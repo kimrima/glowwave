@@ -49,7 +49,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
 
       {/* Screen Display Area */}
       <div 
-        className={`w-full h-full rounded-[6.5%] overflow-hidden relative flex items-center justify-center transition-colors duration-200 ${
+        className={`absolute inset-[2.2cqw] rounded-[6.5%] overflow-hidden flex items-center justify-center transition-colors duration-200 ${
           isBlink ? 'animate-blink' : ''
         }`}
         style={{ 
