@@ -28,7 +28,50 @@ if (!globalForRoomStore.currentStates) {
   globalForRoomStore.currentStates = new Map();
 }
 
-const DB_FILE = path.join(process.cwd(), 'src', 'lib', 'local_db.json');
+// Robust workspace root resolver to handle cases where Next.js infers a parent directory (like C:\Users\김강산) as the root
+function findWorkspaceRoot(): string {
+  let currentDir = __dirname;
+  
+  // 1. Scan upwards from the current directory of the module to find package.json with name "glowwave"
+  for (let i = 0; i < 12; i++) {
+    const pkgPath = path.join(currentDir, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      try {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+        if (pkg.name === 'glowwave') {
+          return currentDir;
+        }
+      } catch (e) {
+        // Ignore JSON parse errors
+      }
+    }
+    const parent = path.dirname(currentDir);
+    if (parent === currentDir) break;
+    currentDir = parent;
+  }
+  
+  // 2. Fallback to process.cwd() checks
+  const cwd = process.cwd();
+  if (fs.existsSync(path.join(cwd, 'package.json'))) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
+      if (pkg.name === 'glowwave') return cwd;
+    } catch (e) {}
+  }
+  
+  // 3. Fallback to standard Desktop location
+  const desktopDir = path.join(cwd, 'Desktop', '전광판');
+  if (fs.existsSync(desktopDir)) {
+    return desktopDir;
+  }
+  
+  return cwd;
+}
+
+const rootDir = findWorkspaceRoot();
+const DB_FILE = path.join(rootDir, 'src', 'lib', 'local_db.json');
+
+console.log(`[localDb] Resolved persistent DB path: ${DB_FILE}`);
 
 function readDb() {
   try {
@@ -53,6 +96,10 @@ function readDb() {
 
 function writeDb(rooms: Map<string, Room>, payments: Payment[], currentStates: Map<string, Preset>) {
   try {
+    const dir = path.dirname(DB_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
     const data = {
       rooms: Object.fromEntries(rooms.entries()),
       payments: payments,
