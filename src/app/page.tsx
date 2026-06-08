@@ -13,10 +13,12 @@ import {
   Play, 
   Search, 
   SmartphoneIcon,
-  HelpCircle
+  HelpCircle,
+  Camera
 } from 'lucide-react';
 import { Preset, EffectType } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
+import QRScannerModal from '@/components/QRScannerModal';
 
 export default function Home() {
   const router = useRouter();
@@ -106,6 +108,12 @@ export default function Home() {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [joinRoomCode, setJoinRoomCode] = useState('');
   const [joinError, setJoinError] = useState('');
+  const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
+
+  const handleQRScanSuccess = (roomId: string) => {
+    setIsQRScannerOpen(false);
+    router.push(`/room/${roomId}`);
+  };
 
   const handleJoinRoomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -443,6 +451,19 @@ export default function Home() {
             <h3 className="text-xl font-bold text-white mb-2">방 참여하기 🔑</h3>
             <p className="text-sm text-zinc-400 mb-6">현장 스크린에 표시된 6자리 방 코드(영어 대문자/숫자)를 입력하여 동기화 모드로 접속합니다.</p>
             
+            {/* QR Scanner Trigger Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsJoinModalOpen(false);
+                setIsQRScannerOpen(true);
+              }}
+              className="w-full py-3 rounded-xl border border-dashed border-indigo-500/20 bg-indigo-500/5 text-indigo-300 font-semibold text-xs hover:bg-indigo-500/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer mb-4"
+            >
+              <Camera className="w-4 h-4" />
+              QR 코드로 스캔해서 참여하기 📸
+            </button>
+
             <form onSubmit={handleJoinRoomSubmit} className="flex flex-col gap-4">
               <div>
                 <input
@@ -478,6 +499,13 @@ export default function Home() {
             </form>
           </div>
         </div>
+      )}
+
+      {isQRScannerOpen && (
+        <QRScannerModal
+          onScanSuccess={handleQRScanSuccess}
+          onClose={() => setIsQRScannerOpen(false)}
+        />
       )}
 
     </div>

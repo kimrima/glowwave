@@ -25,6 +25,21 @@ export default function AudienceRoom() {
   const [showSafariTip, setShowSafariTip] = useState(false); // Hide by default, show on click or first load
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Immersive UI and auto-hide states
+  const [showEnterOverlay, setShowEnterOverlay] = useState(true);
+  const [showControls, setShowControls] = useState(true);
+  const controlsTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const resetControlsTimer = () => {
+    setShowControls(true);
+    if (controlsTimerRef.current) {
+      clearTimeout(controlsTimerRef.current);
+    }
+    controlsTimerRef.current = setTimeout(() => {
+      setShowControls(false);
+    }, 3000); // 3 seconds inactivity threshold
+  };
+
   // Current Signboard Display State
   const [currentPreset, setCurrentPreset] = useState<Preset>({
     bg_color: '#0B0B0F',
@@ -57,8 +72,13 @@ export default function AudienceRoom() {
       setShowSafariTip(true);
     }
 
+    resetControlsTimer();
+
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      if (controlsTimerRef.current) {
+        clearTimeout(controlsTimerRef.current);
+      }
     };
   }, []);
 
@@ -370,7 +390,13 @@ export default function AudienceRoom() {
   }
 
   return (
-    <div ref={containerRef} className="fixed inset-0 overflow-hidden select-none bg-black">
+    <div 
+      ref={containerRef} 
+      className="fixed inset-0 overflow-hidden select-none bg-black cursor-none"
+      onClick={resetControlsTimer}
+      onMouseMove={resetControlsTimer}
+      onTouchStart={resetControlsTimer}
+    >
       
       {/* 6. Landscape forced Warning overlay (Locks with CSS orientation media query) */}
       <div className="fixed inset-0 bg-[#0B0B0F] flex flex-col justify-center items-center text-center px-6 text-white z-50 md:hidden portrait-overlay">
@@ -393,32 +419,41 @@ export default function AudienceRoom() {
         }
       `}</style>
 
-      {/* Floating Control Toolbar */}
-      <div className="absolute top-6 left-6 z-40 flex items-center gap-2">
+      {/* Floating Control Toolbar with Auto-Hide transition */}
+      <div className={`absolute top-6 left-6 z-40 flex items-center gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <button
-          onClick={toggleFullscreen}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFullscreen();
+          }}
           className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
         >
           {isFullscreen ? '화면 축소 📱' : '전체화면 전환 📺'}
         </button>
         <button
-          onClick={() => setShowSafariTip(true)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowSafariTip(true);
+          }}
           className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
         >
           아이폰 사파리 팁 💡
         </button>
       </div>
 
-      {/* iOS Safari Home Screen Tooltip */}
+      {/* iOS Safari Home Screen Tooltip with Auto-Hide transition */}
       {showSafariTip && (
-        <div className="fixed top-6 left-6 right-6 md:left-auto md:w-80 bg-black/95 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-xs text-zinc-300 shadow-2xl z-50 animate-in fade-in slide-in-from-top-4 duration-200">
+        <div className={`fixed top-6 left-6 right-6 md:left-auto md:w-80 bg-black/95 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-xs text-zinc-300 shadow-2xl z-50 animate-in fade-in slide-in-from-top-4 duration-200 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="flex justify-between items-center mb-2">
             <span className="font-bold text-white flex items-center gap-1.5">
               <Smartphone className="w-4 h-4 text-indigo-400" />
               아이폰 Safari 전체화면 팁
             </span>
             <button 
-              onClick={() => setShowSafariTip(false)} 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowSafariTip(false);
+              }} 
               className="text-zinc-500 hover:text-white font-bold font-mono text-sm px-1.5"
             >
               ×
@@ -486,13 +521,45 @@ export default function AudienceRoom() {
 
         {/* 7. Viral Loop Watermark Link Layer */}
         <button 
-          onClick={handleViralClick}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleViralClick();
+          }}
           className="absolute bottom-6 right-6 px-3.5 py-1.5 rounded-lg bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/50 hover:text-white hover:bg-black/70 hover:scale-105 active:scale-95 transition-all z-40 cursor-pointer flex items-center gap-1 font-semibold"
         >
           <span>나도 이런 파티 연출하기 🪄</span>
         </button>
 
       </div>
+
+      {/* 8. Initial entry user activation overlay for Fullscreen & WakeLock support */}
+      {showEnterOverlay && (
+        <div className="fixed inset-0 bg-[#0B0B0F] z-50 flex flex-col justify-center items-center text-center px-6 text-white">
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none" />
+          
+          <div className="relative mb-6 animate-pulse">
+            <Sparkles className="w-12 h-12 text-indigo-400" />
+          </div>
+          
+          <h2 className="text-xl font-bold text-white mb-2">전광판 동기화 준비 완료</h2>
+          <p className="text-xs text-zinc-500 leading-relaxed max-w-xs mb-8">
+            아래 [입장하기] 버튼을 누르면 전광판 화면이 시작되며 가로 전체화면 모드 및 화면 켜짐 유지가 실행됩니다.
+          </p>
+          
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowEnterOverlay(false);
+              toggleFullscreen();
+              requestWakeLock();
+              resetControlsTimer();
+            }}
+            className="px-8 py-4 rounded-xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all shadow-xl hover:shadow-white/10 flex items-center gap-1.5 cursor-pointer"
+          >
+            입장하기 ⚡
+          </button>
+        </div>
+      )}
     </div>
   );
 }
