@@ -245,8 +245,11 @@ export default function QRScannerModal({ onScanSuccess, onClose }: QRScannerModa
         </div>
 
         <p className="text-xs text-zinc-400 leading-normal max-w-xs mx-auto">
-          전광판 스크린이나 티켓의 QR 코드를 사각형 가이드라인 중앙에 맞춰주시면 자동으로 스캔하여 방에 입장합니다.
+          QR 코드를 사각형 가이드라인 중앙에 맞춰주시면 자동으로 스캔하여 입장합니다.
         </p>
+        <div className="mt-3 bg-white/5 border border-white/5 p-2 rounded-lg text-[10px] text-zinc-500 leading-normal max-w-xs mx-auto">
+          💡 <b>스캔이 잘 안 되시나요?</b> 거리가 너무 멀거나 카메라 줌이 되지 않을 때에는, 스크린 아래에 표시된 6자리 [입장 코드]를 홈 화면에 직접 입력해 주셔도 바로 입장하실 수 있습니다!
+        </div>
       </div>
 
       <style jsx global>{`

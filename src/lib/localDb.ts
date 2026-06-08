@@ -386,6 +386,36 @@ export const localDb = {
     }
   },
 
+  async upgradeRoomTier(roomId: string, newTier: TierType): Promise<boolean> {
+    const config = TIER_CONFIGS[newTier];
+    if (!config) return false;
+
+    if (isSupabaseConfigured() && supabase) {
+      const { error } = await supabase
+        .from('rooms')
+        .update({ 
+          tier: newTier, 
+          max_participants: config.maxParticipants 
+        })
+        .eq('id', roomId);
+      if (error) {
+        console.error('[localDb] Supabase upgradeRoomTier error:', error);
+        return false;
+      }
+      return true;
+    } else {
+      this.loadFromDisk();
+      const room = this.rooms.get(roomId);
+      if (room) {
+        room.tier = newTier;
+        room.max_participants = config.maxParticipants;
+        this.saveToDisk();
+        return true;
+      }
+      return false;
+    }
+  },
+
   addClient(roomId: string, clientId: string, controller: ReadableStreamDefaultController, role?: string): void {
     if (!this.clients.has(roomId)) {
       this.clients.set(roomId, []);

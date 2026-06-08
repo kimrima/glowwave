@@ -213,6 +213,16 @@ export default function PresentationView() {
             />
           </div>
 
+          {/* Room Code Display for Manual Entry */}
+          <div className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 px-4 flex flex-col items-center justify-center gap-1">
+            <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">QR 스캔이 잘 안 되거나 너무 먼 경우</span>
+            <div className="flex items-center gap-3">
+              <span className="text-3xl font-black text-indigo-300 font-mono tracking-widest">{roomId}</span>
+              <span className="px-2.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 text-[10px] font-bold">입장 코드</span>
+            </div>
+            <span className="text-[10px] text-zinc-400">GlowWave 홈페이지에서 코드를 직접 입력하고 참여해 주세요!</span>
+          </div>
+
           {/* Instructions Box */}
           <div className="w-full bg-black/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-3 text-left">
             <div className="flex items-start gap-2">

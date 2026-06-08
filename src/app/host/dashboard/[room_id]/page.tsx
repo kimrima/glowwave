@@ -17,9 +17,10 @@ import {
   Volume2,
   Tv,
   Edit3,
-  X
+  X,
+  CreditCard
 } from 'lucide-react';
-import { Preset, Room, SignalPayload, EffectType } from '@/lib/types';
+import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 
@@ -35,6 +36,12 @@ export default function HostDashboard() {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
+  
+  // Upgrade Plan Modal States
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [upgradeStep, setUpgradeStep] = useState<'select' | 'payment' | 'success'>('select');
+  const [selectedUpgradeTier, setSelectedUpgradeTier] = useState<TierType | null>(null);
+  const [isUpgrading, setIsUpgrading] = useState(false);
   
   // Real-time states
   const [presets, setPresets] = useState<Preset[]>([]);
@@ -257,6 +264,64 @@ export default function HostDashboard() {
     }
   };
 
+  const TIER_ORDER: Record<string, number> = {
+    free: 0,
+    lite: 1,
+    pro: 2,
+    max: 3
+  };
+
+  const getUpgradableTiers = () => {
+    const currentTier = room?.tier || 'free';
+    const currentOrder = TIER_ORDER[currentTier] ?? 0;
+    return Object.keys(TIER_CONFIGS).filter(
+      (key) => TIER_ORDER[key] > currentOrder
+    ) as TierType[];
+  };
+
+  const handleUpgrade = async () => {
+    if (!roomId || !token || !selectedUpgradeTier) return;
+    setIsUpgrading(true);
+    try {
+      const res = await fetch(`/api/room/upgrade`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          room_id: roomId,
+          host_session_token: token,
+          new_tier: selectedUpgradeTier
+        })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || '업그레이드 처리 중 오류가 발생했습니다.');
+      }
+
+      // Refresh room details from database
+      const syncResponse = await fetch(`/api/room/${roomId}/status`);
+      if (syncResponse.ok) {
+        const roomData = await syncResponse.json();
+        setRoom({
+          id: roomData.room_id,
+          host_session_token: token,
+          email: roomData.email,
+          tier: roomData.tier,
+          status: roomData.status,
+          max_participants: roomData.max_participants,
+          created_at: roomData.created_at,
+        });
+      }
+
+      setUpgradeStep('success');
+    } catch (err: any) {
+      console.error(err);
+      alert(`오류: ${err.message}`);
+    } finally {
+      setIsUpgrading(false);
+    }
+  };
+
   // 4. Trigger Preset Broadcast Signal
   const triggerPreset = async (preset: Preset, index: number) => {
     if (!roomId || !token) return;
@@ -420,6 +485,18 @@ export default function HostDashboard() {
               <div className="text-xs sm:text-sm font-bold text-white mt-2 px-2 py-0.5 rounded bg-white/5 inline-block capitalize">
                 {room?.tier} Tier
               </div>
+              {room?.tier !== 'max' && (
+                <button
+                  onClick={() => {
+                    setSelectedUpgradeTier(null);
+                    setUpgradeStep('select');
+                    setIsUpgradeModalOpen(true);
+                  }}
+                  className="block mx-auto mt-2.5 text-[9px] text-indigo-400 font-extrabold hover:text-indigo-300 hover:underline cursor-pointer border border-indigo-500/20 px-2 py-0.5 rounded-full bg-indigo-500/5 transition-all"
+                >
+                  업그레이드 ⚡
+                </button>
+              )}
             </div>
           </div>
 
@@ -909,6 +986,164 @@ export default function HostDashboard() {
               <span className="text-[10px] font-mono text-zinc-500 uppercase mb-4 tracking-wider">실시간 연출 미리보기 (Landscape Preview)</span>
               <LandscapePhoneMockup preset={editingPreset} />
             </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* 12. Upgrade Plan Modal Dialog */}
+      {isUpgradeModalOpen && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-effect border border-white/10 rounded-2xl w-full max-w-md p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150 text-center flex flex-col gap-5 text-white">
+            
+            {/* Header */}
+            <div className="flex justify-between items-center pb-3 border-b border-white/5">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-indigo-400" />
+                실시간 플랜 업그레이드
+              </h3>
+              {!isUpgrading && upgradeStep !== 'success' && (
+                <button
+                  onClick={() => setIsUpgradeModalOpen(false)}
+                  className="text-zinc-500 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+                  title="닫기"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+
+            {/* Content Switcher */}
+            {upgradeStep === 'select' && (
+              <div className="flex flex-col gap-4 text-left">
+                <div className="text-xs text-zinc-400 leading-relaxed bg-white/5 border border-white/5 p-3 rounded-xl">
+                  💡 <b>안내:</b> 인원 제한을 늘리기 위해 플랜을 올릴 수 있습니다. 업그레이드 후에도 <b>기존 입장 QR 코드 및 링크는 변경 없이 그대로 유지</b>되며 실시간으로 한도가 확장됩니다.
+                </div>
+                
+                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest font-mono">업그레이드 가능한 플랜 선택</span>
+                <div className="flex flex-col gap-2">
+                  {getUpgradableTiers().map((tKey) => {
+                    const config = TIER_CONFIGS[tKey];
+                    return (
+                      <button
+                        key={tKey}
+                        onClick={() => setSelectedUpgradeTier(tKey)}
+                        className={`w-full p-4 rounded-xl border transition-all text-left flex justify-between items-center cursor-pointer ${
+                          selectedUpgradeTier === tKey
+                            ? 'bg-indigo-500/10 border-indigo-500 text-white'
+                            : 'bg-white/5 border-white/5 text-zinc-300 hover:bg-white/10 hover:border-white/10'
+                        }`}
+                      >
+                        <div>
+                          <div className="font-extrabold text-xs capitalize">{tKey === 'lite' ? 'Lite Plan 🎈' : tKey === 'pro' ? 'Pro Plan 🌊' : 'Max Plan ⚡'}</div>
+                          <div className="text-[10px] text-zinc-500 mt-1">동시 접속 한도: {config.maxParticipants}명</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-mono text-xs text-indigo-300 font-extrabold">{config.priceKrw.toLocaleString()}원</div>
+                          <div className="text-[8px] text-zinc-600 mt-0.5">VAT 포함</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => {
+                    if (selectedUpgradeTier) setUpgradeStep('payment');
+                  }}
+                  disabled={!selectedUpgradeTier}
+                  className="w-full py-3.5 mt-2 rounded-xl bg-white text-black font-extrabold text-xs hover:bg-zinc-200 transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                >
+                  결제 단계로 이동하기 ➡️
+                </button>
+              </div>
+            )}
+
+            {upgradeStep === 'payment' && selectedUpgradeTier && (
+              <div className="flex flex-col gap-4 text-left">
+                <div className="text-xs text-zinc-400 leading-normal">
+                  선택하신 <b>{selectedUpgradeTier.toUpperCase()} Plan</b> 요금을 결제합니다. 결제 승인 즉시 인원 제한이 <b>{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}명</b>으로 증가합니다.
+                </div>
+
+                {/* PG Checkout Simulator Card */}
+                <div className="bg-black/50 border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
+                  <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest font-mono">가상 결제 모듈 시뮬레이터</span>
+                  
+                  <div className="flex justify-between items-center font-mono text-xs border-b border-white/5 pb-2">
+                    <span className="text-zinc-400">결제 대상 플랜</span>
+                    <span className="text-white font-bold capitalize">{selectedUpgradeTier} Plan</span>
+                  </div>
+
+                  <div className="flex justify-between items-center font-mono text-xs border-b border-white/5 pb-2">
+                    <span className="text-zinc-400">증설 인원 한도</span>
+                    <span className="text-emerald-400 font-bold">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}명</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center font-mono text-xs">
+                    <span className="text-zinc-400">결제 금액</span>
+                    <span className="text-indigo-300 font-bold">{TIER_CONFIGS[selectedUpgradeTier].priceKrw.toLocaleString()}원</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setUpgradeStep('select')}
+                    disabled={isUpgrading}
+                    className="flex-1 py-3 rounded-xl bg-white/5 text-zinc-400 font-semibold hover:bg-white/10 transition-all text-xs cursor-pointer disabled:opacity-50"
+                  >
+                    이전으로
+                  </button>
+                  
+                  <button
+                    onClick={handleUpgrade}
+                    disabled={isUpgrading}
+                    className="flex-1 py-3 rounded-xl bg-indigo-500 text-white font-extrabold hover:bg-indigo-650 transition-all text-xs cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    {isUpgrading ? (
+                      <>
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        승인 중...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-3 h-3" />
+                        결제 승인 완료 💳
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {upgradeStep === 'success' && selectedUpgradeTier && (
+              <div className="flex flex-col items-center gap-4 py-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <Check className="w-6 h-6" />
+                </div>
+                
+                <h4 className="text-base font-extrabold text-white">플랜 업그레이드 성공! 🎉</h4>
+                
+                <p className="text-xs text-zinc-400 leading-relaxed max-w-xs">
+                  요금제 플랜 업그레이드가 성공적으로 확인되었습니다.<br />
+                  전광판 동시 접속 정원이 즉시 <b>{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}명</b>으로 확장되었습니다.
+                </p>
+
+                <div className="bg-white/5 border border-white/5 p-3 rounded-xl text-[10px] text-zinc-500 leading-normal max-w-xs text-left">
+                  📌 <b>안내:</b> 기존에 열려 있는 관람객 접속용 QR 코드와 링크 주소는 그대로 동일하게 유지되므로, 관람객들이 새로 고침을 하거나 재스캔을 하지 않아도 정상 작동합니다.
+                </div>
+
+                <button
+                  onClick={() => {
+                    setIsUpgradeModalOpen(false);
+                    setUpgradeStep('select');
+                    setSelectedUpgradeTier(null);
+                  }}
+                  className="w-full py-3.5 mt-2 rounded-xl bg-white text-black font-extrabold text-xs hover:bg-zinc-200 transition-all cursor-pointer"
+                >
+                  대시보드로 돌아가기
+                </button>
+              </div>
+            )}
 
           </div>
         </div>

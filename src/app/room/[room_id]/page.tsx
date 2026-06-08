@@ -53,6 +53,8 @@ export default function AudienceRoom() {
   const [error, setError] = useState<string | null>(null);
   const [isHardCapped, setIsHardCapped] = useState(false);
   const [isRoomInactive, setIsRoomInactive] = useState(false);
+  const [isIOSUserAndNotStandalone, setIsIOSUserAndNotStandalone] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
 
   // Technical Refs for Wake Lock & Real-time
   const wakeLockRef = useRef<any>(null);
@@ -67,9 +69,14 @@ export default function AudienceRoom() {
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     
     // Automatically show Safari hint to iOS users on first render
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    if (isIOS) {
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(ios);
+    const isStandalone = (window.navigator as any).standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+    if (ios) {
       setShowSafariTip(true);
+      if (!isStandalone) {
+        setIsIOSUserAndNotStandalone(true);
+      }
     }
 
     resetControlsTimer();
@@ -440,15 +447,17 @@ export default function AudienceRoom() {
         >
           {isFullscreen ? '화면 축소 📱' : '전체화면 전환 📺'}
         </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowSafariTip(true);
-          }}
-          className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
-        >
-          아이폰 사파리 팁 💡
-        </button>
+        {isIOS && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowSafariTip(true);
+            }}
+            className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
+          >
+            아이폰 사파리 팁 💡
+          </button>
+        )}
       </div>
 
       {/* iOS Safari Home Screen Tooltip with Auto-Hide transition */}
@@ -552,9 +561,40 @@ export default function AudienceRoom() {
           </div>
           
           <h2 className="text-xl font-bold text-white mb-2">전광판 동기화 준비 완료</h2>
-          <p className="text-xs text-zinc-500 leading-relaxed max-w-xs mb-8">
-            아래 [입장하기] 버튼을 누르면 전광판 화면이 시작되며 가로 전체화면 모드 및 화면 켜짐 유지가 실행됩니다.
-          </p>
+          
+          {isIOSUserAndNotStandalone ? (
+            <div className="glass-effect p-6 rounded-2xl max-w-sm border border-indigo-500/20 mb-6 flex flex-col gap-4 text-left">
+              <div className="flex items-center gap-2 text-indigo-400 border-b border-white/5 pb-2">
+                <Smartphone className="w-5 h-5 animate-pulse" />
+                <h3 className="font-extrabold text-sm text-white">아이폰(iOS) 전체화면 설정 권장 🚨</h3>
+              </div>
+              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                아이폰 Safari 브라우저는 주소창과 메뉴바를 숨길 수 없어 일반 브라우저로 접속 시 전광판이 잘려 보입니다. 
+                아래 순서대로 <b>'홈 화면에 추가'</b>하여 실행하시면 완벽한 전체화면 앱으로 이용 가능합니다!
+              </p>
+              <div className="bg-white/5 rounded-xl p-3 text-[10px] flex flex-col gap-2 text-zinc-300 leading-normal border border-white/5 font-medium">
+                <div className="flex gap-1.5">
+                  <span className="text-indigo-400 font-bold">1.</span>
+                  <span>화면 하단 중앙의 <b>[공유 버튼 📤]</b>을 클릭합니다.</span>
+                </div>
+                <div className="flex gap-1.5 border-t border-white/5 pt-1.5">
+                  <span className="text-indigo-400 font-bold">2.</span>
+                  <span>메뉴 중 <b>[홈 화면에 추가 ➕]</b>를 선택합니다.</span>
+                </div>
+                <div className="flex gap-1.5 border-t border-white/5 pt-1.5">
+                  <span className="text-indigo-400 font-bold">3.</span>
+                  <span>바탕화면에 생성된 <b>GlowWave 아이콘</b>으로 재접속해 주세요.</span>
+                </div>
+              </div>
+              <p className="text-[9px] text-zinc-500 text-center">
+                ※ 홈 화면에 추가하지 않고 그냥 브라우저로 이용하려면 아래 버튼을 누르세요.
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-zinc-500 leading-relaxed max-w-xs mb-8">
+              아래 [입장하기] 버튼을 누르면 전광판 화면이 시작되며 가로 전체화면 모드 및 화면 켜짐 유지가 실행됩니다.
+            </p>
+          )}
           
           <button
             onClick={(e) => {
@@ -564,7 +604,8 @@ export default function AudienceRoom() {
               requestWakeLock();
               resetControlsTimer();
             }}
-            className="px-8 py-4 rounded-xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all shadow-xl hover:shadow-white/10 flex items-center gap-1.5 cursor-pointer"
+            className="px-8 py-4 rounded-xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all shadow-xl hover:shadow-white/10 flex items-center gap-1.5 cursor-pointer animate-bounce"
+            style={{ animationDuration: '3s' }}
           >
             입장하기 ⚡
           </button>
