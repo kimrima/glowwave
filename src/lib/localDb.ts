@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { Room, Payment, Preset, TierType, TIER_CONFIGS } from './types';
 
 interface SSEClient {
@@ -26,15 +28,74 @@ if (!globalForRoomStore.currentStates) {
   globalForRoomStore.currentStates = new Map();
 }
 
+const DB_FILE = path.join(process.cwd(), 'src', 'lib', 'local_db.json');
+
+function readDb() {
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      const data = fs.readFileSync(DB_FILE, 'utf8');
+      const parsed = JSON.parse(data);
+      return {
+        rooms: new Map<string, Room>(Object.entries(parsed.rooms || {})),
+        payments: (parsed.payments || []) as Payment[],
+        currentStates: new Map<string, Preset>(Object.entries(parsed.currentStates || {}))
+      };
+    }
+  } catch (err) {
+    console.error('[localDb] Failed to read local DB file:', err);
+  }
+  return {
+    rooms: new Map<string, Room>(),
+    payments: [] as Payment[],
+    currentStates: new Map<string, Preset>()
+  };
+}
+
+function writeDb(rooms: Map<string, Room>, payments: Payment[], currentStates: Map<string, Preset>) {
+  try {
+    const data = {
+      rooms: Object.fromEntries(rooms.entries()),
+      payments: payments,
+      currentStates: Object.fromEntries(currentStates.entries())
+    };
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[localDb] Failed to write local DB file:', err);
+  }
+}
+
 export const localDb = {
   rooms: globalForRoomStore.rooms,
   payments: globalForRoomStore.payments,
   clients: globalForRoomStore.clients,
   currentStates: globalForRoomStore.currentStates,
 
+  loadFromDisk(): void {
+    const data = readDb();
+    
+    this.rooms.clear();
+    for (const [k, v] of data.rooms.entries()) {
+      this.rooms.set(k, v);
+    }
+    
+    this.payments.length = 0;
+    this.payments.push(...data.payments);
+    
+    this.currentStates.clear();
+    for (const [k, v] of data.currentStates.entries()) {
+      this.currentStates.set(k, v);
+    }
+  },
+
+  saveToDisk(): void {
+    writeDb(this.rooms, this.payments, this.currentStates);
+  },
+
   cleanupExpiredRooms(): void {
+    this.loadFromDisk();
     const now = new Date();
     const expiryPeriodMs = 24 * 60 * 60 * 1000; // 24 hours
+    let changed = false;
 
     for (const [roomId, room] of this.rooms.entries()) {
       const createdAt = new Date(room.created_at);
@@ -60,7 +121,12 @@ export const localDb = {
         // Delete state and room itself
         this.currentStates.delete(roomId);
         this.rooms.delete(roomId);
+        changed = true;
       }
+    }
+
+    if (changed) {
+      this.saveToDisk();
     }
   },
 
@@ -87,6 +153,7 @@ export const localDb = {
       speed: 1000,
     });
     
+    this.saveToDisk();
     return newRoom;
   },
 
@@ -110,6 +177,7 @@ export const localDb = {
     amount: number,
     status: 'pending' | 'completed' | 'failed'
   ): Payment {
+    this.loadFromDisk();
     const payment: Payment = {
       id: crypto.randomUUID(),
       email,
@@ -121,10 +189,12 @@ export const localDb = {
       created_at: new Date().toISOString(),
     };
     this.payments.push(payment);
+    this.saveToDisk();
     return payment;
   },
 
   updatePaymentStatus(roomId: string, status: 'completed' | 'failed'): boolean {
+    this.loadFromDisk();
     const payment = this.payments.find((p) => p.room_id === roomId);
     if (payment) {
       payment.payment_status = status;
@@ -134,17 +204,21 @@ export const localDb = {
           room.status = 'active';
         }
       }
+      this.saveToDisk();
       return true;
     }
     return false;
   },
 
   getCurrentState(roomId: string): Preset | undefined {
+    this.loadFromDisk();
     return this.currentStates.get(roomId);
   },
 
   setCurrentState(roomId: string, state: Preset): void {
+    this.loadFromDisk();
     this.currentStates.set(roomId, state);
+    this.saveToDisk();
   },
 
   addClient(roomId: string, clientId: string, controller: ReadableStreamDefaultController, role?: string): void {
