@@ -308,49 +308,80 @@ export default function HostSetup() {
                 {/* Effect Select */}
                 <div>
                   <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">모션 효과</label>
-                  <div className="flex gap-2">
-                    <select
-                      value={presets[selectedPresetIndex].effect}
-                      onChange={(e) => handleUpdatePreset('effect', e.target.value)}
-                      className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-indigo-500"
-                    >
-                      <option value="none">효과 없음 (정적)</option>
-                      <option value="blink">전체 화면 반짝임 (Blink)</option>
-                      <option value="marquee">전광판 가로 흐르기 (Marquee)</option>
-                    </select>
+                  <div className="grid grid-cols-3 gap-1 bg-black/50 p-1 rounded-xl border border-white/10">
+                    {[
+                      { val: 'none', label: '정적' },
+                      { val: 'blink', label: '반짝임' },
+                      { val: 'marquee', label: '흐르기' }
+                    ].map((item) => (
+                      <button
+                        type="button"
+                        key={item.val}
+                        onClick={() => handleUpdatePreset('effect', item.val)}
+                        className={`py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          presets[selectedPresetIndex].effect === item.val
+                            ? 'bg-white text-black shadow-md'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
 
               {/* 글자 크기 및 폰트 커스텀 */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">글자 크기 비율</label>
-                  <select
-                    value={presets[selectedPresetIndex].font_size || 'auto'}
-                    onChange={(e) => handleUpdatePreset('font_size', e.target.value)}
-                    className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="auto">자동 맞춤 (Auto)</option>
-                    <option value="small">작게 (80%)</option>
-                    <option value="medium">중간 (100%)</option>
-                    <option value="large">크게 (140%)</option>
-                    <option value="huge">매우크게 (180%)</option>
-                  </select>
+                  <div className="grid grid-cols-5 gap-1 bg-black/50 p-1 rounded-xl border border-white/10">
+                    {[
+                      { val: 'auto', label: 'Auto' },
+                      { val: 'small', label: '80%' },
+                      { val: 'medium', label: '100%' },
+                      { val: 'large', label: '140%' },
+                      { val: 'huge', label: '180%' }
+                    ].map((item) => (
+                      <button
+                        type="button"
+                        key={item.val}
+                        onClick={() => handleUpdatePreset('font_size', item.val)}
+                        className={`py-2 rounded-lg text-[10px] sm:text-xs font-semibold transition-all cursor-pointer ${
+                          (presets[selectedPresetIndex].font_size || 'auto') === item.val
+                            ? 'bg-white text-black shadow-md'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
-                  <select
-                    value={presets[selectedPresetIndex].font_family || 'sans'}
-                    onChange={(e) => handleUpdatePreset('font_family', e.target.value)}
-                    className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="sans">기본 고딕 (Sans)</option>
-                    <option value="serif">명조체 (Serif)</option>
-                    <option value="neon">네온 글래스 (Neon)</option>
-                    <option value="dot">레트로 도트 (Dot)</option>
-                  </select>
+                  <div className="grid grid-cols-4 gap-1 bg-black/50 p-1 rounded-xl border border-white/10">
+                    {[
+                      { val: 'sans', label: '기본 고딕' },
+                      { val: 'serif', label: '명조체' },
+                      { val: 'neon', label: '네온' },
+                      { val: 'dot', label: '도트' }
+                    ].map((item) => (
+                      <button
+                        type="button"
+                        key={item.val}
+                        onClick={() => handleUpdatePreset('font_family', item.val)}
+                        className={`py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          (presets[selectedPresetIndex].font_family || 'sans') === item.val
+                            ? 'bg-white text-black shadow-md'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
