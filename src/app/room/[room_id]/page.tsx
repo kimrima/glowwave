@@ -107,13 +107,19 @@ export default function AudienceRoom() {
     try {
       const response = await fetch(`/api/room/${roomId}/status`);
       if (!response.ok) {
-        if (response.status === 404) {
-          setError('존재하지 않거나 만료된 방 번호입니다. 방은 생성 후 24시간 동안만 유지됩니다.');
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('glowwave_last_joined_room_id');
+        let errorMsg = '방 정보를 불러오는 과정에서 오류가 발생했습니다.';
+        try {
+          const errData = await response.json();
+          if (errData.suggestion) {
+            errorMsg = `${errData.error || '오류'}: ${errData.suggestion}`;
+          } else if (response.status === 404) {
+            errorMsg = '존재하지 않거나 만료된 방 번호입니다. 방은 생성 후 24시간 동안만 유지됩니다.';
           }
-        } else {
-          setError('방 정보를 불러오는 과정에서 오류가 발생했습니다.');
+        } catch (e) {}
+        
+        setError(errorMsg);
+        if (response.status === 404 && typeof window !== 'undefined') {
+          localStorage.removeItem('glowwave_last_joined_room_id');
         }
         setLoading(false);
         return;

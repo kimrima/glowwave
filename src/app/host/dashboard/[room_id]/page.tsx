@@ -34,6 +34,7 @@ export default function HostDashboard() {
   const [token, setToken] = useState<string | null>(null);
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
   
   // Real-time states
   const [presets, setPresets] = useState<Preset[]>([]);
@@ -99,6 +100,15 @@ export default function HostDashboard() {
       try {
         const response = await fetch(`/api/room/${roomId}/status`);
         if (!response.ok) {
+          let errorMsg = '이 방의 생성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오.';
+          try {
+            const errData = await response.json();
+            if (errData.suggestion) {
+              errorMsg = `${errData.error || '오류'}: ${errData.suggestion}`;
+            }
+          } catch (e) {}
+          setAuthErrorMessage(errorMsg);
+
           if (typeof window !== 'undefined') {
             localStorage.removeItem('glowwave_active_host_room_id');
             localStorage.removeItem(`glowwave_presets_${roomId}`);
@@ -336,8 +346,8 @@ export default function HostDashboard() {
         <div className="glass-effect p-8 rounded-2xl max-w-md border border-red-500/10">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">권한이 없거나 만료된 방입니다</h2>
-          <p className="text-sm text-zinc-400 mb-6">
-            이 방의 생성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 <b>[구매 내역 복구]</b> 기능을 사용해 권한을 획득하십시오.
+          <p className="text-sm text-zinc-400 mb-6 whitespace-pre-line">
+            {authErrorMessage || "이 방의 생성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오."}
           </p>
           <div className="flex flex-col gap-2">
             <Link href="/recovery" className="py-3 px-4 rounded-xl bg-white text-black font-semibold text-sm hover:bg-zinc-200 transition-all">

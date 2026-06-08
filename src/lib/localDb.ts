@@ -208,13 +208,6 @@ export const localDb = {
         status: newRoom.status,
         max_participants: config.maxParticipants,
         created_at: newRoom.created_at,
-        current_state: {
-          bg_color: '#0B0B0F',
-          text: 'GlowWave 🌊',
-          text_color: '#FFFFFF',
-          effect: 'none',
-          speed: 1000,
-        }
       });
       if (error) {
         console.error('[localDb] Supabase createRoom error:', error);
@@ -244,7 +237,7 @@ export const localDb = {
         .maybeSingle();
       if (error) {
         console.error('[localDb] Supabase getRoom error:', error);
-        return undefined;
+        throw new Error(error.message);
       }
       return data ? (data as Room) : undefined;
     } else {

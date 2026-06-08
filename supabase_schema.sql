@@ -32,9 +32,9 @@ ALTER TABLE public.rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
 
 -- 5. Create Simple RLS Policies
--- Rooms RLS: Anyone can read details of active rooms. Host can write.
+-- Rooms RLS: Anyone can read details of rooms (active or inactive). Host can write.
 CREATE POLICY "Allow public read-only of rooms" ON public.rooms
-    FOR SELECT USING (status = 'active');
+    FOR SELECT USING (status = 'active' OR status = 'inactive');
 
 CREATE POLICY "Allow hosts full access with token" ON public.rooms
     FOR ALL USING (true) WITH CHECK (true);
