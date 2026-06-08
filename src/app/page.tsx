@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -16,9 +16,82 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { Preset, EffectType } from '@/lib/types';
+import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 
 export default function Home() {
   const router = useRouter();
+
+  // Active host room states for resume/cleanup
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
+  const [activeRoomToken, setActiveRoomToken] = useState<string | null>(null);
+  const [isRoomStillActive, setIsRoomStillActive] = useState<boolean>(false);
+
+  // Active spectator room states for resume/cleanup
+  const [lastJoinedRoomId, setLastJoinedRoomId] = useState<string | null>(null);
+  const [isAudienceRoomActive, setIsAudienceRoomActive] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedActiveId = localStorage.getItem('glowwave_active_host_room_id');
+      if (savedActiveId) {
+        setActiveRoomId(savedActiveId);
+        const savedToken = localStorage.getItem(`glowwave_token_${savedActiveId}`);
+        setActiveRoomToken(savedToken);
+        
+        // Verify if room is active on the server/DB
+        fetch(`/api/room/${savedActiveId}/status`)
+          .then((res) => {
+            if (res.ok) return res.json();
+            throw new Error('Expired');
+          })
+          .then((data) => {
+            if (data.status === 'active') {
+              setIsRoomStillActive(true);
+            } else {
+              cleanExpiredRoom(savedActiveId);
+            }
+          })
+          .catch(() => {
+            cleanExpiredRoom(savedActiveId);
+          });
+      }
+
+      // Check last joined audience room
+      const savedJoinedId = localStorage.getItem('glowwave_last_joined_room_id');
+      if (savedJoinedId) {
+        setLastJoinedRoomId(savedJoinedId);
+        fetch(`/api/room/${savedJoinedId}/status`)
+          .then((res) => {
+            if (res.ok) return res.json();
+            throw new Error('Expired');
+          })
+          .then((data) => {
+            if (data.status === 'active') {
+              // Only show audience banner if it is not the same as the host's room
+              if (savedJoinedId !== savedActiveId) {
+                setIsAudienceRoomActive(true);
+              }
+            } else {
+              localStorage.removeItem('glowwave_last_joined_room_id');
+              setLastJoinedRoomId(null);
+            }
+          })
+          .catch(() => {
+            localStorage.removeItem('glowwave_last_joined_room_id');
+            setLastJoinedRoomId(null);
+          });
+      }
+    }
+  }, [activeRoomId]);
+
+  const cleanExpiredRoom = (id: string) => {
+    localStorage.removeItem('glowwave_active_host_room_id');
+    localStorage.removeItem(`glowwave_presets_${id}`);
+    localStorage.removeItem(`glowwave_token_${id}`);
+    setActiveRoomId(null);
+    setActiveRoomToken(null);
+    setIsRoomStillActive(false);
+  };
   
   // Interactive Live Trial State
   const [demoPreset, setDemoPreset] = useState<Preset>({
@@ -91,6 +164,30 @@ export default function Home() {
           })
         }}
       />
+
+      {isRoomStillActive && activeRoomId && activeRoomToken && (
+        <div className="bg-indigo-600 text-white py-2.5 px-6 text-center text-xs font-semibold flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 relative z-50">
+          <span>이전의 활성화된 방이 존재합니다 (방 코드: {activeRoomId})</span>
+          <Link
+            href={`/host/dashboard/${activeRoomId}?token=${activeRoomToken}`}
+            className="px-2.5 py-0.5 rounded bg-white text-indigo-600 hover:bg-zinc-100 transition-all font-bold text-[11px]"
+          >
+            대시보드로 돌아가기 &rarr;
+          </Link>
+        </div>
+      )}
+
+      {isAudienceRoomActive && lastJoinedRoomId && (
+        <div className="bg-emerald-600 text-white py-2.5 px-6 text-center text-xs font-semibold flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 relative z-50">
+          <span>이전에 참여하던 전광판 방이 존재합니다 (방 코드: {lastJoinedRoomId})</span>
+          <Link
+            href={`/room/${lastJoinedRoomId}`}
+            className="px-2.5 py-0.5 rounded bg-white text-emerald-600 hover:bg-zinc-100 transition-all font-bold text-[11px]"
+          >
+            관객으로 재진입하기 &rarr;
+          </Link>
+        </div>
+      )}
 
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-white/5 bg-[#0B0B0F]/80 backdrop-blur-md">
@@ -257,52 +354,7 @@ export default function Home() {
 
             {/* Simulated Smartphone Mockup */}
             <div className="flex justify-center items-center">
-              <div className="relative w-[280px] h-[560px] bg-black rounded-[48px] border-4 border-zinc-800 shadow-2xl overflow-hidden p-3 flex flex-col justify-between">
-                {/* Speaker grill / Camera punch-hole */}
-                <div className="absolute top-5 left-1/2 -translate-x-1/2 w-32 h-6 bg-black rounded-2xl z-30 flex items-center justify-center">
-                  <div className="w-16 h-1 bg-zinc-800 rounded-full mb-1" />
-                </div>
-
-                {/* Display Screen */}
-                <div 
-                  className={`w-full h-full rounded-[38px] overflow-hidden relative flex items-center justify-center transition-colors duration-200 ${
-                    demoPreset.effect === 'blink' ? 'animate-blink' : ''
-                  }`}
-                  style={{ 
-                    backgroundColor: demoPreset.bg_color,
-                    '--blink-duration': '0.8s'
-                  } as React.CSSProperties}
-                >
-                  {demoPreset.effect === 'marquee' ? (
-                    <div className="w-full overflow-hidden whitespace-nowrap flex items-center">
-                      <span 
-                        className="animate-marquee inline-block font-black text-4xl select-none"
-                        style={{ 
-                          color: demoPreset.text_color,
-                          '--marquee-duration': '6s'
-                        } as React.CSSProperties}
-                      >
-                        {demoPreset.text || 'GlowWave'} &nbsp;&nbsp;&nbsp;&nbsp; {demoPreset.text || 'GlowWave'}
-                      </span>
-                    </div>
-                  ) : (
-                    <div 
-                      className="font-black text-3xl text-center break-all px-6 select-none max-w-full"
-                      style={{ 
-                        color: demoPreset.text_color,
-                        fontSize: 'clamp(1.5rem, 8vw, 3rem)'
-                      }}
-                    >
-                      {demoPreset.text || 'GlowWave'}
-                    </div>
-                  )}
-
-                  {/* Watermark simulated overlay */}
-                  <div className="absolute bottom-6 right-6 px-2.5 py-1 rounded bg-black/40 backdrop-blur-sm border border-white/5 text-[9px] text-white/50 select-none">
-                    GlowWave.app 🪄
-                  </div>
-                </div>
-              </div>
+              <LandscapePhoneMockup preset={demoPreset} />
             </div>
           </div>
         </div>

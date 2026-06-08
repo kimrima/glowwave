@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Preset, Room, SignalPayload, EffectType } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 
 export default function HostDashboard() {
   const params = useParams();
@@ -83,6 +84,11 @@ export default function HostDashboard() {
       try {
         const response = await fetch(`/api/room/${roomId}/status`);
         if (!response.ok) {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('glowwave_active_host_room_id');
+            localStorage.removeItem(`glowwave_presets_${roomId}`);
+            localStorage.removeItem(`glowwave_token_${roomId}`);
+          }
           setIsAuthorized(false);
           setLoading(false);
           return;
@@ -696,87 +702,54 @@ export default function HostDashboard() {
                 </div>
               </div>
 
-              <div className="flex gap-2.5 mt-2">
+              <div className="flex flex-col gap-2 mt-2">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (editingPresetIndex === null || !editingPreset) return;
+                      const updated = [...presets];
+                      updated[editingPresetIndex] = editingPreset;
+                      setPresets(updated);
+                      localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
+                      setEditingPresetIndex(null);
+                      setEditingPreset(null);
+                    }}
+                    className="flex-1 py-3 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all text-xs"
+                  >
+                    저장만 하기
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (editingPresetIndex === null || !editingPreset) return;
+                      const updated = [...presets];
+                      updated[editingPresetIndex] = editingPreset;
+                      setPresets(updated);
+                      localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
+                      triggerPreset(editingPreset, editingPresetIndex);
+                      setEditingPresetIndex(null);
+                      setEditingPreset(null);
+                    }}
+                    className="flex-1 py-3 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-650 transition-all text-xs"
+                  >
+                    저장 후 바로 송출 ⚡
+                  </button>
+                </div>
                 <button
                   type="button"
                   onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }}
-                  className="flex-1 py-3 rounded-xl bg-white/5 text-zinc-300 font-semibold hover:bg-white/10 transition-all text-xs"
+                  className="w-full py-2.5 rounded-xl bg-white/5 text-zinc-400 font-semibold hover:bg-white/10 transition-all text-xs"
                 >
-                  취소
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (editingPresetIndex === null || !editingPreset) return;
-                    const updated = [...presets];
-                    updated[editingPresetIndex] = editingPreset;
-                    setPresets(updated);
-                    localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
-                    // Instantly trigger/broadcast this preset!
-                    triggerPreset(editingPreset, editingPresetIndex);
-                    setEditingPresetIndex(null);
-                    setEditingPreset(null);
-                  }}
-                  className="flex-1 py-3 rounded-xl bg-white text-black font-extrabold hover:bg-zinc-200 transition-all text-xs"
-                >
-                  저장 및 즉시 송출 ⚡
+                  취소 (변경 사항 무시)
                 </button>
               </div>
             </div>
 
             {/* Modal Right Column: Live phone scroller preview */}
             <div className="bg-[#0B0B0F] rounded-2xl border border-white/5 p-4 flex flex-col justify-center items-center text-center">
-              <span className="text-[10px] font-mono text-zinc-500 uppercase mb-4 tracking-wider">실시간 연출 미리보기 (Device Preview)</span>
-              
-              <div className="relative w-[220px] h-[340px] bg-black rounded-[38px] border-4 border-zinc-800 shadow-xl overflow-hidden p-2.5 flex flex-col justify-between">
-                {/* Punch-hole camera */}
-                <div className="absolute top-3.5 left-1/2 -translate-x-1/2 w-24 h-4 bg-black rounded-full z-30" />
-
-                {/* Display mock */}
-                <div 
-                  className={`w-full h-full rounded-[28px] overflow-hidden relative flex items-center justify-center transition-colors duration-200 ${
-                    editingPreset.effect === 'blink' ? 'animate-blink' : ''
-                  }`}
-                  style={{ 
-                    backgroundColor: editingPreset.bg_color,
-                    '--blink-duration': `${editingPreset.speed || 800}ms`
-                  } as React.CSSProperties}
-                >
-                  {editingPreset.effect === 'marquee' ? (
-                    <div className="w-full overflow-hidden whitespace-nowrap flex items-center">
-                      <span 
-                        className={`animate-marquee inline-block font-black text-2xl select-none uppercase ${
-                          editingPreset.font_family === 'neon' ? 'font-neon' : editingPreset.font_family === 'dot' ? 'font-dot' : ''
-                        }`}
-                        style={{ 
-                          color: editingPreset.text_color,
-                          fontFamily: editingPreset.font_family === 'serif' ? 'Georgia, serif' : undefined,
-                          '--marquee-duration': '5s'
-                        } as React.CSSProperties}
-                      >
-                        {editingPreset.text || 'GlowWave'} &nbsp;&nbsp;&nbsp;&nbsp; {editingPreset.text || 'GlowWave'}
-                      </span>
-                    </div>
-                  ) : (
-                    <div 
-                      className={`font-black text-center break-all px-4 select-none max-w-full leading-none tracking-tight ${
-                        editingPreset.font_family === 'neon' ? 'font-neon' : editingPreset.font_family === 'dot' ? 'font-dot' : ''
-                      }`}
-                      style={{ 
-                        color: editingPreset.text_color,
-                        fontFamily: editingPreset.font_family === 'serif' ? 'Georgia, serif' : undefined,
-                        fontSize: editingPreset.font_size === 'small' ? '1rem' 
-                                : editingPreset.font_size === 'medium' ? '1.5rem'
-                                : editingPreset.font_size === 'large' ? '2rem'
-                                : editingPreset.font_size === 'huge' ? '2.5rem'
-                                : '1.8rem' // auto default mockup sizing
-                      }}
-                    >
-                      {editingPreset.text || 'GlowWave'}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <span className="text-[10px] font-mono text-zinc-500 uppercase mb-4 tracking-wider">실시간 연출 미리보기 (Landscape Preview)</span>
+              <LandscapePhoneMockup preset={editingPreset} />
             </div>
 
           </div>

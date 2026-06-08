@@ -88,7 +88,10 @@ export default function AudienceRoom() {
       const response = await fetch(`/api/room/${roomId}/status`);
       if (!response.ok) {
         if (response.status === 404) {
-          setError('존재하지 않는 방 번호입니다.');
+          setError('존재하지 않거나 만료된 방 번호입니다. 방은 생성 후 24시간 동안만 유지됩니다.');
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('glowwave_last_joined_room_id');
+          }
         } else {
           setError('방 정보를 불러오는 과정에서 오류가 발생했습니다.');
         }
@@ -114,6 +117,11 @@ export default function AudienceRoom() {
         return;
       }
       setIsHardCapped(false);
+
+      // Save to localStorage for recovery/re-entry
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('glowwave_last_joined_room_id', roomId);
+      }
 
       // Fetch active state from DB/Serverless memory to sync instantly within 0.2s
       const stateRes = await fetch(`/api/room/${roomId}/stream`); // This or polling status is quick
@@ -213,6 +221,12 @@ export default function AudienceRoom() {
           } else if (data.event === 'room_activated') {
             setIsRoomInactive(false);
             validateAndConnect(true);
+          } else if (data.event === 'room_expired') {
+            setError('이 방은 생성 후 24시간이 지나 만료되었습니다.');
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('glowwave_last_joined_room_id');
+            }
+            setLoading(false);
           }
         } catch (err) {
           console.error('[Room] SSE parse error:', err);

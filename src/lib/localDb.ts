@@ -32,7 +32,40 @@ export const localDb = {
   clients: globalForRoomStore.clients,
   currentStates: globalForRoomStore.currentStates,
 
+  cleanupExpiredRooms(): void {
+    const now = new Date();
+    const expiryPeriodMs = 24 * 60 * 60 * 1000; // 24 hours
+
+    for (const [roomId, room] of this.rooms.entries()) {
+      const createdAt = new Date(room.created_at);
+      if (now.getTime() - createdAt.getTime() > expiryPeriodMs) {
+        console.log(`[localDb] Expiring room: ${roomId} created at ${room.created_at}`);
+        
+        // Notify any active clients that the room has expired
+        this.broadcastEvent(roomId, { event: 'room_expired', room_id: roomId });
+        
+        // Close all client connections
+        const clientList = this.clients.get(roomId);
+        if (clientList) {
+          clientList.forEach((client) => {
+            try {
+              client.controller.close();
+            } catch (err) {
+              // Ignore
+            }
+          });
+          this.clients.delete(roomId);
+        }
+        
+        // Delete state and room itself
+        this.currentStates.delete(roomId);
+        this.rooms.delete(roomId);
+      }
+    }
+  },
+
   createRoom(roomId: string, email: string, tier: TierType, hostSessionToken: string): Room {
+    this.cleanupExpiredRooms();
     const config = TIER_CONFIGS[tier];
     const newRoom: Room = {
       id: roomId,
@@ -58,10 +91,12 @@ export const localDb = {
   },
 
   getRoom(roomId: string): Room | undefined {
+    this.cleanupExpiredRooms();
     return this.rooms.get(roomId);
   },
 
   getRoomsByEmail(email: string): Room[] {
+    this.cleanupExpiredRooms();
     return Array.from(this.rooms.values()).filter(
       (room) => room.email.toLowerCase() === email.toLowerCase() && room.status === 'active'
     );

@@ -18,6 +18,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { Preset, TierType, TIER_CONFIGS, TierConfig } from '@/lib/types';
+import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 
 export default function HostSetup() {
   const router = useRouter();
@@ -108,6 +109,7 @@ export default function HostSetup() {
         // Save presets and authorization to LocalStorage
         localStorage.setItem(`glowwave_presets_${data.room_id}`, JSON.stringify(presets));
         localStorage.setItem(`glowwave_token_${data.room_id}`, data.host_session_token);
+        localStorage.setItem('glowwave_active_host_room_id', data.room_id);
         
         // Wait briefly for style simulation and redirect
         setTimeout(() => {
@@ -151,6 +153,7 @@ export default function HostSetup() {
       // Save presets and authorization to LocalStorage
       localStorage.setItem(`glowwave_presets_${createdRoomInfo.room_id}`, JSON.stringify(presets));
       localStorage.setItem(`glowwave_token_${createdRoomInfo.room_id}`, createdRoomInfo.host_session_token);
+      localStorage.setItem('glowwave_active_host_room_id', createdRoomInfo.room_id);
 
       setTimeout(() => {
         setIsProcessing(false);
@@ -318,12 +321,50 @@ export default function HostSetup() {
                   </div>
                 </div>
               </div>
+
+              {/* 글자 크기 및 폰트 커스텀 */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">글자 크기 비율</label>
+                  <select
+                    value={presets[selectedPresetIndex].font_size || 'auto'}
+                    onChange={(e) => handleUpdatePreset('font_size', e.target.value)}
+                    className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="auto">자동 맞춤 (Auto)</option>
+                    <option value="small">작게 (80%)</option>
+                    <option value="medium">중간 (100%)</option>
+                    <option value="large">크게 (140%)</option>
+                    <option value="huge">매우크게 (180%)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
+                  <select
+                    value={presets[selectedPresetIndex].font_family || 'sans'}
+                    onChange={(e) => handleUpdatePreset('font_family', e.target.value)}
+                    className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="sans">기본 고딕 (Sans)</option>
+                    <option value="serif">명조체 (Serif)</option>
+                    <option value="neon">네온 글래스 (Neon)</option>
+                    <option value="dot">레트로 도트 (Dot)</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Email input & Tier Options */}
+        {/* Right Column: Live Preview & Email input & Tier Options */}
         <div className="lg:col-span-5 flex flex-col gap-6">
+          {/* Live Signboard Preview */}
+          <div className="glass-effect rounded-2xl p-6 flex flex-col items-center">
+            <span className="text-[10px] font-mono text-zinc-500 uppercase mb-4 tracking-wider">실시간 연출 미리보기 (Landscape Preview)</span>
+            <LandscapePhoneMockup preset={presets[selectedPresetIndex]} />
+          </div>
+
           <form onSubmit={handleStartSetup} className="glass-effect rounded-2xl p-6 flex flex-col gap-6">
             <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
               <Layers className="w-5 h-5 text-indigo-400" />
@@ -426,6 +467,10 @@ export default function HostSetup() {
                   <p className="text-sm text-zinc-400">
                     선택하신 <span className="text-white font-semibold">{TIER_CONFIGS[selectedTier].name}</span> 방을 생성합니다.
                   </p>
+                </div>
+
+                <div className="flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl my-1">
+                  <LandscapePhoneMockup preset={presets[selectedPresetIndex]} />
                 </div>
 
                 <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 text-left max-w-xs mx-auto w-full text-xs flex flex-col gap-2">
