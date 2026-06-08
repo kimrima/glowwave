@@ -19,6 +19,9 @@ export async function GET(
     });
   }
 
+  // Extract role query parameter to ignore host connections in audience counts
+  const role = request.nextUrl.searchParams.get('role') || 'audience';
+
   // Set up ReadableStream for Server-Sent Events (SSE)
   let clientId = '';
   const stream = new ReadableStream({
@@ -26,7 +29,7 @@ export async function GET(
       clientId = crypto.randomUUID();
       
       // Register SSE client
-      localDb.addClient(roomId, clientId, controller);
+      localDb.addClient(roomId, clientId, controller, role);
 
       // Send initial connection details & current signboard state
       const currentState = localDb.getCurrentState(roomId);

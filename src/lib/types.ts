@@ -6,6 +6,8 @@ export interface Preset {
   text_color: string;
   effect: EffectType;
   speed: number; // Duration in milliseconds or scroll speed indicator
+  font_size?: 'auto' | 'small' | 'medium' | 'large' | 'huge';
+  font_family?: 'sans' | 'serif' | 'neon' | 'dot';
 }
 
 export type TierType = 'free' | 'lite' | 'pro' | 'max';

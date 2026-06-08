@@ -80,3 +80,15 @@ body {
   border-color: rgba(255, 255, 255, 0.15);
 }
 
+/* Neon Glow Effect style */
+.font-neon {
+  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 45px currentColor;
+}
+
+/* Monospace Retro Dot style */
+.font-dot {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 950 !important;
+  letter-spacing: 0.05em;
+}
+

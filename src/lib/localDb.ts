@@ -3,6 +3,7 @@ import { Room, Payment, Preset, TierType, TIER_CONFIGS } from './types';
 interface SSEClient {
   id: string;
   controller: ReadableStreamDefaultController;
+  role?: string;
 }
 
 const globalForRoomStore = global as unknown as {
@@ -111,11 +112,11 @@ export const localDb = {
     this.currentStates.set(roomId, state);
   },
 
-  addClient(roomId: string, clientId: string, controller: ReadableStreamDefaultController): void {
+  addClient(roomId: string, clientId: string, controller: ReadableStreamDefaultController, role?: string): void {
     if (!this.clients.has(roomId)) {
       this.clients.set(roomId, []);
     }
-    this.clients.get(roomId)!.push({ id: clientId, controller });
+    this.clients.get(roomId)!.push({ id: clientId, controller, role });
     
     // Notify room of connection count update
     this.broadcastEvent(roomId, { event: 'presence', count: this.getClientCount(roomId) });
@@ -134,7 +135,7 @@ export const localDb = {
   },
 
   getClientCount(roomId: string): number {
-    return this.clients.get(roomId)?.length || 0;
+    return this.clients.get(roomId)?.filter((c) => c.role !== 'host').length || 0;
   },
 
   broadcastEvent(roomId: string, data: any): void {

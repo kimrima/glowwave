@@ -15,7 +15,9 @@ import {
   RefreshCw,
   Sliders,
   Volume2,
-  Tv
+  Tv,
+  Edit3,
+  X
 } from 'lucide-react';
 import { Preset, Room, SignalPayload, EffectType } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -38,6 +40,10 @@ export default function HostDashboard() {
   const [activeParticipants, setActiveParticipants] = useState<number>(0);
   const [copied, setCopied] = useState(false);
   const [channelStatus, setChannelStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
+
+  // Preset Live Edit States
+  const [editingPresetIndex, setEditingPresetIndex] = useState<number | null>(null);
+  const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
 
   // Supabase & SSE references
   const supabaseChannelRef = useRef<any>(null);
@@ -155,11 +161,17 @@ export default function HostDashboard() {
       channel
         .on('presence', { event: 'sync' }, () => {
           const presenceState = channel.presenceState();
-          // Count total viewers subscribed to this room channel
-          const totalConnected = Object.keys(presenceState).reduce((acc, key) => {
-            return acc + presenceState[key].length;
-          }, 0);
-          setActiveParticipants(totalConnected);
+          let count = 0;
+          Object.keys(presenceState).forEach((key) => {
+            const presences = presenceState[key] as any[];
+            presences.forEach((p) => {
+              // Count only actual audience members
+              if (p.role !== 'host') {
+                count++;
+              }
+            });
+          });
+          setActiveParticipants(count);
         })
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
@@ -173,11 +185,11 @@ export default function HostDashboard() {
           }
         });
     } else {
-      // Fallback to local Server-Sent Events stream
+      // Fallback to local Server-Sent Events stream (pass role=host to ignore in count)
       console.log('[Dashboard] Connecting via Local SSE Fallback Stream');
       setChannelStatus('connecting');
       
-      const sseUrl = `/api/room/${roomCode}/stream`;
+      const sseUrl = `/api/room/${roomCode}/stream?role=host`;
       const eventSource = new EventSource(sseUrl);
       eventSourceRef.current = eventSource;
 
@@ -354,10 +366,10 @@ export default function HostDashboard() {
               {presets.map((preset, index) => {
                 const isActive = activePresetIndex === index;
                 return (
-                  <button
+                  <div
                     key={index}
                     onClick={() => triggerPreset(preset, index)}
-                    className={`h-28 rounded-2xl border flex flex-col justify-between p-4 relative overflow-hidden transition-all active:scale-95 ${
+                    className={`h-28 rounded-2xl border flex flex-col justify-between p-4 relative overflow-hidden transition-all active:scale-95 cursor-pointer ${
                       isActive 
                         ? 'border-white ring-2 ring-indigo-400/50 scale-[1.03] shadow-lg shadow-indigo-500/10' 
                         : 'border-white/5 bg-zinc-950/40 hover:border-white/20'
@@ -373,11 +385,30 @@ export default function HostDashboard() {
                       </div>
                     </div>
 
-                    {/* Effect Indicator */}
-                    <div className="absolute top-4 right-4 text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-zinc-400 uppercase font-semibold">
-                      {preset.effect === 'none' ? 'static' : preset.effect === 'blink' ? 'blink' : 'marquee'}
+                    {/* Preset Custom styles indicators */}
+                    <div className="absolute top-4 right-4 flex gap-1 items-center">
+                      <span className="text-[8px] px-1.5 py-0.5 rounded bg-white/10 text-indigo-200 capitalize font-mono">
+                        {preset.font_family || 'sans'}
+                      </span>
+                      <span className="text-[8px] px-1.5 py-0.5 rounded bg-white/5 text-zinc-400 uppercase font-semibold">
+                        {preset.effect === 'none' ? 'static' : preset.effect === 'blink' ? 'blink' : 'marquee'}
+                      </span>
                     </div>
-                  </button>
+
+                    {/* Edit button card overlay */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Avoid triggering color change
+                        setEditingPresetIndex(index);
+                        setEditingPreset({ ...preset });
+                      }}
+                      className="absolute bottom-3 right-3 p-1.5 rounded-lg bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:bg-white/15 hover:scale-110 active:scale-90 transition-all z-20 cursor-pointer"
+                      title="프리셋 세부 수정"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -391,30 +422,57 @@ export default function HostDashboard() {
             </div>
             
             <div className="grid sm:grid-cols-12 gap-4 items-end">
-              <div className="sm:col-span-5">
+              <div className="sm:col-span-3">
                 <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-2">실시간 자막 입력</label>
                 <input
                   id="live-text"
                   type="text"
                   placeholder="구호 입력 (예: 헤쳐모여!)"
-                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm font-semibold"
+                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-xl px-3.5 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm font-semibold"
                 />
               </div>
 
-              <div className="sm:col-span-4">
-                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-2">배경 테마 색상</label>
+              <div className="sm:col-span-2">
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-2">배경 테마</label>
                 <select
                   id="live-color"
-                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-xl px-3 py-3 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-xl px-2.5 py-3 text-white text-xs focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="#EF4444">빨간색 (Red)</option>
-                  <option value="#3B82F6">파란색 (Blue)</option>
-                  <option value="#10B981">초록색 (Green)</option>
-                  <option value="#8B5CF6">보라색 (Purple)</option>
-                  <option value="#F97316">주황색 (Orange)</option>
-                  <option value="#EC4899">분홍색 (Pink)</option>
+                  <option value="#EF4444">빨강 (Red)</option>
+                  <option value="#3B82F6">파랑 (Blue)</option>
+                  <option value="#10B981">초록 (Green)</option>
+                  <option value="#8B5CF6">보라 (Purple)</option>
+                  <option value="#F97316">주황 (Orange)</option>
+                  <option value="#EC4899">분홍 (Pink)</option>
                   <option value="#FFFFFF">흰색 (White)</option>
                   <option value="#0B0B0F">검은색 (Black)</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-2">글자 크기</label>
+                <select
+                  id="live-font-size"
+                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-xl px-2.5 py-3 text-white text-xs focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="auto">자동 (Auto)</option>
+                  <option value="small">작게 (Small)</option>
+                  <option value="medium">중간 (Medium)</option>
+                  <option value="large">크게 (Large)</option>
+                  <option value="huge">매우크게 (Huge)</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-[10px] font-bold text-zinc-500 uppercase mb-2">글꼴 스타일</label>
+                <select
+                  id="live-font-family"
+                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-xl px-2.5 py-3 text-white text-xs focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="sans">기본 고딕 (Sans)</option>
+                  <option value="serif">명조체 (Serif)</option>
+                  <option value="neon">네온글로우 (Neon)</option>
+                  <option value="dot">레트로도트 (Dot)</option>
                 </select>
               </div>
 
@@ -424,6 +482,8 @@ export default function HostDashboard() {
                   onClick={() => {
                     const textVal = (document.getElementById('live-text') as HTMLInputElement)?.value || 'LET\'S GO';
                     const colorVal = (document.getElementById('live-color') as HTMLSelectElement)?.value || '#EF4444';
+                    const sizeVal = (document.getElementById('live-font-size') as HTMLSelectElement)?.value as any || 'auto';
+                    const familyVal = (document.getElementById('live-font-family') as HTMLSelectElement)?.value as any || 'sans';
                     
                     const isWhite = colorVal === '#FFFFFF';
                     const customPreset: Preset = {
@@ -431,7 +491,9 @@ export default function HostDashboard() {
                       text: textVal,
                       text_color: isWhite ? '#000000' : '#FFFFFF',
                       effect: textVal.length > 8 ? 'marquee' : 'none',
-                      speed: 4000
+                      speed: 4000,
+                      font_size: sizeVal,
+                      font_family: familyVal
                     };
                     triggerPreset(customPreset, -1);
                   }}
@@ -501,6 +563,225 @@ export default function HostDashboard() {
       <footer className="border-t border-white/5 bg-zinc-950 py-4 text-center text-[10px] text-zinc-600 font-mono">
         Host Recovery Email: {room?.email} · Session Token: {token?.substring(0, 8)}...
       </footer>
+
+      {/* Preset Customization & Live Preview Modal */}
+      {editingPresetIndex !== null && editingPreset !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/85 backdrop-blur-sm" onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }} />
+          
+          <div className="glass-effect rounded-2xl w-full max-w-3xl p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150 border border-white/10 grid md:grid-cols-2 gap-6">
+            
+            {/* Modal Left Column: Editor controls */}
+            <div className="flex flex-col gap-5">
+              <div className="flex justify-between items-center pb-3 border-b border-white/5">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Sliders className="w-4.5 h-4.5 text-indigo-400" />
+                  프리셋 P{editingPresetIndex + 1} 세부 수정
+                </h3>
+                <button 
+                  onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }}
+                  className="text-zinc-500 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Color Grid */}
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">배경 색상</label>
+                <div className="grid grid-cols-6 gap-1.5">
+                  {[
+                    '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
+                    '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'
+                  ].map((hex) => (
+                    <button
+                      key={hex}
+                      onClick={() => setEditingPreset(prev => ({ ...prev!, bg_color: hex }))}
+                      className={`h-7 rounded-md border transition-all ${
+                        editingPreset.bg_color === hex 
+                          ? 'border-white scale-110 shadow-md' 
+                          : 'border-transparent hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: hex }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Text Input */}
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">출력 문구</label>
+                <input
+                  type="text"
+                  value={editingPreset.text}
+                  onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value }))}
+                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3.5 py-2 text-white focus:outline-none focus:border-indigo-500 text-sm font-semibold"
+                  maxLength={15}
+                />
+              </div>
+
+              {/* Text Color Toggle */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">글자 색상</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#FFFFFF' }))}
+                      className={`flex-1 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                        editingPreset.text_color === '#FFFFFF'
+                          ? 'border-white bg-white text-black'
+                          : 'border-white/10 bg-transparent text-zinc-400'
+                      }`}
+                    >
+                      밝은색
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#000000' }))}
+                      className={`flex-1 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                        editingPreset.text_color === '#000000'
+                          ? 'border-white bg-white text-black'
+                          : 'border-white/10 bg-transparent text-zinc-400'
+                      }`}
+                    >
+                      어두운색
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">글꼴 스타일</label>
+                  <select
+                    value={editingPreset.font_family || 'sans'}
+                    onChange={(e) => setEditingPreset(prev => ({ ...prev!, font_family: e.target.value as any }))}
+                    className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="sans">기본 고딕 (Sans)</option>
+                    <option value="serif">명조체 (Serif)</option>
+                    <option value="neon">네온 글래스 (Neon)</option>
+                    <option value="dot">레트로 도트 (Dot)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Font Size & Motion Effect */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">글자 크기 비율</label>
+                  <select
+                    value={editingPreset.font_size || 'auto'}
+                    onChange={(e) => setEditingPreset(prev => ({ ...prev!, font_size: e.target.value as any }))}
+                    className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="auto">자동 맞춤 (Auto)</option>
+                    <option value="small">작게 (80%)</option>
+                    <option value="medium">중간 (100%)</option>
+                    <option value="large">크게 (140%)</option>
+                    <option value="huge">매우크게 (180%)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">모션 효과</label>
+                  <select
+                    value={editingPreset.effect}
+                    onChange={(e) => setEditingPreset(prev => ({ ...prev!, effect: e.target.value as any }))}
+                    className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-2.5 py-1.5 text-white text-xs focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="none">효과 없음 (Static)</option>
+                    <option value="blink">전체 화면 깜빡임 (Blink)</option>
+                    <option value="marquee">전광판 가로 흐르기 (Marquee)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-2.5 mt-2">
+                <button
+                  type="button"
+                  onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }}
+                  className="flex-1 py-3 rounded-xl bg-white/5 text-zinc-300 font-semibold hover:bg-white/10 transition-all text-xs"
+                >
+                  취소
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (editingPresetIndex === null || !editingPreset) return;
+                    const updated = [...presets];
+                    updated[editingPresetIndex] = editingPreset;
+                    setPresets(updated);
+                    localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
+                    // Instantly trigger/broadcast this preset!
+                    triggerPreset(editingPreset, editingPresetIndex);
+                    setEditingPresetIndex(null);
+                    setEditingPreset(null);
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-white text-black font-extrabold hover:bg-zinc-200 transition-all text-xs"
+                >
+                  저장 및 즉시 송출 ⚡
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Right Column: Live phone scroller preview */}
+            <div className="bg-[#0B0B0F] rounded-2xl border border-white/5 p-4 flex flex-col justify-center items-center text-center">
+              <span className="text-[10px] font-mono text-zinc-500 uppercase mb-4 tracking-wider">실시간 연출 미리보기 (Device Preview)</span>
+              
+              <div className="relative w-[220px] h-[340px] bg-black rounded-[38px] border-4 border-zinc-800 shadow-xl overflow-hidden p-2.5 flex flex-col justify-between">
+                {/* Punch-hole camera */}
+                <div className="absolute top-3.5 left-1/2 -translate-x-1/2 w-24 h-4 bg-black rounded-full z-30" />
+
+                {/* Display mock */}
+                <div 
+                  className={`w-full h-full rounded-[28px] overflow-hidden relative flex items-center justify-center transition-colors duration-200 ${
+                    editingPreset.effect === 'blink' ? 'animate-blink' : ''
+                  }`}
+                  style={{ 
+                    backgroundColor: editingPreset.bg_color,
+                    '--blink-duration': `${editingPreset.speed || 800}ms`
+                  } as React.CSSProperties}
+                >
+                  {editingPreset.effect === 'marquee' ? (
+                    <div className="w-full overflow-hidden whitespace-nowrap flex items-center">
+                      <span 
+                        className={`animate-marquee inline-block font-black text-2xl select-none uppercase ${
+                          editingPreset.font_family === 'neon' ? 'font-neon' : editingPreset.font_family === 'dot' ? 'font-dot' : ''
+                        }`}
+                        style={{ 
+                          color: editingPreset.text_color,
+                          fontFamily: editingPreset.font_family === 'serif' ? 'Georgia, serif' : undefined,
+                          '--marquee-duration': '5s'
+                        } as React.CSSProperties}
+                      >
+                        {editingPreset.text || 'GlowWave'} &nbsp;&nbsp;&nbsp;&nbsp; {editingPreset.text || 'GlowWave'}
+                      </span>
+                    </div>
+                  ) : (
+                    <div 
+                      className={`font-black text-center break-all px-4 select-none max-w-full leading-none tracking-tight ${
+                        editingPreset.font_family === 'neon' ? 'font-neon' : editingPreset.font_family === 'dot' ? 'font-dot' : ''
+                      }`}
+                      style={{ 
+                        color: editingPreset.text_color,
+                        fontFamily: editingPreset.font_family === 'serif' ? 'Georgia, serif' : undefined,
+                        fontSize: editingPreset.font_size === 'small' ? '1rem' 
+                                : editingPreset.font_size === 'medium' ? '1.5rem'
+                                : editingPreset.font_size === 'large' ? '2rem'
+                                : editingPreset.font_size === 'huge' ? '2.5rem'
+                                : '1.8rem' // auto default mockup sizing
+                      }}
+                    >
+                      {editingPreset.text || 'GlowWave'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

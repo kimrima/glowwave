@@ -20,6 +20,11 @@ export default function AudienceRoom() {
   const rawRoomId = params.room_id as string;
   const roomId = rawRoomId ? rawRoomId.toUpperCase() : '';
 
+  // Container ref for Fullscreen API
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [showSafariTip, setShowSafariTip] = useState(false); // Hide by default, show on click or first load
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
   // Current Signboard Display State
   const [currentPreset, setCurrentPreset] = useState<Preset>({
     bg_color: '#0B0B0F',
@@ -38,6 +43,41 @@ export default function AudienceRoom() {
   const wakeLockRef = useRef<any>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const supabaseChannelRef = useRef<any>(null);
+
+  // Fullscreen Change Listener
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    
+    // Automatically show Safari hint to iOS users on first render
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    if (isIOS) {
+      setShowSafariTip(true);
+    }
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = async () => {
+    if (!containerRef.current) return;
+    try {
+      if (!document.fullscreenElement) {
+        await containerRef.current.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    } catch (err) {
+      console.warn('Fullscreen API block:', err);
+      // Fallback hint
+      setShowSafariTip(true);
+    }
+  };
 
   // 1. Initial Room Validations (Existence, Activation, Hard Cap limits)
   const validateAndConnect = async (isReconnect = false) => {
@@ -147,6 +187,8 @@ export default function AudienceRoom() {
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
             console.log('[Room] Subscribed to Supabase channels');
+            // Track presence as role=audience so host can filter and count
+            channel.track({ role: 'audience', joined_at: new Date().toISOString() });
           }
         });
         
@@ -314,7 +356,7 @@ export default function AudienceRoom() {
   }
 
   return (
-    <div className="fixed inset-0 overflow-hidden select-none bg-black">
+    <div ref={containerRef} className="fixed inset-0 overflow-hidden select-none bg-black">
       
       {/* 6. Landscape forced Warning overlay (Locks with CSS orientation media query) */}
       <div className="fixed inset-0 bg-[#0B0B0F] flex flex-col justify-center items-center text-center px-6 text-white z-50 md:hidden portrait-overlay">
@@ -337,6 +379,48 @@ export default function AudienceRoom() {
         }
       `}</style>
 
+      {/* Floating Control Toolbar */}
+      <div className="absolute top-6 left-6 z-40 flex items-center gap-2">
+        <button
+          onClick={toggleFullscreen}
+          className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
+        >
+          {isFullscreen ? '화면 축소 📱' : '전체화면 전환 📺'}
+        </button>
+        <button
+          onClick={() => setShowSafariTip(true)}
+          className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
+        >
+          아이폰 사파리 팁 💡
+        </button>
+      </div>
+
+      {/* iOS Safari Home Screen Tooltip */}
+      {showSafariTip && (
+        <div className="fixed top-6 left-6 right-6 md:left-auto md:w-80 bg-black/95 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-xs text-zinc-300 shadow-2xl z-50 animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-bold text-white flex items-center gap-1.5">
+              <Smartphone className="w-4 h-4 text-indigo-400" />
+              아이폰 Safari 전체화면 팁
+            </span>
+            <button 
+              onClick={() => setShowSafariTip(false)} 
+              className="text-zinc-500 hover:text-white font-bold font-mono text-sm px-1.5"
+            >
+              ×
+            </button>
+          </div>
+          <p className="leading-relaxed mb-3 text-zinc-400">
+            아이폰 사파리 브라우저는 기본 주소창과 탭이 숨겨지지 않습니다. 아래 방법으로 앱처럼 실행하시면 완벽한 전체화면으로 이용 가능합니다!
+          </p>
+          <div className="bg-white/5 rounded-xl p-3 text-[10px] flex flex-col gap-2 text-zinc-400 leading-normal border border-white/5">
+            <div>1. 사파리 화면 하단 **[공유 버튼 📤]**을 누릅니다.</div>
+            <div>2. 목록 중 **[홈 화면에 추가 ➕]**를 클릭합니다.</div>
+            <div>3. 바탕화면에 설치된 **아이콘**을 눌러 실행하면 완벽한 전체화면 앱으로 구동됩니다!</div>
+          </div>
+        </div>
+      )}
+
       {/* Main Display Screen */}
       <div 
         className={`w-full h-full flex items-center justify-center transition-colors duration-300 ${
@@ -350,9 +434,17 @@ export default function AudienceRoom() {
         {currentPreset.effect === 'marquee' ? (
           <div className="w-full overflow-hidden whitespace-nowrap flex items-center">
             <span 
-              className="animate-marquee inline-block font-black select-none text-[clamp(2.5rem,20vw,18rem)] leading-none"
+              className={`animate-marquee inline-block font-black select-none leading-none ${
+                currentPreset.font_family === 'neon' ? 'font-neon' : currentPreset.font_family === 'dot' ? 'font-dot' : ''
+              }`}
               style={{ 
                 color: currentPreset.text_color,
+                fontFamily: currentPreset.font_family === 'serif' ? 'Georgia, serif' : undefined,
+                fontSize: currentPreset.font_size === 'small' ? 'clamp(1rem, 7vw, 5rem)'
+                        : currentPreset.font_size === 'medium' ? 'clamp(1.5rem, 11vw, 9rem)'
+                        : currentPreset.font_size === 'large' ? 'clamp(2rem, 18vw, 16rem)'
+                        : currentPreset.font_size === 'huge' ? 'clamp(3rem, 24vw, 22rem)'
+                        : 'clamp(2.5rem,20vw,18rem)', // auto default
                 '--marquee-duration': `${currentPreset.speed || 6000}ms`
               } as React.CSSProperties}
             >
@@ -361,10 +453,17 @@ export default function AudienceRoom() {
           </div>
         ) : (
           <div 
-            className="font-black text-center break-all px-8 select-none max-w-full leading-none tracking-tighter"
+            className={`font-black text-center break-all px-8 select-none max-w-full leading-none tracking-tighter ${
+              currentPreset.font_family === 'neon' ? 'font-neon' : currentPreset.font_family === 'dot' ? 'font-dot' : ''
+            }`}
             style={{ 
               color: currentPreset.text_color,
-              fontSize: 'clamp(2rem, 16vw, 15rem)'
+              fontFamily: currentPreset.font_family === 'serif' ? 'Georgia, serif' : undefined,
+              fontSize: currentPreset.font_size === 'small' ? 'clamp(1rem, 7vw, 5rem)'
+                      : currentPreset.font_size === 'medium' ? 'clamp(1.5rem, 11vw, 9rem)'
+                      : currentPreset.font_size === 'large' ? 'clamp(2rem, 18vw, 16rem)'
+                      : currentPreset.font_size === 'huge' ? 'clamp(3rem, 24vw, 22rem)'
+                      : 'clamp(2rem, 16vw, 15rem)' // auto default
             }}
           >
             {currentPreset.text}
