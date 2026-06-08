@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    const rooms = localDb.getRoomsByEmail(email);
+    const rooms = await localDb.getRoomsByEmail(email);
 
     if (rooms.length === 0) {
       return NextResponse.json({

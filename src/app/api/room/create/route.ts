@@ -25,20 +25,20 @@ export async function POST(request: Request) {
 
     // Prevent collision
     let attempts = 0;
-    while (localDb.getRoom(roomId) && attempts < 100) {
+    while ((await localDb.getRoom(roomId)) && attempts < 100) {
       roomId = generateRoomId();
       attempts++;
     }
 
     // Create room
-    const room = localDb.createRoom(roomId, email, tier, hostSessionToken);
+    const room = await localDb.createRoom(roomId, email, tier, hostSessionToken);
     
     // Set status based on Tier. Paid tiers start as 'inactive' until payment success
     if (tier !== 'free') {
       room.status = 'inactive';
       const config = TIER_CONFIGS[tier];
       // Log payment record in DB
-      localDb.addPayment(email, hostSessionToken, roomId, tier, config.priceKrw, 'pending');
+      await localDb.addPayment(email, hostSessionToken, roomId, tier, config.priceKrw, 'pending');
     }
 
     return NextResponse.json({

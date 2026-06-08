@@ -121,6 +121,10 @@ export default function AudienceRoom() {
 
       const roomData = await response.json();
       
+      if (roomData.current_state) {
+        setCurrentPreset(roomData.current_state);
+      }
+      
       // If room is inactive (pending payment status)
       if (roomData.status !== 'active') {
         setIsRoomInactive(true);

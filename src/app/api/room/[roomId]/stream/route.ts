@@ -11,7 +11,7 @@ export async function GET(
   const resolvedParams = await params;
   const roomId = (resolvedParams.roomId as string).toUpperCase();
 
-  const room = localDb.getRoom(roomId);
+  const room = await localDb.getRoom(roomId);
   if (!room) {
     return new Response(JSON.stringify({ error: 'Room not found' }), {
       status: 404,
@@ -25,14 +25,14 @@ export async function GET(
   // Set up ReadableStream for Server-Sent Events (SSE)
   let clientId = '';
   const stream = new ReadableStream({
-    start(controller) {
+    async start(controller) {
       clientId = crypto.randomUUID();
       
       // Register SSE client
       localDb.addClient(roomId, clientId, controller, role);
 
       // Send initial connection details & current signboard state
-      const currentState = localDb.getCurrentState(roomId);
+      const currentState = await localDb.getCurrentState(roomId);
       const initialPayload = {
         event: 'init',
         state: currentState,

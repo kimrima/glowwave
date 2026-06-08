@@ -9,7 +9,7 @@ export async function GET(
     const resolvedParams = await params;
     const roomId = (resolvedParams.roomId as string).toUpperCase();
 
-    const room = localDb.getRoom(roomId);
+    const room = await localDb.getRoom(roomId);
     if (!room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }

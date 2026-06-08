@@ -120,6 +120,10 @@ export default function HostDashboard() {
           created_at: roomData.created_at,
         });
 
+        if (roomData.current_state) {
+          setCurrentBroadcastPreset(roomData.current_state);
+        }
+
         // Load presets from localStorage
         const savedPresets = localStorage.getItem(`glowwave_presets_${roomId}`);
         let loadedPresets: Preset[] = [];
@@ -249,12 +253,16 @@ export default function HostDashboard() {
     setActivePresetIndex(index);
     setCurrentBroadcastPreset(preset);
 
-    if (isSupabaseConfigured() && supabaseChannelRef.current) {
+    if (isSupabaseConfigured() && supabaseChannelRef.current && supabase) {
       // Send directly over WebSockets in-memory broadcast
       supabaseChannelRef.current.send({
         type: 'broadcast',
         event: 'render',
         payload: preset
+      });
+      // Also update the current state in Supabase so newly joined spectators sync properly
+      supabase.from('rooms').update({ current_state: preset }).eq('id', roomId).then(({ error }) => {
+        if (error) console.error('[Dashboard] Error persisting current state:', error);
       });
       console.log(`[Dashboard] Broadcast preset: ${preset.text} via Supabase Channel`);
     } else {

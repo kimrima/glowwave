@@ -16,7 +16,7 @@ export async function POST(
       preset: Preset;
     };
 
-    const room = localDb.getRoom(roomId);
+    const room = await localDb.getRoom(roomId);
     if (!room) {
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
@@ -31,7 +31,7 @@ export async function POST(
     }
 
     // Save state in DB/memory
-    localDb.setCurrentState(roomId, preset);
+    await localDb.setCurrentState(roomId, preset);
 
     // Broadcast update to all client streams
     localDb.broadcastEvent(roomId, {
