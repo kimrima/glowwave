@@ -23,16 +23,17 @@ export async function GET(
     }
 
     if (!room) {
+      const isDbError = !!dbErrorMsg;
       return NextResponse.json({
-        error: 'Room not found',
+        error: isDbError ? '서버 연결 오류' : '방을 찾을 수 없음',
         supabase_configured: dbConfigured,
         database_error: dbErrorMsg,
         suggestion: !dbConfigured
-          ? 'Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY) are missing in Vercel settings. Local mock files do not persist on serverless platforms.'
-          : (dbErrorMsg 
-              ? `Database query failed: "${dbErrorMsg}". Please make sure you executed the SQL script in your Supabase SQL Editor.`
-              : 'The room ID is not found. Check if the rooms table in Supabase has an RLS policy blocking SELECT queries for this room (e.g. inactive rooms).')
-      }, { status: 404 });
+          ? '서비스 설정(환경 변수)이 누락되었습니다. 플랫폼 설정을 확인해 주세요.'
+          : (isDbError 
+              ? '서버 데이터베이스와의 연결에 실패했습니다. 일시적인 장애일 수 있으니 잠시 후 다시 시도해 주세요.'
+              : '존재하지 않거나 생성 후 24시간이 경과하여 만료된 방 번호입니다. 방 코드를 확인해 주세요.')
+      }, { status: isDbError ? 500 : 404 });
     }
 
     return NextResponse.json({

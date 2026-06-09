@@ -114,11 +114,18 @@ export default function AudienceRoom() {
     try {
       const response = await fetch(`/api/room/${roomId}/status`);
       if (!response.ok) {
+        // If it is a reconnect and the server returned a database or server error (>= 500), 
+        // ignore it silently to prevent disrupting the active screen.
+        if (isReconnect && response.status >= 500) {
+          console.warn('[Room] Reconnect status check returned server error:', response.status);
+          return;
+        }
+
         let errorMsg = '방 정보를 불러오는 과정에서 오류가 발생했습니다.';
         try {
           const errData = await response.json();
           if (errData.suggestion) {
-            errorMsg = `${errData.error || '오류'}: ${errData.suggestion}`;
+            errorMsg = errData.suggestion; // Use the clean user-facing suggestion directly
           } else if (response.status === 404) {
             errorMsg = '존재하지 않거나 만료된 방 번호입니다. 방은 생성 후 24시간 동안만 유지됩니다.';
           }
@@ -184,6 +191,10 @@ export default function AudienceRoom() {
 
     } catch (err) {
       console.error(err);
+      if (isReconnect) {
+        console.warn('[Room] Reconnect network check failed. Ignoring to let sockets/streams retry.');
+        return;
+      }
       setError('네트워크 상태를 확인해 주세요.');
       setLoading(false);
     }

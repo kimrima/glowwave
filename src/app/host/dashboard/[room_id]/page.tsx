@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { 
@@ -36,6 +36,7 @@ export default function HostDashboard() {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
+  const [isNetworkError, setIsNetworkError] = useState(false);
   
   // Upgrade Plan Modal States
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
@@ -94,107 +95,8 @@ export default function HostDashboard() {
     }
   }, [searchParams, roomId]);
 
-  // 2. Fetch Room Details & Initialize Real-time Connection
-  useEffect(() => {
-    if (!roomId || !token) {
-      if (token === null && loading === false) {
-        setIsAuthorized(false);
-      }
-      return;
-    }
-
-    const initDashboard = async () => {
-      try {
-        const response = await fetch(`/api/room/${roomId}/status`);
-        if (!response.ok) {
-          let errorMsg = '이 방의 생성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오.';
-          try {
-            const errData = await response.json();
-            if (errData.suggestion) {
-              errorMsg = `${errData.error || '오류'}: ${errData.suggestion}`;
-            }
-          } catch (e) {}
-          setAuthErrorMessage(errorMsg);
-
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('glowwave_active_host_room_id');
-            localStorage.removeItem(`glowwave_presets_${roomId}`);
-            localStorage.removeItem(`glowwave_token_${roomId}`);
-          }
-          setIsAuthorized(false);
-          setLoading(false);
-          return;
-        }
-        
-        const roomData = await response.json();
-        setRoom({
-          id: roomData.room_id,
-          host_session_token: token, // Placeholder
-          email: roomData.email,
-          tier: roomData.tier,
-          status: roomData.status,
-          max_participants: roomData.max_participants,
-          created_at: roomData.created_at,
-        });
-
-        if (roomData.current_state) {
-          setCurrentBroadcastPreset(roomData.current_state);
-        }
-
-        // Load presets from localStorage
-        const savedPresets = localStorage.getItem(`glowwave_presets_${roomId}`);
-        let loadedPresets: Preset[] = [];
-        if (savedPresets) {
-          loadedPresets = JSON.parse(savedPresets);
-          setPresets(loadedPresets);
-        } else {
-          // Defaults if empty
-          const defaults: Preset[] = [
-            { bg_color: '#EF4444', text: '열정 🔥', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
-            { bg_color: '#3B82F6', text: '파도 타기 🌊', text_color: '#FFFFFF', effect: 'marquee', speed: 4000 },
-            { bg_color: '#EC4899', text: '소리 질러! 🎉', text_color: '#FFFFFF', effect: 'blink', speed: 600 },
-            { bg_color: '#10B981', text: '싱크 클럽 ⚡', text_color: '#FFFFFF', effect: 'blink', speed: 400 },
-            { bg_color: '#F59E0B', text: '박수 👏👏', text_color: '#000000', effect: 'none', speed: 1000 },
-            { bg_color: '#8B5CF6', text: 'GLOW', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
-          ];
-          loadedPresets = defaults;
-          setPresets(defaults);
-          localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(defaults));
-        }
-
-        if (loadedPresets.length > 0) {
-          setCurrentBroadcastPreset(loadedPresets[0]);
-        }
-
-        // Check if token matches (for simulation, check authorization via status api metadata or simple check)
-        // If the database has rooms, we match the token. For mock db, the room status check passes if the room exists
-        setIsAuthorized(true);
-        setLoading(false);
-
-        // 3. Connect Real-time Engine
-        connectRealtime(roomId);
-
-      } catch (err) {
-        console.error('Failed to init dashboard:', err);
-        setIsAuthorized(false);
-        setLoading(false);
-      }
-    };
-
-    initDashboard();
-
-    return () => {
-      // Cleanup SSE or Supabase
-      if (supabaseChannelRef.current && supabase) {
-        supabase.removeChannel(supabaseChannelRef.current);
-      }
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
-    };
-  }, [roomId, token]);
-
-  const connectRealtime = (roomCode: string) => {
+  // 2. Real-time Connection Engine Setup
+  const connectRealtime = useCallback((roomCode: string) => {
     if (isSupabaseConfigured() && supabase) {
       // Connect to Supabase Realtime Channels (Broadcast type)
       console.log('[Dashboard] Connecting via Supabase Realtime Channel');
@@ -262,7 +164,177 @@ export default function HostDashboard() {
         setChannelStatus('disconnected');
       };
     }
-  };
+  }, []);
+
+  // 3. Fetch Room Details & Initialize Dashboard
+  const initDashboard = useCallback(async () => {
+    if (!roomId || !token) {
+      if (token === null && loading === false) {
+        setIsAuthorized(false);
+      }
+      return;
+    }
+
+    setLoading(true);
+    setIsNetworkError(false);
+    setAuthErrorMessage(null);
+
+    try {
+      const response = await fetch(`/api/room/${roomId}/status`);
+      if (!response.ok) {
+        let errorMsg = '이 방의 생성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오.';
+        try {
+          const errData = await response.json();
+          if (errData.suggestion) {
+            errorMsg = errData.suggestion; // Directly show the clean user-facing suggestion
+          }
+        } catch (e) {}
+
+        // Clear credentials ONLY if it is a 404 (Room truly does not exist or expired).
+        // If it is a 500/network error, keep credentials so they can retry/refresh!
+        if (response.status === 404) {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('glowwave_active_host_room_id');
+            localStorage.removeItem(`glowwave_presets_${roomId}`);
+            localStorage.removeItem(`glowwave_token_${roomId}`);
+          }
+          setAuthErrorMessage(errorMsg);
+          setIsAuthorized(false);
+        } else {
+          // It's a 500 or other server/database error
+          setAuthErrorMessage(errorMsg);
+          setIsNetworkError(true);
+        }
+        setLoading(false);
+        return;
+      }
+      
+      const roomData = await response.json();
+      setRoom({
+        id: roomData.room_id,
+        host_session_token: token, // Placeholder
+        email: roomData.email,
+        tier: roomData.tier,
+        status: roomData.status,
+        max_participants: roomData.max_participants,
+        created_at: roomData.created_at,
+      });
+
+      if (roomData.current_state) {
+        setCurrentBroadcastPreset(roomData.current_state);
+      }
+
+      // Load presets from localStorage
+      const savedPresets = localStorage.getItem(`glowwave_presets_${roomId}`);
+      let loadedPresets: Preset[] = [];
+      if (savedPresets) {
+        loadedPresets = JSON.parse(savedPresets);
+        setPresets(loadedPresets);
+      } else {
+        // Defaults if empty
+        const defaults: Preset[] = [
+          { bg_color: '#EF4444', text: '열정 🔥', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
+          { bg_color: '#3B82F6', text: '파도 타기 🌊', text_color: '#FFFFFF', effect: 'marquee', speed: 4000 },
+          { bg_color: '#EC4899', text: '소리 질러! 🎉', text_color: '#FFFFFF', effect: 'blink', speed: 600 },
+          { bg_color: '#10B981', text: '싱크 클럽 ⚡', text_color: '#FFFFFF', effect: 'blink', speed: 400 },
+          { bg_color: '#F59E0B', text: '박수 👏👏', text_color: '#000000', effect: 'none', speed: 1000 },
+          { bg_color: '#8B5CF6', text: 'GLOW', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
+        ];
+        loadedPresets = defaults;
+        setPresets(defaults);
+        localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(defaults));
+      }
+
+      if (loadedPresets.length > 0) {
+        setCurrentBroadcastPreset(loadedPresets[0]);
+      }
+
+      setIsAuthorized(true);
+      setLoading(false);
+
+      // Connect Real-time Engine
+      connectRealtime(roomId);
+
+    } catch (err) {
+      console.error('Failed to init dashboard:', err);
+      setAuthErrorMessage('네트워크 연결이 일시적으로 원활하지 않습니다. 인터넷 연결을 확인해 주세요.');
+      setIsNetworkError(true);
+      setLoading(false);
+    }
+  }, [roomId, token, connectRealtime]);
+
+  // 4. Initial Trigger Hook
+  useEffect(() => {
+    initDashboard();
+
+    return () => {
+      // Cleanup SSE or Supabase
+      if (supabaseChannelRef.current && supabase) {
+        supabase.removeChannel(supabaseChannelRef.current);
+      }
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
+  }, [roomId, token, initDashboard]);
+
+  // 5. Auto-reconnect & Sync on Visibility Change (Tab focus / Lock screen unlock)
+  useEffect(() => {
+    if (!roomId || !token || !isAuthorized) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[Dashboard] Tab active. Re-connecting real-time and syncing session status...');
+        
+        // Re-connect real-time stream
+        connectRealtime(roomId);
+        
+        // Silent session validation
+        try {
+          const response = await fetch(`/api/room/${roomId}/status`);
+          if (!response.ok) {
+            if (response.status === 404) {
+              console.warn('[Dashboard] Room not found or expired during visibility check.');
+              let errorMsg = '존재하지 않거나 생성 후 24시간이 경과하여 만료된 방 번호입니다.';
+              try {
+                const errData = await response.json();
+                if (errData.suggestion) {
+                  errorMsg = errData.suggestion;
+                }
+              } catch (e) {}
+              setAuthErrorMessage(errorMsg);
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('glowwave_active_host_room_id');
+                localStorage.removeItem(`glowwave_presets_${roomId}`);
+                localStorage.removeItem(`glowwave_token_${roomId}`);
+              }
+              setIsAuthorized(false);
+            } else {
+              console.warn('[Dashboard] Reconnect validation check returned error status:', response.status);
+            }
+            return;
+          }
+          
+          const roomData = await response.json();
+          // Update room details silently
+          setRoom(prev => prev ? {
+            ...prev,
+            tier: roomData.tier,
+            status: roomData.status,
+            max_participants: roomData.max_participants,
+          } : null);
+
+        } catch (err) {
+          console.warn('[Dashboard] Reconnect status check failed (network offline):', err);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [roomId, token, isAuthorized, connectRealtime]);
 
   const TIER_ORDER: Record<string, number> = {
     free: 0,
@@ -404,6 +476,32 @@ export default function HostDashboard() {
     );
   }
 
+  // Network/Server connection error Screen
+  if (isNetworkError) {
+    return (
+      <div className="min-h-screen bg-[#0B0B0F] text-foreground flex flex-col justify-center items-center px-6 text-center">
+        <div className="glass-effect p-8 rounded-2xl max-w-md border border-indigo-500/20">
+          <RefreshCw className="w-12 h-12 text-indigo-400 mx-auto mb-4 animate-spin" style={{ animationDuration: '3s' }} />
+          <h2 className="text-xl font-bold text-white mb-2">서버 연결 일시 지연</h2>
+          <p className="text-sm text-zinc-400 mb-6 whitespace-pre-line font-medium leading-relaxed">
+            {authErrorMessage || "인터넷 연결이 불안정하거나 서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요."}
+          </p>
+          <div className="flex flex-col gap-2 w-full">
+            <button
+              onClick={() => initDashboard()}
+              className="py-3 px-4 rounded-xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg"
+            >
+              다시 연결 시도 ⚡
+            </button>
+            <Link href="/" className="text-sm text-zinc-400 hover:text-white py-2 font-semibold">
+              메인 홈으로 가기
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Access Denied Screen
   if (!isAuthorized) {
     return (
@@ -411,7 +509,7 @@ export default function HostDashboard() {
         <div className="glass-effect p-8 rounded-2xl max-w-md border border-red-500/10">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">권한이 없거나 만료된 방입니다</h2>
-          <p className="text-sm text-zinc-400 mb-6 whitespace-pre-line">
+          <p className="text-sm text-zinc-400 mb-6 whitespace-pre-line font-medium leading-relaxed">
             {authErrorMessage || "이 방의 생성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오."}
           </p>
           <div className="flex flex-col gap-2">
