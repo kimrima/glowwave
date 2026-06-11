@@ -96,12 +96,13 @@ export default function Home() {
   };
   
   // Interactive Live Trial State
+  const [demoSpeedStep, setDemoSpeedStep] = useState(3);
   const [demoPreset, setDemoPreset] = useState<Preset>({
     bg_color: '#8B5CF6',
     text: 'CROWDGLOW',
     text_color: '#FFFFFF',
     effect: 'none',
-    speed: 1000
+    speed: 5000
   });
 
   // Modal/Scanner for Room Join
@@ -197,14 +198,14 @@ export default function Home() {
       )}
 
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#0B0B0F]/80 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#030305]/60 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-white">
+          <Link href="/" className="flex items-center gap-2 font-black text-xl tracking-tight text-white font-outfit">
             <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
             <span>GlowWave</span>
           </Link>
           
-          <nav className="hidden md:flex items-center gap-8 text-sm text-zinc-400 font-medium">
+          <nav className="hidden md:flex items-center gap-8 text-xs text-zinc-400 font-bold uppercase tracking-wider font-outfit">
             <a href="#features" className="hover:text-white transition-colors">주요 기능</a>
             <a href="#trial" className="hover:text-white transition-colors">실시간 무료 체험</a>
             <Link href="/recovery" className="hover:text-white transition-colors">구매 복구</Link>
@@ -213,13 +214,13 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsQRScannerOpen(true)}
-              className="text-sm font-semibold px-4 py-2 rounded-xl text-zinc-300 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+              className="text-xs font-bold px-4 py-2 rounded-xl text-zinc-300 hover:text-white hover:bg-white/5 transition-all cursor-pointer font-outfit"
             >
               QR 스캔 참여 📸
             </button>
             <Link 
               href="/host/setup" 
-              className="text-sm font-bold px-4 py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 transition-all cursor-pointer"
+              className="btn-primary text-xs px-4 py-2.5 rounded-xl text-black hover:bg-zinc-200 transition-all cursor-pointer font-outfit"
             >
               방 만들기 ⚡
             </Link>
@@ -228,50 +229,56 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-16 pb-12 md:pt-24 md:pb-20">
+      <section className="relative overflow-hidden pt-16 pb-12 md:pt-24 md:pb-20 bg-grid-pattern">
+        {/* Background Neon Aura Spheres */}
+        <div className="absolute top-[10%] left-[10%] neon-glow-circle-1" />
+        <div className="absolute top-[30%] right-[10%] neon-glow-circle-2" />
+        
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/5 bg-white/[0.02] text-zinc-400 text-[11px] font-bold mb-6 tracking-wide">
+          <div className="text-center max-w-3xl mx-auto mb-16 relative">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/5 bg-white/[0.02] text-zinc-400 text-[10px] font-bold mb-6 tracking-widest uppercase font-mono">
               <Zap className="w-3.5 h-3.5 text-indigo-400" />
-              <span>100ms 초저지연 실시간 스마트폰 화면 제어</span>
+              <span>100ms ultra-low latency signaling</span>
             </div>
             
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-[1.2] mb-6 text-white">
+            <h1 className="text-4xl sm:text-6xl font-black tracking-tighter leading-[1.15] mb-6 text-white font-outfit text-gradient">
               앱 설치 없이 스마트폰을<br />
-              하나의 무대 조명으로
+              <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">하나의 무대 조명</span>으로
             </h1>
             
-            <p className="text-sm sm:text-base text-zinc-400 max-w-xl mx-auto leading-relaxed font-medium">
+            <p className="text-xs sm:text-sm text-zinc-400 max-w-lg mx-auto leading-relaxed font-semibold">
               현장 QR 코드 스캔 또는 참여 코드를 통해 수백 명의 관객 스마트폰 화면 색상과 구호를 실시간 동기화하여 압도적인 시각 효과를 연출하세요.
             </p>
           </div>
 
-          {/* Core Side-by-Side Action Cards */}
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-10">
-            {/* Host Action Card */}
-            <div className="glass-effect rounded-2xl p-8 flex flex-col justify-between border border-white/5 bg-[#12121a] hover:border-white/10 transition-all">
-              <div className="mb-8">
-                <span className="text-[10px] font-mono text-indigo-400 font-bold uppercase tracking-wider">For Event Host</span>
-                <h2 className="text-2xl font-black text-white mt-2 mb-3">새 전광판 개설하기 ⚡</h2>
-                <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+          {/* Core Side-by-Side Action Cards - Bento Grid Style */}
+          <div className="grid md:grid-cols-12 gap-6 max-w-4xl mx-auto mb-10">
+            {/* Host Action Card (Bento Style: larger width for visual hierarchy) */}
+            <div className="glass-effect rounded-3xl p-8 flex flex-col justify-between border border-white/5 bg-[#0a0a0f]/40 hover:border-indigo-500/20 hover:shadow-[0_0_50px_rgba(99,102,241,0.08)] transition-all duration-300 md:col-span-7 relative group overflow-hidden active-spring-pad">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-300" />
+              <div className="mb-10 relative z-10">
+                <span className="text-[9px] font-mono text-indigo-400 font-extrabold uppercase tracking-widest">For Event Host</span>
+                <h2 className="text-xl sm:text-2xl font-black text-white mt-3 mb-3 font-outfit">새 전광판 개설하기 ⚡</h2>
+                <p className="text-xs text-zinc-400 leading-relaxed font-semibold">
                   버스킹 크루, 파티 DJ, 동아리 이벤트를 위해 나만의 실시간 제어 리모컨을 만듭니다. 별도의 회원가입 없이 즉시 방 코드를 획득하고 연출을 시작해 보세요.
                 </p>
               </div>
               <Link 
                 href="/host/setup" 
-                className="w-full py-4 rounded-xl text-center text-xs tracking-wider flex items-center justify-center gap-2 hover:scale-[1.01] transition-transform bg-white text-black font-bold"
+                className="w-full py-4 rounded-xl text-center text-xs tracking-wider flex items-center justify-center gap-2 bg-white text-black font-extrabold shadow-lg hover:bg-zinc-200 transition-all z-10"
               >
                 방 개설 및 세팅 시작하기 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
 
-            {/* Spectator Action Card */}
-            <div className="glass-effect rounded-2xl p-8 flex flex-col justify-between border border-white/5 bg-[#12121a] hover:border-white/10 transition-all">
-              <div>
-                <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wider">For Audience</span>
-                <h2 className="text-2xl font-black text-white mt-2 mb-3">관객으로 참여하기 🔑</h2>
-                <p className="text-xs text-zinc-400 leading-relaxed mb-6 font-medium">
+            {/* Spectator Action Card (Bento Style: compact entry form) */}
+            <div className="glass-effect rounded-3xl p-8 flex flex-col justify-between border border-white/5 bg-[#0a0a0f]/40 hover:border-emerald-500/20 hover:shadow-[0_0_50px_rgba(16,185,129,0.08)] transition-all duration-300 md:col-span-5 relative group overflow-hidden active-spring-pad">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all duration-300" />
+              <div className="relative z-10 mb-6">
+                <span className="text-[9px] font-mono text-emerald-400 font-extrabold uppercase tracking-widest">For Audience</span>
+                <h2 className="text-xl sm:text-2xl font-black text-white mt-3 mb-3 font-outfit">관객으로 참여하기 🔑</h2>
+                <p className="text-xs text-zinc-400 leading-relaxed mb-6 font-semibold">
                   스크린에 안내된 6자리 코드(대문자/숫자)를 입력하거나 카메라를 켜서 QR 코드를 스캔하세요.
                 </p>
                 
@@ -284,26 +291,26 @@ export default function Home() {
                       setJoinRoomCode(e.target.value.toUpperCase());
                       setJoinError('');
                     }}
-                    placeholder="입장 코드 입력 (6자리)"
-                    className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-center text-white tracking-widest text-sm font-bold focus:outline-none focus:border-indigo-500 uppercase font-mono"
+                    placeholder="입장 코드 6자리"
+                    className="flex-1 bg-black/60 border border-white/10 rounded-xl px-4 py-3.5 text-center text-white tracking-widest text-xs font-black focus:outline-none focus:border-indigo-500 uppercase font-mono transition-all"
                     maxLength={6}
                   />
                   <button
                     type="submit"
-                    className="px-6 py-3.5 rounded-xl text-xs font-extrabold shrink-0 flex items-center justify-center gap-1.5 cursor-pointer bg-white text-black hover:bg-zinc-200 transition-all"
+                    className="px-5 py-3.5 rounded-xl text-xs font-extrabold shrink-0 flex items-center justify-center gap-1.5 cursor-pointer bg-white text-black hover:bg-zinc-200 transition-all"
                   >
                     참여 <Play className="w-3 h-3 fill-current" />
                   </button>
                 </form>
-                {joinError && <p className="text-[11px] text-red-500 mb-4 text-center font-bold">{joinError}</p>}
+                {joinError && <p className="text-[10px] text-red-500 mb-4 text-center font-bold">{joinError}</p>}
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsQRScannerOpen(true)}
-                className="w-full py-3.5 rounded-xl border border-dashed border-white/10 bg-white/5 text-zinc-300 font-bold text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-3.5 rounded-xl border border-dashed border-white/10 bg-white/5 text-zinc-300 font-extrabold text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer relative z-10"
               >
-                <Camera className="w-4 h-4" />
+                <Camera className="w-4 h-4 text-emerald-400" />
                 카메라로 QR 코드 스캔하기 📸
               </button>
             </div>
@@ -313,31 +320,39 @@ export default function Home() {
       </section>
 
       {/* Interactive Live Trial Section */}
-      <section id="trial" className="py-16 border-t border-white/5 relative bg-zinc-950/20">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="trial" className="py-16 md:py-24 border-t border-white/5 relative bg-black/40 bg-grid-pattern overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 neon-glow-circle-1 opacity-50" />
+        
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-black text-white mb-4">실시간 시뮬레이터로 미리 체험해보세요</h2>
-            <p className="text-xs text-zinc-400 font-medium">왼쪽 조명 컨트롤러의 색상과 연출 단추를 클릭해 보세요. 오른쪽 스마트폰 화면에 즉각적으로 연동됩니다.</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 font-outfit text-gradient">실시간 시뮬레이터로 미리 체험해 보세요</h2>
+            <p className="text-xs text-zinc-400 font-semibold max-w-md mx-auto leading-relaxed">왼쪽 조명 컨트롤러의 테크니컬 스펙을 변경해 보세요. 오른쪽 베젤리스 스마트폰 화면에 실시간 속도와 연출이 동기화됩니다.</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-center">
             {/* Live Controller Mockup */}
-            <div className="glass-effect rounded-2xl p-6 flex flex-col gap-6">
-              <div className="pb-4 border-b border-white/5">
-                <span className="text-[10px] text-zinc-500 font-bold font-mono">SIMULATION REMOTE CONTROL</span>
+            <div className="glass-effect rounded-3xl p-6 sm:p-8 flex flex-col gap-6 bg-[#0a0a0f]/50 border border-white/5 shadow-2xl">
+              <div className="pb-4 border-b border-white/5 flex justify-between items-center">
+                <span className="text-[9px] text-zinc-500 font-black font-mono tracking-widest uppercase">SIMULATION CONSOLE</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-ping" />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">배경 색상 선택</label>
-                <div className="grid grid-cols-6 gap-2">
+                <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3">배경 색상 선택</label>
+                <div className="grid grid-cols-6 gap-3">
                   {colors.map((c) => (
                     <button
                       key={c.hex}
                       onClick={() => handleDemoPresetChange('bg_color', c.hex)}
-                      className={`h-9 rounded-lg border transition-all cursor-pointer ${
-                        demoPreset.bg_color === c.hex ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+                      className={`h-9 w-9 rounded-full border transition-all cursor-pointer mx-auto relative ${
+                        demoPreset.bg_color === c.hex 
+                          ? 'border-white scale-110 shadow-lg' 
+                          : 'border-white/10 hover:scale-105 hover:border-white/30'
                       }`}
-                      style={{ backgroundColor: c.hex }}
+                      style={{ 
+                        backgroundColor: c.hex,
+                        boxShadow: demoPreset.bg_color === c.hex ? `0 0 16px ${c.hex}40` : undefined 
+                      }}
                       title={c.name}
                     />
                   ))}
@@ -345,67 +360,120 @@ export default function Home() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">전송할 텍스트 입력</label>
-                <input
-                  type="text"
-                  value={demoPreset.text}
-                  onChange={(e) => handleDemoPresetChange('text', e.target.value)}
-                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-sm font-semibold"
-                  placeholder="텍스트를 입력해 보세요."
-                  maxLength={15}
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">텍스트 색상</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleDemoPresetChange('text_color', '#FFFFFF')}
-                    className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                      demoPreset.text_color === '#FFFFFF'
-                        ? 'border-white bg-white text-black'
-                        : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
-                    }`}
-                  >
-                    밝은색
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDemoPresetChange('text_color', '#000000')}
-                    className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                      demoPreset.text_color === '#000000'
-                        ? 'border-white bg-white text-black'
-                        : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
-                    }`}
-                  >
-                    어두운색
-                  </button>
+                <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">전송할 텍스트 입력</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={demoPreset.text}
+                    onChange={(e) => handleDemoPresetChange('text', e.target.value)}
+                    className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/20 text-xs font-semibold"
+                    placeholder="구호를 입력하세요 (최대 15자)"
+                    maxLength={15}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-mono text-zinc-600 font-bold">
+                    {demoPreset.text.length}/15
+                  </span>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">애니메이션 효과</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['none', 'blink', 'marquee'] as EffectType[]).map((eff) => (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">텍스트 색상</label>
+                  <div className="flex gap-1.5 bg-black/40 p-1 rounded-xl border border-white/5">
                     <button
-                      key={eff}
-                      onClick={() => handleDemoPresetChange('effect', eff)}
-                      className={`py-2 px-3 rounded-lg border text-xs font-semibold uppercase transition-all cursor-pointer ${
-                        demoPreset.effect === eff 
-                          ? 'border-white bg-white/5 text-white font-extrabold' 
-                          : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
+                      type="button"
+                      onClick={() => handleDemoPresetChange('text_color', '#FFFFFF')}
+                      className={`flex-1 py-2 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
+                        demoPreset.text_color === '#FFFFFF'
+                          ? 'bg-white text-black shadow-sm'
+                          : 'text-zinc-500 hover:text-white hover:bg-white/[0.01]'
                       }`}
                     >
-                      {eff === 'none' ? '정적' : eff === 'blink' ? '깜빡이' : '흐르기'}
+                      밝은색
                     </button>
-                  ))}
+                    <button
+                      type="button"
+                      onClick={() => handleDemoPresetChange('text_color', '#000000')}
+                      className={`flex-1 py-2 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
+                        demoPreset.text_color === '#000000'
+                          ? 'bg-white text-black shadow-sm'
+                          : 'text-zinc-500 hover:text-white hover:bg-white/[0.01]'
+                      }`}
+                    >
+                      어두운색
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">애니메이션 효과</label>
+                  <div className="flex gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+                    {(['none', 'blink', 'marquee'] as EffectType[]).map((eff) => (
+                      <button
+                        key={eff}
+                        type="button"
+                        onClick={() => {
+                          handleDemoPresetChange('effect', eff);
+                          // Sync speed according to step
+                          let newSpeed = 1000;
+                          if (eff === 'blink') {
+                            const blinkSpeeds = [1000, 600, 400, 200, 100];
+                            newSpeed = blinkSpeeds[demoSpeedStep - 1];
+                          } else if (eff === 'marquee') {
+                            const marqueeSpeeds = [10000, 7000, 5000, 3000, 1500];
+                            newSpeed = marqueeSpeeds[demoSpeedStep - 1];
+                          }
+                          handleDemoPresetChange('speed', newSpeed);
+                        }}
+                        className={`flex-1 py-2 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
+                          demoPreset.effect === eff 
+                            ? 'bg-white text-black shadow-sm' 
+                            : 'text-zinc-500 hover:text-white hover:bg-white/[0.01]'
+                        }`}
+                      >
+                        {eff === 'none' ? '정적' : eff === 'blink' ? '깜빡이' : '흐르기'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
+
+              {/* Speed Range Slider */}
+              {demoPreset.effect !== 'none' && (
+                <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
+                  <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
+                    <span>애니메이션 속도 조절</span>
+                    <span className="text-indigo-400 font-extrabold">
+                      {demoSpeedStep === 5 ? '매우 빠름 ⚡⚡' : demoSpeedStep === 4 ? '빠름 ⚡' : demoSpeedStep === 3 ? '보통 🏃' : demoSpeedStep === 2 ? '느림 🐢' : '매우 느림 🐌'}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    value={demoSpeedStep}
+                    onChange={(e) => {
+                      const step = parseInt(e.target.value);
+                      setDemoSpeedStep(step);
+                      
+                      let newSpeed = 3000;
+                      if (demoPreset.effect === 'blink') {
+                        const blinkSpeeds = [1000, 600, 400, 200, 100];
+                        newSpeed = blinkSpeeds[step - 1];
+                      } else if (demoPreset.effect === 'marquee') {
+                        const marqueeSpeeds = [10000, 7000, 5000, 3000, 1500];
+                        newSpeed = marqueeSpeeds[step - 1];
+                      }
+                      handleDemoPresetChange('speed', newSpeed);
+                    }}
+                    className="premium-slider"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Simulated Smartphone Mockup */}
-            <div className="flex justify-center items-center">
+            <div className="flex justify-center items-center hover:scale-[1.02] transition-transform duration-300">
               <LandscapePhoneMockup preset={demoPreset} />
             </div>
           </div>

@@ -76,6 +76,8 @@ export default function HostDashboard() {
   const [customBgColor, setCustomBgColor] = useState('#EF4444');
   const [customFontSize, setCustomFontSize] = useState<'auto' | 'small' | 'medium' | 'large' | 'huge'>('auto');
   const [customFontFamily, setCustomFontFamily] = useState<'sans' | 'serif' | 'neon' | 'dot'>('sans');
+  const [customEffect, setCustomEffect] = useState<EffectType>('none');
+  const [customSpeedStep, setCustomSpeedStep] = useState(3);
 
   // Preset Live Edit States
   const [editingPresetIndex, setEditingPresetIndex] = useState<number | null>(null);
@@ -539,13 +541,17 @@ export default function HostDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0B0B0F] text-foreground flex flex-col justify-between">
+    <div className="min-h-screen bg-[#030305] text-foreground flex flex-col justify-between bg-grid-pattern relative overflow-hidden">
+      {/* Background Neon Aura Spheres */}
+      <div className="absolute top-[10%] left-[-10%] neon-glow-circle-1 opacity-30" />
+      <div className="absolute bottom-[20%] right-[-10%] neon-glow-circle-2 opacity-25" />
+
       {/* Header */}
-      <header className="border-b border-white/5 bg-[#0B0B0F]/80 backdrop-blur-md">
+      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-indigo-400" />
-            <span className="font-bold text-white tracking-tight">GlowWave Host Remote</span>
+            <span className="font-black text-white tracking-tight font-outfit text-sm uppercase">GlowWave Host Remote</span>
           </div>
           
           <button 
@@ -630,32 +636,94 @@ export default function HostDashboard() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {presets.map((preset, index) => {
                 const isActive = activePresetIndex === index;
+                const isWhite = preset.bg_color === '#FFFFFF';
                 return (
                   <div
                     key={index}
                     onClick={() => triggerPreset(preset, index)}
-                    className={`h-24 rounded-2xl border flex items-center justify-center p-6 relative overflow-hidden transition-all active:scale-[0.97] cursor-pointer ${
+                    className={`h-24 rounded-2xl border flex items-center justify-center p-6 relative overflow-hidden transition-all duration-300 cursor-pointer active-spring-pad ${
                       isActive 
-                        ? 'bg-white/[0.03] ring-1 ring-white/10' 
-                        : 'border-white/5 bg-black/20 hover:border-white/10 hover:bg-white/[0.01]'
+                        ? 'border-white/20 bg-white/[0.04]' 
+                        : 'border-white/5 bg-[#0a0a0f]/40 hover:border-white/10 hover:bg-white/[0.01]'
                     }`}
                     style={isActive ? { 
                       boxShadow: preset.bg_color === '#0B0B0F' 
-                        ? '0 0 20px rgba(255,255,255,0.1)' 
-                        : `0 0 22px ${preset.bg_color}44`,
+                        ? '0 0 20px rgba(255,255,255,0.06)' 
+                        : `0 0 24px ${preset.bg_color}33`,
                       borderColor: preset.bg_color === '#0B0B0F' ? '#FFFFFF' : preset.bg_color
                     } : undefined}
                   >
-                    {/* Background color subtle glow corner */}
-                    <div className="absolute top-2.5 left-3 w-3 h-3 rounded-full" style={{ backgroundColor: preset.bg_color }} />
+                    {/* Visual launchpad active background animation indicator */}
+                    <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.12] overflow-hidden rounded-2xl">
+                      {preset.effect === 'blink' && (
+                        <div 
+                          className="w-full h-full" 
+                          style={{
+                            backgroundColor: preset.bg_color,
+                            animation: `preset-card-flash ${preset.speed || 400}ms infinite`
+                          }}
+                        />
+                      )}
+                      {preset.effect === 'marquee' && (
+                        <div className="w-full h-full flex items-center justify-center select-none text-[18px] font-black tracking-widest whitespace-nowrap text-white">
+                          <div className="animate-marquee inline-block" style={{ '--marquee-duration': `${(preset.speed || 6000) * 1.5}ms` } as any}>
+                            {preset.text} &nbsp;&nbsp;&nbsp;&nbsp; {preset.text}
+                          </div>
+                        </div>
+                      )}
+                      {preset.effect === 'equalizer' && (
+                        <div className="absolute bottom-2 right-4 flex items-end gap-0.5 h-8">
+                          {[...Array(4)].map((_, i) => (
+                            <div 
+                              key={i} 
+                              className="w-0.5 rounded-t-sm"
+                              style={{
+                                height: '100%',
+                                backgroundColor: isWhite ? '#000000' : '#FFFFFF',
+                                transformOrigin: 'bottom',
+                                animation: `preset-card-eq ${0.35 + i * 0.12}s ease-in-out infinite alternate`
+                              }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      {preset.effect === 'countdown' && (
+                        <div 
+                          className="absolute inset-0 flex items-center justify-center font-bold text-2xl text-white"
+                          style={{ animation: 'preset-card-pulse 1.2s ease-in-out infinite' }}
+                        >
+                          ⏱️
+                        </div>
+                      )}
+                      {preset.effect === 'none' && (
+                        <div 
+                          className="w-full h-full"
+                          style={{
+                            backgroundColor: preset.bg_color,
+                            animation: 'preset-card-breath 3.5s ease-in-out infinite'
+                          }}
+                        />
+                      )}
+                    </div>
+
+                    {/* Left top indicator led light */}
+                    <div 
+                      className={`absolute top-3 left-3.5 w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                        isActive ? 'scale-110 shadow-lg animate-pulse' : 'opacity-40'
+                      }`}
+                      style={{ 
+                        backgroundColor: preset.bg_color,
+                        boxShadow: isActive && preset.bg_color !== '#0B0B0F' ? `0 0 8px ${preset.bg_color}` : undefined 
+                      }} 
+                    />
                     
-                    <div className="text-center">
-                      <div className="font-extrabold text-sm sm:text-base text-white tracking-tight">
+                    <div className="text-center relative z-10 select-none">
+                      <div className="font-extrabold text-xs sm:text-sm text-white tracking-tight font-outfit uppercase">
                         {preset.text}
                       </div>
                     </div>
-
-                    {/* Small edit pencil icon in the top right, appears on hover or low-contrast */}
+ 
+                    {/* Small edit pencil icon in the top right, appears on hover */}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -663,10 +731,10 @@ export default function HostDashboard() {
                         setEditingPresetIndex(index);
                         setEditingPreset({ ...preset });
                       }}
-                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/5 text-zinc-500 hover:text-white hover:bg-white/15 transition-all z-20 cursor-pointer"
+                      className="absolute top-2.5 right-2.5 p-1 rounded-lg bg-white/5 text-zinc-500 hover:text-white hover:bg-white/10 transition-all z-20 cursor-pointer opacity-0 hover:opacity-100 group-hover:opacity-100"
                       title="수정"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
+                      <Edit3 className="w-3 h-3" />
                     </button>
                   </div>
                 );
@@ -735,12 +803,18 @@ export default function HostDashboard() {
                   type="button"
                   onClick={() => {
                     const isWhite = customBgColor === '#FFFFFF';
+                    const calculatedSpeed = customEffect === 'blink'
+                      ? [1000, 600, 400, 200, 100][customSpeedStep - 1]
+                      : customEffect === 'marquee'
+                        ? [10000, 7000, 5000, 3000, 1500][customSpeedStep - 1]
+                        : 1000;
+                    
                     const customPreset: Preset = {
                       bg_color: customBgColor,
                       text: customText || 'LET\'S GO',
                       text_color: isWhite ? '#000000' : '#FFFFFF',
-                      effect: customText.length > 8 ? 'marquee' : 'none',
-                      speed: 4000,
+                      effect: customEffect,
+                      speed: calculatedSpeed,
                       font_size: customFontSize,
                       font_family: customFontFamily
                     };
@@ -754,11 +828,11 @@ export default function HostDashboard() {
               </div>
 
               {/* Button Grids Controls Row (Segmented list) */}
-              <div className="grid md:grid-cols-3 gap-6 pt-3 border-t border-white/5">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-3 border-t border-white/5">
                 {/* 배경 테마 */}
                 <div>
-                  <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-2">배경 테마</label>
-                  <div className="grid grid-cols-4 gap-1.5 bg-black/40 p-1.5 rounded-xl border border-white/5">
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">배경 테마</label>
+                  <div className="grid grid-cols-4 gap-1.5 bg-black/40 p-1.5 rounded-xl border border-white/5 h-[44px] items-center">
                     {[
                       '#EF4444', '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#EC4899', '#FFFFFF', '#0B0B0F'
                     ].map((hex) => (
@@ -768,7 +842,7 @@ export default function HostDashboard() {
                         onClick={() => setCustomBgColor(hex)}
                         className={`h-7 rounded-lg border cursor-pointer transition-all ${
                           customBgColor === hex
-                            ? 'border-white scale-105'
+                            ? 'border-white scale-105 shadow-sm'
                             : 'border-transparent hover:scale-102 hover:bg-white/5'
                         }`}
                         style={{ backgroundColor: hex }}
@@ -779,7 +853,7 @@ export default function HostDashboard() {
 
                 {/* 글자 크기 */}
                 <div>
-                  <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-2">글자 크기</label>
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">글자 크기</label>
                   <div className="grid grid-cols-5 gap-1 bg-black/40 p-1.5 rounded-xl border border-white/5 h-[44px] items-center">
                     {[
                       { val: 'auto', label: 'Auto' },
@@ -806,7 +880,7 @@ export default function HostDashboard() {
 
                 {/* 글꼴 스타일 */}
                 <div>
-                  <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-2">글꼴 스타일</label>
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">글꼴 스타일</label>
                   <div className="grid grid-cols-4 gap-1 bg-black/40 p-1.5 rounded-xl border border-white/5 h-[44px] items-center">
                     {[
                       { val: 'sans', label: '고딕' },
@@ -829,7 +903,52 @@ export default function HostDashboard() {
                     ))}
                   </div>
                 </div>
+
+                {/* 모션 효과 */}
+                <div>
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">모션 효과</label>
+                  <div className="grid grid-cols-3 gap-1 bg-black/40 p-1.5 rounded-xl border border-white/5 h-[44px] items-center">
+                    {[
+                      { val: 'none', label: '정적' },
+                      { val: 'blink', label: '깜빡이' },
+                      { val: 'marquee', label: '흐르기' }
+                    ].map((item) => (
+                      <button
+                        type="button"
+                        key={item.val}
+                        onClick={() => setCustomEffect(item.val as any)}
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          customEffect === item.val
+                            ? 'bg-white text-black shadow-sm'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
+
+              {/* Speed range slider for custom controller */}
+              {customEffect !== 'none' && (
+                <div className="pt-4 border-t border-white/5 animate-in fade-in duration-200">
+                  <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
+                    <span>전송 애니메이션 속도 조절</span>
+                    <span className="text-indigo-400 font-extrabold">
+                      {customSpeedStep === 5 ? '매우 빠름 ⚡⚡' : customSpeedStep === 4 ? '빠름 ⚡' : customSpeedStep === 3 ? '보통 🏃' : customSpeedStep === 2 ? '느림 🐢' : '매우 느림 🐌'}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    value={customSpeedStep}
+                    onChange={(e) => setCustomSpeedStep(parseInt(e.target.value))}
+                    className="premium-slider"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1087,7 +1206,18 @@ export default function HostDashboard() {
                         <button
                           type="button"
                           key={item.val}
-                          onClick={() => setEditingPreset(prev => ({ ...prev!, effect: item.val as any }))}
+                          onClick={() => {
+                            // Helper to get current step before switching
+                            const list = editingPreset.effect === 'blink' ? [1000, 600, 400, 200, 100] : [10000, 7000, 5000, 3000, 1500];
+                            const idx = list.indexOf(editingPreset.speed);
+                            const currentStep = idx === -1 ? 3 : idx + 1;
+
+                            // Get new speed for selected effect matching the step
+                            const newList = item.val === 'blink' ? [1000, 600, 400, 200, 100] : [10000, 7000, 5000, 3000, 1500];
+                            const newSpeed = item.val === 'blink' || item.val === 'marquee' ? (newList[currentStep - 1] || 1000) : 1000;
+                            
+                            setEditingPreset(prev => ({ ...prev!, effect: item.val as any, speed: newSpeed }));
+                          }}
                           className={`py-1.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer ${
                             editingPreset.effect === item.val
                               ? 'bg-white text-black shadow-sm'
@@ -1100,6 +1230,40 @@ export default function HostDashboard() {
                     </div>
                   </div>
                 </div>
+
+                {/* Speed Slider in Preset Edit Drawer */}
+                {(editingPreset.effect === 'blink' || editingPreset.effect === 'marquee') && (
+                  <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
+                    <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
+                      <span>애니메이션 속도 조절</span>
+                      <span className="text-indigo-400 font-extrabold">
+                        {(() => {
+                          const list = editingPreset.effect === 'blink' ? [1000, 600, 400, 200, 100] : [10000, 7000, 5000, 3000, 1500];
+                          const idx = list.indexOf(editingPreset.speed);
+                          const step = idx === -1 ? 3 : idx + 1;
+                          return step === 5 ? '매우 빠름 ⚡⚡' : step === 4 ? '빠름 ⚡' : step === 3 ? '보통 🏃' : step === 2 ? '느림 🐢' : '매우 느림 🐌';
+                        })()}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      value={(() => {
+                        const list = editingPreset.effect === 'blink' ? [1000, 600, 400, 200, 100] : [10000, 7000, 5000, 3000, 1500];
+                        const idx = list.indexOf(editingPreset.speed);
+                        return idx === -1 ? 3 : idx + 1;
+                      })()}
+                      onChange={(e) => {
+                        const step = parseInt(e.target.value);
+                        const list = editingPreset.effect === 'blink' ? [1000, 600, 400, 200, 100] : [10000, 7000, 5000, 3000, 1500];
+                        const newSpeed = list[step - 1] || 1000;
+                        setEditingPreset(prev => ({ ...prev!, speed: newSpeed }));
+                      }}
+                      className="premium-slider"
+                    />
+                  </div>
+                )}
 
               </div>
             </div>

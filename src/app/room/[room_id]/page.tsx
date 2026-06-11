@@ -569,7 +569,7 @@ export default function AudienceRoom() {
           </div>
         ) : (
           <div 
-            className={`font-black text-center break-all px-8 select-none max-w-full leading-none tracking-tighter ${
+            className={`font-black text-center whitespace-nowrap overflow-hidden px-8 select-none max-w-full leading-none tracking-tighter ${
               currentPreset.font_family === 'neon' ? 'font-neon' : currentPreset.font_family === 'dot' ? 'font-dot' : ''
             }`}
             style={{ 
@@ -604,13 +604,15 @@ export default function AudienceRoom() {
           </div>
         )}
 
-        {/* 7. Viral Loop Watermark Link Layer */}
+        {/* 7. Viral Loop Watermark Link Layer (Hides when controls hide for Dark Immersive UI) */}
         <button 
           onClick={(e) => {
             e.stopPropagation();
             handleViralClick();
           }}
-          className="absolute bottom-6 right-6 px-3.5 py-1.5 rounded-lg bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/50 hover:text-white hover:bg-black/70 hover:scale-105 active:scale-95 transition-all z-40 cursor-pointer flex items-center gap-1 font-semibold"
+          className={`absolute bottom-6 right-6 px-3.5 py-1.5 rounded-lg bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/50 hover:text-white hover:bg-black/70 hover:scale-105 active:scale-95 transition-all z-40 cursor-pointer flex items-center gap-1 font-semibold duration-500 ${
+            showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+          }`}
         >
           <span>나도 이런 파티 연출하기 🪄</span>
         </button>
@@ -619,7 +621,12 @@ export default function AudienceRoom() {
 
       {/* 8. Initial entry user activation overlay for Fullscreen & WakeLock support */}
       {showEnterOverlay && (
-        <div className="fixed inset-0 bg-[#0B0B0F] z-50 flex flex-col justify-center items-center text-center px-6 text-white">
+        <div className="fixed inset-0 bg-[#030305] z-50 flex flex-col justify-center items-center text-center px-6 text-white bg-grid-pattern relative overflow-hidden">
+          {/* Background Aura Spheres */}
+          <div className="absolute top-[20%] left-[-15%] w-[60vw] h-[60vw] bg-indigo-500/10 blur-[120px] rounded-full animate-pulse z-0 pointer-events-none" style={{ animationDuration: '6s' }} />
+          <div className="absolute bottom-[20%] right-[-15%] w-[50vw] h-[50vw] bg-purple-500/10 blur-[120px] rounded-full animate-pulse z-0 pointer-events-none" style={{ animationDuration: '8s' }} />
+          
+          <div className="relative z-10 flex flex-col justify-center items-center">
           
           <div className="relative mb-6">
             <Sparkles className="w-10 h-10 text-white animate-pulse" />
@@ -675,6 +682,7 @@ export default function AudienceRoom() {
             입장하기 ⚡
           </button>
         </div>
+      </div>
       )}
     </div>
   );

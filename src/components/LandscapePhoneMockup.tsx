@@ -65,7 +65,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
           </div>
         ) : (
           <div 
-            className={`text-center break-all px-[10cqw] select-none max-w-full leading-none tracking-tighter ${getFontFamilyClass()}`}
+            className={`text-center whitespace-nowrap overflow-hidden px-[10cqw] select-none max-w-full leading-none tracking-tighter ${getFontFamilyClass()}`}
             style={{ 
               color: preset.text_color,
               fontFamily: preset.font_family === 'serif' ? 'Georgia, serif' : undefined,

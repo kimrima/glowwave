@@ -25,12 +25,12 @@ export default function HostSetup() {
   
   // Default presets for the buttons (to be stored inside DB/Local storage automatically)
   const defaultPresets: Preset[] = [
-    { bg_color: '#EF4444', text: '열정 🔥', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
-    { bg_color: '#3B82F6', text: '파도 타기 🌊', text_color: '#FFFFFF', effect: 'marquee', speed: 4000 },
-    { bg_color: '#EC4899', text: '소리 질러! 🎉', text_color: '#FFFFFF', effect: 'blink', speed: 600 },
-    { bg_color: '#10B981', text: '싱크 클럽 ⚡', text_color: '#FFFFFF', effect: 'blink', speed: 400 },
-    { bg_color: '#F59E0B', text: '박수 👏👏', text_color: '#000000', effect: 'none', speed: 1000 },
-    { bg_color: '#8B5CF6', text: 'GLOW', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
+    { bg_color: '#0B0B0F', text: '앰비언트 🕯️', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
+    { bg_color: '#EF4444', text: '사이키 ⚡', text_color: '#FFFFFF', effect: 'blink', speed: 200 },
+    { bg_color: '#3B82F6', text: '웨이브 🌊', text_color: '#FFFFFF', effect: 'marquee', speed: 4000 },
+    { bg_color: '#8B5CF6', text: '카운트다운 ⏱️', text_color: '#FFFFFF', effect: 'countdown', speed: 1000 },
+    { bg_color: '#F97316', text: '스크롤 💬', text_color: '#FFFFFF', effect: 'marquee', speed: 3000 },
+    { bg_color: '#10B981', text: '이퀄라이저 📊', text_color: '#FFFFFF', effect: 'equalizer', speed: 1000 },
   ];
 
   const [selectedTier, setSelectedTier] = useState<TierType>('free');
@@ -158,22 +158,26 @@ export default function HostSetup() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0B0F] text-foreground flex flex-col justify-between">
+    <div className="min-h-screen bg-[#030305] text-foreground flex flex-col justify-between bg-grid-pattern relative overflow-hidden">
+      {/* Background Neon Aura Spheres */}
+      <div className="absolute top-[10%] left-[-10%] neon-glow-circle-1 opacity-40" />
+      <div className="absolute bottom-[10%] right-[-10%] neon-glow-circle-2 opacity-30" />
+
       {/* Header */}
-      <header className="border-b border-white/5 bg-[#0B0B0F]/80 backdrop-blur-md">
+      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-white">
+          <Link href="/" className="flex items-center gap-2 font-black text-xl tracking-tight text-white font-outfit">
             <Sparkles className="w-5 h-5 text-indigo-400" />
             <span>GlowWave</span>
           </Link>
-          <div className="text-xs text-zinc-500 font-mono">
-            SETUP BUILDER v1.1
+          <div className="text-[10px] text-zinc-500 font-black font-mono tracking-widest">
+            SETUP BUILDER v1.2
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-10 flex-1 grid lg:grid-cols-12 gap-12 w-full items-center">
+      <main className="max-w-6xl mx-auto px-6 py-10 flex-1 grid lg:grid-cols-12 gap-12 w-full items-center relative z-10">
         
         {/* Left Column: Welcome & Showcase */}
         <div className="lg:col-span-6 flex flex-col gap-8 pr-0 lg:pr-8 py-4">
@@ -244,25 +248,25 @@ export default function HostSetup() {
                     key={tierKey}
                     type="button"
                     onClick={() => setSelectedTier(tierKey)}
-                    className={`text-left p-4 rounded-xl border cursor-pointer transition-all ${
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all flex justify-between items-center duration-200 ${
                       isSelected 
-                        ? 'border-white bg-white/[0.04]' 
+                        ? 'border-white bg-white/[0.04] shadow-[0_0_20px_rgba(255,255,255,0.03)]' 
                         : 'border-white/5 bg-transparent hover:border-white/10 hover:bg-white/[0.01]'
                     }`}
                   >
                     <div>
-                      <div className="font-bold text-white text-sm flex items-center gap-2">
+                      <div className="font-extrabold text-white text-xs flex items-center gap-2">
                         {cfg.name}
-                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />}
+                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />}
                       </div>
-                      <div className="text-xs text-zinc-400 mt-1">최대 동시 접속 {cfg.maxParticipants}명</div>
+                      <div className="text-[10px] text-zinc-400 mt-1 font-semibold">최대 동시 접속 {cfg.maxParticipants}명</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm font-black text-white">
+                      <div className="text-xs font-black text-white font-mono">
                         {cfg.priceKrw === 0 ? '무료' : `${cfg.priceKrw.toLocaleString()}원`}
                       </div>
                       {cfg.priceKrw > 0 && (
-                        <div className="text-[10px] text-zinc-500">${cfg.priceUsd} USD</div>
+                        <div className="text-[9px] text-zinc-500 font-bold font-mono">${cfg.priceUsd} USD</div>
                       )}
                     </div>
                   </button>

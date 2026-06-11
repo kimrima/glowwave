@@ -41,20 +41,38 @@ export default function useFitText(text: string, effect: string, sizeOption: str
         return;
       }
 
-      // For static & blink text, it must fit inside BOTH width and height.
-      // 1. Calculate size based on text length to fit horizontally
-      const textLen = Math.max(text.length, 1);
-      // Rough estimation: width of standard character is ~0.65 of its font size
-      const maxFontSizeWidth = (clientWidth * 0.9) / (textLen * 0.65);
+      // For static, blink, countdown, equalizer text: it must fit inside BOTH width and height.
+      // 1. Calculate weighted text length based on CJK unicode characters
+      let weightedLen = 0;
+      for (let i = 0; i < text.length; i++) {
+        const charCode = text.charCodeAt(i);
+        if (text[i] === ' ') {
+          weightedLen += 0.35;
+        } else if (
+          (charCode >= 0xac00 && charCode <= 0xd7a3) || // Hangul Syllables
+          (charCode >= 0x1100 && charCode <= 0x11ff) || // Hangul Jamo
+          (charCode >= 0x3130 && charCode <= 0x318f) || // Hangul Compatibility Jamo
+          (charCode >= 0x4e00 && charCode <= 0x9fff) || // CJK Ideographs
+          (charCode >= 0x3000 && charCode <= 0x303f)    // CJK Symbols
+        ) {
+          weightedLen += 1.05; // CJK characters are square and wider
+        } else {
+          weightedLen += 0.58; // Standard alphanumeric characters are narrower
+        }
+      }
+      weightedLen = Math.max(weightedLen, 1);
+
+      // We want text width to be within 88% of container width for safety margin
+      const maxFontSizeWidth = (clientWidth * 0.88) / weightedLen;
 
       // 2. Calculate size based on container height to fit vertically
-      const maxFontSizeHeight = clientHeight * 0.72;
+      const maxFontSizeHeight = clientHeight * 0.68;
 
-      // 3. Pick the smaller of the two to fit safely, then apply user-selected multiplier
+      // 3. Pick the smaller of the two, then apply user-selected multiplier
       let targetSize = Math.min(maxFontSizeWidth, maxFontSizeHeight) * sizeMultiplier;
 
-      // Absolute upper limits to prevent wrapping and overflow on edge ratios
-      const absoluteMax = Math.min((clientWidth * 0.95) / (textLen * 0.52), clientHeight * 0.82);
+      // Absolute upper limits to prevent wrapping and overflow under extreme aspect ratios
+      const absoluteMax = Math.min((clientWidth * 0.92) / weightedLen, clientHeight * 0.78);
       if (targetSize > absoluteMax) {
         targetSize = absoluteMax;
       }
