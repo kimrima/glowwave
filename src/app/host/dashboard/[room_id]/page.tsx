@@ -18,11 +18,22 @@ import {
   Tv,
   Edit3,
   X,
-  CreditCard
+  CreditCard,
+  Plus,
+  Trash2
 } from 'lucide-react';
 import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
+
+const defaults: Preset[] = [
+  { bg_color: '#0B0B0F', text: '앰비언트 🕯️', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
+  { bg_color: '#EF4444', text: '사이키 ⚡', text_color: '#FFFFFF', effect: 'blink', speed: 200 },
+  { bg_color: '#3B82F6', text: '웨이브 🌊', text_color: '#FFFFFF', effect: 'marquee', speed: 4000 },
+  { bg_color: '#8B5CF6', text: '카운트다운 ⏱️', text_color: '#FFFFFF', effect: 'countdown', speed: 1000 },
+  { bg_color: '#F97316', text: '스크롤 💬', text_color: '#FFFFFF', effect: 'marquee', speed: 3000 },
+  { bg_color: '#10B981', text: '이퀄라이저 📊', text_color: '#FFFFFF', effect: 'equalizer', speed: 1000 },
+];
 
 export default function HostDashboard() {
   const params = useParams();
@@ -75,6 +86,8 @@ export default function HostDashboard() {
   const eventSourceRef = useRef<EventSource | null>(null);
   const [originUrl, setOriginUrl] = useState('');
 
+  const audienceUrl = originUrl && roomId ? `${originUrl}/room/${roomId}` : '';
+  const qrCodeUrl = roomId ? `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(audienceUrl)}` : '';
   // 1. Authorization and Room Setup
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -510,13 +523,13 @@ export default function HostDashboard() {
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">권한이 없거나 만료된 방입니다</h2>
           <p className="text-sm text-zinc-400 mb-6 whitespace-pre-line font-medium leading-relaxed">
-            {authErrorMessage || "이 방의 생성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오."}
+            {authErrorMessage || "이 방의 활성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오."}
           </p>
           <div className="flex flex-col gap-2">
-            <Link href="/recovery" className="py-3 px-4 rounded-xl bg-white text-black font-semibold text-sm hover:bg-zinc-200 transition-all">
-              구매 내역 복구하러 가기 🪄
+            <Link href="/recovery" className="py-3 px-4 rounded-xl bg-white text-black font-semibold text-sm hover:bg-zinc-200 transition-all flex items-center justify-center">
+              구매 내역 복구하기
             </Link>
-            <Link href="/" className="text-sm text-zinc-400 hover:text-white py-2">
+            <Link href="/" className="text-sm text-zinc-400 hover:text-white py-2 font-semibold">
               메인 홈으로 가기
             </Link>
           </div>
@@ -525,9 +538,6 @@ export default function HostDashboard() {
     );
   }
 
-  const audienceUrl = `${originUrl}/room/${roomId}`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(audienceUrl)}`;
-
   return (
     <div className="min-h-screen bg-[#0B0B0F] text-foreground flex flex-col justify-between">
       {/* Header */}
@@ -535,52 +545,44 @@ export default function HostDashboard() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-indigo-400" />
-            <span className="font-bold text-white">GlowWave Host Remote</span>
+            <span className="font-bold text-white tracking-tight">GlowWave Host Remote</span>
           </div>
-
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-              <span>{channelStatus === 'connected' ? '실시간 연결됨' : '연결 중'}</span>
-            </div>
-            
-            <button 
-              onClick={() => router.push('/')}
-              className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-              title="나가기"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
+          
+          <button 
+            onClick={() => router.push('/')}
+            className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+            title="나가기"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </header>
 
-      {/* Main Grid */}
-      <main className="max-w-7xl mx-auto px-6 py-8 flex-1 grid lg:grid-cols-12 gap-8 w-full">
-        
-        {/* Left Column: Remote Board (Presets & Free-text edit) */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
-          {/* Header Stats */}
-          <div className="glass-effect rounded-2xl p-6 grid grid-cols-3 gap-6 text-center bg-[#12121a]">
+      {/* Unified HUD Status Bar */}
+      <section className="max-w-7xl mx-auto px-6 pt-6 w-full">
+        <div className="glass-effect rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 bg-[#12121a] border border-white/5">
+          <div className="flex flex-wrap items-center gap-6">
             <div>
-              <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">이벤트 방 코드</div>
-              <div className="text-2xl sm:text-3xl font-black text-white mt-1 select-all tracking-wider font-mono">{roomId}</div>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">Event Code</span>
+              <span className="text-xl font-mono font-black text-white select-all">{roomId}</span>
             </div>
             
-            <div className="border-x border-white/5">
-              <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider flex items-center justify-center gap-1">
-                실시간 관객
-              </div>
-              <div className="text-2xl sm:text-3xl font-black text-white mt-1 flex justify-center items-baseline gap-1">
+            <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
+            
+            <div>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">Live Audience</span>
+              <span className="text-xl font-black text-white flex items-baseline gap-1">
                 <span>{activeParticipants}</span>
-                <span className="text-xs text-zinc-500 font-bold">/ {room?.max_participants}명</span>
-              </div>
+                <span className="text-[10px] text-zinc-500 font-bold">/ {room?.max_participants}명</span>
+              </span>
             </div>
 
-            <div className="flex flex-col justify-center items-center">
-              <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">요금제 등급</div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-extrabold text-white px-2.5 py-0.5 rounded-lg bg-white/5 uppercase border border-white/5">
+            <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
+
+            <div>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">Active Plan</span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-white/5 uppercase border border-white/5">
                   {room?.tier}
                 </span>
                 {room?.tier !== 'max' && (
@@ -590,15 +592,31 @@ export default function HostDashboard() {
                       setUpgradeStep('select');
                       setIsUpgradeModalOpen(true);
                     }}
-                    className="text-[9px] font-extrabold text-indigo-400 hover:text-indigo-300 cursor-pointer transition-colors"
+                    className="text-[9px] font-bold text-indigo-400 hover:text-indigo-300 cursor-pointer transition-colors"
                   >
-                    업그레이드 ⚡
+                    Upgrade ⚡
                   </button>
                 )}
               </div>
             </div>
           </div>
 
+          <div className="flex items-center gap-3">
+            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">System Status</span>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+              <span>{channelStatus === 'connected' ? 'CONNECTED' : 'CONNECTING'}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Grid */}
+      <main className="max-w-7xl mx-auto px-6 py-6 flex-1 grid lg:grid-cols-12 gap-8 w-full">
+        
+        {/* Left Column: Cockpit (Presets & Free-text edit) */}
+        <div className="lg:col-span-8 flex flex-col gap-6">
+          
           {/* Quick Triggers Dashboard */}
           <div className="glass-effect rounded-2xl p-6 bg-[#12121a]">
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
@@ -616,47 +634,73 @@ export default function HostDashboard() {
                   <div
                     key={index}
                     onClick={() => triggerPreset(preset, index)}
-                    className={`h-28 rounded-2xl border flex flex-col justify-between p-4 relative overflow-hidden transition-all active:scale-[0.97] cursor-pointer ${
+                    className={`h-24 rounded-2xl border flex items-center justify-center p-6 relative overflow-hidden transition-all active:scale-[0.97] cursor-pointer ${
                       isActive 
-                        ? 'border-white bg-white/[0.04] ring-1 ring-white/20' 
+                        ? 'bg-white/[0.03] ring-1 ring-white/10' 
                         : 'border-white/5 bg-black/20 hover:border-white/10 hover:bg-white/[0.01]'
                     }`}
+                    style={isActive ? { 
+                      boxShadow: preset.bg_color === '#0B0B0F' 
+                        ? '0 0 20px rgba(255,255,255,0.1)' 
+                        : `0 0 22px ${preset.bg_color}44`,
+                      borderColor: preset.bg_color === '#0B0B0F' ? '#FFFFFF' : preset.bg_color
+                    } : undefined}
                   >
-                    {/* Small layout indicator bar instead of a heavy color dot */}
-                    <div className="flex justify-between items-center w-full">
-                      <div className="w-6 h-1.5 rounded-full" style={{ backgroundColor: preset.bg_color }} />
-                      <span className="text-[9px] font-bold text-zinc-500 font-mono">P{index + 1}</span>
-                    </div>
+                    {/* Background color subtle glow corner */}
+                    <div className="absolute top-2.5 left-3 w-3 h-3 rounded-full" style={{ backgroundColor: preset.bg_color }} />
                     
-                    <div className="text-left mt-4">
-                      <div className="font-extrabold text-sm truncate text-white">
+                    <div className="text-center">
+                      <div className="font-extrabold text-sm sm:text-base text-white tracking-tight">
                         {preset.text}
                       </div>
                     </div>
 
-                    {/* Preset Custom styles indicators */}
-                    <div className="flex gap-1 items-center mt-2 self-start">
-                      <span className="text-[8px] px-1.5 py-0.5 rounded bg-white/5 text-zinc-400 uppercase font-semibold font-mono">
-                        {preset.effect === 'none' ? 'static' : preset.effect === 'blink' ? 'blink' : 'marquee'}
-                      </span>
-                    </div>
-
-                    {/* Edit button card overlay */}
+                    {/* Small edit pencil icon in the top right, appears on hover or low-contrast */}
                     <button
                       type="button"
                       onClick={(e) => {
-                        e.stopPropagation(); // Avoid triggering color change
+                        e.stopPropagation(); // Avoid triggering preset
                         setEditingPresetIndex(index);
                         setEditingPreset({ ...preset });
                       }}
-                      className="absolute bottom-3 right-3 p-1.5 rounded-lg bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:bg-white/15 hover:scale-105 active:scale-95 transition-all z-20 cursor-pointer"
-                      title="프리셋 세부 수정"
+                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-white/5 text-zinc-500 hover:text-white hover:bg-white/15 transition-all z-20 cursor-pointer"
+                      title="수정"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 );
               })}
+
+              {/* + Custom Preset Card Slot */}
+              <div
+                onClick={() => {
+                  // Check tier limit: Free is limited to 6 presets max
+                  if (room?.tier === 'free' && presets.length >= 6) {
+                    setSelectedUpgradeTier(null);
+                    setUpgradeStep('select');
+                    setIsUpgradeModalOpen(true);
+                    return;
+                  }
+                  
+                  // Else, open edit drawer to add custom preset
+                  const newPreset: Preset = {
+                    bg_color: '#EF4444',
+                    text: '새 연출 ⚡',
+                    text_color: '#FFFFFF',
+                    effect: 'none',
+                    speed: 1000
+                  };
+                  setEditingPresetIndex(presets.length);
+                  setEditingPreset(newPreset);
+                }}
+                className="h-24 rounded-2xl border border-dashed border-white/10 hover:border-white/30 bg-transparent flex items-center justify-center p-6 transition-all hover:bg-white/[0.01] active:scale-[0.97] cursor-pointer text-zinc-500 hover:text-white"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Plus className="w-4 h-4" />
+                  <span className="text-sm font-bold">새 연출 추가</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -671,50 +715,50 @@ export default function HostDashboard() {
             </div>
             
             <div className="flex flex-col gap-5">
-              {/* Text Input & Send Button Row */}
-              <div className="grid sm:grid-cols-12 gap-4 items-end">
-                <div className="sm:col-span-9">
-                  <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-2">실시간 자막 입력</label>
+              {/* Text Input & Send Button Row (Combined side-by-side) */}
+              <div className="flex gap-3 items-center">
+                <div className="flex-1 relative">
                   <input
                     type="text"
                     value={customText}
                     onChange={(e) => setCustomText(e.target.value)}
-                    placeholder="구호 입력 (예: 헤쳐모여!)"
+                    placeholder="즉석 구호 입력 (예: 소리질러!)"
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-white text-sm font-semibold"
                     maxLength={15}
                   />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold font-mono text-zinc-600">
+                    {customText.length}/15
+                  </span>
                 </div>
                 
-                <div className="sm:col-span-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const isWhite = customBgColor === '#FFFFFF';
-                      const customPreset: Preset = {
-                        bg_color: customBgColor,
-                        text: customText || 'LET\'S GO',
-                        text_color: isWhite ? '#000000' : '#FFFFFF',
-                        effect: customText.length > 8 ? 'marquee' : 'none',
-                        speed: 4000,
-                        font_size: customFontSize,
-                        font_family: customFontFamily
-                      };
-                      triggerPreset(customPreset, -1);
-                    }}
-                    className="btn-primary w-full py-3.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Tv className="w-3.5 h-3.5" />
-                    송출하기
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const isWhite = customBgColor === '#FFFFFF';
+                    const customPreset: Preset = {
+                      bg_color: customBgColor,
+                      text: customText || 'LET\'S GO',
+                      text_color: isWhite ? '#000000' : '#FFFFFF',
+                      effect: customText.length > 8 ? 'marquee' : 'none',
+                      speed: 4000,
+                      font_size: customFontSize,
+                      font_family: customFontFamily
+                    };
+                    triggerPreset(customPreset, -1);
+                  }}
+                  className="btn-primary h-[48px] px-6 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                >
+                  <Tv className="w-3.5 h-3.5" />
+                  송출하기
+                </button>
               </div>
 
-              {/* Button Grids Controls Row */}
+              {/* Button Grids Controls Row (Segmented list) */}
               <div className="grid md:grid-cols-3 gap-6 pt-3 border-t border-white/5">
                 {/* 배경 테마 */}
                 <div>
                   <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-2">배경 테마</label>
-                  <div className="grid grid-cols-4 gap-1.5">
+                  <div className="grid grid-cols-4 gap-1.5 bg-black/40 p-1.5 rounded-xl border border-white/5">
                     {[
                       '#EF4444', '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#EC4899', '#FFFFFF', '#0B0B0F'
                     ].map((hex) => (
@@ -725,7 +769,7 @@ export default function HostDashboard() {
                         className={`h-7 rounded-lg border cursor-pointer transition-all ${
                           customBgColor === hex
                             ? 'border-white scale-105'
-                            : 'border-transparent hover:scale-102'
+                            : 'border-transparent hover:scale-102 hover:bg-white/5'
                         }`}
                         style={{ backgroundColor: hex }}
                       />
@@ -736,7 +780,7 @@ export default function HostDashboard() {
                 {/* 글자 크기 */}
                 <div>
                   <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-2">글자 크기</label>
-                  <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+                  <div className="grid grid-cols-5 gap-1 bg-black/40 p-1.5 rounded-xl border border-white/5 h-[44px] items-center">
                     {[
                       { val: 'auto', label: 'Auto' },
                       { val: 'small', label: '80%' },
@@ -750,7 +794,7 @@ export default function HostDashboard() {
                         onClick={() => setCustomFontSize(item.val as any)}
                         className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
                           customFontSize === item.val
-                            ? 'bg-white text-black shadow-md'
+                            ? 'bg-white text-black shadow-sm'
                             : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}
                       >
@@ -763,7 +807,7 @@ export default function HostDashboard() {
                 {/* 글꼴 스타일 */}
                 <div>
                   <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-2">글꼴 스타일</label>
-                  <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+                  <div className="grid grid-cols-4 gap-1 bg-black/40 p-1.5 rounded-xl border border-white/5 h-[44px] items-center">
                     {[
                       { val: 'sans', label: '고딕' },
                       { val: 'serif', label: '명조' },
@@ -776,7 +820,7 @@ export default function HostDashboard() {
                         onClick={() => setCustomFontFamily(item.val as any)}
                         className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
                           customFontFamily === item.val
-                            ? 'bg-white text-black shadow-md'
+                            ? 'bg-white text-black shadow-sm'
                             : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}
                       >
@@ -793,7 +837,7 @@ export default function HostDashboard() {
         {/* Right Column: Live Preview & Admission QR Sharing */}
         <div className="lg:col-span-4 flex flex-col gap-6">
           {/* LIVE ON AIR Preview Card */}
-          <div className="glass-effect rounded-2xl p-6 flex flex-col items-center">
+          <div className="glass-effect rounded-2xl p-6 flex flex-col items-center bg-[#12121a]">
             <div className="flex items-center gap-2 mb-2 self-start">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
               <h2 className="text-sm font-bold text-white uppercase tracking-wider">LIVE ON AIR</h2>
@@ -804,7 +848,7 @@ export default function HostDashboard() {
             </div>
           </div>
 
-          <div className="glass-effect rounded-2xl p-6 flex flex-col items-center text-center">
+          <div className="glass-effect rounded-2xl p-6 flex flex-col items-center text-center bg-[#12121a]">
             <Share2 className="w-6 h-6 text-indigo-400 mb-3" />
             <h2 className="text-lg font-bold text-white mb-1">관객 입장안내 (Admission QR)</h2>
             <p className="text-xs text-zinc-500 mb-6">관객들이 카메라로 스캔하여 즉시 입장할 수 있도록 스크린에 QR을 띄우거나 링크를 복사해 주세요.</p>
@@ -857,7 +901,7 @@ export default function HostDashboard() {
             </div>
           </div>
 
-          <div className="glass-effect rounded-2xl p-6 text-xs text-zinc-500 leading-normal flex flex-col gap-2">
+          <div className="glass-effect rounded-2xl p-6 text-xs text-zinc-500 leading-normal flex flex-col gap-2 bg-[#12121a]">
             <div className="font-bold text-zinc-400 mb-1 flex items-center gap-1.5">
               <Smartphone className="w-3.5 h-3.5" />
               현장 운영 팁 (Host Guide)
@@ -875,75 +919,89 @@ export default function HostDashboard() {
         Host Recovery Email: {room?.email} · Session Token: {token?.substring(0, 8)}...
       </footer>
 
-      {/* Preset Customization & Live Preview Modal */}
+      {/* 11. Preset Slide Drawer Editor */}
       {editingPresetIndex !== null && editingPreset !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-black/85 backdrop-blur-sm" onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }} />
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }} 
+          />
           
-          <div className="glass-effect rounded-2xl w-full max-w-3xl p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150 border border-white/10 grid md:grid-cols-2 gap-6">
-            
-            {/* Modal Left Column: Editor controls */}
-            <div className="flex flex-col gap-5">
-              <div className="flex justify-between items-center pb-3 border-b border-white/5">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Sliders className="w-4.5 h-4.5 text-indigo-400" />
-                  프리셋 P{editingPresetIndex + 1} 세부 수정
+          {/* Drawer Panel */}
+          <div className="absolute inset-y-0 right-0 max-w-md w-full bg-[#12121a] border-l border-white/5 shadow-2xl flex flex-col justify-between z-10 animate-in slide-in-from-right duration-250">
+            <div className="flex flex-col flex-1 overflow-y-auto">
+              
+              {/* Header */}
+              <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-indigo-400" />
+                  <span>
+                    {editingPresetIndex >= presets.length ? '새 커스텀 프리셋 추가' : `프리셋 P${editingPresetIndex + 1} 편집`}
+                  </span>
                 </h3>
                 <button 
                   onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }}
-                  className="text-zinc-500 hover:text-white"
+                  className="text-zinc-500 hover:text-white p-1 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Color Grid */}
-              <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">배경 색상</label>
-                <div className="grid grid-cols-6 gap-1.5">
-                  {[
-                    '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
-                    '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'
-                  ].map((hex) => (
-                    <button
-                      key={hex}
-                      onClick={() => setEditingPreset(prev => ({ ...prev!, bg_color: hex }))}
-                      className={`h-7 rounded-md border transition-all ${
-                        editingPreset.bg_color === hex 
-                          ? 'border-white scale-110 shadow-md' 
-                          : 'border-transparent hover:scale-105'
-                      }`}
-                      style={{ backgroundColor: hex }}
-                    />
-                  ))}
-                </div>
+              {/* Landscape Live Preview Mockup Inside Drawer */}
+              <div className="p-6 border-b border-white/5 bg-black/40 flex flex-col items-center">
+                <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-3 tracking-wider">실시간 연출 미리보기 (Mockup Sync)</span>
+                <LandscapePhoneMockup preset={editingPreset} />
               </div>
 
-              {/* Text Input */}
-              <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">출력 문구</label>
-                <input
-                  type="text"
-                  value={editingPreset.text}
-                  onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value }))}
-                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3.5 py-2 text-white focus:outline-none focus:border-indigo-500 text-sm font-semibold"
-                  maxLength={15}
-                />
-              </div>
-
-              {/* Text Color Toggle */}
-              {/* Text Color Toggle & Font Family */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Form Controls */}
+              <div className="p-6 flex flex-col gap-5">
+                {/* Output Text */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">글자 색상</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">출력 문구</label>
+                  <input
+                    type="text"
+                    value={editingPreset.text}
+                    onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value }))}
+                    className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-sm font-semibold"
+                    maxLength={15}
+                  />
+                </div>
+
+                {/* Background Color Grid */}
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">배경 색상</label>
+                  <div className="grid grid-cols-6 gap-2">
+                    {[
+                      '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
+                      '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'
+                    ].map((hex) => (
+                      <button
+                        key={hex}
+                        type="button"
+                        onClick={() => setEditingPreset(prev => ({ ...prev!, bg_color: hex }))}
+                        className={`h-9 rounded-lg border cursor-pointer transition-all ${
+                          editingPreset.bg_color === hex 
+                            ? 'border-white scale-105' 
+                            : 'border-transparent hover:scale-102'
+                        }`}
+                        style={{ backgroundColor: hex }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Text Color Option */}
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 색상</label>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#FFFFFF' }))}
-                      className={`flex-1 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                      className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
                         editingPreset.text_color === '#FFFFFF'
-                          ? 'border-white bg-white text-black'
-                          : 'border-white/10 bg-transparent text-zinc-400'
+                          ? 'border-white bg-white text-black font-extrabold'
+                          : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
                       }`}
                     >
                       밝은색
@@ -951,10 +1009,10 @@ export default function HostDashboard() {
                     <button
                       type="button"
                       onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#000000' }))}
-                      className={`flex-1 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                      className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
                         editingPreset.text_color === '#000000'
-                          ? 'border-white bg-white text-black'
-                          : 'border-white/10 bg-transparent text-zinc-400'
+                          ? 'border-white bg-white text-black font-extrabold'
+                          : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
                       }`}
                     >
                       어두운색
@@ -962,9 +1020,10 @@ export default function HostDashboard() {
                   </div>
                 </div>
 
+                {/* Font Family Selector */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">글꼴 스타일</label>
-                  <div className="grid grid-cols-4 gap-1 bg-black/50 p-1 rounded-xl border border-white/10">
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
+                  <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
                     {[
                       { val: 'sans', label: '고딕' },
                       { val: 'serif', label: '명조' },
@@ -975,39 +1034,10 @@ export default function HostDashboard() {
                         type="button"
                         key={item.val}
                         onClick={() => setEditingPreset(prev => ({ ...prev!, font_family: item.val as any }))}
-                        className={`py-2 rounded-lg text-[10px] font-semibold transition-all cursor-pointer ${
+                        className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           (editingPreset.font_family || 'sans') === item.val
-                            ? 'bg-white text-black shadow-md'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Font Size & Motion Effect */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">글자 크기 비율</label>
-                  <div className="grid grid-cols-5 gap-1 bg-black/50 p-1 rounded-xl border border-white/10">
-                    {[
-                      { val: 'auto', label: 'Auto' },
-                      { val: 'small', label: '80%' },
-                      { val: 'medium', label: '100%' },
-                      { val: 'large', label: '140%' },
-                      { val: 'huge', label: '180%' }
-                    ].map((item) => (
-                      <button
-                        type="button"
-                        key={item.val}
-                        onClick={() => setEditingPreset(prev => ({ ...prev!, font_size: item.val as any }))}
-                        className={`py-2 rounded-lg text-[9px] sm:text-[10px] font-semibold transition-all cursor-pointer ${
-                          (editingPreset.font_size || 'auto') === item.val
-                            ? 'bg-white text-black shadow-md'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                            ? 'bg-white text-black shadow-sm'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}
                       >
                         {item.label}
@@ -1016,79 +1046,153 @@ export default function HostDashboard() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">모션 효과</label>
-                  <div className="grid grid-cols-3 gap-1 bg-black/50 p-1 rounded-xl border border-white/10">
-                    {[
-                      { val: 'none', label: '정적' },
-                      { val: 'blink', label: '반짝임' },
-                      { val: 'marquee', label: '흐르기' }
-                    ].map((item) => (
-                      <button
-                        type="button"
-                        key={item.val}
-                        onClick={() => setEditingPreset(prev => ({ ...prev!, effect: item.val as any }))}
-                        className={`py-2 rounded-lg text-[10px] font-semibold transition-all cursor-pointer ${
-                          editingPreset.effect === item.val
-                            ? 'bg-white text-black shadow-md'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
+                {/* Font Size & Motion Effect in Two columns */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 크기 비율</label>
+                    <div className="grid grid-cols-5 gap-0.5 bg-black/40 p-1 rounded-xl border border-white/5">
+                      {[
+                        { val: 'auto', label: 'Auto' },
+                        { val: 'small', label: '80%' },
+                        { val: 'medium', label: '100%' },
+                        { val: 'large', label: '140%' },
+                        { val: 'huge', label: '180%' }
+                      ].map((item) => (
+                        <button
+                          type="button"
+                          key={item.val}
+                          onClick={() => setEditingPreset(prev => ({ ...prev!, font_size: item.val as any }))}
+                          className={`py-1.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer ${
+                            (editingPreset.font_size || 'auto') === item.val
+                              ? 'bg-white text-black shadow-sm'
+                              : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">모션 효과</label>
+                    <div className="grid grid-cols-5 gap-0.5 bg-black/40 p-1 rounded-xl border border-white/5">
+                      {[
+                        { val: 'none', label: '정적' },
+                        { val: 'blink', label: '깜빡이' },
+                        { val: 'marquee', label: '흐르기' },
+                        { val: 'equalizer', label: '이퀄' },
+                        { val: 'countdown', label: '타이머' }
+                      ].map((item) => (
+                        <button
+                          type="button"
+                          key={item.val}
+                          onClick={() => setEditingPreset(prev => ({ ...prev!, effect: item.val as any }))}
+                          className={`py-1.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer ${
+                            editingPreset.effect === item.val
+                              ? 'bg-white text-black shadow-sm'
+                              : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col gap-2 mt-2">
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (editingPresetIndex === null || !editingPreset) return;
-                      const updated = [...presets];
-                      updated[editingPresetIndex] = editingPreset;
-                      setPresets(updated);
-                      localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
-                      setEditingPresetIndex(null);
-                      setEditingPreset(null);
-                    }}
-                    className="flex-1 py-3 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all text-xs"
-                  >
-                    저장만 하기
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (editingPresetIndex === null || !editingPreset) return;
-                      const updated = [...presets];
-                      updated[editingPresetIndex] = editingPreset;
-                      setPresets(updated);
-                      localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
-                      triggerPreset(editingPreset, editingPresetIndex);
-                      setEditingPresetIndex(null);
-                      setEditingPreset(null);
-                    }}
-                    className="flex-1 py-3 rounded-xl bg-indigo-500 text-white font-bold hover:bg-indigo-650 transition-all text-xs"
-                  >
-                    저장 후 바로 송출 ⚡
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }}
-                  className="w-full py-2.5 rounded-xl bg-white/5 text-zinc-400 font-semibold hover:bg-white/10 transition-all text-xs"
-                >
-                  취소 (변경 사항 무시)
-                </button>
               </div>
             </div>
 
-            {/* Modal Right Column: Live phone scroller preview */}
-            <div className="bg-[#0B0B0F] rounded-2xl border border-white/5 p-4 flex flex-col justify-center items-center text-center">
-              <span className="text-[10px] font-mono text-zinc-500 uppercase mb-4 tracking-wider">실시간 연출 미리보기 (Landscape Preview)</span>
-              <LandscapePhoneMockup preset={editingPreset} />
+            {/* Footer Buttons */}
+            <div className="p-6 border-t border-white/5 bg-black/20 flex flex-col gap-2">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (editingPresetIndex === null || !editingPreset) return;
+                    const updated = [...presets];
+                    if (editingPresetIndex === presets.length) {
+                      updated.push(editingPreset);
+                    } else {
+                      updated[editingPresetIndex] = editingPreset;
+                    }
+                    setPresets(updated);
+                    localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
+                    setEditingPresetIndex(null);
+                    setEditingPreset(null);
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-white/10 text-white font-bold hover:bg-white/15 transition-all text-xs cursor-pointer"
+                >
+                  저장만 하기
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (editingPresetIndex === null || !editingPreset) return;
+                    const updated = [...presets];
+                    if (editingPresetIndex === presets.length) {
+                      updated.push(editingPreset);
+                    } else {
+                      updated[editingPresetIndex] = editingPreset;
+                    }
+                    setPresets(updated);
+                    localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
+                    triggerPreset(editingPreset, editingPresetIndex);
+                    setEditingPresetIndex(null);
+                    setEditingPreset(null);
+                  }}
+                  className="btn-primary flex-1 py-3 rounded-xl text-xs font-bold cursor-pointer"
+                >
+                  저장 후 바로 송출 ⚡
+                </button>
+              </div>
+
+              {/* Reset to Defaults (for system defaults) */}
+              {editingPresetIndex < 6 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingPreset({ ...defaults[editingPresetIndex] });
+                  }}
+                  className="w-full py-2.5 rounded-xl border border-white/5 bg-white/5 text-zinc-400 font-semibold hover:bg-white/10 transition-all text-xs cursor-pointer"
+                >
+                  기본값으로 초기화 🔄
+                </button>
+              )}
+
+              {/* Delete Custom Preset */}
+              {editingPresetIndex >= 6 && editingPresetIndex < presets.length && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = presets.filter((_, idx) => idx !== editingPresetIndex);
+                    setPresets(updated);
+                    localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
+                    
+                    if (activePresetIndex === editingPresetIndex) {
+                      setActivePresetIndex(null);
+                    } else if (activePresetIndex !== null && activePresetIndex > editingPresetIndex) {
+                      setActivePresetIndex(activePresetIndex - 1);
+                    }
+                    
+                    setEditingPresetIndex(null);
+                    setEditingPreset(null);
+                  }}
+                  className="w-full py-2.5 rounded-xl border border-red-500/10 bg-red-500/5 text-red-400 font-semibold hover:bg-red-500/15 transition-all text-xs cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  프리셋 삭제
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }}
+                className="w-full py-2.5 rounded-xl bg-white/5 text-zinc-400 font-semibold hover:bg-white/10 transition-all text-xs cursor-pointer"
+              >
+                취소 (변경 사항 무시)
+              </button>
             </div>
 
           </div>
@@ -1098,7 +1202,7 @@ export default function HostDashboard() {
       {/* 12. Upgrade Plan Modal Dialog */}
       {isUpgradeModalOpen && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-effect border border-white/10 rounded-2xl w-full max-w-md p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150 text-center flex flex-col gap-5 text-white">
+          <div className="glass-effect border border-white/10 rounded-2xl w-full max-w-md p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150 text-center flex flex-col gap-5 text-white bg-[#12121a]">
             
             {/* Header */}
             <div className="flex justify-between items-center pb-3 border-b border-white/5">
@@ -1156,7 +1260,7 @@ export default function HostDashboard() {
                     if (selectedUpgradeTier) setUpgradeStep('payment');
                   }}
                   disabled={!selectedUpgradeTier}
-                  className="w-full py-3.5 mt-2 rounded-xl bg-white text-black font-extrabold text-xs hover:bg-zinc-200 transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                  className="btn-primary w-full py-3.5 mt-2 rounded-xl text-xs font-extrabold cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
                 >
                   결제 단계로 이동하기 ➡️
                 </button>
@@ -1201,7 +1305,7 @@ export default function HostDashboard() {
                   <button
                     onClick={handleUpgrade}
                     disabled={isUpgrading}
-                    className="flex-1 py-3 rounded-xl bg-indigo-500 text-white font-extrabold hover:bg-indigo-650 transition-all text-xs cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    className="btn-primary flex-1 py-3 rounded-xl text-xs font-extrabold cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 animate-pulse"
                   >
                     {isUpgrading ? (
                       <>

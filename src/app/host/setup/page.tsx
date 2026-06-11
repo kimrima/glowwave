@@ -23,17 +23,16 @@ import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 export default function HostSetup() {
   const router = useRouter();
   
-  // Default presets for the buttons
-  const [presets, setPresets] = useState<Preset[]>([
+  // Default presets for the buttons (to be stored inside DB/Local storage automatically)
+  const defaultPresets: Preset[] = [
     { bg_color: '#EF4444', text: '열정 🔥', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
     { bg_color: '#3B82F6', text: '파도 타기 🌊', text_color: '#FFFFFF', effect: 'marquee', speed: 4000 },
     { bg_color: '#EC4899', text: '소리 질러! 🎉', text_color: '#FFFFFF', effect: 'blink', speed: 600 },
     { bg_color: '#10B981', text: '싱크 클럽 ⚡', text_color: '#FFFFFF', effect: 'blink', speed: 400 },
     { bg_color: '#F59E0B', text: '박수 👏👏', text_color: '#000000', effect: 'none', speed: 1000 },
     { bg_color: '#8B5CF6', text: 'GLOW', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
-  ]);
+  ];
 
-  const [selectedPresetIndex, setSelectedPresetIndex] = useState<number>(0);
   const [selectedTier, setSelectedTier] = useState<TierType>('free');
   const [hostEmail, setHostEmail] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -52,15 +51,6 @@ export default function HostSetup() {
       setHostEmail(savedEmail);
     }
   }, []);
-
-  const handleUpdatePreset = (key: keyof Preset, value: any) => {
-    const updated = [...presets];
-    updated[selectedPresetIndex] = {
-      ...updated[selectedPresetIndex],
-      [key]: value
-    };
-    setPresets(updated);
-  };
 
   const handleStartSetup = (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,8 +96,8 @@ export default function HostSetup() {
 
       // If Free Tier, it is active immediately (no payment hook required)
       if (selectedTier === 'free') {
-        // Save presets and authorization to LocalStorage
-        localStorage.setItem(`glowwave_presets_${data.room_id}`, JSON.stringify(presets));
+        // Save default presets and authorization to LocalStorage
+        localStorage.setItem(`glowwave_presets_${data.room_id}`, JSON.stringify(defaultPresets));
         localStorage.setItem(`glowwave_token_${data.room_id}`, data.host_session_token);
         localStorage.setItem('glowwave_active_host_room_id', data.room_id);
         
@@ -150,8 +140,8 @@ export default function HostSetup() {
         throw new Error(data.error || '결제 웹훅 통신 실패');
       }
 
-      // Save presets and authorization to LocalStorage
-      localStorage.setItem(`glowwave_presets_${createdRoomInfo.room_id}`, JSON.stringify(presets));
+      // Save default presets and authorization to LocalStorage
+      localStorage.setItem(`glowwave_presets_${createdRoomInfo.room_id}`, JSON.stringify(defaultPresets));
       localStorage.setItem(`glowwave_token_${createdRoomInfo.room_id}`, createdRoomInfo.host_session_token);
       localStorage.setItem('glowwave_active_host_room_id', createdRoomInfo.room_id);
 
@@ -167,21 +157,6 @@ export default function HostSetup() {
     }
   };
 
-  const colors = [
-    { name: '빨강', hex: '#EF4444' },
-    { name: '오렌지', hex: '#F97316' },
-    { name: '노랑', hex: '#F59E0B' },
-    { name: '초록', hex: '#10B981' },
-    { name: '민트', hex: '#06B6D4' },
-    { name: '파랑', hex: '#3B82F6' },
-    { name: '남색', hex: '#6366F1' },
-    { name: '보라', hex: '#8B5CF6' },
-    { name: '자주', hex: '#D946EF' },
-    { name: '분홍', hex: '#EC4899' },
-    { name: '하양', hex: '#FFFFFF' },
-    { name: '검정', hex: '#0B0B0F' },
-  ];
-
   return (
     <div className="min-h-screen bg-[#0B0B0F] text-foreground flex flex-col justify-between">
       {/* Header */}
@@ -192,210 +167,41 @@ export default function HostSetup() {
             <span>GlowWave</span>
           </Link>
           <div className="text-xs text-zinc-500 font-mono">
-            SETUP BUILDER v1.0
+            SETUP BUILDER v1.1
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-10 flex-1 grid lg:grid-cols-12 gap-8 w-full">
+      <main className="max-w-6xl mx-auto px-6 py-10 flex-1 grid lg:grid-cols-12 gap-12 w-full items-center">
         
-        {/* Left Column: Preset Setup */}
-        <div className="lg:col-span-7 flex flex-col gap-6">
-          <div className="glass-effect rounded-2xl p-6 bg-[#12121a]">
-            <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-              <Settings className="w-5 h-5 text-indigo-400" />
-              <span>실시간 연출 프리셋 세팅</span>
-            </h2>
-            <p className="text-sm text-zinc-400 mb-6">현장에서 리모컨 클릭 한 번으로 관객 전체 화면을 바꿀 프리셋 6개를 세팅해 주세요.</p>
-
-            {/* Presets Grid Selector */}
-            <div className="grid grid-cols-3 gap-3 mb-6">
-              {presets.map((p, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedPresetIndex(idx)}
-                  className={`h-16 rounded-xl border text-left p-3 relative overflow-hidden transition-all cursor-pointer ${
-                    selectedPresetIndex === idx 
-                      ? 'border-white bg-white/[0.04]' 
-                      : 'border-white/5 hover:border-white/10 hover:bg-white/[0.01]'
-                  }`}
-                >
-                  <div className="absolute top-2.5 left-3 w-5 h-1.5 rounded-full" style={{ backgroundColor: p.bg_color }} />
-                  <div className="absolute bottom-2.5 left-3 text-xs font-bold truncate max-w-[85%] text-white">
-                    {p.text || `버튼 ${idx + 1}`}
-                  </div>
-                  <span className="absolute top-2 right-3 text-[9px] text-zinc-500 font-mono">
-                    P{idx + 1}
-                  </span>
-                </button>
-              ))}
+        {/* Left Column: Welcome & Showcase */}
+        <div className="lg:col-span-6 flex flex-col gap-8 pr-0 lg:pr-8 py-4">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>비밀번호 없이 3초 만에 생성</span>
             </div>
+            <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight tracking-tight">
+              어두운 행사장을 빛낼<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">우리만의 모바일 전광판</span>
+            </h1>
+            <p className="text-sm text-zinc-400 leading-relaxed max-w-md">
+              번거로운 가입이나 앱 다운로드 없이, 이메일 주소만으로 방을 개설할 수 있습니다. 
+              생성 완료 후 호스트 리모컨 대시보드에서 마음껏 자막과 효과를 연출해 보세요!
+            </p>
+          </div>
 
-            {/* Preset Customizer Board */}
-            <div className="bg-black/40 border border-white/5 rounded-xl p-5 flex flex-col gap-4">
-              <div className="flex justify-between items-center pb-3 border-b border-white/5">
-                <span className="text-[10px] font-mono text-zinc-500 uppercase">Editing Preset {selectedPresetIndex + 1}</span>
-                <span className="text-xs px-2.5 py-0.5 rounded bg-white/5 text-white font-bold">
-                  {presets[selectedPresetIndex].effect === 'none' ? '정적 효과' : presets[selectedPresetIndex].effect === 'blink' ? '깜빡이' : '자막 흐르기'}
-                </span>
-              </div>
-
-              {/* Color Selection */}
-              <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">화면 배경 색상</label>
-                <div className="grid grid-cols-6 gap-2">
-                  {colors.map((c) => (
-                    <button
-                      key={c.hex}
-                      onClick={() => handleUpdatePreset('bg_color', c.hex)}
-                      className={`h-9 rounded-lg border transition-all cursor-pointer ${
-                        presets[selectedPresetIndex].bg_color === c.hex 
-                          ? 'border-white scale-105' 
-                          : 'border-transparent hover:scale-102'
-                      }`}
-                      style={{ backgroundColor: c.hex }}
-                      title={c.name}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Text Input */}
-              <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">출력 문구</label>
-                <input
-                  type="text"
-                  value={presets[selectedPresetIndex].text}
-                  onChange={(e) => handleUpdatePreset('text', e.target.value)}
-                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-sm font-semibold"
-                  placeholder="구호를 입력하세요 (예: GOAL, 소리질러)"
-                  maxLength={15}
-                />
-              </div>
-
-              {/* Text Color Toggle & Motion Effect Selector */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 색상</label>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleUpdatePreset('text_color', '#FFFFFF')}
-                      className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                        presets[selectedPresetIndex].text_color === '#FFFFFF'
-                          ? 'border-white bg-white text-black font-extrabold'
-                          : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
-                      }`}
-                    >
-                      밝은색
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleUpdatePreset('text_color', '#000000')}
-                      className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                        presets[selectedPresetIndex].text_color === '#000000'
-                          ? 'border-white bg-white text-black font-extrabold'
-                          : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
-                      }`}
-                    >
-                      어두운색
-                    </button>
-                  </div>
-                </div>
-
-                {/* Effect Select */}
-                <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">모션 효과</label>
-                  <div className="grid grid-cols-3 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
-                    {[
-                      { val: 'none', label: '정적' },
-                      { val: 'blink', label: '반빡임' },
-                      { val: 'marquee', label: '흐르기' }
-                    ].map((item) => (
-                      <button
-                        type="button"
-                        key={item.val}
-                        onClick={() => handleUpdatePreset('effect', item.val)}
-                        className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          presets[selectedPresetIndex].effect === item.val
-                            ? 'bg-white text-black shadow-md'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* 글자 크기 및 폰트 커스텀 */}
-              <div className="flex flex-col gap-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 크기 비율</label>
-                  <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
-                    {[
-                      { val: 'auto', label: 'Auto' },
-                      { val: 'small', label: '80%' },
-                      { val: 'medium', label: '100%' },
-                      { val: 'large', label: '140%' },
-                      { val: 'huge', label: '180%' }
-                    ].map((item) => (
-                      <button
-                        type="button"
-                        key={item.val}
-                        onClick={() => handleUpdatePreset('font_size', item.val)}
-                        className={`py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${
-                          (presets[selectedPresetIndex].font_size || 'auto') === item.val
-                            ? 'bg-white text-black shadow-md'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
-                  <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
-                    {[
-                      { val: 'sans', label: '기본 고딕' },
-                      { val: 'serif', label: '명조체' },
-                      { val: 'neon', label: '네온' },
-                      { val: 'dot', label: '도트' }
-                    ].map((item) => (
-                      <button
-                        type="button"
-                        key={item.val}
-                        onClick={() => handleUpdatePreset('font_family', item.val)}
-                        className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          (presets[selectedPresetIndex].font_family || 'sans') === item.val
-                            ? 'bg-white text-black shadow-md'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Phone Mockup Showcase */}
+          <div className="flex flex-col items-center lg:items-start">
+            <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-4 tracking-wider">실시간 연출 효과 예시 (Mockup Preview)</span>
+            <LandscapePhoneMockup preset={defaultPresets[1]} />
           </div>
         </div>
 
-        {/* Right Column: Live Preview & Email input & Tier Options */}
-        <div className="lg:col-span-5 flex flex-col gap-6">
-          {/* Live Signboard Preview */}
-          <div className="glass-effect rounded-2xl p-6 flex flex-col items-center bg-[#12121a]">
-            <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-4 tracking-wider">실시간 연출 미리보기 (Landscape Preview)</span>
-            <LandscapePhoneMockup preset={presets[selectedPresetIndex]} />
-          </div>
-
-          <form onSubmit={handleStartSetup} className="glass-effect rounded-2xl p-6 flex flex-col gap-6 bg-[#12121a]">
+        {/* Right Column: Setup Form */}
+        <div className="lg:col-span-6 flex flex-col justify-center">
+          <form onSubmit={handleStartSetup} className="glass-effect rounded-2xl p-6 sm:p-8 flex flex-col gap-6 bg-[#12121a]">
             <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
               <Layers className="w-5 h-5 text-indigo-400" />
               <span>참여 인원 및 요금제 선택</span>
@@ -424,7 +230,7 @@ export default function HostSetup() {
                   {emailError}
                 </p>
               ) : (
-                <p className="text-[10px] text-zinc-500 mt-2">비밀번호 가입 없이 이메일만으로 결제 정보를 식별하고 나중에 복구할 수 있습니다.</p>
+                <p className="text-[10px] text-zinc-500 mt-2 font-medium">이메일만으로 결제 정보를 식별하고 나중에 복구할 수 있습니다.</p>
               )}
             </div>
 
@@ -467,7 +273,7 @@ export default function HostSetup() {
             {/* Submit btn */}
             <button
               type="submit"
-              className="btn-primary w-full py-4 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer"
+              className="btn-primary w-full py-4 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-xl"
             >
               이벤트 방 개설하기 <ChevronRight className="w-4 h-4" />
             </button>
@@ -500,7 +306,7 @@ export default function HostSetup() {
                 </div>
 
                 <div className="flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl my-1">
-                  <LandscapePhoneMockup preset={presets[selectedPresetIndex]} />
+                  <LandscapePhoneMockup preset={defaultPresets[1]} />
                 </div>
 
                 <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 text-left max-w-xs mx-auto w-full text-xs flex flex-col gap-2">
@@ -512,7 +318,7 @@ export default function HostSetup() {
                 <button
                   onClick={executeCheckoutCreation}
                   disabled={isProcessing}
-                  className="w-full py-3.5 rounded-xl bg-white text-black font-bold hover:bg-zinc-200 transition-all text-sm flex items-center justify-center gap-2"
+                  className="btn-primary w-full py-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isProcessing ? (
                     <>

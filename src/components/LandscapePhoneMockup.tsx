@@ -1,5 +1,6 @@
 import React from 'react';
 import { Preset } from '@/lib/types';
+import useFitText from '@/hooks/useFitText';
 
 interface LandscapePhoneMockupProps {
   preset: Preset;
@@ -20,25 +21,15 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
     }
   };
 
-  // Font sizing using cqw (Container Query Width) to scale in exact proportion to mockup width
-  const getFontSizeStyle = () => {
-    switch (preset.font_size) {
-      case 'small':
-        return { fontSize: 'clamp(0.5rem, 7cqw, 2.5rem)' };
-      case 'medium':
-        return { fontSize: 'clamp(0.75rem, 11cqw, 4.5rem)' };
-      case 'large':
-        return { fontSize: 'clamp(1rem, 18cqw, 8rem)' };
-      case 'huge':
-        return { fontSize: 'clamp(1.5rem, 24cqw, 11rem)' };
-      default:
-        // 'auto' sizing logic matching standard spectator clamp defaults
-        return { fontSize: 'clamp(1rem, 16cqw, 7.5rem)' };
-    }
-  };
-
   const isBlink = preset.effect === 'blink';
   const isMarquee = preset.effect === 'marquee';
+
+  // Use dynamic fitting hook to sync sizes proportional to container clientWidth/clientHeight
+  const { containerRef, fontSize } = useFitText(
+    preset.text || 'GlowWave',
+    preset.effect || 'none',
+    preset.font_size || 'auto'
+  );
 
   return (
     <div className="@container w-full max-w-[420px] aspect-[1.91/1] bg-black rounded-[9%] border-[1.2cqw] border-zinc-800 shadow-2xl p-[2.2cqw] flex items-center justify-center overflow-hidden relative">
@@ -49,6 +40,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
 
       {/* Screen Display Area */}
       <div 
+        ref={containerRef}
         className={`absolute inset-[2.2cqw] rounded-[6.5%] overflow-hidden flex items-center justify-center transition-colors duration-200 ${
           isBlink ? 'animate-blink' : ''
         }`}
@@ -64,7 +56,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
               style={{ 
                 color: preset.text_color,
                 fontFamily: preset.font_family === 'serif' ? 'Georgia, serif' : undefined,
-                ...getFontSizeStyle(),
+                fontSize,
                 '--marquee-duration': `${preset.speed || 6000}ms`
               } as React.CSSProperties}
             >
@@ -77,7 +69,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
             style={{ 
               color: preset.text_color,
               fontFamily: preset.font_family === 'serif' ? 'Georgia, serif' : undefined,
-              ...getFontSizeStyle()
+              fontSize
             }}
           >
             {preset.text || 'GlowWave'}

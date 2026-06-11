@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Preset, Room } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import useFitText from '@/hooks/useFitText';
 
 export default function AudienceRoom() {
   const params = useParams();
@@ -20,8 +21,7 @@ export default function AudienceRoom() {
   const rawRoomId = params.room_id as string;
   const roomId = rawRoomId ? rawRoomId.toUpperCase() : '';
 
-  // Container ref for Fullscreen API
-  const containerRef = useRef<HTMLDivElement>(null);
+
   const [showSafariTip, setShowSafariTip] = useState(false); // Hide by default, show on click or first load
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -48,6 +48,38 @@ export default function AudienceRoom() {
     effect: 'none',
     speed: 1000
   });
+
+  // Countdown timer state
+  const [countdownVal, setCountdownVal] = useState<number | string>(10);
+
+  // Trigger countdown timer decrement when currentPreset effect is set to countdown
+  useEffect(() => {
+    if (currentPreset.effect === 'countdown') {
+      setCountdownVal(10);
+      const timer = setInterval(() => {
+        setCountdownVal((prev) => {
+          if (typeof prev === 'number') {
+            if (prev <= 1) {
+              return 'GO! ⚡';
+            }
+            return prev - 1;
+          }
+          return prev;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [currentPreset.text, currentPreset.effect]);
+
+  // Compute text to display on screen
+  const displayText = currentPreset.effect === 'countdown' ? String(countdownVal) : currentPreset.text;
+
+  // Use dynamic fitting hook to sync text sizes proportional to viewport container clientWidth/clientHeight
+  const { containerRef, fontSize } = useFitText(
+    displayText,
+    currentPreset.effect,
+    currentPreset.font_size || 'auto'
+  );
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -502,6 +534,7 @@ export default function AudienceRoom() {
 
       {/* Main Display Screen */}
       <div 
+        ref={containerRef}
         className={`w-full h-full flex items-center justify-center transition-colors duration-300 ${
           currentPreset.effect === 'blink' ? 'animate-blink' : ''
         }`}
@@ -510,6 +543,14 @@ export default function AudienceRoom() {
           '--blink-duration': `${currentPreset.speed || 1000}ms`
         } as React.CSSProperties}
       >
+        {/* standard styling tags for keyframes (highly robust in Next.js) */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes equalizer-bar {
+            0% { transform: scaleY(0.15); }
+            100% { transform: scaleY(0.95); }
+          }
+        `}} />
+
         {currentPreset.effect === 'marquee' ? (
           <div className="w-full overflow-hidden whitespace-nowrap flex items-center">
             <span 
@@ -519,15 +560,11 @@ export default function AudienceRoom() {
               style={{ 
                 color: currentPreset.text_color,
                 fontFamily: currentPreset.font_family === 'serif' ? 'Georgia, serif' : undefined,
-                fontSize: currentPreset.font_size === 'small' ? 'clamp(1rem, 7vw, 5rem)'
-                        : currentPreset.font_size === 'medium' ? 'clamp(1.5rem, 11vw, 9rem)'
-                        : currentPreset.font_size === 'large' ? 'clamp(2rem, 18vw, 16rem)'
-                        : currentPreset.font_size === 'huge' ? 'clamp(3rem, 24vw, 22rem)'
-                        : 'clamp(2.5rem,20vw,18rem)', // auto default
+                fontSize,
                 '--marquee-duration': `${currentPreset.speed || 6000}ms`
               } as React.CSSProperties}
             >
-              {currentPreset.text} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {currentPreset.text}
+              {displayText} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {displayText}
             </span>
           </div>
         ) : (
@@ -538,14 +575,32 @@ export default function AudienceRoom() {
             style={{ 
               color: currentPreset.text_color,
               fontFamily: currentPreset.font_family === 'serif' ? 'Georgia, serif' : undefined,
-              fontSize: currentPreset.font_size === 'small' ? 'clamp(1rem, 7vw, 5rem)'
-                      : currentPreset.font_size === 'medium' ? 'clamp(1.5rem, 11vw, 9rem)'
-                      : currentPreset.font_size === 'large' ? 'clamp(2rem, 18vw, 16rem)'
-                      : currentPreset.font_size === 'huge' ? 'clamp(3rem, 24vw, 22rem)'
-                      : 'clamp(2rem, 16vw, 15rem)' // auto default
+              fontSize
             }}
           >
-            {currentPreset.text}
+            {displayText}
+          </div>
+        )}
+
+        {/* Dynamic Simulated Equalizer Bars Overlay */}
+        {currentPreset.effect === 'equalizer' && (
+          <div className="absolute inset-x-0 bottom-0 top-1/2 flex items-end justify-center gap-1 sm:gap-2 px-6 sm:px-12 pb-6 sm:pb-10 pointer-events-none opacity-30">
+            {[...Array(16)].map((_, i) => {
+              const animDuration = 0.5 + Math.random() * 0.7;
+              const animDelay = Math.random() * 0.4;
+              return (
+                <div 
+                  key={i}
+                  className="flex-1 max-w-[20px] h-full rounded-t-md transition-all"
+                  style={{
+                    backgroundColor: currentPreset.text_color || '#FFFFFF',
+                    transformOrigin: 'bottom',
+                    animation: `equalizer-bar ${animDuration}s ease-in-out infinite alternate`,
+                    animationDelay: `${animDelay}s`
+                  }}
+                />
+              );
+            })}
           </div>
         )}
 
