@@ -565,39 +565,38 @@ export default function AudienceRoom() {
       {/* 8. Initial entry user activation overlay for Fullscreen & WakeLock support */}
       {showEnterOverlay && (
         <div className="fixed inset-0 bg-[#0B0B0F] z-50 flex flex-col justify-center items-center text-center px-6 text-white">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none" />
           
-          <div className="relative mb-6 animate-pulse">
-            <Sparkles className="w-12 h-12 text-indigo-400" />
+          <div className="relative mb-6">
+            <Sparkles className="w-10 h-10 text-white animate-pulse" />
           </div>
           
-          <h2 className="text-xl font-bold text-white mb-2">전광판 동기화 준비 완료</h2>
+          <h2 className="text-xl font-black text-white mb-2">전광판 동기화 준비 완료</h2>
           
           {isIOSUserAndNotStandalone ? (
-            <div className="glass-effect p-6 rounded-2xl max-w-sm border border-indigo-500/20 mb-6 flex flex-col gap-4 text-left">
-              <div className="flex items-center gap-2 text-indigo-400 border-b border-white/5 pb-2">
-                <Smartphone className="w-5 h-5 animate-pulse" />
-                <h3 className="font-extrabold text-sm text-white">아이폰(iOS) 전체화면 설정 권장 🚨</h3>
+            <div className="glass-effect p-6 rounded-2xl max-w-sm border border-white/5 bg-[#12121a] mb-6 flex flex-col gap-4 text-left">
+              <div className="flex items-center gap-2 border-b border-white/5 pb-2">
+                <Smartphone className="w-4.5 h-4.5" />
+                <h3 className="font-bold text-xs text-white">아이폰(iOS) 전체화면 설정 권장 🚨</h3>
               </div>
-              <p className="text-[11px] text-zinc-400 leading-relaxed">
+              <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">
                 아이폰 Safari 브라우저는 주소창과 메뉴바를 숨길 수 없어 일반 브라우저로 접속 시 전광판이 잘려 보입니다. 
                 아래 순서대로 <b>'홈 화면에 추가'</b>하여 실행하시면 완벽한 전체화면 앱으로 이용 가능합니다!
               </p>
               <div className="bg-white/5 rounded-xl p-3 text-[10px] flex flex-col gap-2 text-zinc-300 leading-normal border border-white/5 font-medium">
                 <div className="flex gap-1.5">
-                  <span className="text-indigo-400 font-bold">1.</span>
+                  <span className="text-zinc-500 font-bold">1.</span>
                   <span>화면 하단 중앙의 <b>[공유 버튼 📤]</b>을 클릭합니다.</span>
                 </div>
                 <div className="flex gap-1.5 border-t border-white/5 pt-1.5">
-                  <span className="text-indigo-400 font-bold">2.</span>
+                  <span className="text-zinc-500 font-bold">2.</span>
                   <span>메뉴 중 <b>[홈 화면에 추가 ➕]</b>를 선택합니다.</span>
                 </div>
                 <div className="flex gap-1.5 border-t border-white/5 pt-1.5">
-                  <span className="text-indigo-400 font-bold">3.</span>
+                  <span className="text-zinc-500 font-bold">3.</span>
                   <span>바탕화면에 생성된 <b>GlowWave 아이콘</b>으로 재접속해 주세요.</span>
                 </div>
               </div>
-              <p className="text-[9px] text-zinc-500 text-center">
+              <p className="text-[9px] text-zinc-500 text-center font-medium">
                 ※ 홈 화면에 추가하지 않고 그냥 브라우저로 이용하려면 아래 버튼을 누르세요.
               </p>
             </div>

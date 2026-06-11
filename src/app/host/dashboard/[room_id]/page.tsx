@@ -561,48 +561,52 @@ export default function HostDashboard() {
         {/* Left Column: Remote Board (Presets & Free-text edit) */}
         <div className="lg:col-span-8 flex flex-col gap-6">
           {/* Header Stats */}
-          <div className="glass-effect rounded-2xl p-6 grid grid-cols-3 gap-4 text-center">
+          <div className="glass-effect rounded-2xl p-6 grid grid-cols-3 gap-6 text-center bg-[#12121a]">
             <div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-mono">고유 방 코드</div>
-              <div className="text-xl sm:text-2xl font-black text-indigo-300 mt-1 select-all">{roomId}</div>
+              <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">이벤트 방 코드</div>
+              <div className="text-2xl sm:text-3xl font-black text-white mt-1 select-all tracking-wider font-mono">{roomId}</div>
             </div>
             
             <div className="border-x border-white/5">
-              <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-mono flex items-center justify-center gap-1">
-                <Users className="w-3 h-3 text-indigo-400" />
-                실시간 관객 수
+              <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider flex items-center justify-center gap-1">
+                실시간 관객
               </div>
-              <div className="text-xl sm:text-2xl font-black text-white mt-1 flex justify-center items-baseline gap-1">
+              <div className="text-2xl sm:text-3xl font-black text-white mt-1 flex justify-center items-baseline gap-1">
                 <span>{activeParticipants}</span>
-                <span className="text-xs text-zinc-500">/ {room?.max_participants}명</span>
+                <span className="text-xs text-zinc-500 font-bold">/ {room?.max_participants}명</span>
               </div>
             </div>
 
-            <div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-mono">요금제 티어</div>
-              <div className="text-xs sm:text-sm font-bold text-white mt-2 px-2 py-0.5 rounded bg-white/5 inline-block capitalize">
-                {room?.tier} Tier
+            <div className="flex flex-col justify-center items-center">
+              <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider mb-1.5">요금제 등급</div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-extrabold text-white px-2.5 py-0.5 rounded-lg bg-white/5 uppercase border border-white/5">
+                  {room?.tier}
+                </span>
+                {room?.tier !== 'max' && (
+                  <button
+                    onClick={() => {
+                      setSelectedUpgradeTier(null);
+                      setUpgradeStep('select');
+                      setIsUpgradeModalOpen(true);
+                    }}
+                    className="text-[9px] font-extrabold text-indigo-400 hover:text-indigo-300 cursor-pointer transition-colors"
+                  >
+                    업그레이드 ⚡
+                  </button>
+                )}
               </div>
-              {room?.tier !== 'max' && (
-                <button
-                  onClick={() => {
-                    setSelectedUpgradeTier(null);
-                    setUpgradeStep('select');
-                    setIsUpgradeModalOpen(true);
-                  }}
-                  className="block mx-auto mt-2.5 text-[9px] text-indigo-400 font-extrabold hover:text-indigo-300 hover:underline cursor-pointer border border-indigo-500/20 px-2 py-0.5 rounded-full bg-indigo-500/5 transition-all"
-                >
-                  업그레이드 ⚡
-                </button>
-              )}
             </div>
           </div>
 
           {/* Quick Triggers Dashboard */}
-          <div className="glass-effect rounded-2xl p-6">
-            <div className="flex items-center gap-2 mb-6 pb-3 border-b border-white/5">
-              <Sliders className="w-4 h-4 text-indigo-400" />
-              <h2 className="text-base font-bold text-white">원터치 연출 보드 (Quick Preset Board)</h2>
+          <div className="glass-effect rounded-2xl p-6 bg-[#12121a]">
+            <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
+              <div className="flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-zinc-400" />
+                <h2 className="text-sm font-bold text-white">원터치 연출 보드 (Quick Preset Board)</h2>
+              </div>
+              <span className="text-[9px] font-bold font-mono text-zinc-500">P1 - P6 SELECTORS</span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -612,28 +616,27 @@ export default function HostDashboard() {
                   <div
                     key={index}
                     onClick={() => triggerPreset(preset, index)}
-                    className={`h-28 rounded-2xl border flex flex-col justify-between p-4 relative overflow-hidden transition-all active:scale-95 cursor-pointer ${
+                    className={`h-28 rounded-2xl border flex flex-col justify-between p-4 relative overflow-hidden transition-all active:scale-[0.97] cursor-pointer ${
                       isActive 
-                        ? 'border-white ring-2 ring-indigo-400/50 scale-[1.03] shadow-lg shadow-indigo-500/10' 
-                        : 'border-white/5 bg-zinc-950/40 hover:border-white/20'
+                        ? 'border-white bg-white/[0.04] ring-1 ring-white/20' 
+                        : 'border-white/5 bg-black/20 hover:border-white/10 hover:bg-white/[0.01]'
                     }`}
                   >
-                    {/* Glowing color dot */}
-                    <div className="w-3.5 h-3.5 rounded-full border border-white/30" style={{ backgroundColor: preset.bg_color }} />
+                    {/* Small layout indicator bar instead of a heavy color dot */}
+                    <div className="flex justify-between items-center w-full">
+                      <div className="w-6 h-1.5 rounded-full" style={{ backgroundColor: preset.bg_color }} />
+                      <span className="text-[9px] font-bold text-zinc-500 font-mono">P{index + 1}</span>
+                    </div>
                     
-                    <div className="text-left">
-                      <div className="text-xs text-zinc-500 font-mono">PRESET {index + 1}</div>
-                      <div className="font-extrabold text-sm truncate text-white mt-0.5">
+                    <div className="text-left mt-4">
+                      <div className="font-extrabold text-sm truncate text-white">
                         {preset.text}
                       </div>
                     </div>
 
                     {/* Preset Custom styles indicators */}
-                    <div className="absolute top-4 right-4 flex gap-1 items-center">
-                      <span className="text-[8px] px-1.5 py-0.5 rounded bg-white/10 text-indigo-200 capitalize font-mono">
-                        {preset.font_family || 'sans'}
-                      </span>
-                      <span className="text-[8px] px-1.5 py-0.5 rounded bg-white/5 text-zinc-400 uppercase font-semibold">
+                    <div className="flex gap-1 items-center mt-2 self-start">
+                      <span className="text-[8px] px-1.5 py-0.5 rounded bg-white/5 text-zinc-400 uppercase font-semibold font-mono">
                         {preset.effect === 'none' ? 'static' : preset.effect === 'blink' ? 'blink' : 'marquee'}
                       </span>
                     </div>
@@ -646,7 +649,7 @@ export default function HostDashboard() {
                         setEditingPresetIndex(index);
                         setEditingPreset({ ...preset });
                       }}
-                      className="absolute bottom-3 right-3 p-1.5 rounded-lg bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:bg-white/15 hover:scale-110 active:scale-90 transition-all z-20 cursor-pointer"
+                      className="absolute bottom-3 right-3 p-1.5 rounded-lg bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:bg-white/15 hover:scale-105 active:scale-95 transition-all z-20 cursor-pointer"
                       title="프리셋 세부 수정"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
@@ -658,23 +661,26 @@ export default function HostDashboard() {
           </div>
 
           {/* Custom Customizer Input for On-the-fly Triggering */}
-          <div className="glass-effect rounded-2xl p-6">
-            <div className="flex items-center gap-2 mb-6 pb-3 border-b border-white/5">
-              <Volume2 className="w-4 h-4 text-indigo-400" />
-              <h2 className="text-base font-bold text-white">즉석 라이브 메시지 전송 (Custom Broadcast)</h2>
+          <div className="glass-effect rounded-2xl p-6 bg-[#12121a]">
+            <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
+              <div className="flex items-center gap-2">
+                <Volume2 className="w-4 h-4 text-zinc-400" />
+                <h2 className="text-sm font-bold text-white">즉석 라이브 메시지 전송 (Custom Broadcast)</h2>
+              </div>
+              <span className="text-[9px] font-bold font-mono text-zinc-500">LIVE CONTROLLER</span>
             </div>
             
             <div className="flex flex-col gap-5">
               {/* Text Input & Send Button Row */}
               <div className="grid sm:grid-cols-12 gap-4 items-end">
                 <div className="sm:col-span-9">
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">실시간 자막 입력</label>
+                  <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-2">실시간 자막 입력</label>
                   <input
                     type="text"
                     value={customText}
                     onChange={(e) => setCustomText(e.target.value)}
                     placeholder="구호 입력 (예: 헤쳐모여!)"
-                    className="w-full bg-[#0B0B0F] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 text-sm font-semibold"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-white text-sm font-semibold"
                     maxLength={15}
                   />
                 </div>
@@ -695,20 +701,20 @@ export default function HostDashboard() {
                       };
                       triggerPreset(customPreset, -1);
                     }}
-                    className="w-full py-3 rounded-xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all flex items-center justify-center gap-1.5"
+                    className="btn-primary w-full py-3.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <Tv className="w-4 h-4" />
+                    <Tv className="w-3.5 h-3.5" />
                     송출하기
                   </button>
                 </div>
               </div>
 
               {/* Button Grids Controls Row */}
-              <div className="grid md:grid-cols-3 gap-6 pt-2 border-t border-white/5">
+              <div className="grid md:grid-cols-3 gap-6 pt-3 border-t border-white/5">
                 {/* 배경 테마 */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">배경 테마</label>
-                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+                  <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-2">배경 테마</label>
+                  <div className="grid grid-cols-4 gap-1.5">
                     {[
                       '#EF4444', '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#EC4899', '#FFFFFF', '#0B0B0F'
                     ].map((hex) => (
@@ -716,10 +722,10 @@ export default function HostDashboard() {
                         key={hex}
                         type="button"
                         onClick={() => setCustomBgColor(hex)}
-                        className={`h-7 rounded-lg border transition-all ${
+                        className={`h-7 rounded-lg border cursor-pointer transition-all ${
                           customBgColor === hex
-                            ? 'border-white scale-110 shadow-md shadow-white/10'
-                            : 'border-transparent hover:scale-105'
+                            ? 'border-white scale-105'
+                            : 'border-transparent hover:scale-102'
                         }`}
                         style={{ backgroundColor: hex }}
                       />
@@ -729,8 +735,8 @@ export default function HostDashboard() {
 
                 {/* 글자 크기 */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">글자 크기</label>
-                  <div className="grid grid-cols-5 gap-1 bg-black/50 p-1 rounded-xl border border-white/10">
+                  <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-2">글자 크기</label>
+                  <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
                     {[
                       { val: 'auto', label: 'Auto' },
                       { val: 'small', label: '80%' },
@@ -742,10 +748,10 @@ export default function HostDashboard() {
                         type="button"
                         key={item.val}
                         onClick={() => setCustomFontSize(item.val as any)}
-                        className={`py-1.5 rounded-lg text-[10px] font-semibold transition-all cursor-pointer ${
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
                           customFontSize === item.val
                             ? 'bg-white text-black shadow-md'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}
                       >
                         {item.label}
@@ -756,8 +762,8 @@ export default function HostDashboard() {
 
                 {/* 글꼴 스타일 */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-2">글꼴 스타일</label>
-                  <div className="grid grid-cols-4 gap-1 bg-black/50 p-1 rounded-xl border border-white/10">
+                  <label className="block text-[9px] font-bold text-zinc-400 uppercase mb-2">글꼴 스타일</label>
+                  <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
                     {[
                       { val: 'sans', label: '고딕' },
                       { val: 'serif', label: '명조' },
@@ -768,10 +774,10 @@ export default function HostDashboard() {
                         type="button"
                         key={item.val}
                         onClick={() => setCustomFontFamily(item.val as any)}
-                        className={`py-1.5 rounded-lg text-[10px] font-semibold transition-all cursor-pointer ${
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
                           customFontFamily === item.val
                             ? 'bg-white text-black shadow-md'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}
                       >
                         {item.label}

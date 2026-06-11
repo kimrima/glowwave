@@ -202,7 +202,7 @@ export default function HostSetup() {
         
         {/* Left Column: Preset Setup */}
         <div className="lg:col-span-7 flex flex-col gap-6">
-          <div className="glass-effect rounded-2xl p-6">
+          <div className="glass-effect rounded-2xl p-6 bg-[#12121a]">
             <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
               <Settings className="w-5 h-5 text-indigo-400" />
               <span>실시간 연출 프리셋 세팅</span>
@@ -215,20 +215,19 @@ export default function HostSetup() {
                 <button
                   key={idx}
                   onClick={() => setSelectedPresetIndex(idx)}
-                  className={`h-16 rounded-xl border text-left p-3 relative overflow-hidden transition-all ${
+                  className={`h-16 rounded-xl border text-left p-3 relative overflow-hidden transition-all cursor-pointer ${
                     selectedPresetIndex === idx 
-                      ? 'border-white ring-2 ring-indigo-500/50 scale-[1.02]' 
-                      : 'border-white/5 hover:border-white/20'
+                      ? 'border-white bg-white/[0.04]' 
+                      : 'border-white/5 hover:border-white/10 hover:bg-white/[0.01]'
                   }`}
-                  style={{ backgroundColor: p.bg_color + '15' }} // Semi-transparent button bg
                 >
-                  <div className="absolute top-2 left-2 w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: p.bg_color }} />
-                  <div className="absolute bottom-2 left-3 text-xs font-bold truncate max-w-[85%]" style={{ color: p.text_color === '#000000' && p.bg_color === '#FFFFFF' ? '#888' : '#FFF' }}>
+                  <div className="absolute top-2.5 left-3 w-5 h-1.5 rounded-full" style={{ backgroundColor: p.bg_color }} />
+                  <div className="absolute bottom-2.5 left-3 text-xs font-bold truncate max-w-[85%] text-white">
                     {p.text || `버튼 ${idx + 1}`}
                   </div>
-                  <div className="absolute top-2 right-2 text-[9px] text-zinc-500 uppercase">
+                  <span className="absolute top-2 right-3 text-[9px] text-zinc-500 font-mono">
                     P{idx + 1}
-                  </div>
+                  </span>
                 </button>
               ))}
             </div>
@@ -236,24 +235,24 @@ export default function HostSetup() {
             {/* Preset Customizer Board */}
             <div className="bg-black/40 border border-white/5 rounded-xl p-5 flex flex-col gap-4">
               <div className="flex justify-between items-center pb-3 border-b border-white/5">
-                <span className="text-xs font-mono text-zinc-500 uppercase">Editing Preset {selectedPresetIndex + 1}</span>
-                <span className="text-xs px-2.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 font-semibold">
+                <span className="text-[10px] font-mono text-zinc-500 uppercase">Editing Preset {selectedPresetIndex + 1}</span>
+                <span className="text-xs px-2.5 py-0.5 rounded bg-white/5 text-white font-bold">
                   {presets[selectedPresetIndex].effect === 'none' ? '정적 효과' : presets[selectedPresetIndex].effect === 'blink' ? '깜빡이' : '자막 흐르기'}
                 </span>
               </div>
 
               {/* Color Selection */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">화면 배경 색상</label>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">화면 배경 색상</label>
                 <div className="grid grid-cols-6 gap-2">
                   {colors.map((c) => (
                     <button
                       key={c.hex}
                       onClick={() => handleUpdatePreset('bg_color', c.hex)}
-                      className={`h-9 rounded-lg border transition-all ${
+                      className={`h-9 rounded-lg border transition-all cursor-pointer ${
                         presets[selectedPresetIndex].bg_color === c.hex 
-                          ? 'border-white scale-110 shadow-lg' 
-                          : 'border-transparent hover:scale-105'
+                          ? 'border-white scale-105' 
+                          : 'border-transparent hover:scale-102'
                       }`}
                       style={{ backgroundColor: c.hex }}
                       title={c.name}
@@ -264,29 +263,29 @@ export default function HostSetup() {
 
               {/* Text Input */}
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">출력 문구</label>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">출력 문구</label>
                 <input
                   type="text"
                   value={presets[selectedPresetIndex].text}
                   onChange={(e) => handleUpdatePreset('text', e.target.value)}
-                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-sm font-semibold"
+                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-sm font-semibold"
                   placeholder="구호를 입력하세요 (예: GOAL, 소리질러)"
                   maxLength={15}
                 />
               </div>
 
-              {/* Text Color Toggle */}
+              {/* Text Color Toggle & Motion Effect Selector */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">글자 색상</label>
-                  <div className="flex gap-4">
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 색상</label>
+                  <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => handleUpdatePreset('text_color', '#FFFFFF')}
-                      className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-all ${
+                      className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
                         presets[selectedPresetIndex].text_color === '#FFFFFF'
-                          ? 'border-white bg-white text-black'
-                          : 'border-white/10 bg-transparent text-zinc-400 hover:text-white'
+                          ? 'border-white bg-white text-black font-extrabold'
+                          : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
                       }`}
                     >
                       밝은색
@@ -294,10 +293,10 @@ export default function HostSetup() {
                     <button
                       type="button"
                       onClick={() => handleUpdatePreset('text_color', '#000000')}
-                      className={`flex-1 py-2 rounded-lg border text-xs font-medium transition-all ${
+                      className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
                         presets[selectedPresetIndex].text_color === '#000000'
-                          ? 'border-white bg-white text-black'
-                          : 'border-white/10 bg-transparent text-zinc-400 hover:text-white'
+                          ? 'border-white bg-white text-black font-extrabold'
+                          : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
                       }`}
                     >
                       어두운색
@@ -307,21 +306,21 @@ export default function HostSetup() {
 
                 {/* Effect Select */}
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">모션 효과</label>
-                  <div className="grid grid-cols-3 gap-1 bg-black/50 p-1 rounded-xl border border-white/10">
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">모션 효과</label>
+                  <div className="grid grid-cols-3 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
                     {[
                       { val: 'none', label: '정적' },
-                      { val: 'blink', label: '반짝임' },
+                      { val: 'blink', label: '반빡임' },
                       { val: 'marquee', label: '흐르기' }
                     ].map((item) => (
                       <button
                         type="button"
                         key={item.val}
                         onClick={() => handleUpdatePreset('effect', item.val)}
-                        className={`py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           presets[selectedPresetIndex].effect === item.val
                             ? 'bg-white text-black shadow-md'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}
                       >
                         {item.label}
@@ -334,8 +333,8 @@ export default function HostSetup() {
               {/* 글자 크기 및 폰트 커스텀 */}
               <div className="flex flex-col gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">글자 크기 비율</label>
-                  <div className="grid grid-cols-5 gap-1 bg-black/50 p-1 rounded-xl border border-white/10">
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 크기 비율</label>
+                  <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
                     {[
                       { val: 'auto', label: 'Auto' },
                       { val: 'small', label: '80%' },
@@ -347,10 +346,10 @@ export default function HostSetup() {
                         type="button"
                         key={item.val}
                         onClick={() => handleUpdatePreset('font_size', item.val)}
-                        className={`py-2 rounded-lg text-[10px] sm:text-xs font-semibold transition-all cursor-pointer ${
+                        className={`py-2 rounded-lg text-[10px] sm:text-xs font-bold transition-all cursor-pointer ${
                           (presets[selectedPresetIndex].font_size || 'auto') === item.val
                             ? 'bg-white text-black shadow-md'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}
                       >
                         {item.label}
@@ -360,8 +359,8 @@ export default function HostSetup() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
-                  <div className="grid grid-cols-4 gap-1 bg-black/50 p-1 rounded-xl border border-white/10">
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
+                  <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
                     {[
                       { val: 'sans', label: '기본 고딕' },
                       { val: 'serif', label: '명조체' },
@@ -372,10 +371,10 @@ export default function HostSetup() {
                         type="button"
                         key={item.val}
                         onClick={() => handleUpdatePreset('font_family', item.val)}
-                        className={`py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                           (presets[selectedPresetIndex].font_family || 'sans') === item.val
                             ? 'bg-white text-black shadow-md'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}
                       >
                         {item.label}
@@ -391,12 +390,12 @@ export default function HostSetup() {
         {/* Right Column: Live Preview & Email input & Tier Options */}
         <div className="lg:col-span-5 flex flex-col gap-6">
           {/* Live Signboard Preview */}
-          <div className="glass-effect rounded-2xl p-6 flex flex-col items-center">
-            <span className="text-[10px] font-mono text-zinc-500 uppercase mb-4 tracking-wider">실시간 연출 미리보기 (Landscape Preview)</span>
+          <div className="glass-effect rounded-2xl p-6 flex flex-col items-center bg-[#12121a]">
+            <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-4 tracking-wider">실시간 연출 미리보기 (Landscape Preview)</span>
             <LandscapePhoneMockup preset={presets[selectedPresetIndex]} />
           </div>
 
-          <form onSubmit={handleStartSetup} className="glass-effect rounded-2xl p-6 flex flex-col gap-6">
+          <form onSubmit={handleStartSetup} className="glass-effect rounded-2xl p-6 flex flex-col gap-6 bg-[#12121a]">
             <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
               <Layers className="w-5 h-5 text-indigo-400" />
               <span>참여 인원 및 요금제 선택</span>
@@ -404,8 +403,8 @@ export default function HostSetup() {
 
             {/* Email Input Step (No login logic) */}
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
-              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5" />
+              <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 animate-pulse" />
                 이메일 주소 (비회원 영수증 및 복구용)
               </label>
               <input
@@ -417,7 +416,7 @@ export default function HostSetup() {
                   setEmailError('');
                 }}
                 placeholder="event@glowwave.com"
-                className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-sm"
+                className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-sm"
               />
               {emailError ? (
                 <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
@@ -425,7 +424,7 @@ export default function HostSetup() {
                   {emailError}
                 </p>
               ) : (
-                <p className="text-[11px] text-zinc-500 mt-2">비밀번호 가입 없이 이메일만으로 결제 정보를 식별하고 나중에 복구할 수 있습니다.</p>
+                <p className="text-[10px] text-zinc-500 mt-2">비밀번호 가입 없이 이메일만으로 결제 정보를 식별하고 나중에 복구할 수 있습니다.</p>
               )}
             </div>
 
@@ -439,16 +438,16 @@ export default function HostSetup() {
                     key={tierKey}
                     type="button"
                     onClick={() => setSelectedTier(tierKey)}
-                    className={`text-left p-4 rounded-xl border flex justify-between items-center transition-all ${
+                    className={`text-left p-4 rounded-xl border cursor-pointer transition-all ${
                       isSelected 
-                        ? 'border-white bg-white/5 ring-1 ring-white/20' 
-                        : 'border-white/5 bg-transparent hover:border-white/10'
+                        ? 'border-white bg-white/[0.04]' 
+                        : 'border-white/5 bg-transparent hover:border-white/10 hover:bg-white/[0.01]'
                     }`}
                   >
                     <div>
                       <div className="font-bold text-white text-sm flex items-center gap-2">
                         {cfg.name}
-                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />}
+                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />}
                       </div>
                       <div className="text-xs text-zinc-400 mt-1">최대 동시 접속 {cfg.maxParticipants}명</div>
                     </div>
@@ -468,7 +467,7 @@ export default function HostSetup() {
             {/* Submit btn */}
             <button
               type="submit"
-              className="w-full py-4 rounded-xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all shadow-xl hover:shadow-white/5 flex items-center justify-center gap-1"
+              className="btn-primary w-full py-4 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer"
             >
               이벤트 방 개설하기 <ChevronRight className="w-4 h-4" />
             </button>

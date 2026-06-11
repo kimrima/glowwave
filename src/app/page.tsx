@@ -104,8 +104,7 @@ export default function Home() {
     speed: 1000
   });
 
-  // Modal for Room Join
-  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  // Modal/Scanner for Room Join
   const [joinRoomCode, setJoinRoomCode] = useState('');
   const [joinError, setJoinError] = useState('');
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
@@ -213,14 +212,14 @@ export default function Home() {
 
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => setIsJoinModalOpen(true)}
-              className="text-sm font-medium px-4 py-2 rounded-lg text-zinc-300 hover:text-white hover:bg-white/5 transition-all"
+              onClick={() => setIsQRScannerOpen(true)}
+              className="text-sm font-semibold px-4 py-2 rounded-xl text-zinc-300 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
             >
-              참여하기
+              QR 스캔 참여 📸
             </button>
             <Link 
               href="/host/setup" 
-              className="text-sm font-semibold px-4 py-2 rounded-lg bg-white text-black hover:bg-zinc-200 transition-all shadow-lg hover:shadow-white/5"
+              className="text-sm font-bold px-4 py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 transition-all cursor-pointer"
             >
               방 만들기 ⚡
             </Link>
@@ -229,41 +228,87 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-20 pb-16 md:pt-32 md:pb-24">
-        {/* Glow Effects */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-1/3 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
-
-        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/5 text-indigo-300 text-xs font-semibold mb-6">
-            <Zap className="w-3.5 h-3.5" />
-            <span>100ms 초저지연 실시간 스마트폰 화면 제어</span>
+      <section className="relative overflow-hidden pt-16 pb-12 md:pt-24 md:pb-20">
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/5 bg-white/[0.02] text-zinc-400 text-[11px] font-bold mb-6 tracking-wide">
+              <Zap className="w-3.5 h-3.5 text-indigo-400" />
+              <span>100ms 초저지연 실시간 스마트폰 화면 제어</span>
+            </div>
+            
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-[1.2] mb-6 text-white">
+              앱 설치 없이 스마트폰을<br />
+              하나의 무대 조명으로
+            </h1>
+            
+            <p className="text-sm sm:text-base text-zinc-400 max-w-xl mx-auto leading-relaxed font-medium">
+              현장 QR 코드 스캔 또는 참여 코드를 통해 수백 명의 관객 스마트폰 화면 색상과 구호를 실시간 동기화하여 압도적인 시각 효과를 연출하세요.
+            </p>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-[1.15] mb-8 text-gradient">
-            앱 설치 없이 스마트폰을<br />
-            하나의 콘서트 조명으로
-          </h1>
+          {/* Core Side-by-Side Action Cards */}
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-10">
+            {/* Host Action Card */}
+            <div className="glass-effect rounded-2xl p-8 flex flex-col justify-between border border-white/5 bg-[#12121a] hover:border-white/10 transition-all">
+              <div className="mb-8">
+                <span className="text-[10px] font-mono text-indigo-400 font-bold uppercase tracking-wider">For Event Host</span>
+                <h2 className="text-2xl font-black text-white mt-2 mb-3">새 전광판 개설하기 ⚡</h2>
+                <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+                  버스킹 크루, 파티 DJ, 동아리 이벤트를 위해 나만의 실시간 제어 리모컨을 만듭니다. 별도의 회원가입 없이 즉시 방 코드를 획득하고 연출을 시작해 보세요.
+                </p>
+              </div>
+              <Link 
+                href="/host/setup" 
+                className="w-full py-4 rounded-xl text-center text-xs tracking-wider flex items-center justify-center gap-2 hover:scale-[1.01] transition-transform bg-white text-black font-bold"
+              >
+                방 개설 및 세팅 시작하기 <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
 
-          <p className="text-base sm:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed mb-10">
-            소규모 버스킹 크루, 클럽 DJ, 대학 동아리, 야외 응원단까지.<br />
-            현장 QR 코드 스캔만으로 수백 명의 스마트폰 화면 색상과 구호를 실시간 동기화하여 압도적인 무대를 연출하세요.
-          </p>
+            {/* Spectator Action Card */}
+            <div className="glass-effect rounded-2xl p-8 flex flex-col justify-between border border-white/5 bg-[#12121a] hover:border-white/10 transition-all">
+              <div>
+                <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wider">For Audience</span>
+                <h2 className="text-2xl font-black text-white mt-2 mb-3">관객으로 참여하기 🔑</h2>
+                <p className="text-xs text-zinc-400 leading-relaxed mb-6 font-medium">
+                  스크린에 안내된 6자리 코드(대문자/숫자)를 입력하거나 카메라를 켜서 QR 코드를 스캔하세요.
+                </p>
+                
+                {/* Direct join code input interface */}
+                <form onSubmit={handleJoinRoomSubmit} className="flex gap-2 mb-3">
+                  <input
+                    type="text"
+                    value={joinRoomCode}
+                    onChange={(e) => {
+                      setJoinRoomCode(e.target.value.toUpperCase());
+                      setJoinError('');
+                    }}
+                    placeholder="입장 코드 입력 (6자리)"
+                    className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-center text-white tracking-widest text-sm font-bold focus:outline-none focus:border-indigo-500 uppercase font-mono"
+                    maxLength={6}
+                  />
+                  <button
+                    type="submit"
+                    className="px-6 py-3.5 rounded-xl text-xs font-extrabold shrink-0 flex items-center justify-center gap-1.5 cursor-pointer bg-white text-black hover:bg-zinc-200 transition-all"
+                  >
+                    참여 <Play className="w-3 h-3 fill-current" />
+                  </button>
+                </form>
+                {joinError && <p className="text-[11px] text-red-500 mb-4 text-center font-bold">{joinError}</p>}
+              </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link 
-              href="/host/setup" 
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white text-black font-bold flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all shadow-xl hover:shadow-white/10"
-            >
-              무료로 방 만들기 <ArrowRight className="w-5 h-5" />
-            </Link>
-            <button 
-              onClick={() => setIsJoinModalOpen(true)}
-              className="w-full sm:w-auto px-8 py-4 rounded-xl border border-white/10 bg-white/5 font-semibold text-white flex items-center justify-center gap-2 hover:bg-white/10 transition-all"
-            >
-              관객으로 참여하기
-            </button>
+              <button
+                type="button"
+                onClick={() => setIsQRScannerOpen(true)}
+                className="w-full py-3.5 rounded-xl border border-dashed border-white/10 bg-white/5 text-zinc-300 font-bold text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Camera className="w-4 h-4" />
+                카메라로 QR 코드 스캔하기 📸
+              </button>
+            </div>
           </div>
+
         </div>
       </section>
 
@@ -271,28 +316,25 @@ export default function Home() {
       <section id="trial" className="py-16 border-t border-white/5 relative bg-zinc-950/20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-white mb-4">실시간 시뮬레이터로 미리 체험해보세요</h2>
-            <p className="text-zinc-400">오른쪽 화면(스마트폰 목업)이 관객의 화면이라고 생각하고 왼쪽 컨트롤러를 조작해 보세요.</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-white mb-4">실시간 시뮬레이터로 미리 체험해보세요</h2>
+            <p className="text-xs text-zinc-400 font-medium">왼쪽 조명 컨트롤러의 색상과 연출 단추를 클릭해 보세요. 오른쪽 스마트폰 화면에 즉각적으로 연동됩니다.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-center">
             {/* Live Controller Mockup */}
             <div className="glass-effect rounded-2xl p-6 flex flex-col gap-6">
-              <div className="flex items-center gap-2 pb-4 border-b border-white/5">
-                <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="text-xs text-zinc-500 font-mono ml-2">HOST CONTROLLER</span>
+              <div className="pb-4 border-b border-white/5">
+                <span className="text-[10px] text-zinc-500 font-bold font-mono">SIMULATION REMOTE CONTROL</span>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">배경 색상 선택</label>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">배경 색상 선택</label>
                 <div className="grid grid-cols-6 gap-2">
                   {colors.map((c) => (
                     <button
                       key={c.hex}
                       onClick={() => handleDemoPresetChange('bg_color', c.hex)}
-                      className={`h-10 rounded-lg border transition-all ${
+                      className={`h-9 rounded-lg border transition-all cursor-pointer ${
                         demoPreset.bg_color === c.hex ? 'border-white scale-110' : 'border-transparent hover:scale-105'
                       }`}
                       style={{ backgroundColor: c.hex }}
@@ -303,57 +345,59 @@ export default function Home() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">전송할 텍스트 입력</label>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">전송할 텍스트 입력</label>
                 <input
                   type="text"
                   value={demoPreset.text}
                   onChange={(e) => handleDemoPresetChange('text', e.target.value)}
-                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-sm"
+                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-sm font-semibold"
                   placeholder="텍스트를 입력해 보세요."
                   maxLength={15}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">텍스트 색상</label>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="textColor"
-                      checked={demoPreset.text_color === '#FFFFFF'}
-                      onChange={() => handleDemoPresetChange('text_color', '#FFFFFF')}
-                      className="accent-indigo-500"
-                    />
-                    흰색
-                  </label>
-                  <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="textColor"
-                      checked={demoPreset.text_color === '#000000'}
-                      onChange={() => handleDemoPresetChange('text_color', '#000000')}
-                      className="accent-indigo-500"
-                    />
-                    검은색
-                  </label>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">텍스트 색상</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleDemoPresetChange('text_color', '#FFFFFF')}
+                    className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                      demoPreset.text_color === '#FFFFFF'
+                        ? 'border-white bg-white text-black'
+                        : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    밝은색
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDemoPresetChange('text_color', '#000000')}
+                    className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                      demoPreset.text_color === '#000000'
+                        ? 'border-white bg-white text-black'
+                        : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    어두운색
+                  </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">애니메이션 효과</label>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">애니메이션 효과</label>
                 <div className="grid grid-cols-3 gap-2">
                   {(['none', 'blink', 'marquee'] as EffectType[]).map((eff) => (
                     <button
                       key={eff}
                       onClick={() => handleDemoPresetChange('effect', eff)}
-                      className={`py-2 px-3 rounded-lg border text-xs font-medium uppercase transition-all ${
+                      className={`py-2 px-3 rounded-lg border text-xs font-semibold uppercase transition-all cursor-pointer ${
                         demoPreset.effect === eff 
-                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-300' 
-                          : 'border-white/5 bg-white/5 text-zinc-400 hover:text-white'
+                          ? 'border-white bg-white/5 text-white font-extrabold' 
+                          : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
                       }`}
                     >
-                      {eff === 'none' ? '정적 (Static)' : eff === 'blink' ? '반짝임 (Blink)' : '흐르기 (Marquee)'}
+                      {eff === 'none' ? '정적' : eff === 'blink' ? '깜빡이' : '흐르기'}
                     </button>
                   ))}
                 </div>
@@ -372,48 +416,48 @@ export default function Home() {
       <section id="features" className="py-16 md:py-24 border-t border-white/5">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-white mb-4">CS 제로를 지향하는 디테일한 기술 사양</h2>
-            <p className="text-zinc-400 max-w-xl mx-auto">1인 기획자, 개발사도 안심하고 단독 운영이 가능하도록 예외 케이스를 설계했습니다.</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-white mb-4">CS 제로를 지향하는 디테일한 기술 사양</h2>
+            <p className="text-xs text-zinc-400 max-w-xl mx-auto font-medium">1인 기획자, 개발사도 안심하고 대형 이벤트를 단독 운영할 수 있도록 설계했습니다.</p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="p-6 rounded-xl border border-white/5 bg-zinc-950/20">
-              <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 mb-4">
-                <Smartphone className="w-5 h-5" />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.01]">
+              <div className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-white mb-4">
+                <Smartphone className="w-4.5 h-4.5" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">화면 꺼짐 강제 방지</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                W3C Wake Lock API를 활용하여, 10분간 화면을 터치하지 않아도 스마트폰 화면이 꺼지거나 어두워지지 않습니다.
+              <h3 className="text-base font-bold text-white mb-2">화면 꺼짐 강제 방지</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+                W3C Wake Lock API를 지원하여, 화면을 터치하지 않아도 스마트폰 화면이 절전 모드로 어두워지거나 꺼지지 않습니다.
               </p>
             </div>
 
-            <div className="p-6 rounded-xl border border-white/5 bg-zinc-950/20">
-              <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 mb-4">
-                <RefreshCw className="w-5 h-5" />
+            <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.01]">
+              <div className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-white mb-4">
+                <RefreshCw className="w-4.5 h-4.5" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">백그라운드 자동 복귀</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                전화나 메신저 확인 후 브라우저 복귀 시 즉시 동기화가 재연결되어 0.2초 이내에 현 시점 상태로 강제 복구됩니다.
+              <h3 className="text-base font-bold text-white mb-2">백그라운드 자동 복귀</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+                전화 수신 등으로 홈 화면에 나갔다가 복귀할 때도, 브라우저 가시성 감지 센서가 즉시 작동하여 실시간 싱크를 0.2초 내 복원합니다.
               </p>
             </div>
 
-            <div className="p-6 rounded-xl border border-white/5 bg-zinc-950/20">
-              <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 mb-4">
-                <Lock className="w-5 h-5" />
+            <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.01]">
+              <div className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-white mb-4">
+                <Lock className="w-4.5 h-4.5" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">초과 유저 하드캡 차단</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                요금제별 지정된 동시접속자가 도달할 경우 Edge 단에서 초과 접속자를 부드럽게 대기 오버레이로 즉시 블로킹합니다.
+              <h3 className="text-base font-bold text-white mb-2">초과 유저 하드캡 차단</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+                요금제별 접속 한도에 도달하면 신규 접속자를 대기 오버레이로 친절하게 안내하여 트래픽 오버 및 서비스 마비를 자동 방어합니다.
               </p>
             </div>
 
-            <div className="p-6 rounded-xl border border-white/5 bg-zinc-950/20">
-              <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-400 mb-4">
-                <SmartphoneIcon className="w-5 h-5" />
+            <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.01]">
+              <div className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-white mb-4">
+                <SmartphoneIcon className="w-4.5 h-4.5" />
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">자동 가로 고정 유도</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                관객이 스마트폰을 세로로 들면 가로 회전 유도 팝업 오버레이를 강제 노출하여 최대 면적의 빛을 확보하도록 돕습니다.
+              <h3 className="text-base font-bold text-white mb-2">자동 가로 고정 유도</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+                스마트폰을 세로로 들면 가로 회전 가이드 팝업을 노출하여 전광판 문구 잘림을 방지하고 최대의 발광 면적을 확보하게 돕습니다.
               </p>
             </div>
           </div>
@@ -421,85 +465,28 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 bg-zinc-950 py-12">
+      <footer className="border-t border-white/5 bg-[#07070a] py-12">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2 font-bold text-lg text-white">
-            <Sparkles className="w-4 h-4 text-indigo-400" />
+          <div className="flex items-center gap-2 font-bold text-base text-white">
+            <Sparkles className="w-4.5 h-4.5 text-indigo-400" />
             <span>GlowWave</span>
           </div>
           
-          <div className="flex flex-wrap justify-center gap-8 text-sm text-zinc-500">
+          <div className="flex flex-wrap justify-center gap-8 text-[11px] text-zinc-500 font-semibold font-mono">
             <span>DIY Concert Smartphone Light System</span>
             <span>·</span>
             <span>Free real-time phone led signboard</span>
             <span>·</span>
-            <span>홍대 버스킹 스마트폰 전광판 동기화 툴</span>
+            <span>스마트폰 전광판 동기화 서비스</span>
           </div>
           
-          <p className="text-xs text-zinc-600">
+          <p className="text-[11px] text-zinc-600 font-medium">
             &copy; 2026 Anti-gravity. All rights reserved.
           </p>
         </div>
       </footer>
 
-      {/* Join Room Modal */}
-      {isJoinModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsJoinModalOpen(false)} />
-          
-          <div className="glass-effect rounded-2xl w-full max-w-md p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150">
-            <h3 className="text-xl font-bold text-white mb-2">방 참여하기 🔑</h3>
-            <p className="text-sm text-zinc-400 mb-6">현장 스크린에 표시된 6자리 방 코드(영어 대문자/숫자)를 입력하여 동기화 모드로 접속합니다.</p>
-            
-            {/* QR Scanner Trigger Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setIsJoinModalOpen(false);
-                setIsQRScannerOpen(true);
-              }}
-              className="w-full py-3 rounded-xl border border-dashed border-indigo-500/20 bg-indigo-500/5 text-indigo-300 font-semibold text-xs hover:bg-indigo-500/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer mb-4"
-            >
-              <Camera className="w-4 h-4" />
-              QR 코드로 스캔해서 참여하기 📸
-            </button>
 
-            <form onSubmit={handleJoinRoomSubmit} className="flex flex-col gap-4">
-              <div>
-                <input
-                  type="text"
-                  value={joinRoomCode}
-                  onChange={(e) => {
-                    setJoinRoomCode(e.target.value.toUpperCase());
-                    setJoinError('');
-                  }}
-                  className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-center text-white tracking-widest text-2xl font-bold focus:outline-none focus:border-indigo-500 uppercase"
-                  placeholder="CODE9"
-                  maxLength={6}
-                  autoFocus
-                />
-                {joinError && <p className="text-xs text-red-500 mt-2 text-center">{joinError}</p>}
-              </div>
-
-              <div className="flex gap-3 mt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsJoinModalOpen(false)}
-                  className="flex-1 py-3 rounded-xl bg-white/5 text-zinc-300 font-medium hover:bg-white/10 transition-all text-sm"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-3 rounded-xl bg-white text-black font-bold hover:bg-zinc-200 transition-all text-sm flex items-center justify-center gap-1"
-                >
-                  참여 <Play className="w-3.5 h-3.5 fill-current" />
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {isQRScannerOpen && (
         <QRScannerModal
