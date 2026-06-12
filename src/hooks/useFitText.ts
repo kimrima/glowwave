@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
  * Hook to dynamically calculate font size to fit text perfectly on 1 line 
  * without wrapping or overflowing the screen boundaries, relative to container dimensions.
  */
-export default function useFitText(text: string, effect: string, sizeOption: string) {
+export default function useFitText(text: string, effect: string, sizePercent: number | undefined) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [fontSize, setFontSize] = useState<string>('8vw'); // Fallback style before layout computation
 
@@ -16,22 +16,8 @@ export default function useFitText(text: string, effect: string, sizeOption: str
       const { clientWidth, clientHeight } = container;
       if (clientWidth === 0 || clientHeight === 0) return;
 
-      // Base multipliers for different preset size options
-      let sizeMultiplier = 0.95; // default 'auto'
-      switch (sizeOption) {
-        case 'small':
-          sizeMultiplier = 0.6;
-          break;
-        case 'medium':
-          sizeMultiplier = 0.85;
-          break;
-        case 'large':
-          sizeMultiplier = 1.15;
-          break;
-        case 'huge':
-          sizeMultiplier = 1.45;
-          break;
-      }
+      // Calculate size multiplier continuously based on percentage (30 to 100)
+      const sizeMultiplier = (sizePercent || 100) / 100;
 
       // Marquee is scrolling text: it flows offscreen horizontally. 
       // Thus, only the vertical height is the scaling limit.
@@ -92,7 +78,7 @@ export default function useFitText(text: string, effect: string, sizeOption: str
     return () => {
       resizeObserver.disconnect();
     };
-  }, [text, effect, sizeOption]);
+  }, [text, effect, sizePercent]);
 
   return { containerRef, fontSize };
 }

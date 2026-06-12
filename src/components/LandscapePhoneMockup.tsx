@@ -44,27 +44,29 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [preset.text, preset.effect, preset.countdown_seconds, preset.result_text]);
+  }, [preset.text, preset.effect, preset.countdown_seconds, preset.result_text, preset.trigger_id]);
 
   const isBlink = preset.effect === 'blink';
   const isMarquee = preset.effect === 'marquee';
   const isCountdown = preset.effect === 'countdown';
-  const isEqualizer = preset.effect === 'equalizer';
-  const isGradient = preset.effect === 'gradient';
+  const isLuckyDraw = preset.effect === 'luckydraw';
+  const isLuckyDrawWait = preset.effect === 'luckydraw_wait';
 
   // Compute text to display on screen (no default text fallbacks)
   const displayText = isCountdown 
     ? String(countdownVal) 
-    : isEqualizer 
-      ? '' 
+    : isLuckyDrawWait 
+      ? '추첨 대기 중'
       : (preset.text || '');
 
   // Use dynamic fitting hook to sync sizes proportional to container clientWidth/clientHeight
   const { containerRef, fontSize } = useFitText(
     displayText,
     preset.effect || 'none',
-    preset.font_size || 'auto'
+    preset.font_size || 100
   );
+
+  const isDuoSiren = isBlink && !!preset.bg_color_secondary;
 
   return (
     <div className="@container w-full max-w-[420px] aspect-[1.91/1] bg-black rounded-[9%] border-[1.2cqw] border-zinc-800 shadow-2xl p-[2.2cqw] flex items-center justify-center overflow-hidden relative">
@@ -78,14 +80,14 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
         key={preset.trigger_id || 'mockup'}
         ref={containerRef}
         className={`absolute inset-[2.2cqw] rounded-[6.5%] overflow-hidden flex items-center justify-center transition-colors duration-200 ${
-          isBlink ? 'animate-blink' : ''
-        } ${
-          isGradient ? 'animate-gradient-flow' : ''
+          isDuoSiren ? 'animate-siren' : isBlink ? 'animate-blink' : ''
         }`}
         style={{ 
-          backgroundColor: isGradient ? undefined : preset.bg_color,
+          backgroundColor: isLuckyDraw ? '#FFD700' : isLuckyDrawWait ? '#0B0B0F' : preset.bg_color,
+          border: isLuckyDrawWait ? '2px solid #FFD700' : 'none',
           '--blink-duration': `${preset.speed || 1000}ms`,
-          '--gradient-duration': `${preset.speed || 8000}ms`
+          '--siren-color-1': preset.bg_color,
+          '--siren-color-2': preset.bg_color_secondary || '#3B82F6'
         } as React.CSSProperties}
       >
         {isMarquee ? (
@@ -105,37 +107,13 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
           <div 
             className={`text-center whitespace-nowrap overflow-hidden px-[2cqw] select-none max-w-full leading-none tracking-tighter ${getFontFamilyClass()}`}
             style={{ 
-              color: preset.text_color,
+              color: isLuckyDraw ? '#000000' : isLuckyDrawWait ? '#FFD700' : preset.text_color,
               fontSize,
-              zIndex: 10
+              zIndex: 10,
+              animation: isLuckyDrawWait ? 'preset-card-pulse 1.2s ease-in-out infinite' : undefined
             }}
           >
             {displayText}
-          </div>
-        )}
-
-        {/* Dynamic Equalizer Bars Overlay for Mockup Preview */}
-        {isEqualizer && (
-          <div className="absolute inset-x-0 bottom-0 top-1/2 flex items-end justify-center gap-[1.5cqw] px-[4cqw] pb-[4cqw] pointer-events-none opacity-80 z-0">
-            {[...Array(12)].map((_, i) => {
-              const animDuration = 0.5 + Math.random() * 0.7;
-              const animDelay = Math.random() * 0.4;
-              return (
-                <div 
-                  key={i}
-                  className="flex-1 max-w-[2cqw] rounded-full"
-                  style={{
-                    background: preset.text_color && preset.text_color !== '#FFFFFF'
-                      ? `linear-gradient(to top, ${preset.text_color}cc, ${preset.text_color})`
-                      : 'linear-gradient(to top, rgba(99, 102, 241, 0.8), rgba(236, 72, 153, 0.9))',
-                    height: '100%',
-                    transformOrigin: 'bottom',
-                    animation: `preset-card-eq ${animDuration}s ease-in-out infinite alternate`,
-                    animationDelay: `${animDelay}s`
-                  }}
-                />
-              );
-            })}
           </div>
         )}
 

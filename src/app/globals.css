@@ -204,16 +204,13 @@ body {
   animation: blink var(--blink-duration, 1000ms) infinite !important;
 }
 
-.animate-gradient-flow {
-  background: linear-gradient(270deg, #ff0055, #7a00ff, #00e5ff, #00ff66) !important;
-  background-size: 800% 800% !important;
-  animation: gradient-move var(--gradient-duration, 8000ms) ease infinite !important;
+.animate-siren {
+  animation: siren-blink var(--blink-duration, 200ms) infinite !important;
 }
 
-@keyframes gradient-move {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+@keyframes siren-blink {
+  0%, 49.9% { background-color: var(--siren-color-1, #EF4444); }
+  50%, 100% { background-color: var(--siren-color-2, #3B82F6); }
 }
 
 /* Keyframes for DJ Launchpad visual card previews */
@@ -228,9 +225,5 @@ body {
 @keyframes preset-card-breath {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.05; }
-}
-@keyframes preset-card-eq {
-  0% { transform: scaleY(0.15); }
-  100% { transform: scaleY(0.95); }
 }
 

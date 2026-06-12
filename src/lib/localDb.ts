@@ -440,6 +440,10 @@ export const localDb = {
     return this.clients.get(roomId)?.filter((c) => c.role !== 'host').length || 0;
   },
 
+  getAudienceIds(roomId: string): string[] {
+    return this.clients.get(roomId)?.filter((c) => c.role === 'audience').map((c) => c.id) || [];
+  },
+
   broadcastEvent(roomId: string, data: any): void {
     const list = this.clients.get(roomId);
     if (!list) return;

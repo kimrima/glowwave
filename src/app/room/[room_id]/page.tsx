@@ -82,117 +82,45 @@ export default function AudienceRoom() {
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [currentPreset.text, currentPreset.effect, currentPreset.countdown_seconds, currentPreset.result_text]);
+  }, [currentPreset.text, currentPreset.effect, currentPreset.countdown_seconds, currentPreset.result_text, currentPreset.trigger_id]);
 
-  // Audio Analyzer states for real-time microphone equalizer
-  const [audioFreqs, setAudioFreqs] = useState<number[]>(new Array(16).fill(0));
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
+  // Persistent Client Audience UUID
+  const [audienceUuid, setAudienceUuid] = useState<string>('');
 
-  const initAudio = async () => {
-    try {
-      if (audioContextRef.current) {
-        if (audioContextRef.current.state === 'suspended') {
-          await audioContextRef.current.resume();
-        }
-        return;
-      }
-      if (typeof window === 'undefined') return;
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.warn('Microphone API not available (HTTP context or unsupported browser)');
-        return;
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-      streamRef.current = stream;
-
-      const audioCtx = new AudioContextClass();
-      audioContextRef.current = audioCtx;
-
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64; // 32 frequency bins
-      analyserRef.current = analyser;
-
-      const source = audioCtx.createMediaStreamSource(stream);
-      source.connect(analyser);
-    } catch (err) {
-      console.warn('Microphone access denied or not supported for real equalizer:', err);
-    }
-  };
-
-  const stopAudio = () => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-    analyserRef.current = null;
-  };
-
-  // Trigger initAudio and update loops when currentPreset.effect === 'equalizer' and welcome screen is closed
   useEffect(() => {
-    let active = true;
-    let frameId: number | null = null;
-    
-    const bufferLength = analyserRef.current ? analyserRef.current.frequencyBinCount : 32;
-    const dataArray = new Uint8Array(bufferLength);
-
-    const updateLoop = () => {
-      if (!active) return;
-      if (analyserRef.current && currentPreset.effect === 'equalizer') {
-        analyserRef.current.getByteFrequencyData(dataArray);
-        const newFreqs = new Array(16).fill(0);
-        for (let i = 0; i < 16; i++) {
-          const val = (dataArray[i * 2] + dataArray[i * 2 + 1]) / 2;
-          newFreqs[i] = Math.max(0, (val / 255) * 100);
-        }
-        setAudioFreqs(newFreqs);
+    if (typeof window !== 'undefined') {
+      let uuid = localStorage.getItem('glowwave_audience_uuid');
+      if (!uuid) {
+        uuid = 'x-xxxx-xxxx-xxxx'.replace(/[xy]/g, function(c) {
+          const r = Math.random() * 16 | 0;
+          const v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+        localStorage.setItem('glowwave_audience_uuid', uuid);
       }
-      frameId = requestAnimationFrame(updateLoop);
-    };
-
-    if (currentPreset.effect === 'equalizer' && !showEnterOverlay) {
-      initAudio().then(() => {
-        if (analyserRef.current) {
-          updateLoop();
-        }
-      });
-    } else {
-      setAudioFreqs(new Array(16).fill(0));
+      setAudienceUuid(uuid);
     }
+  }, []);
 
-    return () => {
-      active = false;
-      if (frameId) {
-        cancelAnimationFrame(frameId);
-      }
-    };
-  }, [currentPreset.effect, showEnterOverlay]);
+  const isCountdown = currentPreset.effect === 'countdown';
+  const isLuckyDraw = currentPreset.effect === 'luckydraw';
+  const isLuckyDrawWait = currentPreset.effect === 'luckydraw_wait';
+  const isWinner = isLuckyDraw && currentPreset.lucky_draw_winner_id === audienceUuid;
 
   // Compute text to display on screen
-  const displayText = currentPreset.effect === 'countdown' 
+  const displayText = isCountdown 
     ? String(countdownVal) 
-    : currentPreset.effect === 'equalizer'
-      ? ''
-      : currentPreset.text;
+    : isLuckyDrawWait
+      ? '추첨 대기 중'
+      : isLuckyDraw
+        ? (isWinner ? (currentPreset.text || '👑 축하합니다! 당첨!') : (currentPreset.result_text || '아쉽네요! 다음 기회에..'))
+        : currentPreset.text;
 
   // Use dynamic fitting hook to sync text sizes proportional to viewport container clientWidth/clientHeight
   const { containerRef, fontSize } = useFitText(
     displayText,
     currentPreset.effect,
-    currentPreset.font_size || 'auto'
+    currentPreset.font_size || 100
   );
 
   const [loading, setLoading] = useState(true);
@@ -345,14 +273,14 @@ export default function AudienceRoom() {
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
             console.log('[Room] Subscribed to Supabase channels');
-            channel.track({ role: 'audience', joined_at: new Date().toISOString() });
+            channel.track({ role: 'audience', uuid: audienceUuid, joined_at: new Date().toISOString() });
           }
         });
         
       supabaseChannelRef.current = channel;
     } else {
       console.log('[Room] Connecting to Local SSE Stream');
-      const eventSource = new EventSource(`/api/room/${roomCode}/stream`);
+      const eventSource = new EventSource(`/api/room/${roomCode}/stream?role=audience&uuid=${audienceUuid}`);
       eventSourceRef.current = eventSource;
 
       eventSource.onmessage = (event) => {
@@ -411,12 +339,14 @@ export default function AudienceRoom() {
   };
 
   useEffect(() => {
-    validateAndConnect();
+    if (audienceUuid) {
+      validateAndConnect();
+    }
 
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
         await requestWakeLock();
-        if (roomId) {
+        if (roomId && audienceUuid) {
           validateAndConnect(true);
           connectRealtime(roomId);
         }
@@ -433,7 +363,7 @@ export default function AudienceRoom() {
       if (eventSourceRef.current) eventSourceRef.current.close();
       if (supabaseChannelRef.current && supabase) supabase.removeChannel(supabaseChannelRef.current);
     };
-  }, [roomId]);
+  }, [roomId, audienceUuid]);
 
   const handleViralClick = () => {
     if (typeof window !== 'undefined') {
@@ -598,14 +528,16 @@ export default function AudienceRoom() {
         key={currentPreset.trigger_id || 'audience'}
         ref={containerRef}
         className={`w-full h-full flex items-center justify-center transition-colors duration-300 ${
-          currentPreset.effect === 'blink' ? 'animate-blink' : ''
+          isDuoSiren ? 'animate-siren' : currentPreset.effect === 'blink' ? 'animate-blink' : ''
         } ${
-          currentPreset.effect === 'gradient' ? 'animate-gradient-flow' : ''
+          isWinner ? 'animate-blink' : ''
         }`}
         style={{ 
-          backgroundColor: currentPreset.effect === 'gradient' ? undefined : currentPreset.bg_color,
-          '--blink-duration': `${currentPreset.speed || 1000}ms`,
-          '--gradient-duration': `${currentPreset.speed || 8000}ms`
+          backgroundColor: isWinner ? '#FFD700' : isLuckyDraw ? '#0B0B0F' : isLuckyDrawWait ? '#0B0B0F' : currentPreset.bg_color,
+          border: isLuckyDrawWait ? '8px solid #FFD700' : 'none',
+          '--blink-duration': isWinner ? '150ms' : `${currentPreset.speed || 1000}ms`,
+          '--siren-color-1': currentPreset.bg_color,
+          '--siren-color-2': currentPreset.bg_color_secondary || '#3B82F6'
         } as React.CSSProperties}
       >
         {currentPreset.effect === 'marquee' ? (
@@ -625,45 +557,20 @@ export default function AudienceRoom() {
           <div 
             className={`text-center whitespace-nowrap overflow-hidden px-8 select-none max-w-full leading-none tracking-tighter ${getFontFamilyClass(currentPreset.font_family)}`}
             style={{ 
-              color: currentPreset.text_color,
-              fontSize
+              color: isWinner ? '#000000' : isLuckyDraw ? '#F3F4F6' : isLuckyDrawWait ? '#FFD700' : currentPreset.text_color,
+              fontSize,
+              zIndex: 10,
+              animation: isLuckyDrawWait ? 'preset-card-pulse 1.2s ease-in-out infinite' : undefined
             }}
           >
             {displayText}
           </div>
         )}
 
-        {/* Microphone Help Notice if Equalizer is active but Mic permission is blocked/unconfigured */}
-        {currentPreset.effect === 'equalizer' && !audioContextRef.current && (
-          <div className="absolute top-[35%] text-center text-[10px] text-zinc-500 font-bold z-10 px-6 max-w-md pointer-events-none select-none">
-            🎤 사운드 싱크 기능을 위해 주소창 좌측 자물쇠 아이콘을 눌러 마이크 권한을 허용해 주세요.
-          </div>
-        )}
-
-        {/* Dynamic Equalizer Bars Overlay (Real Microphone Audio or Still) */}
-        {currentPreset.effect === 'equalizer' && (
-          <div className="absolute inset-x-0 bottom-0 top-[10%] flex items-end justify-center gap-1.5 sm:gap-2.5 px-6 sm:px-16 pb-12 sm:pb-20 pointer-events-none opacity-85 z-0">
-            {[...Array(16)].map((_, i) => {
-              const hasRealAudio = audioContextRef.current !== null;
-              const freq = audioFreqs[i] || 0;
-              
-              return (
-                <div 
-                  key={i}
-                  className="flex-1 max-w-[24px] rounded-full transition-all duration-75"
-                  style={{
-                    background: currentPreset.text_color && currentPreset.text_color !== '#FFFFFF'
-                      ? `linear-gradient(to top, ${currentPreset.text_color}cc, ${currentPreset.text_color})`
-                      : 'linear-gradient(to top, rgba(99, 102, 241, 0.8), rgba(236, 72, 153, 0.9))',
-                    height: hasRealAudio ? `calc(${Math.max(2, freq)}% + 6px)` : '6px',
-                    minHeight: '6px',
-                    boxShadow: currentPreset.text_color === '#FFFFFF' 
-                      ? '0 0 12px rgba(255, 255, 255, 0.2)' 
-                      : `0 0 16px ${currentPreset.text_color || '#FFFFFF'}40`
-                  }}
-                />
-              );
-            })}
+        {/* Floating high-tension warning overlay on Waiting */}
+        {isLuckyDrawWait && (
+          <div className="absolute top-[20%] text-center text-xs tracking-widest text-[#FFD700] uppercase font-bold font-outfit animate-pulse">
+            R A F F L E &nbsp; I N &nbsp; P R O G R E S S
           </div>
         )}
 
@@ -738,7 +645,6 @@ export default function AudienceRoom() {
               toggleFullscreen();
               requestWakeLock();
               resetControlsTimer();
-              initAudio(); // Request mic permission and pre-resume AudioContext
             }}
             className="px-8 py-4 rounded-xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all shadow-xl hover:shadow-white/10 flex items-center gap-1.5 cursor-pointer"
           >

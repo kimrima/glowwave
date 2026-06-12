@@ -1,4 +1,4 @@
-export type EffectType = 'none' | 'blink' | 'marquee' | 'equalizer' | 'countdown' | 'gradient';
+export type EffectType = 'none' | 'blink' | 'marquee' | 'countdown' | 'luckydraw' | 'luckydraw_wait';
 
 export interface Preset {
   bg_color: string;
@@ -6,11 +6,13 @@ export interface Preset {
   text_color: string;
   effect: EffectType;
   speed: number; // Duration in milliseconds or scroll speed indicator
-  font_size?: 'auto' | 'small' | 'medium' | 'large' | 'huge';
+  font_size?: number; // Font size multiplier percentage (30 to 100)
   font_family?: 'sans-thin' | 'sans-thick' | 'serif' | 'neon';
   countdown_seconds?: number;
   result_text?: string;
   trigger_id?: string;
+  bg_color_secondary?: string; // For duo-color flashing
+  lucky_draw_winner_id?: string; // Persistent UUID of the winner
 }
 
 export type TierType = 'free' | 'lite' | 'pro' | 'max';

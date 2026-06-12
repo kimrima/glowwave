@@ -19,14 +19,15 @@ export async function GET(
     });
   }
 
-  // Extract role query parameter to ignore host connections in audience counts
+  // Extract role and uuid query parameters
   const role = request.nextUrl.searchParams.get('role') || 'audience';
+  const uuid = request.nextUrl.searchParams.get('uuid') || '';
 
   // Set up ReadableStream for Server-Sent Events (SSE)
   let clientId = '';
   const stream = new ReadableStream({
     async start(controller) {
-      clientId = crypto.randomUUID();
+      clientId = uuid || crypto.randomUUID();
       
       // Register SSE client
       localDb.addClient(roomId, clientId, controller, role);
