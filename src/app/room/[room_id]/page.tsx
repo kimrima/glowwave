@@ -3,15 +3,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { 
-  Sparkles, 
   RotateCw, 
-  AlertTriangle, 
   Smartphone, 
   Loader2,
   Lock,
   WifiOff
 } from 'lucide-react';
-import { Preset, Room } from '@/lib/types';
+import { Preset } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import useFitText from '@/hooks/useFitText';
 
@@ -21,8 +19,7 @@ export default function AudienceRoom() {
   const rawRoomId = params.room_id as string;
   const roomId = rawRoomId ? rawRoomId.toUpperCase() : '';
 
-
-  const [showSafariTip, setShowSafariTip] = useState(false); // Hide by default, show on click or first load
+  const [showSafariTip, setShowSafariTip] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Immersive UI and auto-hide states
@@ -37,7 +34,7 @@ export default function AudienceRoom() {
     }
     controlsTimerRef.current = setTimeout(() => {
       setShowControls(false);
-    }, 3000); // 3 seconds inactivity threshold
+    }, 3000);
   };
 
   // Current Signboard Display State
@@ -73,7 +70,7 @@ export default function AudienceRoom() {
   }, [currentPreset.text, currentPreset.effect, currentPreset.countdown_seconds, currentPreset.result_text]);
 
   // Audio Analyzer states for real-time microphone equalizer
-  const [audioFreqs, setAudioFreqs] = useState<number[]>(new Array(16).fill(10));
+  const [audioFreqs, setAudioFreqs] = useState<number[]>(new Array(16).fill(0));
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -109,7 +106,7 @@ export default function AudienceRoom() {
         const newFreqs = new Array(16).fill(0);
         for (let i = 0; i < 16; i++) {
           const val = (dataArray[i * 2] + dataArray[i * 2 + 1]) / 2;
-          newFreqs[i] = Math.max(10, (val / 255) * 100);
+          newFreqs[i] = Math.max(0, (val / 255) * 100);
         }
         setAudioFreqs(newFreqs);
         animationFrameRef.current = requestAnimationFrame(updateData);
@@ -213,12 +210,10 @@ export default function AudienceRoom() {
       }
     } catch (err) {
       console.warn('Fullscreen API block:', err);
-      // Fallback hint
       setShowSafariTip(true);
     }
   };
 
-  // 1. Initial Room Validations (Existence, Activation, Hard Cap limits)
   const validateAndConnect = async (isReconnect = false) => {
     if (!roomId) return;
     if (!isReconnect) setLoading(true);
@@ -226,8 +221,6 @@ export default function AudienceRoom() {
     try {
       const response = await fetch(`/api/room/${roomId}/status`);
       if (!response.ok) {
-        // If it is a reconnect and the server returned a database or server error (>= 500), 
-        // ignore it silently to prevent disrupting the active screen.
         if (isReconnect && response.status >= 500) {
           console.warn('[Room] Reconnect status check returned server error:', response.status);
           return;
@@ -237,7 +230,7 @@ export default function AudienceRoom() {
         try {
           const errData = await response.json();
           if (errData.suggestion) {
-            errorMsg = errData.suggestion; // Use the clean user-facing suggestion directly
+            errorMsg = errData.suggestion;
           } else if (response.status === 404) {
             errorMsg = '존재하지 않거나 만료된 방 번호입니다. 방은 생성 후 24시간 동안만 유지됩니다.';
           }
@@ -257,7 +250,6 @@ export default function AudienceRoom() {
         setCurrentPreset(roomData.current_state);
       }
       
-      // If room is inactive (pending payment status)
       if (roomData.status !== 'active') {
         setIsRoomInactive(true);
         setLoading(false);
@@ -265,8 +257,6 @@ export default function AudienceRoom() {
       }
       setIsRoomInactive(false);
 
-      // Check Hard Cap (limit of room tier)
-      // On reconnect, we allow connection if they were already inside, but validate for fresh entry
       if (!isReconnect && roomData.current_participants >= roomData.max_participants) {
         setIsHardCapped(true);
         setLoading(false);
@@ -274,33 +264,15 @@ export default function AudienceRoom() {
       }
       setIsHardCapped(false);
 
-      // Save to localStorage for recovery/re-entry
       if (typeof window !== 'undefined') {
         localStorage.setItem('glowwave_last_joined_room_id', roomId);
       }
 
-      // Fetch active state from DB/Serverless memory to sync instantly within 0.2s
-      const stateRes = await fetch(`/api/room/${roomId}/stream`); // This or polling status is quick
-      // We can also request the status API which returns presets details, or simply fetch room's current state
-      // Let's call status API which returns current active settings, or let the stream connect first.
-      
       if (!isReconnect) {
-        // Initialize Realtime engine
         connectRealtime(roomId);
-        // Request Wake Lock
         requestWakeLock();
         setLoading(false);
-      } else {
-        // Just fetch latest state to sync immediately
-        const syncResponse = await fetch(`/api/room/${roomId}/status`);
-        if (syncResponse.ok) {
-          const syncData = await syncResponse.json();
-          // We can fetch the local states if needed. Our localDb keeps currentStates.
-          // Let's perform a fast get-state request
-          fetchCurrentState();
-        }
       }
-
     } catch (err) {
       console.error(err);
       if (isReconnect) {
@@ -312,25 +284,7 @@ export default function AudienceRoom() {
     }
   };
 
-  const fetchCurrentState = async () => {
-    try {
-      const response = await fetch(`/api/room/${roomId}/status`);
-      if (response.ok) {
-        // If localDb or Supabase is active, fetch current state.
-        // Let's add a fast fetch helper in localDb/Server for current state
-        const sData = await response.json();
-        // Since we want to update the preset, we can call a GET route for room current state
-        // For simplicity, we can fetch room status, which in local fallback also includes current preset,
-        // but let's connect and sync via real-time channel.
-      }
-    } catch (e) {
-      // Fail silently on sync fallback
-    }
-  };
-
-  // 2. Real-time Subscription Setup
   const connectRealtime = (roomCode: string) => {
-    // Clean existing
     if (eventSourceRef.current) eventSourceRef.current.close();
     if (supabaseChannelRef.current && supabase) supabase.removeChannel(supabaseChannelRef.current);
 
@@ -344,7 +298,6 @@ export default function AudienceRoom() {
 
       channel
         .on('broadcast', { event: 'render' }, ({ payload }) => {
-          // Sync signaling payload in sub-100ms
           console.log('[Room] Received broadcast payload:', payload);
           setCurrentPreset(payload);
         })
@@ -355,14 +308,12 @@ export default function AudienceRoom() {
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
             console.log('[Room] Subscribed to Supabase channels');
-            // Track presence as role=audience so host can filter and count
             channel.track({ role: 'audience', joined_at: new Date().toISOString() });
           }
         });
         
       supabaseChannelRef.current = channel;
     } else {
-      // SSE Fallback connection
       console.log('[Room] Connecting to Local SSE Stream');
       const eventSource = new EventSource(`/api/room/${roomCode}/stream`);
       eventSourceRef.current = eventSource;
@@ -395,22 +346,18 @@ export default function AudienceRoom() {
 
       eventSource.onerror = (err) => {
         console.error('[Room] SSE Connection closed/failed. Reconnecting...', err);
-        // Standard EventSource auto-reconnects, but we'll monitor visibility changes too
       };
     }
   };
 
-  // 3. W3C Wake Lock API implementation
   const requestWakeLock = async () => {
     if ('wakeLock' in navigator) {
       try {
         wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
-        console.log('[WakeLock] Screen Wake Lock is active 🔒');
+        console.log('[WakeLock] Screen Wake Lock is active');
       } catch (err: any) {
         console.warn(`[WakeLock] Failed to lock screen sleep: ${err.message}`);
       }
-    } else {
-      console.warn('[WakeLock] Wake Lock API is not supported in this browser.');
     }
   };
 
@@ -426,25 +373,17 @@ export default function AudienceRoom() {
     }
   };
 
-  // 4. Auto-reconnect & Sync on Visibility Change (Tab focus / Lock screen unlock)
   useEffect(() => {
     validateAndConnect();
 
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
-        console.log('[Visibility] Tab active. Re-acquiring wake lock & syncing state...');
         await requestWakeLock();
-        
-        // Auto-reconnect live stream and fetch latest state from API (takes 0.2s)
         if (roomId) {
-          // Trigger immediate server check
           validateAndConnect(true);
-          
-          // Re-subscribe to SSE or WebSockets to repair broken links
           connectRealtime(roomId);
         }
       } else {
-        // Tab backgrounded: release lock to comply with browser battery policy
         releaseWakeLock();
       }
     };
@@ -459,12 +398,10 @@ export default function AudienceRoom() {
     };
   }, [roomId]);
 
-  // 5. Viral Loop Referral setup
   const handleViralClick = () => {
     if (typeof window !== 'undefined') {
-      // Set referral cookie/localStorage
       localStorage.setItem('glowwave_referred_discount', 'true');
-      document.cookie = "glowwave_referred_discount=true; max-age=604800; path=/"; // 7 days expiration
+      document.cookie = "glowwave_referred_discount=true; max-age=604800; path=/";
       router.push('/');
     }
   };
@@ -495,13 +432,12 @@ export default function AudienceRoom() {
     );
   }
 
-  // Hard Cap limit reached overlay
   if (isHardCapped) {
     return (
       <div className="fixed inset-0 bg-[#0B0B0F] flex items-center justify-center px-6 text-center text-white z-50">
         <div className="glass-effect p-8 rounded-2xl max-w-sm border border-yellow-500/20">
           <Lock className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-          <h2 className="text-lg font-extrabold text-white mb-2">접속 인원 제한 초과 🛑</h2>
+          <h2 className="text-lg font-extrabold text-white mb-2">접속 인원 제한 초과</h2>
           <p className="text-xs text-zinc-400 mb-6 leading-relaxed">
             본 방은 주최자의 요금제별 지정 동시 접속 한도에 도달했습니다.<br />
             기존 참여자가 나가거나 주최자가 상위 등급으로 업그레이드할 때까지 입장이 제한됩니다.
@@ -514,7 +450,6 @@ export default function AudienceRoom() {
     );
   }
 
-  // Inactive Room (Pending Payment) overlay
   if (isRoomInactive) {
     return (
       <div className="fixed inset-0 bg-[#0B0B0F] flex items-center justify-center px-6 text-center text-white z-50">
@@ -538,13 +473,13 @@ export default function AudienceRoom() {
       onTouchStart={resetControlsTimer}
     >
       
-      {/* 6. Landscape forced Warning overlay (Locks with CSS orientation media query) */}
+      {/* Landscape forced Warning overlay */}
       <div className="fixed inset-0 bg-[#0B0B0F] flex flex-col justify-center items-center text-center px-6 text-white z-50 md:hidden portrait-overlay">
         <div className="relative mb-6">
           <Smartphone className="w-16 h-16 text-indigo-400 animate-pulse" />
           <RotateCw className="w-6 h-6 text-indigo-300 absolute -bottom-1 -right-1 animate-spin" style={{ animationDuration: '3s' }} />
         </div>
-        <h2 className="text-xl font-black text-white mb-2">스마트폰을 가로로 돌려주세요 🔄</h2>
+        <h2 className="text-xl font-black text-white mb-2">스마트폰을 가로로 돌려주세요</h2>
         <p className="text-xs text-zinc-500 leading-relaxed max-w-xs">
           빛의 방사 면적을 최대화하고 자막이 깨지지 않도록 하기 위해 가로 모드 회전이 필수입니다.
         </p>
@@ -559,7 +494,7 @@ export default function AudienceRoom() {
         }
       `}</style>
 
-      {/* Floating Control Toolbar with Auto-Hide transition */}
+      {/* Floating Control Toolbar */}
       <div className={`absolute top-6 left-6 z-40 flex items-center gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <button
           onClick={(e) => {
@@ -568,7 +503,7 @@ export default function AudienceRoom() {
           }}
           className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
         >
-          {isFullscreen ? '화면 축소 📱' : '전체화면 전환 📺'}
+          {isFullscreen ? '화면 축소' : '전체화면 전환'}
         </button>
         {isIOS && (
           <button
@@ -578,12 +513,12 @@ export default function AudienceRoom() {
             }}
             className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
           >
-            아이폰 사파리 팁 💡
+            아이폰 사파리 팁
           </button>
         )}
       </div>
 
-      {/* iOS Safari Home Screen Tooltip with Auto-Hide transition */}
+      {/* iOS Safari Home Screen Tooltip */}
       {showSafariTip && (
         <div className={`fixed top-6 left-6 right-6 md:left-auto md:w-80 bg-black/95 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-xs text-zinc-300 shadow-2xl z-50 animate-in fade-in slide-in-from-top-4 duration-200 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="flex justify-between items-center mb-2">
@@ -602,12 +537,12 @@ export default function AudienceRoom() {
             </button>
           </div>
           <p className="leading-relaxed mb-3 text-zinc-400">
-            아이폰 사파리 브라우저는 기본 주소창과 탭이 숨겨지지 않습니다. 아래 방법으로 앱처럼 실행하시면 완벽한 전체화면으로 이용 가능합니다!
+            아이폰 사파리 브라우저는 기본 주소창과 탭이 숨겨지지 않습니다. 아래 방법으로 앱처럼 실행하시면 완벽한 전체화면으로 이용 가능합니다.
           </p>
           <div className="bg-white/5 rounded-xl p-3 text-[10px] flex flex-col gap-2 text-zinc-400 leading-normal border border-white/5">
-            <div>1. 사파리 화면 하단 **[공유 버튼 📤]**을 누릅니다.</div>
-            <div>2. 목록 중 **[홈 화면에 추가 ➕]**를 클릭합니다.</div>
-            <div>3. 바탕화면에 설치된 **아이콘**을 눌러 실행하면 완벽한 전체화면 앱으로 구동됩니다!</div>
+            <div>1. 사파리 화면 하단 [공유 버튼]을 누릅니다.</div>
+            <div>2. 목록 중 [홈 화면에 추가]를 클릭합니다.</div>
+            <div>3. 바탕화면에 설치된 아이콘을 눌러 실행하면 완벽한 전체화면 앱으로 구동됩니다.</div>
           </div>
         </div>
       )}
@@ -617,29 +552,26 @@ export default function AudienceRoom() {
         ref={containerRef}
         className={`w-full h-full flex items-center justify-center transition-colors duration-300 ${
           currentPreset.effect === 'blink' ? 'animate-blink' : ''
+        } ${
+          currentPreset.effect === 'gradient' ? 'animate-gradient-flow' : ''
         }`}
         style={{ 
-          backgroundColor: currentPreset.bg_color,
-          '--blink-duration': `${currentPreset.speed || 1000}ms`
+          backgroundColor: currentPreset.effect === 'gradient' ? undefined : currentPreset.bg_color,
+          '--blink-duration': `${currentPreset.speed || 1000}ms`,
+          '--gradient-duration': `${currentPreset.speed || 8000}ms`
         } as React.CSSProperties}
       >
-        {/* standard styling tags for keyframes (highly robust in Next.js) */}
-        <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes equalizer-bar {
-            0% { transform: scaleY(0.15); }
-            100% { transform: scaleY(0.95); }
-          }
-        `}} />
-
         {currentPreset.effect === 'marquee' ? (
           <div className="w-full overflow-hidden whitespace-nowrap flex items-center">
             <span 
               className={`animate-marquee inline-block font-black select-none leading-none ${
-                currentPreset.font_family === 'neon' ? 'font-neon' : currentPreset.font_family === 'dot' ? 'font-dot' : ''
+                currentPreset.font_family === 'sans' ? 'font-sign-sans' : 
+                currentPreset.font_family === 'serif' ? 'font-sign-serif' : 
+                currentPreset.font_family === 'neon' ? 'font-sign-neon' : 
+                currentPreset.font_family === 'dot' ? 'font-sign-dot' : 'font-sign-sans'
               }`}
               style={{ 
                 color: currentPreset.text_color,
-                fontFamily: currentPreset.font_family === 'serif' ? 'Georgia, serif' : undefined,
                 fontSize,
                 '--marquee-duration': `${currentPreset.speed || 6000}ms`
               } as React.CSSProperties}
@@ -650,11 +582,13 @@ export default function AudienceRoom() {
         ) : (
           <div 
             className={`font-black text-center whitespace-nowrap overflow-hidden px-8 select-none max-w-full leading-none tracking-tighter ${
-              currentPreset.font_family === 'neon' ? 'font-neon' : currentPreset.font_family === 'dot' ? 'font-dot' : ''
+              currentPreset.font_family === 'sans' ? 'font-sign-sans' : 
+              currentPreset.font_family === 'serif' ? 'font-sign-serif' : 
+              currentPreset.font_family === 'neon' ? 'font-sign-neon' : 
+              currentPreset.font_family === 'dot' ? 'font-sign-dot' : 'font-sign-sans'
             }`}
             style={{ 
               color: currentPreset.text_color,
-              fontFamily: currentPreset.font_family === 'serif' ? 'Georgia, serif' : undefined,
               fontSize
             }}
           >
@@ -662,31 +596,23 @@ export default function AudienceRoom() {
           </div>
         )}
 
-        {/* Dynamic Equalizer Bars Overlay (Real Audio or Fallback) */}
+        {/* Dynamic Equalizer Bars Overlay (Real Microphone Audio or Still) */}
         {currentPreset.effect === 'equalizer' && (
           <div className="absolute inset-x-0 bottom-0 top-[10%] flex items-end justify-center gap-1.5 sm:gap-2.5 px-6 sm:px-16 pb-12 sm:pb-20 pointer-events-none opacity-85 z-0">
             {[...Array(16)].map((_, i) => {
               const hasRealAudio = audioContextRef.current !== null;
-              const freq = audioFreqs[i] || 10;
-              const animDuration = 0.55 + Math.random() * 0.6;
-              const animDelay = Math.random() * 0.4;
+              const freq = audioFreqs[i] || 0;
               
               return (
                 <div 
                   key={i}
-                  className="flex-1 max-w-[24px] rounded-t-lg transition-all duration-75"
-                  style={hasRealAudio ? {
-                    backgroundColor: currentPreset.text_color || '#FFFFFF',
-                    height: `${freq}%`,
-                    boxShadow: currentPreset.text_color === '#FFFFFF' 
-                      ? '0 0 12px rgba(255, 255, 255, 0.2)' 
-                      : `0 0 16px ${currentPreset.text_color || '#FFFFFF'}40`
-                  } : {
-                    backgroundColor: currentPreset.text_color || '#FFFFFF',
-                    transformOrigin: 'bottom',
-                    height: '100%',
-                    animation: `equalizer-bar ${animDuration}s ease-in-out infinite alternate`,
-                    animationDelay: `${animDelay}s`,
+                  className="flex-1 max-w-[24px] rounded-full transition-all duration-75"
+                  style={{
+                    background: currentPreset.text_color && currentPreset.text_color !== '#FFFFFF'
+                      ? `linear-gradient(to top, ${currentPreset.text_color}cc, ${currentPreset.text_color})`
+                      : 'linear-gradient(to top, rgba(99, 102, 241, 0.8), rgba(236, 72, 153, 0.9))',
+                    height: hasRealAudio ? `calc(${Math.max(2, freq)}% + 6px)` : '6px',
+                    minHeight: '6px',
                     boxShadow: currentPreset.text_color === '#FFFFFF' 
                       ? '0 0 12px rgba(255, 255, 255, 0.2)' 
                       : `0 0 16px ${currentPreset.text_color || '#FFFFFF'}40`
@@ -697,7 +623,7 @@ export default function AudienceRoom() {
           </div>
         )}
 
-        {/* 7. Viral Loop Watermark Link Layer (Hides when controls hide for Dark Immersive UI) */}
+        {/* Viral Referral Watermark Link Layer */}
         <button 
           onClick={(e) => {
             e.stopPropagation();
@@ -707,12 +633,12 @@ export default function AudienceRoom() {
             showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
           }`}
         >
-          <span>나도 이런 파티 연출하기 🪄</span>
+          <span>나도 이런 파티 연출하기</span>
         </button>
 
       </div>
 
-      {/* 8. Initial entry user activation overlay for Fullscreen & WakeLock support */}
+      {/* Initial entry user activation overlay */}
       {showEnterOverlay && (
         <div className="fixed inset-0 bg-[#030305] z-50 flex flex-col justify-center items-center text-center px-6 text-white bg-grid-pattern relative overflow-hidden">
           {/* Background Aura Spheres */}
@@ -722,7 +648,7 @@ export default function AudienceRoom() {
           <div className="relative z-10 flex flex-col justify-center items-center">
           
           <div className="relative mb-6">
-            <Sparkles className="w-10 h-10 text-white animate-pulse" />
+            <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center font-bold text-white text-lg">GW</div>
           </div>
           
           <h2 className="text-xl font-black text-white mb-2">전광판 동기화 준비 완료</h2>
@@ -731,20 +657,20 @@ export default function AudienceRoom() {
             <div className="glass-effect p-6 rounded-2xl max-w-sm border border-white/5 bg-[#12121a] mb-6 flex flex-col gap-4 text-left">
               <div className="flex items-center gap-2 border-b border-white/5 pb-2">
                 <Smartphone className="w-4.5 h-4.5" />
-                <h3 className="font-bold text-xs text-white">아이폰(iOS) 전체화면 설정 권장 🚨</h3>
+                <h3 className="font-bold text-xs text-white">아이폰(iOS) 전체화면 설정 권장</h3>
               </div>
               <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">
                 아이폰 Safari 브라우저는 주소창과 메뉴바를 숨길 수 없어 일반 브라우저로 접속 시 전광판이 잘려 보입니다. 
-                아래 순서대로 <b>'홈 화면에 추가'</b>하여 실행하시면 완벽한 전체화면 앱으로 이용 가능합니다!
+                아래 순서대로 <b>'홈 화면에 추가'</b>하여 실행하시면 완벽한 전체화면 앱으로 이용 가능합니다.
               </p>
               <div className="bg-white/5 rounded-xl p-3 text-[10px] flex flex-col gap-2 text-zinc-300 leading-normal border border-white/5 font-medium">
                 <div className="flex gap-1.5">
                   <span className="text-zinc-500 font-bold">1.</span>
-                  <span>화면 하단 중앙의 <b>[공유 버튼 📤]</b>을 클릭합니다.</span>
+                  <span>화면 하단 중앙의 <b>[공유 버튼]</b>을 클릭합니다.</span>
                 </div>
                 <div className="flex gap-1.5 border-t border-white/5 pt-1.5">
                   <span className="text-zinc-500 font-bold">2.</span>
-                  <span>메뉴 중 <b>[홈 화면에 추가 ➕]</b>를 선택합니다.</span>
+                  <span>메뉴 중 <b>[홈 화면에 추가]</b>를 선택합니다.</span>
                 </div>
                 <div className="flex gap-1.5 border-t border-white/5 pt-1.5">
                   <span className="text-zinc-500 font-bold">3.</span>
@@ -769,10 +695,9 @@ export default function AudienceRoom() {
               requestWakeLock();
               resetControlsTimer();
             }}
-            className="px-8 py-4 rounded-xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all shadow-xl hover:shadow-white/10 flex items-center gap-1.5 cursor-pointer animate-bounce"
-            style={{ animationDuration: '3s' }}
+            className="px-8 py-4 rounded-xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all shadow-xl hover:shadow-white/10 flex items-center gap-1.5 cursor-pointer"
           >
-            입장하기 ⚡
+            입장하기
           </button>
         </div>
       </div>

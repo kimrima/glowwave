@@ -3,31 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Sparkles, 
-  Settings, 
-  Layers, 
-  Mail, 
-  CreditCard, 
-  Check, 
-  ChevronRight,
-  Plus,
-  Trash2,
-  AlertCircle,
-  HelpCircle,
-  Loader2
-} from 'lucide-react';
-import { Preset, TierType, TIER_CONFIGS, TierConfig } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
+import { Preset, TierType, TIER_CONFIGS } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 
 export default function HostSetup() {
   const router = useRouter();
   
-  // Default presets for the buttons (to be stored inside DB/Local storage automatically)
+  // Default presets: replaced wave with gradient
   const defaultPresets: Preset[] = [
     { bg_color: '#0B0B0F', text: '앰비언트', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
     { bg_color: '#EF4444', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200 },
-    { bg_color: '#3B82F6', text: '웨이브', text_color: '#FFFFFF', effect: 'marquee', speed: 4000 },
+    { bg_color: '#8B5CF6', text: '그라데이션', text_color: '#FFFFFF', effect: 'gradient', speed: 8000 },
     { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 10, result_text: 'START' },
     { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000 },
     { bg_color: '#10B981', text: '사운드 싱크', text_color: '#FFFFFF', effect: 'equalizer', speed: 1000 },
@@ -41,7 +28,7 @@ export default function HostSetup() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'toss' | 'stripe'>('toss');
-  const [checkoutStep, setCheckoutStep] = useState<'options' | 'input' | 'done'>('options');
+  const [checkoutStep, setCheckoutStep] = useState<'input' | 'done'>('input');
   const [createdRoomInfo, setCreatedRoomInfo] = useState<{ room_id: string; host_session_token: string } | null>(null);
 
   // Auto-fill email from localStorage if returning host
@@ -52,7 +39,7 @@ export default function HostSetup() {
     }
   }, []);
 
-  const handleStartSetup = (e: React.FormEvent) => {
+  const handleStartSetup = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Email Validation
@@ -62,14 +49,8 @@ export default function HostSetup() {
       return;
     }
     setEmailError('');
-
-    // Open Checkout Dialog
-    setIsCheckoutOpen(true);
-    setCheckoutStep('options');
-  };
-
-  const executeCheckoutCreation = async () => {
     setIsProcessing(true);
+
     try {
       // 1. Call Create Room API
       const response = await fetch('/api/room/create', {
@@ -94,29 +75,25 @@ export default function HostSetup() {
       // Save email in localStorage for future convenience
       localStorage.setItem('glowwave_host_email', hostEmail);
 
-      // If Free Tier, it is active immediately (no payment hook required)
+      // Save default presets and authorization to LocalStorage
+      localStorage.setItem(`glowwave_presets_${data.room_id}`, JSON.stringify(defaultPresets));
+      localStorage.setItem(`glowwave_token_${data.room_id}`, data.host_session_token);
+      localStorage.setItem('glowwave_active_host_room_id', data.room_id);
+
       if (selectedTier === 'free') {
-        // Save default presets and authorization to LocalStorage
-        localStorage.setItem(`glowwave_presets_${data.room_id}`, JSON.stringify(defaultPresets));
-        localStorage.setItem(`glowwave_token_${data.room_id}`, data.host_session_token);
-        localStorage.setItem('glowwave_active_host_room_id', data.room_id);
-        
-        // Wait briefly for style simulation and redirect
-        setTimeout(() => {
-          setIsProcessing(false);
-          setIsCheckoutOpen(false);
-          router.push(`/host/dashboard/${data.room_id}`);
-        }, 1500);
+        // Free tier goes directly to dashboard without intermediate step
+        setIsProcessing(false);
+        router.push(`/host/dashboard/${data.room_id}`);
       } else {
-        // Go to payment inputs step for paid tiers
+        // Paid tier opens PG checkout input directly
         setCheckoutStep('input');
+        setIsCheckoutOpen(true);
         setIsProcessing(false);
       }
     } catch (err: any) {
       console.error(err);
       alert(err.message || '방 생성 중 오류가 발생했습니다.');
       setIsProcessing(false);
-      setIsCheckoutOpen(false);
     }
   };
 
@@ -167,10 +144,9 @@ export default function HostSetup() {
       <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-black text-xl tracking-tight text-white font-outfit">
-            <Sparkles className="w-5 h-5 text-indigo-400" />
             <span>GlowWave</span>
           </Link>
-          <div className="text-[10px] text-zinc-500 font-black font-mono tracking-widest">
+          <div className="text-[10px] text-zinc-500 font-black font-mono tracking-widest animate-pulse">
             SETUP BUILDER v1.2
           </div>
         </div>
@@ -183,7 +159,6 @@ export default function HostSetup() {
         <div className="lg:col-span-6 flex flex-col gap-8 pr-0 lg:pr-8 py-4">
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5" />
               <span>비밀번호 없이 3초 만에 생성</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight tracking-tight">
@@ -196,25 +171,23 @@ export default function HostSetup() {
             </p>
           </div>
 
-          {/* Phone Mockup Showcase */}
+          {/* Phone Mockup Showcase: Replace preview with solid indigo GLOWWAVE */}
           <div className="flex flex-col items-center lg:items-start">
-            <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-4 tracking-wider">실시간 연출 효과 예시 (Mockup Preview)</span>
-            <LandscapePhoneMockup preset={defaultPresets[1]} />
+            <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-4 tracking-wider">미리보기 (GLOWWAVE SOLID)</span>
+            <LandscapePhoneMockup preset={{ bg_color: '#6366F1', text: 'GLOWWAVE', text_color: '#FFFFFF', effect: 'none', speed: 1000 }} />
           </div>
         </div>
 
         {/* Right Column: Setup Form */}
         <div className="lg:col-span-6 flex flex-col justify-center">
           <form onSubmit={handleStartSetup} className="glass-effect rounded-2xl p-6 sm:p-8 flex flex-col gap-6 bg-[#12121a]">
-            <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-              <Layers className="w-5 h-5 text-indigo-400" />
-              <span>참여 인원 및 요금제 선택</span>
+            <h2 className="text-xl font-bold text-white mb-2">
+              참여 인원 및 요금제 선택
             </h2>
 
             {/* Email Input Step (No login logic) */}
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
-              <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 animate-pulse" />
+              <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
                 이메일 주소 (비회원 영수증 및 복구용)
               </label>
               <input
@@ -229,8 +202,7 @@ export default function HostSetup() {
                 className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-sm"
               />
               {emailError ? (
-                <p className="text-xs text-red-400 mt-2 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" />
+                <p className="text-xs text-red-400 mt-2">
                   {emailError}
                 </p>
               ) : (
@@ -277,9 +249,17 @@ export default function HostSetup() {
             {/* Submit btn */}
             <button
               type="submit"
+              disabled={isProcessing}
               className="btn-primary w-full py-4 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shadow-xl"
             >
-              이벤트 방 개설하기 <ChevronRight className="w-4 h-4" />
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                  생성 중...
+                </>
+              ) : (
+                '이벤트 방 개설하기'
+              )}
             </button>
           </form>
         </div>
@@ -297,53 +277,13 @@ export default function HostSetup() {
           <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" />
           
           <div className="glass-effect rounded-2xl w-full max-w-md p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150 border border-white/10">
-            {checkoutStep === 'options' && (
-              <div className="flex flex-col gap-6 text-center py-4">
-                <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400 mx-auto mb-2 animate-bounce">
-                  <CreditCard className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-2">이벤트 방 생성 승인</h3>
-                  <p className="text-sm text-zinc-400">
-                    선택하신 <span className="text-white font-semibold">{TIER_CONFIGS[selectedTier].name}</span> 방을 생성합니다.
-                  </p>
-                </div>
-
-                <div className="flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl my-1">
-                  <LandscapePhoneMockup preset={defaultPresets[1]} />
-                </div>
-
-                <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 text-left max-w-xs mx-auto w-full text-xs flex flex-col gap-2">
-                  <div className="flex justify-between"><span className="text-zinc-500">이메일:</span><span className="text-white font-mono">{hostEmail}</span></div>
-                  <div className="flex justify-between"><span className="text-zinc-500">인원 하드캡:</span><span className="text-white">{TIER_CONFIGS[selectedTier].maxParticipants}명</span></div>
-                  <div className="flex justify-between border-t border-white/5 pt-2 mt-1"><span className="text-zinc-500 font-bold">결제 금액:</span><span className="text-white font-bold">{TIER_CONFIGS[selectedTier].priceKrw === 0 ? '무료' : `${TIER_CONFIGS[selectedTier].priceKrw.toLocaleString()}원`}</span></div>
-                </div>
-
-                <button
-                  onClick={executeCheckoutCreation}
-                  disabled={isProcessing}
-                  className="btn-primary w-full py-3.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      생성 중...
-                    </>
-                  ) : (
-                    '방 만들기 시작'
-                  )}
-                </button>
-              </div>
-            )}
-
             {checkoutStep === 'input' && (
               <div className="flex flex-col gap-5">
                 <div className="flex justify-between items-center pb-3 border-b border-white/10">
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-indigo-400" />
+                  <h3 className="text-base font-bold text-white">
                     간편 비회원 결제창
                   </h3>
-                  <span className="text-xs text-zinc-500">방 번호: {createdRoomInfo?.room_id}</span>
+                  <span className="text-xs text-zinc-500 font-mono">방 번호: {createdRoomInfo?.room_id}</span>
                 </div>
 
                 {/* PG Method Selector */}
@@ -390,8 +330,7 @@ export default function HostSetup() {
                   </div>
                 </div>
 
-                <div className="text-[10px] text-zinc-500 leading-normal flex items-start gap-1">
-                  <AlertCircle className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                <div className="text-[10px] text-zinc-500 leading-normal">
                   <span>본 결제는 시뮬레이션입니다. 결제하기 버튼을 누르면 즉시 카드사 PG 웹훅 API를 호출하여 방장 대시보드가 활성화됩니다.</span>
                 </div>
 
@@ -410,14 +349,11 @@ export default function HostSetup() {
                   >
                     {isProcessing ? (
                       <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
                         결제 승인 중...
                       </>
                     ) : (
-                      <>
-                        <Check className="w-4 h-4" />
-                        결제하기
-                      </>
+                      '결제하기'
                     )}
                   </button>
                 </div>

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Outfit, Plus_Jakarta_Sans } from "next/font/google";
+import { Geist, Geist_Mono, Outfit, Plus_Jakarta_Sans, Black_Han_Sans, Orbitron, Gowun_Batang } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,6 +19,23 @@ const outfit = Outfit({
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta-sans",
+  subsets: ["latin"],
+});
+
+const blackHanSans = Black_Han_Sans({
+  variable: "--font-black-han-sans",
+  weight: "400",
+  subsets: ["latin"],
+});
+
+const orbitron = Orbitron({
+  variable: "--font-orbitron",
+  subsets: ["latin"],
+});
+
+const gowunBatang = Gowun_Batang({
+  variable: "--font-gowun-batang",
+  weight: ["400", "700"],
   subsets: ["latin"],
 });
 
@@ -47,7 +64,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} ${plusJakartaSans.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${outfit.variable} ${plusJakartaSans.variable} ${blackHanSans.variable} ${orbitron.variable} ${gowunBatang.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

@@ -1,4 +1,4 @@
-export type EffectType = 'none' | 'blink' | 'marquee' | 'equalizer' | 'countdown';
+export type EffectType = 'none' | 'blink' | 'marquee' | 'equalizer' | 'countdown' | 'gradient';
 
 export interface Preset {
   bg_color: string;

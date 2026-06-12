@@ -29,7 +29,7 @@ import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 const defaults: Preset[] = [
   { bg_color: '#0B0B0F', text: '앰비언트', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
   { bg_color: '#EF4444', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200 },
-  { bg_color: '#3B82F6', text: '웨이브', text_color: '#FFFFFF', effect: 'marquee', speed: 4000 },
+  { bg_color: '#8B5CF6', text: '그라데이션', text_color: '#FFFFFF', effect: 'gradient', speed: 8000 },
   { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 10, result_text: 'START' },
   { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000 },
   { bg_color: '#10B981', text: '사운드 싱크', text_color: '#FFFFFF', effect: 'equalizer', speed: 1000 },
@@ -109,12 +109,12 @@ export default function HostDashboard() {
   });
 
   // Custom instant message state values
-  const [customText, setCustomText] = useState('열정 🔥');
+  const [customText, setCustomText] = useState('열정');
   const [customBgColor, setCustomBgColor] = useState('#EF4444');
   const [customFontSize, setCustomFontSize] = useState<'auto' | 'small' | 'medium' | 'large' | 'huge'>('auto');
   const [customFontFamily, setCustomFontFamily] = useState<'sans' | 'serif' | 'neon' | 'dot'>('sans');
   const [customEffect, setCustomEffect] = useState<EffectType>('none');
-  const [customSpeedStep, setCustomSpeedStep] = useState(3);
+  const [customSpeed, setCustomSpeed] = useState(50); // range 1-100
 
   // Safety transmitter lock & miniature preview toggles
   const [isTransmitterLocked, setIsTransmitterLocked] = useState(false);
@@ -131,6 +131,33 @@ export default function HostDashboard() {
 
   const audienceUrl = originUrl && roomId ? `${originUrl}/room/${roomId}` : '';
   const qrCodeUrl = roomId ? `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(audienceUrl)}` : '';
+
+  const getSpeedFactor = (effect: EffectType, ms: number) => {
+    if (effect === 'blink') {
+      return Math.max(1, Math.min(100, Math.round(((2000 - ms) * 99) / 1950 + 1)));
+    }
+    if (effect === 'marquee') {
+      return Math.max(1, Math.min(100, Math.round(((15000 - ms) * 99) / 14000 + 1)));
+    }
+    if (effect === 'gradient') {
+      return Math.max(1, Math.min(100, Math.round(((20000 - ms) * 99) / 19000 + 1)));
+    }
+    return 50;
+  };
+
+  const getSpeedMs = (effect: EffectType, factor: number) => {
+    if (effect === 'blink') {
+      return Math.round(2000 - (factor - 1) * (1950 / 99));
+    }
+    if (effect === 'marquee') {
+      return Math.round(15000 - (factor - 1) * (14000 / 99));
+    }
+    if (effect === 'gradient') {
+      return Math.round(20000 - (factor - 1) * (19000 / 99));
+    }
+    return 1000;
+  };
+
   // 1. Authorization and Room Setup
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -303,6 +330,15 @@ export default function HostDashboard() {
         
         if (emojiRegex.test(p.text)) {
           p.text = p.text.replace(emojiRegex, '').trim();
+          changed = true;
+        }
+
+        if (idx === 2 && p.effect !== 'gradient') {
+          p.bg_color = '#8B5CF6';
+          p.text = '그라데이션';
+          p.text_color = '#FFFFFF';
+          p.effect = 'gradient';
+          p.speed = 8000;
           changed = true;
         }
 
@@ -625,7 +661,6 @@ export default function HostDashboard() {
       <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-400" />
             <span className="font-black text-white tracking-tight font-outfit text-sm uppercase">GlowWave Host Remote</span>
           </div>
           
@@ -675,7 +710,7 @@ export default function HostDashboard() {
                     }}
                     className="text-[9px] font-bold text-indigo-400 hover:text-indigo-300 cursor-pointer transition-colors"
                   >
-                    Upgrade ⚡
+                    Upgrade
                   </button>
                 )}
               </div>
@@ -717,7 +752,7 @@ export default function HostDashboard() {
                       : 'border-white/5 bg-white/5 text-zinc-400 hover:text-white'
                   }`}
                 >
-                  <span>카드 미리보기: {showMiniPreviews ? 'ON 📺' : 'OFF 🌑'}</span>
+                  <span>카드 미리보기: {showMiniPreviews ? 'ON' : 'OFF'}</span>
                 </button>
 
                 {/* Safety Transmission Lock Toggle */}
@@ -730,7 +765,7 @@ export default function HostDashboard() {
                       : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
                   }`}
                 >
-                  <span>{isTransmitterLocked ? '송출 잠금 🔒' : '실시간 송출 🔓'}</span>
+                  <span>{isTransmitterLocked ? '송출 잠금' : '실시간 송출'}</span>
                 </button>
               </div>
             </div>
@@ -904,15 +939,11 @@ export default function HostDashboard() {
                   type="button"
                   onClick={() => {
                     const isWhite = customBgColor === '#FFFFFF';
-                    const calculatedSpeed = customEffect === 'blink'
-                      ? [1000, 600, 400, 200, 100][customSpeedStep - 1]
-                      : customEffect === 'marquee'
-                        ? [10000, 7000, 5000, 3000, 1500][customSpeedStep - 1]
-                        : 1000;
+                    const calculatedSpeed = getSpeedMs(customEffect, customSpeed);
                     
                     const customPreset: Preset = {
                       bg_color: customBgColor,
-                      text: customText, // Send empty text if blank to support bg-only lighting
+                      text: customText,
                       text_color: isWhite ? '#000000' : '#FFFFFF',
                       effect: customEffect,
                       speed: calculatedSpeed,
@@ -921,9 +952,8 @@ export default function HostDashboard() {
                     };
                     triggerPreset(customPreset, -1);
                   }}
-                  className="btn-primary h-[48px] px-6 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                  className="btn-primary h-[48px] px-6 rounded-xl text-xs font-black flex items-center justify-center cursor-pointer shrink-0"
                 >
-                  <Tv className="w-3.5 h-3.5" />
                   송출하기
                 </button>
               </div>
@@ -1048,20 +1078,20 @@ export default function HostDashboard() {
               </div>
 
               {/* Speed range slider for custom controller */}
-              {customEffect !== 'none' && (
+              {(customEffect === 'blink' || customEffect === 'marquee' || customEffect === 'gradient') && (
                 <div className="pt-4 border-t border-white/5 animate-in fade-in duration-200">
                   <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
                     <span>전송 애니메이션 속도 조절</span>
                     <span className="text-indigo-400 font-extrabold">
-                      {customSpeedStep === 5 ? '매우 빠름 ⚡⚡' : customSpeedStep === 4 ? '빠름 ⚡' : customSpeedStep === 3 ? '보통 🏃' : customSpeedStep === 2 ? '느림 🐢' : '매우 느림 🐌'}
+                      속도: {customSpeed}%
                     </span>
                   </div>
                   <input
                     type="range"
                     min="1"
-                    max="5"
-                    value={customSpeedStep}
-                    onChange={(e) => setCustomSpeedStep(parseInt(e.target.value))}
+                    max="100"
+                    value={customSpeed}
+                    onChange={(e) => setCustomSpeed(parseInt(e.target.value))}
                     className="premium-slider"
                   />
                 </div>
@@ -1116,23 +1146,23 @@ export default function HostDashboard() {
             <div className="flex flex-col gap-2 w-full">
               <button
                 onClick={copyAudienceUrl}
-                className="w-full py-3 rounded-xl border border-white/5 bg-white/5 font-semibold text-white text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-3 rounded-xl border border-white/5 bg-white/5 font-semibold text-white text-xs hover:bg-white/10 transition-all flex items-center justify-center cursor-pointer"
               >
-                관객용 URL 링크 복사하기 📋
+                관객용 URL 링크 복사하기
               </button>
               
               <button
                 onClick={() => window.open(`/host/present/${roomId}`, '_blank')}
-                className="w-full py-3 rounded-xl bg-indigo-500 font-bold text-white text-xs hover:bg-indigo-600 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-indigo-500/10"
+                className="w-full py-3 rounded-xl bg-indigo-500 font-bold text-white text-xs hover:bg-indigo-600 transition-all flex items-center justify-center cursor-pointer shadow-lg shadow-indigo-500/10"
               >
-                새 창으로 관객 안내 스크린 열기 📺
+                새 창으로 관객 안내 스크린 열기
               </button>
               
               <button
                 onClick={downloadQrCode}
-                className="w-full py-3 rounded-xl border border-white/10 bg-white/10 font-semibold text-white text-xs hover:bg-white/15 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full py-3 rounded-xl border border-white/10 bg-white/10 font-semibold text-white text-xs hover:bg-white/15 transition-all flex items-center justify-center cursor-pointer"
               >
-                입장 QR 이미지 다운로드 📥
+                입장 QR 이미지 다운로드
               </button>
             </div>
           </div>
@@ -1171,7 +1201,6 @@ export default function HostDashboard() {
               {/* Header */}
               <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-indigo-400" />
                   <span>
                     {editingPresetIndex >= presets.length ? '새 커스텀 프리셋 추가' : `프리셋 P${editingPresetIndex + 1} 편집`}
                   </span>
@@ -1211,82 +1240,93 @@ export default function HostDashboard() {
                     {[
                       '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
                       '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'
-                    ].map((hex) => (
-                      <button
-                        key={hex}
-                        type="button"
-                        onClick={() => setEditingPreset(prev => ({ ...prev!, bg_color: hex }))}
-                        className={`h-9 rounded-lg border cursor-pointer transition-all ${
-                          editingPreset.bg_color === hex 
-                            ? 'border-white scale-105' 
-                            : 'border-transparent hover:scale-102'
-                        }`}
-                        style={{ backgroundColor: hex }}
-                      />
-                    ))}
+                    ].map((hex) => {
+                      const isSelected = editingPreset.bg_color === hex;
+                      const dotColor = hex === '#FFFFFF' ? '#000000' : '#FFFFFF';
+                      return (
+                        <button
+                          key={hex}
+                          type="button"
+                          onClick={() => setEditingPreset(prev => ({ ...prev!, bg_color: hex }))}
+                          className={`h-9 rounded-lg border cursor-pointer transition-all relative flex items-center justify-center ${
+                            isSelected 
+                              ? 'border-white scale-105 shadow-md' 
+                              : 'border-white/10 hover:border-white/30'
+                          }`}
+                          style={{ backgroundColor: hex }}
+                        >
+                          {isSelected && (
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dotColor }} />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Text Color Option */}
-                <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 색상</label>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#FFFFFF' }))}
-                      className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                        editingPreset.text_color === '#FFFFFF'
-                          ? 'border-white bg-white text-black font-extrabold'
-                          : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
-                      }`}
-                    >
-                      밝은색
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#000000' }))}
-                      className={`flex-1 py-2 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                        editingPreset.text_color === '#000000'
-                          ? 'border-white bg-white text-black font-extrabold'
-                          : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
-                      }`}
-                    >
-                      어두운색
-                    </button>
-                  </div>
-                </div>
-
-                {/* Font Family Selector */}
-                <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
-                  <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
-                    {[
-                      { val: 'sans', label: '고딕' },
-                      { val: 'serif', label: '명조' },
-                      { val: 'neon', label: '네온' },
-                      { val: 'dot', label: '도트' }
-                    ].map((item) => (
-                      <button
-                        type="button"
-                        key={item.val}
-                        onClick={() => setEditingPreset(prev => ({ ...prev!, font_family: item.val as any }))}
-                        className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          (editingPreset.font_family || 'sans') === item.val
-                            ? 'bg-white text-black shadow-sm'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Font Size & Motion Effect in Two columns */}
+                {/* Row 1: Font Family + Color */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 크기 비율</label>
-                    <div className="grid grid-cols-5 gap-0.5 bg-black/40 p-1 rounded-xl border border-white/5">
+                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 색상</label>
+                    <div className="flex gap-2 h-9 items-center">
+                      <button
+                        type="button"
+                        onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#FFFFFF' }))}
+                        className={`flex-1 py-1.5 rounded-full border text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                          editingPreset.text_color === '#FFFFFF'
+                            ? 'border-white bg-white/10 text-white font-extrabold'
+                            : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
+                        }`}
+                      >
+                        <span className="w-3 h-3 rounded-full bg-white border border-black/20" />
+                        <span>흰색 글씨</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#000000' }))}
+                        className={`flex-1 py-1.5 rounded-full border text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                          editingPreset.text_color === '#000000'
+                            ? 'border-white bg-white/10 text-white font-extrabold'
+                            : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
+                        }`}
+                      >
+                        <span className="w-3 h-3 rounded-full bg-black border border-white/20" />
+                        <span>검은색 글씨</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
+                    <div className="grid grid-cols-4 gap-0.5 bg-black/40 p-1 rounded-full border border-white/5 h-9 items-center font-medium">
+                      {[
+                        { val: 'sans', label: '고딕' },
+                        { val: 'serif', label: '명조' },
+                        { val: 'neon', label: '네온' },
+                        { val: 'dot', label: '도트' }
+                      ].map((item) => (
+                        <button
+                          type="button"
+                          key={item.val}
+                          onClick={() => setEditingPreset(prev => ({ ...prev!, font_family: item.val as any }))}
+                          className={`py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                            (editingPreset.font_family || 'sans') === item.val
+                              ? 'bg-white text-black shadow-sm font-extrabold'
+                              : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Row 2: Font Size + Effect */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 크기</label>
+                    <div className="grid grid-cols-5 gap-0.5 bg-black/40 p-1 rounded-full border border-white/5 h-9 items-center">
                       {[
                         { val: 'auto', label: 'Auto' },
                         { val: 'small', label: '80%' },
@@ -1298,9 +1338,9 @@ export default function HostDashboard() {
                           type="button"
                           key={item.val}
                           onClick={() => setEditingPreset(prev => ({ ...prev!, font_size: item.val as any }))}
-                          className={`py-1.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer ${
+                          className={`py-1 rounded-full text-[9px] font-bold transition-all cursor-pointer ${
                             (editingPreset.font_size || 'auto') === item.val
-                              ? 'bg-white text-black shadow-sm'
+                              ? 'bg-white text-black shadow-sm font-extrabold'
                               : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                           }`}
                         >
@@ -1312,11 +1352,11 @@ export default function HostDashboard() {
 
                   <div>
                     <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">모션 효과</label>
-                    <div className="grid grid-cols-5 gap-0.5 bg-black/40 p-1 rounded-xl border border-white/5">
+                    <div className="grid grid-cols-5 gap-0.5 bg-black/40 p-1 rounded-full border border-white/5 h-9 items-center font-medium">
                       {[
                         { val: 'none', label: '정적' },
-                        { val: 'blink', label: '깜빡이' },
-                        { val: 'marquee', label: '흐르기' },
+                        { val: 'blink', label: '깜빡' },
+                        { val: 'marquee', label: '흐름' },
                         { val: 'equalizer', label: '이퀄' },
                         { val: 'countdown', label: '타이머' }
                       ].map((item) => (
@@ -1324,20 +1364,13 @@ export default function HostDashboard() {
                           type="button"
                           key={item.val}
                           onClick={() => {
-                            // Helper to get current step before switching
-                            const list = editingPreset.effect === 'blink' ? [1000, 600, 400, 200, 100] : [10000, 7000, 5000, 3000, 1500];
-                            const idx = list.indexOf(editingPreset.speed);
-                            const currentStep = idx === -1 ? 3 : idx + 1;
-
-                            // Get new speed for selected effect matching the step
-                            const newList = item.val === 'blink' ? [1000, 600, 400, 200, 100] : [10000, 7000, 5000, 3000, 1500];
-                            const newSpeed = item.val === 'blink' || item.val === 'marquee' ? (newList[currentStep - 1] || 1000) : 1000;
+                            const currentStep = getSpeedFactor(editingPreset.effect, editingPreset.speed);
                             
                             setEditingPreset(prev => {
                               const updated: Preset = { 
                                 ...prev!, 
                                 effect: item.val as any, 
-                                speed: newSpeed 
+                                speed: getSpeedMs(item.val as any, currentStep)
                               };
                               if (item.val === 'countdown') {
                                 if (updated.countdown_seconds === undefined) updated.countdown_seconds = 10;
@@ -1346,9 +1379,9 @@ export default function HostDashboard() {
                               return updated;
                             });
                           }}
-                          className={`py-1.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer ${
+                          className={`py-1 rounded-full text-[9px] font-bold transition-all cursor-pointer ${
                             editingPreset.effect === item.val
-                              ? 'bg-white text-black shadow-sm'
+                              ? 'bg-white text-black shadow-sm font-extrabold'
                               : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                           }`}
                         >
@@ -1360,32 +1393,22 @@ export default function HostDashboard() {
                 </div>
 
                 {/* Speed Slider in Preset Edit Drawer */}
-                {(editingPreset.effect === 'blink' || editingPreset.effect === 'marquee') && (
+                {(editingPreset.effect === 'blink' || editingPreset.effect === 'marquee' || editingPreset.effect === 'gradient') && (
                   <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
                     <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
                       <span>애니메이션 속도 조절</span>
                       <span className="text-indigo-400 font-extrabold">
-                        {(() => {
-                          const list = editingPreset.effect === 'blink' ? [1000, 600, 400, 200, 100] : [10000, 7000, 5000, 3000, 1500];
-                          const idx = list.indexOf(editingPreset.speed);
-                          const step = idx === -1 ? 3 : idx + 1;
-                          return step === 5 ? '매우 빠름 ⚡⚡' : step === 4 ? '빠름 ⚡' : step === 3 ? '보통 🏃' : step === 2 ? '느림 🐢' : '매우 느림 🐌';
-                        })()}
+                        속도: {getSpeedFactor(editingPreset.effect, editingPreset.speed)}%
                       </span>
                     </div>
                     <input
                       type="range"
                       min="1"
-                      max="5"
-                      value={(() => {
-                        const list = editingPreset.effect === 'blink' ? [1000, 600, 400, 200, 100] : [10000, 7000, 5000, 3000, 1500];
-                        const idx = list.indexOf(editingPreset.speed);
-                        return idx === -1 ? 3 : idx + 1;
-                      })()}
+                      max="100"
+                      value={getSpeedFactor(editingPreset.effect, editingPreset.speed)}
                       onChange={(e) => {
-                        const step = parseInt(e.target.value);
-                        const list = editingPreset.effect === 'blink' ? [1000, 600, 400, 200, 100] : [10000, 7000, 5000, 3000, 1500];
-                        const newSpeed = list[step - 1] || 1000;
+                        const factor = parseInt(e.target.value);
+                        const newSpeed = getSpeedMs(editingPreset.effect, factor);
                         setEditingPreset(prev => ({ ...prev!, speed: newSpeed }));
                       }}
                       className="premium-slider"
@@ -1398,13 +1421,13 @@ export default function HostDashboard() {
                   <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200 flex flex-col gap-4">
                     <div>
                       <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">카운트다운 지속 초 (Seconds)</label>
-                      <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+                      <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-full border border-white/5">
                         {[3, 5, 10, 30, 60].map((sec) => (
                           <button
                             type="button"
                             key={sec}
                             onClick={() => setEditingPreset(prev => ({ ...prev!, countdown_seconds: sec }))}
-                            className={`py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                            className={`py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                               (editingPreset.countdown_seconds || 10) === sec
                                 ? 'bg-white text-black shadow-sm font-extrabold'
                                 : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
@@ -1434,8 +1457,8 @@ export default function HostDashboard() {
             </div>
 
             {/* Footer Buttons */}
-            <div className="p-6 border-t border-white/5 bg-black/20 flex flex-col gap-2">
-              <div className="flex gap-2">
+            <div className="p-6 border-t border-white/5 bg-black/20 flex flex-col gap-4">
+              <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -1451,7 +1474,7 @@ export default function HostDashboard() {
                     setEditingPresetIndex(null);
                     setEditingPreset(null);
                   }}
-                  className="flex-1 py-3 rounded-xl bg-white/10 text-white font-bold hover:bg-white/15 transition-all text-xs cursor-pointer"
+                  className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-bold hover:bg-white/10 transition-all text-xs cursor-pointer"
                 >
                   저장만 하기
                 </button>
@@ -1473,55 +1496,55 @@ export default function HostDashboard() {
                   }}
                   className="btn-primary flex-1 py-3 rounded-xl text-xs font-bold cursor-pointer"
                 >
-                  저장 후 바로 송출 ⚡
+                  저장 후 바로 송출
                 </button>
               </div>
 
-              {/* Reset to Defaults (for system defaults) */}
-              {editingPresetIndex < 6 && (
+              {/* Reset, Delete, Cancel as simple clean links */}
+              <div className="flex flex-col gap-2 items-center text-xs">
+                {editingPresetIndex < 6 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingPreset({ ...defaults[editingPresetIndex] });
+                    }}
+                    className="text-zinc-500 hover:text-white transition-colors cursor-pointer underline underline-offset-4"
+                  >
+                    기본값으로 초기화
+                  </button>
+                )}
+
+                {editingPresetIndex >= 6 && editingPresetIndex < presets.length && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = presets.filter((_, idx) => idx !== editingPresetIndex);
+                      setPresets(updated);
+                      localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
+                      
+                      if (activePresetIndex === editingPresetIndex) {
+                        setActivePresetIndex(null);
+                      } else if (activePresetIndex !== null && activePresetIndex > editingPresetIndex) {
+                        setActivePresetIndex(activePresetIndex - 1);
+                      }
+                      
+                      setEditingPresetIndex(null);
+                      setEditingPreset(null);
+                    }}
+                    className="text-red-500/80 hover:text-red-400 transition-colors cursor-pointer underline underline-offset-4"
+                  >
+                    이 커스텀 프리셋 삭제
+                  </button>
+                )}
+
                 <button
                   type="button"
-                  onClick={() => {
-                    setEditingPreset({ ...defaults[editingPresetIndex] });
-                  }}
-                  className="w-full py-2.5 rounded-xl border border-white/5 bg-white/5 text-zinc-400 font-semibold hover:bg-white/10 transition-all text-xs cursor-pointer"
+                  onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }}
+                  className="text-zinc-500 hover:text-white transition-colors cursor-pointer underline underline-offset-4"
                 >
-                  기본값으로 초기화 🔄
+                  취소
                 </button>
-              )}
-
-              {/* Delete Custom Preset */}
-              {editingPresetIndex >= 6 && editingPresetIndex < presets.length && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const updated = presets.filter((_, idx) => idx !== editingPresetIndex);
-                    setPresets(updated);
-                    localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
-                    
-                    if (activePresetIndex === editingPresetIndex) {
-                      setActivePresetIndex(null);
-                    } else if (activePresetIndex !== null && activePresetIndex > editingPresetIndex) {
-                      setActivePresetIndex(activePresetIndex - 1);
-                    }
-                    
-                    setEditingPresetIndex(null);
-                    setEditingPreset(null);
-                  }}
-                  className="w-full py-2.5 rounded-xl border border-red-500/10 bg-red-500/5 text-red-400 font-semibold hover:bg-red-500/15 transition-all text-xs cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  프리셋 삭제
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }}
-                className="w-full py-2.5 rounded-xl bg-white/5 text-zinc-400 font-semibold hover:bg-white/10 transition-all text-xs cursor-pointer"
-              >
-                취소 (변경 사항 무시)
-              </button>
+              </div>
             </div>
 
           </div>
@@ -1644,7 +1667,7 @@ export default function HostDashboard() {
                     ) : (
                       <>
                         <CreditCard className="w-3 h-3" />
-                        결제 승인 완료 💳
+                        결제 승인 완료
                       </>
                     )}
                   </button>
@@ -1658,7 +1681,7 @@ export default function HostDashboard() {
                   <Check className="w-6 h-6" />
                 </div>
                 
-                <h4 className="text-base font-extrabold text-white">플랜 업그레이드 성공! 🎉</h4>
+                <h4 className="text-base font-extrabold text-white">플랜 업그레이드 성공!</h4>
                 
                 <p className="text-xs text-zinc-400 leading-relaxed max-w-xs">
                   요금제 플랜 업그레이드가 성공적으로 확인되었습니다.<br />

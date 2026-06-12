@@ -10,14 +10,16 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
   // Styles for the font families matching global CSS definitions
   const getFontFamilyClass = () => {
     switch (preset.font_family) {
-      case 'neon':
-        return 'font-neon font-black';
-      case 'dot':
-        return 'font-dot';
+      case 'sans':
+        return 'font-sign-sans font-black';
       case 'serif':
-        return 'font-serif font-black';
+        return 'font-sign-serif font-black';
+      case 'neon':
+        return 'font-sign-neon font-black';
+      case 'dot':
+        return 'font-sign-dot font-black';
       default:
-        return 'font-sans font-black';
+        return 'font-sign-sans font-black';
     }
   };
 
@@ -48,6 +50,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
   const isMarquee = preset.effect === 'marquee';
   const isCountdown = preset.effect === 'countdown';
   const isEqualizer = preset.effect === 'equalizer';
+  const isGradient = preset.effect === 'gradient';
 
   // Compute text to display on screen (no default text fallbacks)
   const displayText = isCountdown 
@@ -75,10 +78,13 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
         ref={containerRef}
         className={`absolute inset-[2.2cqw] rounded-[6.5%] overflow-hidden flex items-center justify-center transition-colors duration-200 ${
           isBlink ? 'animate-blink' : ''
+        } ${
+          isGradient ? 'animate-gradient-flow' : ''
         }`}
         style={{ 
-          backgroundColor: preset.bg_color,
-          '--blink-duration': `${preset.speed || 1000}ms`
+          backgroundColor: isGradient ? undefined : preset.bg_color,
+          '--blink-duration': `${preset.speed || 1000}ms`,
+          '--gradient-duration': `${preset.speed || 8000}ms`
         } as React.CSSProperties}
       >
         {isMarquee ? (
@@ -87,7 +93,6 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
               className={`animate-marquee inline-block select-none leading-none ${getFontFamilyClass()}`}
               style={{ 
                 color: preset.text_color,
-                fontFamily: preset.font_family === 'serif' ? 'Georgia, serif' : undefined,
                 fontSize,
                 '--marquee-duration': `${preset.speed || 6000}ms`
               } as React.CSSProperties}
@@ -100,7 +105,6 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
             className={`text-center whitespace-nowrap overflow-hidden px-[10cqw] select-none max-w-full leading-none tracking-tighter ${getFontFamilyClass()}`}
             style={{ 
               color: preset.text_color,
-              fontFamily: preset.font_family === 'serif' ? 'Georgia, serif' : undefined,
               fontSize,
               zIndex: 10
             }}
@@ -118,9 +122,11 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
               return (
                 <div 
                   key={i}
-                  className="flex-1 max-w-[2cqw] rounded-t-[0.5cqw]"
+                  className="flex-1 max-w-[2cqw] rounded-full"
                   style={{
-                    backgroundColor: preset.text_color || '#FFFFFF',
+                    background: preset.text_color && preset.text_color !== '#FFFFFF'
+                      ? `linear-gradient(to top, ${preset.text_color}cc, ${preset.text_color})`
+                      : 'linear-gradient(to top, rgba(99, 102, 241, 0.8), rgba(236, 72, 153, 0.9))',
                     height: '100%',
                     transformOrigin: 'bottom',
                     animation: `preset-card-eq ${animDuration}s ease-in-out infinite alternate`,
@@ -133,8 +139,8 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
         )}
 
         {/* Semi-transparent watermark footer */}
-        <div className="absolute bottom-[8%] right-[10%] px-[2%] py-[0.5%] rounded bg-black/45 backdrop-blur-sm border border-white/5 text-[1.8cqw] text-white/50 select-none">
-          GlowWave.app 🪄
+        <div className="absolute bottom-[8%] right-[10%] px-[2%] py-[0.5%] rounded bg-black/45 backdrop-blur-sm border border-white/5 text-[1.8cqw] text-white/50 select-none font-semibold">
+          GlowWave.app
         </div>
       </div>
     </div>

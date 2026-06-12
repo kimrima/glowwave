@@ -3,22 +3,27 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
-  Sparkles, 
-  Smartphone, 
-  Zap, 
-  Lock, 
-  RefreshCw, 
-  ArrowRight, 
-  Play, 
-  Search, 
-  SmartphoneIcon,
-  HelpCircle,
-  Camera
-} from 'lucide-react';
 import { Preset, EffectType } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import QRScannerModal from '@/components/QRScannerModal';
+
+const getSpeedFactor = (speed: number, effect: string) => {
+  if (effect === 'blink') {
+    return Math.min(100, Math.max(1, Math.round((2050 - speed) / 20)));
+  } else if (effect === 'marquee') {
+    return Math.min(100, Math.max(1, Math.round((15140 - speed) / 140)));
+  }
+  return 50;
+};
+
+const getSpeedMs = (factor: number, effect: string) => {
+  if (effect === 'blink') {
+    return Math.round(2050 - factor * 20);
+  } else if (effect === 'marquee') {
+    return Math.round(15140 - factor * 140);
+  }
+  return 1000;
+};
 
 export default function Home() {
   const router = useRouter();
@@ -201,7 +206,6 @@ export default function Home() {
       <header className="sticky top-0 z-40 border-b border-white/5 bg-[#030305]/60 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-black text-xl tracking-tight text-white font-outfit">
-            <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
             <span>GlowWave</span>
           </Link>
           
@@ -214,15 +218,15 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsQRScannerOpen(true)}
-              className="text-xs font-bold px-4 py-2 rounded-xl text-zinc-300 hover:text-white hover:bg-white/5 transition-all cursor-pointer font-outfit"
+              className="btn-secondary text-xs px-4 py-2.5 rounded-xl text-zinc-300 hover:text-white transition-all cursor-pointer font-outfit"
             >
-              QR 스캔 참여 📸
+              QR 스캔 참여
             </button>
             <Link 
               href="/host/setup" 
               className="btn-primary text-xs px-4 py-2.5 rounded-xl text-black hover:bg-zinc-200 transition-all cursor-pointer font-outfit"
             >
-              방 만들기 ⚡
+              방 만들기
             </Link>
           </div>
         </div>
@@ -238,7 +242,6 @@ export default function Home() {
           
           <div className="text-center max-w-3xl mx-auto mb-16 relative">
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/5 bg-white/[0.02] text-zinc-400 text-[10px] font-bold mb-6 tracking-widest uppercase font-mono">
-              <Zap className="w-3.5 h-3.5 text-indigo-400" />
               <span>100ms ultra-low latency signaling</span>
             </div>
             
@@ -259,7 +262,7 @@ export default function Home() {
               <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-300" />
               <div className="mb-10 relative z-10">
                 <span className="text-[9px] font-mono text-indigo-400 font-extrabold uppercase tracking-widest">For Event Host</span>
-                <h2 className="text-xl sm:text-2xl font-black text-white mt-3 mb-3 font-outfit">새 전광판 개설하기 ⚡</h2>
+                <h2 className="text-xl sm:text-2xl font-black text-white mt-3 mb-3 font-outfit">새 전광판 개설하기</h2>
                 <p className="text-xs text-zinc-400 leading-relaxed font-semibold">
                   버스킹 크루, 파티 DJ, 동아리 이벤트를 위해 나만의 실시간 제어 리모컨을 만듭니다. 별도의 회원가입 없이 즉시 방 코드를 획득하고 연출을 시작해 보세요.
                 </p>
@@ -268,7 +271,7 @@ export default function Home() {
                 href="/host/setup" 
                 className="w-full py-4 rounded-xl text-center text-xs tracking-wider flex items-center justify-center gap-2 bg-white text-black font-extrabold shadow-lg hover:bg-zinc-200 transition-all z-10"
               >
-                방 개설 및 세팅 시작하기 <ArrowRight className="w-4 h-4" />
+                방 개설 및 세팅 시작하기
               </Link>
             </div>
 
@@ -277,7 +280,7 @@ export default function Home() {
               <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all duration-300" />
               <div className="relative z-10 mb-6">
                 <span className="text-[9px] font-mono text-emerald-400 font-extrabold uppercase tracking-widest">For Audience</span>
-                <h2 className="text-xl sm:text-2xl font-black text-white mt-3 mb-3 font-outfit">관객으로 참여하기 🔑</h2>
+                <h2 className="text-xl sm:text-2xl font-black text-white mt-3 mb-3 font-outfit">관객으로 참여하기</h2>
                 <p className="text-xs text-zinc-400 leading-relaxed mb-6 font-semibold">
                   스크린에 안내된 6자리 코드(대문자/숫자)를 입력하거나 카메라를 켜서 QR 코드를 스캔하세요.
                 </p>
@@ -299,7 +302,7 @@ export default function Home() {
                     type="submit"
                     className="px-5 py-3.5 rounded-xl text-xs font-extrabold shrink-0 flex items-center justify-center gap-1.5 cursor-pointer bg-white text-black hover:bg-zinc-200 transition-all"
                   >
-                    참여 <Play className="w-3 h-3 fill-current" />
+                    참여
                   </button>
                 </form>
                 {joinError && <p className="text-[10px] text-red-500 mb-4 text-center font-bold">{joinError}</p>}
@@ -310,8 +313,7 @@ export default function Home() {
                 onClick={() => setIsQRScannerOpen(true)}
                 className="w-full py-3.5 rounded-xl border border-dashed border-white/10 bg-white/5 text-zinc-300 font-extrabold text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer relative z-10"
               >
-                <Camera className="w-4 h-4 text-emerald-400" />
-                카메라로 QR 코드 스캔하기 📸
+                카메라로 QR 코드 스캔하기
               </button>
             </div>
           </div>
@@ -344,17 +346,20 @@ export default function Home() {
                     <button
                       key={c.hex}
                       onClick={() => handleDemoPresetChange('bg_color', c.hex)}
-                      className={`h-9 w-9 rounded-full border transition-all cursor-pointer mx-auto relative ${
+                      className={`h-9 w-9 rounded-full border-2 transition-all cursor-pointer mx-auto flex items-center justify-center ${
                         demoPreset.bg_color === c.hex 
                           ? 'border-white scale-110 shadow-lg' 
                           : 'border-white/10 hover:scale-105 hover:border-white/30'
                       }`}
                       style={{ 
                         backgroundColor: c.hex,
-                        boxShadow: demoPreset.bg_color === c.hex ? `0 0 16px ${c.hex}40` : undefined 
                       }}
                       title={c.name}
-                    />
+                    >
+                      {demoPreset.bg_color === c.hex && (
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: c.hex === '#FFFFFF' ? '#000000' : '#FFFFFF' }} />
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -414,15 +419,9 @@ export default function Home() {
                         type="button"
                         onClick={() => {
                           handleDemoPresetChange('effect', eff);
-                          // Sync speed according to step
                           let newSpeed = 1000;
-                          if (eff === 'blink') {
-                            const blinkSpeeds = [1000, 600, 400, 200, 100];
-                            newSpeed = blinkSpeeds[demoSpeedStep - 1];
-                          } else if (eff === 'marquee') {
-                            const marqueeSpeeds = [10000, 7000, 5000, 3000, 1500];
-                            newSpeed = marqueeSpeeds[demoSpeedStep - 1];
-                          }
+                          if (eff === 'blink') newSpeed = 400;
+                          else if (eff === 'marquee') newSpeed = 6000;
                           handleDemoPresetChange('speed', newSpeed);
                         }}
                         className={`flex-1 py-2 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
@@ -441,30 +440,21 @@ export default function Home() {
               {/* Speed Range Slider */}
               {demoPreset.effect !== 'none' && (
                 <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
-                  <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
-                    <span>애니메이션 속도 조절</span>
-                    <span className="text-indigo-400 font-extrabold">
-                      {demoSpeedStep === 5 ? '매우 빠름 ⚡⚡' : demoSpeedStep === 4 ? '빠름 ⚡' : demoSpeedStep === 3 ? '보통 🏃' : demoSpeedStep === 2 ? '느림 🐢' : '매우 느림 🐌'}
+                  <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2.5">
+                    <span>속도 조절</span>
+                    <span className="text-white font-extrabold">
+                      {getSpeedFactor(demoPreset.speed, demoPreset.effect)}%
                     </span>
                   </div>
                   <input
                     type="range"
                     min="1"
-                    max="5"
-                    value={demoSpeedStep}
+                    max="100"
+                    value={getSpeedFactor(demoPreset.speed, demoPreset.effect)}
                     onChange={(e) => {
-                      const step = parseInt(e.target.value);
-                      setDemoSpeedStep(step);
-                      
-                      let newSpeed = 3000;
-                      if (demoPreset.effect === 'blink') {
-                        const blinkSpeeds = [1000, 600, 400, 200, 100];
-                        newSpeed = blinkSpeeds[step - 1];
-                      } else if (demoPreset.effect === 'marquee') {
-                        const marqueeSpeeds = [10000, 7000, 5000, 3000, 1500];
-                        newSpeed = marqueeSpeeds[step - 1];
-                      }
-                      handleDemoPresetChange('speed', newSpeed);
+                      const factor = parseInt(e.target.value);
+                      const ms = getSpeedMs(factor, demoPreset.effect);
+                      handleDemoPresetChange('speed', ms);
                     }}
                     className="premium-slider"
                   />
@@ -490,8 +480,8 @@ export default function Home() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.01]">
-              <div className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-white mb-4">
-                <Smartphone className="w-4.5 h-4.5" />
+              <div className="text-[10px] font-mono text-zinc-500 font-bold mb-4">
+                01
               </div>
               <h3 className="text-base font-bold text-white mb-2">화면 꺼짐 강제 방지</h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-medium">
@@ -500,8 +490,8 @@ export default function Home() {
             </div>
 
             <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.01]">
-              <div className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-white mb-4">
-                <RefreshCw className="w-4.5 h-4.5" />
+              <div className="text-[10px] font-mono text-zinc-500 font-bold mb-4">
+                02
               </div>
               <h3 className="text-base font-bold text-white mb-2">백그라운드 자동 복귀</h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-medium">
@@ -510,8 +500,8 @@ export default function Home() {
             </div>
 
             <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.01]">
-              <div className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-white mb-4">
-                <Lock className="w-4.5 h-4.5" />
+              <div className="text-[10px] font-mono text-zinc-500 font-bold mb-4">
+                03
               </div>
               <h3 className="text-base font-bold text-white mb-2">초과 유저 하드캡 차단</h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-medium">
@@ -520,8 +510,8 @@ export default function Home() {
             </div>
 
             <div className="p-6 rounded-2xl border border-white/5 bg-white/[0.01]">
-              <div className="w-9 h-9 rounded-xl border border-white/5 bg-white/5 flex items-center justify-center text-white mb-4">
-                <SmartphoneIcon className="w-4.5 h-4.5" />
+              <div className="text-[10px] font-mono text-zinc-500 font-bold mb-4">
+                04
               </div>
               <h3 className="text-base font-bold text-white mb-2">자동 가로 고정 유도</h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-medium">
@@ -536,7 +526,6 @@ export default function Home() {
       <footer className="border-t border-white/5 bg-[#07070a] py-12">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2 font-bold text-base text-white">
-            <Sparkles className="w-4.5 h-4.5 text-indigo-400" />
             <span>GlowWave</span>
           </div>
           
