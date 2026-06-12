@@ -25,12 +25,12 @@ export default function HostSetup() {
   
   // Default presets for the buttons (to be stored inside DB/Local storage automatically)
   const defaultPresets: Preset[] = [
-    { bg_color: '#0B0B0F', text: '앰비언트 🕯️', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
-    { bg_color: '#EF4444', text: '사이키 ⚡', text_color: '#FFFFFF', effect: 'blink', speed: 200 },
-    { bg_color: '#3B82F6', text: '웨이브 🌊', text_color: '#FFFFFF', effect: 'marquee', speed: 4000 },
-    { bg_color: '#8B5CF6', text: '카운트다운 ⏱️', text_color: '#FFFFFF', effect: 'countdown', speed: 1000 },
-    { bg_color: '#F97316', text: '스크롤 💬', text_color: '#FFFFFF', effect: 'marquee', speed: 3000 },
-    { bg_color: '#10B981', text: '이퀄라이저 📊', text_color: '#FFFFFF', effect: 'equalizer', speed: 1000 },
+    { bg_color: '#0B0B0F', text: '앰비언트', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
+    { bg_color: '#EF4444', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200 },
+    { bg_color: '#3B82F6', text: '웨이브', text_color: '#FFFFFF', effect: 'marquee', speed: 4000 },
+    { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 10, result_text: 'START' },
+    { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000 },
+    { bg_color: '#10B981', text: '사운드 싱크', text_color: '#FFFFFF', effect: 'equalizer', speed: 1000 },
   ];
 
   const [selectedTier, setSelectedTier] = useState<TierType>('free');

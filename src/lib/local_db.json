@@ -17,6 +17,24 @@
       "status": "active",
       "max_participants": 20,
       "created_at": "2026-06-11T20:07:46.150Z"
+    },
+    "OYUR8S": {
+      "id": "OYUR8S",
+      "host_session_token": "9f0401d0-02d9-46b9-b7ee-1e9057c35b4d",
+      "email": "test@paid.com",
+      "tier": "lite",
+      "status": "active",
+      "max_participants": 100,
+      "created_at": "2026-06-12T10:53:47.050Z"
+    },
+    "6OPH5M": {
+      "id": "6OPH5M",
+      "host_session_token": "684a93c0-05bb-4db2-b8f3-d42bf30bae88",
+      "email": "test@verify.com",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 20,
+      "created_at": "2026-06-12T10:59:26.216Z"
     }
   },
   "payments": [
@@ -29,6 +47,16 @@
       "amount": 5000,
       "payment_status": "completed",
       "created_at": "2026-06-11T20:06:34.750Z"
+    },
+    {
+      "id": "04bd784a-f43c-44b6-a520-c7fdeda85c92",
+      "email": "test@paid.com",
+      "host_session_token": "9f0401d0-02d9-46b9-b7ee-1e9057c35b4d",
+      "room_id": "OYUR8S",
+      "tier": "lite",
+      "amount": 5000,
+      "payment_status": "completed",
+      "created_at": "2026-06-12T10:53:47.051Z"
     }
   ],
   "currentStates": {
@@ -45,6 +73,20 @@
       "text_color": "#FFFFFF",
       "effect": "blink",
       "speed": 200
+    },
+    "OYUR8S": {
+      "bg_color": "#EF4444",
+      "text": "사이키",
+      "text_color": "#FFFFFF",
+      "effect": "blink",
+      "speed": 200
+    },
+    "6OPH5M": {
+      "bg_color": "#10B981",
+      "text": "사운드 싱크",
+      "text_color": "#FFFFFF",
+      "effect": "equalizer",
+      "speed": 1000
     }
   }
 }

@@ -27,13 +27,50 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 
 const defaults: Preset[] = [
-  { bg_color: '#0B0B0F', text: '앰비언트 🕯️', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
-  { bg_color: '#EF4444', text: '사이키 ⚡', text_color: '#FFFFFF', effect: 'blink', speed: 200 },
-  { bg_color: '#3B82F6', text: '웨이브 🌊', text_color: '#FFFFFF', effect: 'marquee', speed: 4000 },
-  { bg_color: '#8B5CF6', text: '카운트다운 ⏱️', text_color: '#FFFFFF', effect: 'countdown', speed: 1000 },
-  { bg_color: '#F97316', text: '스크롤 💬', text_color: '#FFFFFF', effect: 'marquee', speed: 3000 },
-  { bg_color: '#10B981', text: '이퀄라이저 📊', text_color: '#FFFFFF', effect: 'equalizer', speed: 1000 },
+  { bg_color: '#0B0B0F', text: '앰비언트', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
+  { bg_color: '#EF4444', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200 },
+  { bg_color: '#3B82F6', text: '웨이브', text_color: '#FFFFFF', effect: 'marquee', speed: 4000 },
+  { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 10, result_text: 'START' },
+  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000 },
+  { bg_color: '#10B981', text: '사운드 싱크', text_color: '#FFFFFF', effect: 'equalizer', speed: 1000 },
 ];
+
+interface MiniCountdownPreviewProps {
+  preset: Preset;
+}
+
+function MiniCountdownPreview({ preset }: MiniCountdownPreviewProps) {
+  const [val, setVal] = useState<number | string>(preset.countdown_seconds || 10);
+  
+  useEffect(() => {
+    const startVal = preset.countdown_seconds || 10;
+    setVal(startVal);
+    const timer = setInterval(() => {
+      setVal((prev) => {
+        if (typeof prev === 'number') {
+          if (prev <= 1) {
+            return preset.result_text || 'START';
+          }
+          return prev - 1;
+        }
+        return startVal;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [preset.countdown_seconds, preset.result_text]);
+
+  return (
+    <div 
+      className="absolute inset-0 flex items-center justify-center font-bold text-lg font-mono opacity-60"
+      style={{ 
+        color: preset.text_color,
+        animation: 'preset-card-pulse 1.2s ease-in-out infinite'
+      }}
+    >
+      {val}
+    </div>
+  );
+}
 
 export default function HostDashboard() {
   const params = useParams();
@@ -65,7 +102,7 @@ export default function HostDashboard() {
   // Live broadcast on-air preview state
   const [currentBroadcastPreset, setCurrentBroadcastPreset] = useState<Preset>({ 
     bg_color: '#0B0B0F', 
-    text: 'GlowWave 🌊', 
+    text: 'GlowWave', 
     text_color: '#FFFFFF', 
     effect: 'none', 
     speed: 1000 
@@ -78,6 +115,10 @@ export default function HostDashboard() {
   const [customFontFamily, setCustomFontFamily] = useState<'sans' | 'serif' | 'neon' | 'dot'>('sans');
   const [customEffect, setCustomEffect] = useState<EffectType>('none');
   const [customSpeedStep, setCustomSpeedStep] = useState(3);
+
+  // Safety transmitter lock & miniature preview toggles
+  const [isTransmitterLocked, setIsTransmitterLocked] = useState(false);
+  const [showMiniPreviews, setShowMiniPreviews] = useState(true);
 
   // Preset Live Edit States
   const [editingPresetIndex, setEditingPresetIndex] = useState<number | null>(null);
@@ -235,32 +276,66 @@ export default function HostDashboard() {
         created_at: roomData.created_at,
       });
 
+      let initialPreset: Preset | null = null;
       if (roomData.current_state) {
-        setCurrentBroadcastPreset(roomData.current_state);
+        initialPreset = roomData.current_state;
       }
 
       // Load presets from localStorage
       const savedPresets = localStorage.getItem(`glowwave_presets_${roomId}`);
       let loadedPresets: Preset[] = [];
       if (savedPresets) {
-        loadedPresets = JSON.parse(savedPresets);
-        setPresets(loadedPresets);
+        try {
+          loadedPresets = JSON.parse(savedPresets);
+        } catch (e) {
+          loadedPresets = [...defaults];
+        }
       } else {
-        // Defaults if empty
-        const defaults: Preset[] = [
-          { bg_color: '#EF4444', text: '열정 🔥', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
-          { bg_color: '#3B82F6', text: '파도 타기 🌊', text_color: '#FFFFFF', effect: 'marquee', speed: 4000 },
-          { bg_color: '#EC4899', text: '소리 질러! 🎉', text_color: '#FFFFFF', effect: 'blink', speed: 600 },
-          { bg_color: '#10B981', text: '싱크 클럽 ⚡', text_color: '#FFFFFF', effect: 'blink', speed: 400 },
-          { bg_color: '#F59E0B', text: '박수 👏👏', text_color: '#000000', effect: 'none', speed: 1000 },
-          { bg_color: '#8B5CF6', text: 'GLOW', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
-        ];
-        loadedPresets = defaults;
-        setPresets(defaults);
-        localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(defaults));
+        loadedPresets = [...defaults];
       }
 
-      if (loadedPresets.length > 0) {
+      // Migrate presets: remove emojis and set correct effects/countdown properties
+      let migrated = false;
+      const emojiRegex = /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+      
+      loadedPresets = loadedPresets.map((p, idx) => {
+        let changed = false;
+        
+        if (emojiRegex.test(p.text)) {
+          p.text = p.text.replace(emojiRegex, '').trim();
+          changed = true;
+        }
+
+        if (idx === 3 && p.text.includes('카운트다운') && p.effect !== 'countdown') {
+          p.effect = 'countdown';
+          p.countdown_seconds = p.countdown_seconds || 10;
+          p.result_text = p.result_text || 'START';
+          changed = true;
+        }
+
+        if (idx === 5 && (p.text.includes('사운드 싱크') || p.text.includes('이퀄라이저')) && p.effect !== 'equalizer') {
+          p.effect = 'equalizer';
+          changed = true;
+        }
+
+        if (changed) {
+          migrated = true;
+        }
+        return p;
+      });
+
+      if (migrated || !savedPresets) {
+        localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(loadedPresets));
+      }
+
+      setPresets(loadedPresets);
+
+      if (initialPreset) {
+        if (emojiRegex.test(initialPreset.text)) {
+          initialPreset.text = initialPreset.text.replace(emojiRegex, '').trim();
+        }
+        setCurrentBroadcastPreset(initialPreset);
+      } else if (loadedPresets.length > 0) {
         setCurrentBroadcastPreset(loadedPresets[0]);
       }
 
@@ -625,86 +700,112 @@ export default function HostDashboard() {
           
           {/* Quick Triggers Dashboard */}
           <div className="glass-effect rounded-2xl p-6 bg-[#12121a]">
-            <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/5">
               <div className="flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-zinc-400" />
-                <h2 className="text-sm font-bold text-white">원터치 연출 보드 (Quick Preset Board)</h2>
+                <Sliders className="w-4 h-4 text-indigo-400" />
+                <h2 className="text-sm font-bold text-white font-outfit">원터치 연출 보드 (Quick Preset Board)</h2>
               </div>
-              <span className="text-[9px] font-bold font-mono text-zinc-500">P1 - P6 SELECTORS</span>
+              
+              <div className="flex items-center gap-2">
+                {/* 6 Preset Miniature Previews Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setShowMiniPreviews(prev => !prev)}
+                  className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    showMiniPreviews 
+                      ? 'border-indigo-500/20 bg-indigo-500/10 text-indigo-300' 
+                      : 'border-white/5 bg-white/5 text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <span>카드 미리보기: {showMiniPreviews ? 'ON 📺' : 'OFF 🌑'}</span>
+                </button>
+
+                {/* Safety Transmission Lock Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setIsTransmitterLocked(prev => !prev)}
+                  className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    isTransmitterLocked 
+                      ? 'border-red-500/20 bg-red-500/10 text-red-400' 
+                      : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                  }`}
+                >
+                  <span>{isTransmitterLocked ? '송출 잠금 🔒' : '실시간 송출 🔓'}</span>
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {presets.map((preset, index) => {
                 const isActive = activePresetIndex === index;
-                const isWhite = preset.bg_color === '#FFFFFF';
                 return (
                   <div
                     key={index}
-                    onClick={() => triggerPreset(preset, index)}
-                    className={`h-24 rounded-2xl border flex items-center justify-center p-6 relative overflow-hidden transition-all duration-300 cursor-pointer active-spring-pad ${
-                      isActive 
-                        ? 'border-white/20 bg-white/[0.04]' 
-                        : 'border-white/5 bg-[#0a0a0f]/40 hover:border-white/10 hover:bg-white/[0.01]'
-                    }`}
-                    style={isActive ? { 
-                      boxShadow: preset.bg_color === '#0B0B0F' 
-                        ? '0 0 20px rgba(255,255,255,0.06)' 
-                        : `0 0 24px ${preset.bg_color}33`,
-                      borderColor: preset.bg_color === '#0B0B0F' ? '#FFFFFF' : preset.bg_color
-                    } : undefined}
+                    onClick={() => {
+                      if (isTransmitterLocked) {
+                        setEditingPresetIndex(index);
+                        setEditingPreset({ ...preset });
+                      } else {
+                        triggerPreset(preset, index);
+                      }
+                    }}
+                    className={`h-24 rounded-2xl border flex items-center justify-center p-6 relative overflow-hidden transition-all duration-300 cursor-pointer active-spring-pad group`}
+                    style={{
+                      backgroundColor: showMiniPreviews ? preset.bg_color : '#0B0B0F',
+                      color: showMiniPreviews ? preset.text_color : 'rgba(255, 255, 255, 0.75)',
+                      borderColor: isActive 
+                        ? (preset.bg_color === '#0B0B0F' || !showMiniPreviews ? '#FFFFFF' : preset.bg_color) 
+                        : 'rgba(255, 255, 255, 0.08)',
+                      boxShadow: isActive 
+                        ? (preset.bg_color === '#0B0B0F' || !showMiniPreviews 
+                            ? '0 0 20px rgba(255, 255, 255, 0.15)' 
+                            : `0 0 28px ${preset.bg_color}88`) 
+                        : undefined
+                    }}
                   >
                     {/* Visual launchpad active background animation indicator */}
-                    <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.12] overflow-hidden rounded-2xl">
-                      {preset.effect === 'blink' && (
-                        <div 
-                          className="w-full h-full" 
-                          style={{
-                            backgroundColor: preset.bg_color,
-                            animation: `preset-card-flash ${preset.speed || 400}ms infinite`
-                          }}
-                        />
-                      )}
-                      {preset.effect === 'marquee' && (
-                        <div className="w-full h-full flex items-center justify-center select-none text-[18px] font-black tracking-widest whitespace-nowrap text-white">
-                          <div className="animate-marquee inline-block" style={{ '--marquee-duration': `${(preset.speed || 6000) * 1.5}ms` } as any}>
-                            {preset.text} &nbsp;&nbsp;&nbsp;&nbsp; {preset.text}
+                    {showMiniPreviews && (
+                      <div 
+                        className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-2xl"
+                        style={{ opacity: preset.bg_color === '#FFFFFF' ? 0.35 : 0.45 }}
+                      >
+                        {preset.effect === 'blink' && (
+                          <div 
+                            className="w-full h-full" 
+                            style={{
+                              backgroundColor: preset.text_color || '#FFFFFF',
+                              animation: `preset-card-flash ${preset.speed || 400}ms infinite`
+                            }}
+                          />
+                        )}
+                        {preset.effect === 'marquee' && (
+                          <div className="w-full h-full flex items-center justify-center select-none text-[11px] font-black tracking-widest whitespace-nowrap" style={{ color: preset.text_color }}>
+                            <div className="animate-marquee inline-block" style={{ '--marquee-duration': `${(preset.speed || 6000) * 1.5}ms` } as any}>
+                              {preset.text} &nbsp;&nbsp;&nbsp;&nbsp; {preset.text}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      {preset.effect === 'equalizer' && (
-                        <div className="absolute bottom-2 right-4 flex items-end gap-0.5 h-8">
-                          {[...Array(4)].map((_, i) => (
-                            <div 
-                              key={i} 
-                              className="w-0.5 rounded-t-sm"
-                              style={{
-                                height: '100%',
-                                backgroundColor: isWhite ? '#000000' : '#FFFFFF',
-                                transformOrigin: 'bottom',
-                                animation: `preset-card-eq ${0.35 + i * 0.12}s ease-in-out infinite alternate`
-                              }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                      {preset.effect === 'countdown' && (
-                        <div 
-                          className="absolute inset-0 flex items-center justify-center font-bold text-2xl text-white"
-                          style={{ animation: 'preset-card-pulse 1.2s ease-in-out infinite' }}
-                        >
-                          ⏱️
-                        </div>
-                      )}
-                      {preset.effect === 'none' && (
-                        <div 
-                          className="w-full h-full"
-                          style={{
-                            backgroundColor: preset.bg_color,
-                            animation: 'preset-card-breath 3.5s ease-in-out infinite'
-                          }}
-                        />
-                      )}
-                    </div>
+                        )}
+                        {preset.effect === 'equalizer' && (
+                          <div className="absolute inset-x-0 bottom-2 flex items-end justify-center gap-0.5 h-10 px-4">
+                            {[...Array(6)].map((_, i) => (
+                              <div 
+                                key={i} 
+                                className="flex-1 rounded-t-sm"
+                                style={{
+                                  height: '100%',
+                                  backgroundColor: preset.text_color || '#FFFFFF',
+                                  transformOrigin: 'bottom',
+                                  animation: `preset-card-eq ${0.35 + i * 0.1}s ease-in-out infinite alternate`
+                                }}
+                              />
+                            ))}
+                          </div>
+                        )}
+                        {preset.effect === 'countdown' && (
+                          <MiniCountdownPreview preset={preset} />
+                        )}
+                      </div>
+                    )}
 
                     {/* Left top indicator led light */}
                     <div 
@@ -712,18 +813,18 @@ export default function HostDashboard() {
                         isActive ? 'scale-110 shadow-lg animate-pulse' : 'opacity-40'
                       }`}
                       style={{ 
-                        backgroundColor: preset.bg_color,
-                        boxShadow: isActive && preset.bg_color !== '#0B0B0F' ? `0 0 8px ${preset.bg_color}` : undefined 
+                        backgroundColor: showMiniPreviews ? preset.text_color : '#FFFFFF',
+                        boxShadow: isActive ? '0 0 8px currentColor' : undefined 
                       }} 
                     />
                     
                     <div className="text-center relative z-10 select-none">
-                      <div className="font-extrabold text-xs sm:text-sm text-white tracking-tight font-outfit uppercase">
+                      <div className="font-extrabold text-xs sm:text-sm tracking-tight font-outfit uppercase">
                         {preset.text}
                       </div>
                     </div>
  
-                    {/* Small edit pencil icon in the top right, appears on hover */}
+                    {/* Pencil Edit Icon: always visible but highly styled to prevent visual noise */}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -731,7 +832,7 @@ export default function HostDashboard() {
                         setEditingPresetIndex(index);
                         setEditingPreset({ ...preset });
                       }}
-                      className="absolute top-2.5 right-2.5 p-1 rounded-lg bg-white/5 text-zinc-500 hover:text-white hover:bg-white/10 transition-all z-20 cursor-pointer opacity-0 hover:opacity-100 group-hover:opacity-100"
+                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/20 text-white/50 hover:text-white hover:bg-black/50 transition-all z-20 cursor-pointer shadow-sm border border-white/5"
                       title="수정"
                     >
                       <Edit3 className="w-3 h-3" />
@@ -754,7 +855,7 @@ export default function HostDashboard() {
                   // Else, open edit drawer to add custom preset
                   const newPreset: Preset = {
                     bg_color: '#EF4444',
-                    text: '새 연출 ⚡',
+                    text: '새 연출',
                     text_color: '#FFFFFF',
                     effect: 'none',
                     speed: 1000
@@ -811,7 +912,7 @@ export default function HostDashboard() {
                     
                     const customPreset: Preset = {
                       bg_color: customBgColor,
-                      text: customText || 'LET\'S GO',
+                      text: customText, // Send empty text if blank to support bg-only lighting
                       text_color: isWhite ? '#000000' : '#FFFFFF',
                       effect: customEffect,
                       speed: calculatedSpeed,
@@ -827,12 +928,12 @@ export default function HostDashboard() {
                 </button>
               </div>
 
-              {/* Button Grids Controls Row (Segmented list) */}
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-3 border-t border-white/5">
+              {/* iOS style Segmented Controls Row (Flex layout) */}
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-4 pt-3.5 border-t border-white/5">
                 {/* 배경 테마 */}
-                <div>
-                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">배경 테마</label>
-                  <div className="grid grid-cols-4 gap-1.5 bg-black/40 p-1.5 rounded-xl border border-white/5 h-[44px] items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">테마:</span>
+                  <div className="flex items-center gap-1.5 bg-black/45 px-2 py-1 rounded-full border border-white/5 h-8">
                     {[
                       '#EF4444', '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#EC4899', '#FFFFFF', '#0B0B0F'
                     ].map((hex) => (
@@ -840,21 +941,37 @@ export default function HostDashboard() {
                         key={hex}
                         type="button"
                         onClick={() => setCustomBgColor(hex)}
-                        className={`h-7 rounded-lg border cursor-pointer transition-all ${
+                        className={`w-5 h-5 rounded-full border cursor-pointer transition-all ${
                           customBgColor === hex
-                            ? 'border-white scale-105 shadow-sm'
-                            : 'border-transparent hover:scale-102 hover:bg-white/5'
+                            ? 'border-white scale-110 shadow-md'
+                            : 'border-transparent hover:scale-105'
                         }`}
                         style={{ backgroundColor: hex }}
                       />
                     ))}
+                    
+                    {/* Custom Color Picker for Paid Tiers */}
+                    {room?.tier !== 'free' && (
+                      <div 
+                        className="w-5 h-5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0" 
+                        style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                        title="커스텀 색상 선택"
+                      >
+                        <input
+                          type="color"
+                          value={customBgColor}
+                          onChange={(e) => setCustomBgColor(e.target.value)}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* 글자 크기 */}
-                <div>
-                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">글자 크기</label>
-                  <div className="grid grid-cols-5 gap-1 bg-black/40 p-1.5 rounded-xl border border-white/5 h-[44px] items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">크기:</span>
+                  <div className="inline-flex bg-black/45 p-1 rounded-full border border-white/5 h-8 items-center">
                     {[
                       { val: 'auto', label: 'Auto' },
                       { val: 'small', label: '80%' },
@@ -866,10 +983,10 @@ export default function HostDashboard() {
                         type="button"
                         key={item.val}
                         onClick={() => setCustomFontSize(item.val as any)}
-                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
                           customFontSize === item.val
-                            ? 'bg-white text-black shadow-sm'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                            ? 'bg-white text-black font-extrabold shadow-sm'
+                            : 'text-zinc-400 hover:text-white'
                         }`}
                       >
                         {item.label}
@@ -879,9 +996,9 @@ export default function HostDashboard() {
                 </div>
 
                 {/* 글꼴 스타일 */}
-                <div>
-                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">글꼴 스타일</label>
-                  <div className="grid grid-cols-4 gap-1 bg-black/40 p-1.5 rounded-xl border border-white/5 h-[44px] items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">스타일:</span>
+                  <div className="inline-flex bg-black/45 p-1 rounded-full border border-white/5 h-8 items-center">
                     {[
                       { val: 'sans', label: '고딕' },
                       { val: 'serif', label: '명조' },
@@ -892,10 +1009,10 @@ export default function HostDashboard() {
                         type="button"
                         key={item.val}
                         onClick={() => setCustomFontFamily(item.val as any)}
-                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                        className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
                           customFontFamily === item.val
-                            ? 'bg-white text-black shadow-sm'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                            ? 'bg-white text-black font-extrabold shadow-sm'
+                            : 'text-zinc-400 hover:text-white'
                         }`}
                       >
                         {item.label}
@@ -905,9 +1022,9 @@ export default function HostDashboard() {
                 </div>
 
                 {/* 모션 효과 */}
-                <div>
-                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">모션 효과</label>
-                  <div className="grid grid-cols-3 gap-1 bg-black/40 p-1.5 rounded-xl border border-white/5 h-[44px] items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">효과:</span>
+                  <div className="inline-flex bg-black/45 p-1 rounded-full border border-white/5 h-8 items-center">
                     {[
                       { val: 'none', label: '정적' },
                       { val: 'blink', label: '깜빡이' },
@@ -917,10 +1034,10 @@ export default function HostDashboard() {
                         type="button"
                         key={item.val}
                         onClick={() => setCustomEffect(item.val as any)}
-                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                        className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
                           customEffect === item.val
-                            ? 'bg-white text-black shadow-sm'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                            ? 'bg-white text-black font-extrabold shadow-sm'
+                            : 'text-zinc-400 hover:text-white'
                         }`}
                       >
                         {item.label}
@@ -1216,7 +1333,18 @@ export default function HostDashboard() {
                             const newList = item.val === 'blink' ? [1000, 600, 400, 200, 100] : [10000, 7000, 5000, 3000, 1500];
                             const newSpeed = item.val === 'blink' || item.val === 'marquee' ? (newList[currentStep - 1] || 1000) : 1000;
                             
-                            setEditingPreset(prev => ({ ...prev!, effect: item.val as any, speed: newSpeed }));
+                            setEditingPreset(prev => {
+                              const updated: Preset = { 
+                                ...prev!, 
+                                effect: item.val as any, 
+                                speed: newSpeed 
+                              };
+                              if (item.val === 'countdown') {
+                                if (updated.countdown_seconds === undefined) updated.countdown_seconds = 10;
+                                if (updated.result_text === undefined) updated.result_text = 'START';
+                              }
+                              return updated;
+                            });
                           }}
                           className={`py-1.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer ${
                             editingPreset.effect === item.val
@@ -1262,6 +1390,43 @@ export default function HostDashboard() {
                       }}
                       className="premium-slider"
                     />
+                  </div>
+                )}
+
+                {/* Countdown Options in Preset Edit Drawer */}
+                {editingPreset.effect === 'countdown' && (
+                  <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200 flex flex-col gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">카운트다운 지속 초 (Seconds)</label>
+                      <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
+                        {[3, 5, 10, 30, 60].map((sec) => (
+                          <button
+                            type="button"
+                            key={sec}
+                            onClick={() => setEditingPreset(prev => ({ ...prev!, countdown_seconds: sec }))}
+                            className={`py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              (editingPreset.countdown_seconds || 10) === sec
+                                ? 'bg-white text-black shadow-sm font-extrabold'
+                                : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                            }`}
+                          >
+                            {sec}초
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">종료 시 출력 문구 (Result Text)</label>
+                      <input
+                        type="text"
+                        value={editingPreset.result_text || 'START'}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value }))}
+                        className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
+                        maxLength={15}
+                        placeholder="예: START, 축하합니다!, GO!"
+                      />
+                    </div>
                   </div>
                 )}
 

@@ -50,17 +50,18 @@ export default function AudienceRoom() {
   });
 
   // Countdown timer state
-  const [countdownVal, setCountdownVal] = useState<number | string>(10);
+  const [countdownVal, setCountdownVal] = useState<number | string>(currentPreset.countdown_seconds || 10);
 
   // Trigger countdown timer decrement when currentPreset effect is set to countdown
   useEffect(() => {
     if (currentPreset.effect === 'countdown') {
-      setCountdownVal(10);
+      const startSec = currentPreset.countdown_seconds || 10;
+      setCountdownVal(startSec);
       const timer = setInterval(() => {
         setCountdownVal((prev) => {
           if (typeof prev === 'number') {
             if (prev <= 1) {
-              return 'GO! ⚡';
+              return currentPreset.result_text || 'START';
             }
             return prev - 1;
           }
@@ -69,10 +70,89 @@ export default function AudienceRoom() {
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [currentPreset.text, currentPreset.effect]);
+  }, [currentPreset.text, currentPreset.effect, currentPreset.countdown_seconds, currentPreset.result_text]);
+
+  // Audio Analyzer states for real-time microphone equalizer
+  const [audioFreqs, setAudioFreqs] = useState<number[]>(new Array(16).fill(10));
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+
+  const initAudio = async () => {
+    try {
+      if (audioContextRef.current) return;
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContextClass) return;
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      streamRef.current = stream;
+
+      const audioCtx = new AudioContextClass();
+      audioContextRef.current = audioCtx;
+
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 64; // 32 frequency bins
+      analyserRef.current = analyser;
+
+      const source = audioCtx.createMediaStreamSource(stream);
+      source.connect(analyser);
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      const updateData = () => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteFrequencyData(dataArray);
+        
+        // Map 32 bins to 16 bands
+        const newFreqs = new Array(16).fill(0);
+        for (let i = 0; i < 16; i++) {
+          const val = (dataArray[i * 2] + dataArray[i * 2 + 1]) / 2;
+          newFreqs[i] = Math.max(10, (val / 255) * 100);
+        }
+        setAudioFreqs(newFreqs);
+        animationFrameRef.current = requestAnimationFrame(updateData);
+      };
+
+      updateData();
+    } catch (err) {
+      console.warn('Microphone access denied or not supported for real equalizer:', err);
+    }
+  };
+
+  const stopAudio = () => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    analyserRef.current = null;
+  };
+
+  // Trigger initAudio when currentPreset.effect === 'equalizer' and welcome screen is closed
+  useEffect(() => {
+    if (currentPreset.effect === 'equalizer' && !showEnterOverlay) {
+      initAudio();
+    } else {
+      stopAudio();
+    }
+    return () => stopAudio();
+  }, [currentPreset.effect, showEnterOverlay]);
 
   // Compute text to display on screen
-  const displayText = currentPreset.effect === 'countdown' ? String(countdownVal) : currentPreset.text;
+  const displayText = currentPreset.effect === 'countdown' 
+    ? String(countdownVal) 
+    : currentPreset.effect === 'equalizer'
+      ? ''
+      : currentPreset.text;
 
   // Use dynamic fitting hook to sync text sizes proportional to viewport container clientWidth/clientHeight
   const { containerRef, fontSize } = useFitText(
@@ -582,21 +662,34 @@ export default function AudienceRoom() {
           </div>
         )}
 
-        {/* Dynamic Simulated Equalizer Bars Overlay */}
+        {/* Dynamic Equalizer Bars Overlay (Real Audio or Fallback) */}
         {currentPreset.effect === 'equalizer' && (
-          <div className="absolute inset-x-0 bottom-0 top-1/2 flex items-end justify-center gap-1 sm:gap-2 px-6 sm:px-12 pb-6 sm:pb-10 pointer-events-none opacity-30">
+          <div className="absolute inset-x-0 bottom-0 top-[10%] flex items-end justify-center gap-1.5 sm:gap-2.5 px-6 sm:px-16 pb-12 sm:pb-20 pointer-events-none opacity-85 z-0">
             {[...Array(16)].map((_, i) => {
-              const animDuration = 0.5 + Math.random() * 0.7;
+              const hasRealAudio = audioContextRef.current !== null;
+              const freq = audioFreqs[i] || 10;
+              const animDuration = 0.55 + Math.random() * 0.6;
               const animDelay = Math.random() * 0.4;
+              
               return (
                 <div 
                   key={i}
-                  className="flex-1 max-w-[20px] h-full rounded-t-md transition-all"
-                  style={{
+                  className="flex-1 max-w-[24px] rounded-t-lg transition-all duration-75"
+                  style={hasRealAudio ? {
+                    backgroundColor: currentPreset.text_color || '#FFFFFF',
+                    height: `${freq}%`,
+                    boxShadow: currentPreset.text_color === '#FFFFFF' 
+                      ? '0 0 12px rgba(255, 255, 255, 0.2)' 
+                      : `0 0 16px ${currentPreset.text_color || '#FFFFFF'}40`
+                  } : {
                     backgroundColor: currentPreset.text_color || '#FFFFFF',
                     transformOrigin: 'bottom',
+                    height: '100%',
                     animation: `equalizer-bar ${animDuration}s ease-in-out infinite alternate`,
-                    animationDelay: `${animDelay}s`
+                    animationDelay: `${animDelay}s`,
+                    boxShadow: currentPreset.text_color === '#FFFFFF' 
+                      ? '0 0 12px rgba(255, 255, 255, 0.2)' 
+                      : `0 0 16px ${currentPreset.text_color || '#FFFFFF'}40`
                   }}
                 />
               );

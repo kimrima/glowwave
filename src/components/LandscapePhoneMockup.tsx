@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Preset } from '@/lib/types';
 import useFitText from '@/hooks/useFitText';
 
@@ -21,12 +21,44 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
     }
   };
 
+  // Countdown state for mockup ticking
+  const [countdownVal, setCountdownVal] = useState<number | string>(preset.countdown_seconds || 10);
+
+  useEffect(() => {
+    if (preset.effect === 'countdown') {
+      const startVal = preset.countdown_seconds || 10;
+      setCountdownVal(startVal);
+      const timer = setInterval(() => {
+        setCountdownVal((prev) => {
+          if (typeof prev === 'number') {
+            if (prev <= 1) {
+              return preset.result_text || 'START';
+            }
+            return prev - 1;
+          }
+          // Loop back after showing result
+          return startVal;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [preset.text, preset.effect, preset.countdown_seconds, preset.result_text]);
+
   const isBlink = preset.effect === 'blink';
   const isMarquee = preset.effect === 'marquee';
+  const isCountdown = preset.effect === 'countdown';
+  const isEqualizer = preset.effect === 'equalizer';
+
+  // Compute text to display on screen (no default text fallbacks)
+  const displayText = isCountdown 
+    ? String(countdownVal) 
+    : isEqualizer 
+      ? '' 
+      : (preset.text || '');
 
   // Use dynamic fitting hook to sync sizes proportional to container clientWidth/clientHeight
   const { containerRef, fontSize } = useFitText(
-    preset.text || 'GlowWave',
+    displayText,
     preset.effect || 'none',
     preset.font_size || 'auto'
   );
@@ -60,7 +92,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
                 '--marquee-duration': `${preset.speed || 6000}ms`
               } as React.CSSProperties}
             >
-              {preset.text || 'GlowWave'} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {preset.text || 'GlowWave'}
+              {displayText} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {displayText}
             </span>
           </div>
         ) : (
@@ -69,10 +101,34 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
             style={{ 
               color: preset.text_color,
               fontFamily: preset.font_family === 'serif' ? 'Georgia, serif' : undefined,
-              fontSize
+              fontSize,
+              zIndex: 10
             }}
           >
-            {preset.text || 'GlowWave'}
+            {displayText}
+          </div>
+        )}
+
+        {/* Dynamic Equalizer Bars Overlay for Mockup Preview */}
+        {isEqualizer && (
+          <div className="absolute inset-x-0 bottom-0 top-1/2 flex items-end justify-center gap-[1.5cqw] px-[4cqw] pb-[4cqw] pointer-events-none opacity-80 z-0">
+            {[...Array(12)].map((_, i) => {
+              const animDuration = 0.5 + Math.random() * 0.7;
+              const animDelay = Math.random() * 0.4;
+              return (
+                <div 
+                  key={i}
+                  className="flex-1 max-w-[2cqw] rounded-t-[0.5cqw]"
+                  style={{
+                    backgroundColor: preset.text_color || '#FFFFFF',
+                    height: '100%',
+                    transformOrigin: 'bottom',
+                    animation: `preset-card-eq ${animDuration}s ease-in-out infinite alternate`,
+                    animationDelay: `${animDelay}s`
+                  }}
+                />
+              );
+            })}
           </div>
         )}
 

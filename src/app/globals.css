@@ -184,6 +184,15 @@ body {
   transform: scale(0.94);
 }
 
+/* Direct Animation Classes to guarantee speed slider overrides work */
+.animate-marquee {
+  animation: marquee var(--marquee-duration, 6000ms) linear infinite !important;
+}
+
+.animate-blink {
+  animation: blink var(--blink-duration, 1000ms) infinite !important;
+}
+
 /* Keyframes for DJ Launchpad visual card previews */
 @keyframes preset-card-flash {
   0%, 100% { opacity: 0.6; }

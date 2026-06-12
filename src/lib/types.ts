@@ -8,6 +8,8 @@ export interface Preset {
   speed: number; // Duration in milliseconds or scroll speed indicator
   font_size?: 'auto' | 'small' | 'medium' | 'large' | 'huge';
   font_family?: 'sans' | 'serif' | 'neon' | 'dot';
+  countdown_seconds?: number;
+  result_text?: string;
 }
 
 export type TierType = 'free' | 'lite' | 'pro' | 'max';

@@ -217,7 +217,7 @@ export const localDb = {
       this.rooms.set(roomId, newRoom);
       this.currentStates.set(roomId, {
         bg_color: '#0B0B0F',
-        text: 'GlowWave 🌊',
+        text: 'GlowWave',
         text_color: '#FFFFFF',
         effect: 'none',
         speed: 1000,
@@ -359,7 +359,7 @@ export const localDb = {
       }
       return data?.current_state ? (data.current_state as Preset) : {
         bg_color: '#0B0B0F',
-        text: 'GlowWave 🌊',
+        text: 'GlowWave',
         text_color: '#FFFFFF',
         effect: 'none',
         speed: 1000,
