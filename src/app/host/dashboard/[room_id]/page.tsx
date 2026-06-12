@@ -1771,7 +1771,7 @@ export default function HostDashboard() {
                     if (editingPresetIndex === null || !editingPreset) return;
                     const normalized: Preset = {
                       ...editingPreset,
-                      text: editingPreset.text.trim() || (editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw' ? '당첨!' : 'GLOW WAVE'),
+                      text: editingPreset.text.trim(),
                       result_text: (editingPreset.effect === 'countdown') 
                         ? (editingPreset.result_text?.trim() || 'START')
                         : (editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw')
@@ -1799,7 +1799,7 @@ export default function HostDashboard() {
                     if (editingPresetIndex === null || !editingPreset) return;
                     const normalized: Preset = {
                       ...editingPreset,
-                      text: editingPreset.text.trim() || (editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw' ? '당첨!' : 'GLOW WAVE'),
+                      text: editingPreset.text.trim(),
                       result_text: (editingPreset.effect === 'countdown') 
                         ? (editingPreset.result_text?.trim() || 'START')
                         : (editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw')
