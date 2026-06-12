@@ -27,12 +27,12 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 
 const defaults: Preset[] = [
-  { bg_color: '#0B0B0F', text: '앰비언트', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin' },
-  { bg_color: '#EF4444', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200, font_family: 'sans-thin' },
-  { bg_color: '#8B5CF6', text: '그라데이션', text_color: '#FFFFFF', effect: 'gradient', speed: 8000, font_family: 'sans-thin' },
-  { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 10, result_text: 'START', font_family: 'sans-thin' },
-  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000, font_family: 'sans-thin' },
-  { bg_color: '#10B981', text: '사운드 싱크', text_color: '#FFFFFF', effect: 'equalizer', speed: 1000, font_family: 'sans-thin' },
+  { bg_color: '#0B0B0F', text: '앰비언트', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#EF4444', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200, bg_color_secondary: '#000000', font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#FF0000', text: '경찰 사이렌', text_color: '#FFFFFF', effect: 'blink', speed: 150, bg_color_secondary: '#0000FF', font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 10, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000, font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1000, result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100 },
 ];
 
 interface MiniCountdownPreviewProps {
@@ -110,9 +110,9 @@ export default function HostDashboard() {
   });
 
   // Custom instant message state values
-  const [customText, setCustomText] = useState('열정');
+  const [customText, setCustomText] = useState('GLOW WAVE');
   const [customBgColor, setCustomBgColor] = useState('#EF4444');
-  const [customFontSize, setCustomFontSize] = useState<'auto' | 'small' | 'medium' | 'large' | 'huge'>('auto');
+  const [customFontSize, setCustomFontSize] = useState<number>(100);
   const [customFontFamily, setCustomFontFamily] = useState<'sans-thin' | 'sans-thick' | 'serif' | 'neon'>('sans-thin');
   const [customEffect, setCustomEffect] = useState<EffectType>('none');
   const [customSpeed, setCustomSpeed] = useState(50); // range 1-100
@@ -140,9 +140,6 @@ export default function HostDashboard() {
     if (effect === 'marquee') {
       return Math.max(1, Math.min(100, Math.round(((15000 - ms) * 99) / 14000 + 1)));
     }
-    if (effect === 'gradient') {
-      return Math.max(1, Math.min(100, Math.round(((20000 - ms) * 99) / 19000 + 1)));
-    }
     return 50;
   };
 
@@ -152,9 +149,6 @@ export default function HostDashboard() {
     }
     if (effect === 'marquee') {
       return Math.round(15000 - (factor - 1) * (14000 / 99));
-    }
-    if (effect === 'gradient') {
-      return Math.round(20000 - (factor - 1) * (19000 / 99));
     }
     return 1000;
   };
@@ -322,7 +316,7 @@ export default function HostDashboard() {
         loadedPresets = [...defaults];
       }
 
-      // Migrate presets: remove emojis and set correct effects/countdown properties
+      // Migrate presets: remove emojis, convert size to number, and set correct premium effects
       let migrated = false;
       const emojiRegex = /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
       
@@ -339,12 +333,25 @@ export default function HostDashboard() {
           changed = true;
         }
 
-        if (idx === 2 && p.effect !== 'gradient') {
-          p.bg_color = '#8B5CF6';
-          p.text = '그라데이션';
+        // Migrate string font size to numeric slider percentage (30 to 100)
+        if (typeof p.font_size === 'string' || p.font_size === undefined) {
+          if (p.font_size === 'small') p.font_size = 80;
+          else if (p.font_size === 'medium') p.font_size = 100;
+          else if (p.font_size === 'large') p.font_size = 100;
+          else if (p.font_size === 'huge') p.font_size = 100;
+          else p.font_size = 100; // 'auto' -> 100
+          changed = true;
+        }
+
+        // Migrate index 2: from gradient to police siren duo-flash
+        if (idx === 2 && ((p.effect as string) === 'gradient' || p.text.includes('그라데이션') || p.text.includes('경찰'))) {
+          p.bg_color = '#FF0000';
+          p.text = '경찰 사이렌';
           p.text_color = '#FFFFFF';
-          p.effect = 'gradient';
-          p.speed = 8000;
+          p.effect = 'blink';
+          p.speed = 150;
+          p.bg_color_secondary = '#0000FF';
+          p.font_size = 100;
           changed = true;
         }
 
@@ -352,11 +359,19 @@ export default function HostDashboard() {
           p.effect = 'countdown';
           p.countdown_seconds = p.countdown_seconds || 10;
           p.result_text = p.result_text || 'START';
+          p.font_size = 100;
           changed = true;
         }
 
-        if (idx === 5 && (p.text.includes('사운드 싱크') || p.text.includes('이퀄라이저')) && p.effect !== 'equalizer') {
-          p.effect = 'equalizer';
+        // Migrate index 5: from equalizer to lucky draw wait roulette
+        if (idx === 5 && ((p.effect as string) === 'equalizer' || p.text.includes('사운드') || p.text.includes('이퀄라이저') || p.text.includes('당첨'))) {
+          p.bg_color = '#0B0B0F';
+          p.text = '당첨!';
+          p.text_color = '#FFD700';
+          p.effect = 'luckydraw_wait';
+          p.speed = 1000;
+          p.result_text = '아쉽네요! 다음 기회에..';
+          p.font_size = 100;
           changed = true;
         }
 
@@ -571,6 +586,79 @@ export default function HostDashboard() {
       } catch (err: any) {
         console.error('Trigger preset error:', err);
         alert(`전송 오류: ${err.message}`);
+      }
+    }
+  };
+
+  const handleDrawWinner = async () => {
+    if (!roomId || !token) return;
+
+    let candidateUuids: string[] = [];
+
+    if (isSupabaseConfigured() && supabaseChannelRef.current && supabase) {
+      try {
+        const presenceState = supabaseChannelRef.current.presenceState();
+        Object.keys(presenceState).forEach((key) => {
+          const presences = presenceState[key] as any[];
+          presences.forEach((p) => {
+            if (p.role === 'audience' && p.uuid) {
+              candidateUuids.push(p.uuid);
+            }
+          });
+        });
+      } catch (err) {
+        console.error('Failed to parse Supabase presence for drawing:', err);
+      }
+    } else {
+      try {
+        const response = await fetch(`/api/room/${roomId}/participants?token=${token}`);
+        if (response.ok) {
+          const data = await response.json();
+          candidateUuids = data.participants || [];
+        }
+      } catch (err) {
+        console.error('Failed to fetch local participants for drawing:', err);
+      }
+    }
+
+    candidateUuids = Array.from(new Set(candidateUuids));
+
+    if (candidateUuids.length === 0) {
+      console.log('[Dashboard] No participants active. Generating a mock winner ID for testing.');
+      candidateUuids.push('mock-winner-uuid-' + Math.floor(Math.random() * 1000));
+    }
+
+    const randomIndex = Math.floor(Math.random() * candidateUuids.length);
+    const winnerId = candidateUuids[randomIndex];
+
+    const drawResultPreset: Preset = {
+      ...currentBroadcastPreset,
+      effect: 'luckydraw',
+      lucky_draw_winner_id: winnerId,
+      trigger_id: Date.now().toString()
+    };
+
+    setCurrentBroadcastPreset(drawResultPreset);
+
+    if (isSupabaseConfigured() && supabaseChannelRef.current && supabase) {
+      supabaseChannelRef.current.send({
+        type: 'broadcast',
+        event: 'render',
+        payload: drawResultPreset
+      });
+      await supabase.from('rooms').update({ current_state: drawResultPreset }).eq('id', roomId);
+    } else {
+      try {
+        await fetch(`/api/room/${roomId}/broadcast`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            host_session_token: token,
+            preset: drawResultPreset
+          })
+        });
+      } catch (err) {
+        console.error('Failed to broadcast lucky draw result:', err);
       }
     }
   };
@@ -831,20 +919,9 @@ export default function HostDashboard() {
                             </div>
                           </div>
                         )}
-                        {preset.effect === 'equalizer' && (
-                          <div className="absolute inset-x-0 bottom-2 flex items-end justify-center gap-0.5 h-10 px-4">
-                            {[...Array(6)].map((_, i) => (
-                              <div 
-                                key={i} 
-                                className="flex-1 rounded-t-sm"
-                                style={{
-                                  height: '100%',
-                                  backgroundColor: preset.text_color || '#FFFFFF',
-                                  transformOrigin: 'bottom',
-                                  animation: `preset-card-eq ${0.35 + i * 0.1}s ease-in-out infinite alternate`
-                                }}
-                              />
-                            ))}
+                        {(preset.effect === 'luckydraw_wait' || preset.effect === 'luckydraw') && (
+                          <div className="absolute inset-0 z-0 flex items-center justify-center bg-black/45 border border-amber-500/30 rounded-2xl animate-pulse">
+                            <span className="text-[10px] text-amber-400 font-black tracking-widest font-mono">RAFFLE BOARD</span>
                           </div>
                         )}
                         {preset.effect === 'countdown' && (
@@ -1009,30 +1086,21 @@ export default function HostDashboard() {
                   </div>
                 </div>
 
-                {/* 글자 크기 */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">크기:</span>
-                  <div className="inline-flex bg-black/45 p-1 rounded-full border border-white/5 h-8 items-center">
-                    {[
-                      { val: 'auto', label: 'Auto' },
-                      { val: 'small', label: '80%' },
-                      { val: 'medium', label: '100%' },
-                      { val: 'large', label: '140%' },
-                      { val: 'huge', label: '180%' }
-                    ].map((item) => (
-                      <button
-                        type="button"
-                        key={item.val}
-                        onClick={() => setCustomFontSize(item.val as any)}
-                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
-                          customFontSize === item.val
-                            ? 'bg-white text-black font-extrabold shadow-sm'
-                            : 'text-zinc-400 hover:text-white'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
+                {/* 글자 크기 (30% ~ 100% Range Slider) */}
+                <div className="flex flex-col gap-1.5 min-w-[140px] flex-1">
+                  <div className="flex justify-between text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                    <span>글자 크기:</span>
+                    <span className="text-indigo-400 font-extrabold">{customFontSize}%</span>
+                  </div>
+                  <div className="flex items-center h-8">
+                    <input
+                      type="range"
+                      min="30"
+                      max="100"
+                      value={customFontSize}
+                      onChange={(e) => setCustomFontSize(parseInt(e.target.value))}
+                      className="premium-slider w-full"
+                    />
                   </div>
                 </div>
 
@@ -1089,7 +1157,7 @@ export default function HostDashboard() {
               </div>
 
               {/* Speed range slider for custom controller */}
-              {(customEffect === 'blink' || customEffect === 'marquee' || customEffect === 'gradient') && (
+              {(customEffect === 'blink' || customEffect === 'marquee') && (
                 <div className="pt-4 border-t border-white/5 animate-in fade-in duration-200">
                   <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
                     <span>전송 애니메이션 속도 조절</span>
@@ -1123,6 +1191,16 @@ export default function HostDashboard() {
             <div className="w-full flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl">
               <LandscapePhoneMockup preset={currentBroadcastPreset} />
             </div>
+
+            {currentBroadcastPreset.effect === 'luckydraw_wait' && (
+              <button
+                type="button"
+                onClick={handleDrawWinner}
+                className="w-full mt-4 py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black text-xs tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl shadow-amber-500/20 animate-bounce cursor-pointer border border-amber-300"
+              >
+                <span>👑 결과 발표 (추첨 완료)</span>
+              </button>
+            )}
           </div>
 
           <div className="glass-effect rounded-2xl p-6 flex flex-col items-center text-center bg-[#12121a]">
@@ -1275,6 +1353,39 @@ export default function HostDashboard() {
                   </div>
                 </div>
 
+                {/* Secondary Background Color Grid for Duo-Color Flash */}
+                {editingPreset.effect === 'blink' && (
+                  <div className="animate-in fade-in duration-200">
+                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">보조 배경 색상 (듀오 사이키용)</label>
+                    <div className="grid grid-cols-6 gap-2">
+                      {[
+                        '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
+                        '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'
+                      ].map((hex) => {
+                        const isSelected = editingPreset.bg_color_secondary === hex;
+                        const dotColor = hex === '#FFFFFF' ? '#000000' : '#FFFFFF';
+                        return (
+                          <button
+                            key={hex}
+                            type="button"
+                            onClick={() => setEditingPreset(prev => ({ ...prev!, bg_color_secondary: hex }))}
+                            className={`h-9 rounded-lg border cursor-pointer transition-all relative flex items-center justify-center ${
+                              isSelected 
+                                ? 'border-white scale-105 shadow-md' 
+                                : 'border-white/10 hover:border-white/30'
+                            }`}
+                            style={{ backgroundColor: hex }}
+                          >
+                            {isSelected && (
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dotColor }} />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Row 1: Font Family + Color */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -1333,31 +1444,25 @@ export default function HostDashboard() {
                   </div>
                 </div>
 
-                {/* Row 2: Font Size + Effect */}
+                {/* Row 2: Font Size Slider + Effect */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 크기</label>
-                    <div className="grid grid-cols-5 gap-0.5 bg-black/40 p-1 rounded-full border border-white/5 h-9 items-center">
-                      {[
-                        { val: 'auto', label: 'Auto' },
-                        { val: 'small', label: '80%' },
-                        { val: 'medium', label: '100%' },
-                        { val: 'large', label: '140%' },
-                        { val: 'huge', label: '180%' }
-                      ].map((item) => (
-                        <button
-                          type="button"
-                          key={item.val}
-                          onClick={() => setEditingPreset(prev => ({ ...prev!, font_size: item.val as any }))}
-                          className={`py-1 rounded-full text-[9px] font-bold transition-all cursor-pointer ${
-                            (editingPreset.font_size || 'auto') === item.val
-                              ? 'bg-white text-black shadow-sm font-extrabold'
-                              : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
-                          }`}
-                        >
-                          {item.label}
-                        </button>
-                      ))}
+                    <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                      <span>글자 크기</span>
+                      <span className="text-indigo-400 font-extrabold">{editingPreset.font_size || 100}%</span>
+                    </div>
+                    <div className="flex items-center h-9">
+                      <input
+                        type="range"
+                        min="30"
+                        max="100"
+                        value={editingPreset.font_size || 100}
+                        onChange={(e) => {
+                          const size = parseInt(e.target.value);
+                          setEditingPreset(prev => ({ ...prev!, font_size: size }));
+                        }}
+                        className="premium-slider w-full"
+                      />
                     </div>
                   </div>
 
@@ -1368,30 +1473,35 @@ export default function HostDashboard() {
                         { val: 'none', label: '정적' },
                         { val: 'blink', label: '깜빡' },
                         { val: 'marquee', label: '흐름' },
-                        { val: 'equalizer', label: '이퀄' },
-                        { val: 'countdown', label: '타이머' }
+                        { val: 'countdown', label: '타이머' },
+                        { val: 'luckydraw_wait', label: '추첨' }
                       ].map((item) => (
                         <button
                           type="button"
                           key={item.val}
                           onClick={() => {
-                            const currentStep = getSpeedFactor(editingPreset.effect, editingPreset.speed);
+                            const currentStep = getSpeedFactor(editingPreset.effect === 'luckydraw_wait' ? 'blink' : (editingPreset.effect as any), editingPreset.speed);
                             
                             setEditingPreset(prev => {
                               const updated: Preset = { 
                                 ...prev!, 
                                 effect: item.val as any, 
-                                speed: getSpeedMs(item.val as any, currentStep)
+                                speed: getSpeedMs(item.val === 'luckydraw_wait' ? 'blink' : (item.val as any), currentStep)
                               };
                               if (item.val === 'countdown') {
                                 if (updated.countdown_seconds === undefined) updated.countdown_seconds = 10;
                                 if (updated.result_text === undefined) updated.result_text = 'START';
                               }
+                              if (item.val === 'luckydraw_wait') {
+                                if (updated.text === undefined || updated.text === 'GLOW WAVE') updated.text = '당첨!';
+                                if (updated.result_text === undefined) updated.result_text = '아쉽네요! 다음 기회에..';
+                                updated.text_color = '#FFD700';
+                              }
                               return updated;
                             });
                           }}
                           className={`py-1 rounded-full text-[9px] font-bold transition-all cursor-pointer ${
-                            editingPreset.effect === item.val
+                            (editingPreset.effect === 'luckydraw' || editingPreset.effect === 'luckydraw_wait' ? 'luckydraw_wait' : editingPreset.effect) === item.val
                               ? 'bg-white text-black shadow-sm font-extrabold'
                               : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                           }`}
@@ -1404,7 +1514,7 @@ export default function HostDashboard() {
                 </div>
 
                 {/* Speed Slider in Preset Edit Drawer */}
-                {(editingPreset.effect === 'blink' || editingPreset.effect === 'marquee' || editingPreset.effect === 'gradient') && (
+                {(editingPreset.effect === 'blink' || editingPreset.effect === 'marquee') && (
                   <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
                     <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
                       <span>애니메이션 속도 조절</span>
@@ -1459,6 +1569,35 @@ export default function HostDashboard() {
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
                         maxLength={15}
                         placeholder="예: START, 축하합니다!, GO!"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Lucky Draw Options in Preset Edit Drawer */}
+                {(editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw') && (
+                  <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200 flex flex-col gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">당첨 시 출력 문구 (Winner Text)</label>
+                      <input
+                        type="text"
+                        value={editingPreset.text || '당첨!'}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value }))}
+                        className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
+                        maxLength={15}
+                        placeholder="예: 👑 당첨! 축하합니다!"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">낙첨 시 출력 문구 (Loser Text)</label>
+                      <input
+                        type="text"
+                        value={editingPreset.result_text || '아쉽네요! 다음 기회에..'}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value }))}
+                        className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
+                        maxLength={15}
+                        placeholder="예: 아쉽지만 다음 기회에.. 😢"
                       />
                     </div>
                   </div>

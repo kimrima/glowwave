@@ -10,14 +10,14 @@ import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 export default function HostSetup() {
   const router = useRouter();
   
-  // Default presets: replaced wave with gradient
+  // Default presets: reconfigured to Ambient, Psychedelic, Police Siren, Countdown, Scroll, Lucky Draw
   const defaultPresets: Preset[] = [
-    { bg_color: '#0B0B0F', text: '앰비언트', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
-    { bg_color: '#EF4444', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200 },
-    { bg_color: '#8B5CF6', text: '그라데이션', text_color: '#FFFFFF', effect: 'gradient', speed: 8000 },
-    { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 10, result_text: 'START' },
-    { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000 },
-    { bg_color: '#10B981', text: '사운드 싱크', text_color: '#FFFFFF', effect: 'equalizer', speed: 1000 },
+    { bg_color: '#0B0B0F', text: '앰비언트', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
+    { bg_color: '#EF4444', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200, bg_color_secondary: '#000000', font_family: 'sans-thin', font_size: 100 },
+    { bg_color: '#FF0000', text: '경찰 사이렌', text_color: '#FFFFFF', effect: 'blink', speed: 150, bg_color_secondary: '#0000FF', font_family: 'sans-thin', font_size: 100 },
+    { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 10, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
+    { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000, font_family: 'sans-thin', font_size: 100 },
+    { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1000, result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100 },
   ];
 
   const [selectedTier, setSelectedTier] = useState<TierType>('free');

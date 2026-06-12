@@ -106,6 +106,8 @@ export default function AudienceRoom() {
   const isLuckyDraw = currentPreset.effect === 'luckydraw';
   const isLuckyDrawWait = currentPreset.effect === 'luckydraw_wait';
   const isWinner = isLuckyDraw && currentPreset.lucky_draw_winner_id === audienceUuid;
+  const isBlink = currentPreset.effect === 'blink';
+  const isDuoSiren = isBlink && !!currentPreset.bg_color_secondary;
 
   // Compute text to display on screen
   const displayText = isCountdown 
