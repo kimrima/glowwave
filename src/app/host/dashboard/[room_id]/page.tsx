@@ -1313,7 +1313,7 @@ export default function HostDashboard() {
                 onClick={handleDrawWinner}
                 className="w-full mt-4 py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black text-xs tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl shadow-amber-500/20 animate-bounce cursor-pointer border border-amber-300"
               >
-                <span>👑 결과 발표 (추첨 완료)</span>
+                <span>결과 발표 (추첨 완료)</span>
               </button>
             )}
           </div>

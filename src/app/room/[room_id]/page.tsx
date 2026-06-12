@@ -533,7 +533,7 @@ export default function AudienceRoom() {
           isDuoSiren ? 'animate-siren' : currentPreset.effect === 'blink' ? 'animate-blink' : ''
         }`}
         style={{ 
-          backgroundColor: isLuckyDrawWait ? currentPreset.bg_color : (!isWinner && isLuckyDraw) ? '#0B0B0F' : undefined,
+          backgroundColor: (isLuckyDraw && !isWinner) ? '#0B0B0F' : (isDuoSiren ? undefined : currentPreset.bg_color),
           border: isLuckyDrawWait ? `8px solid ${currentPreset.bg_color_secondary || '#FFD700'}` : 'none',
           '--blink-duration': `${currentPreset.speed || 1000}ms`,
           '--siren-color-1': currentPreset.bg_color,
