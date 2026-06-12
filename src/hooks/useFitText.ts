@@ -27,43 +27,51 @@ export default function useFitText(text: string, effect: string, sizePercent: nu
         return;
       }
 
-      // For static, blink, countdown, equalizer text: it must fit inside BOTH width and height.
-      // 1. Calculate weighted text length based on CJK unicode characters
-      let weightedLen = 0;
-      for (let i = 0; i < text.length; i++) {
-        const charCode = text.charCodeAt(i);
-        if (text[i] === ' ') {
-          weightedLen += 0.35;
-        } else if (
-          (charCode >= 0xac00 && charCode <= 0xd7a3) || // Hangul Syllables
-          (charCode >= 0x1100 && charCode <= 0x11ff) || // Hangul Jamo
-          (charCode >= 0x3130 && charCode <= 0x318f) || // Hangul Compatibility Jamo
-          (charCode >= 0x4e00 && charCode <= 0x9fff) || // CJK Ideographs
-          (charCode >= 0x3000 && charCode <= 0x303f)    // CJK Symbols
-        ) {
-          weightedLen += 1.15; // CJK characters are square and wider
+      // Measurement-based binary search:
+      // Create a hidden temporary span with the same font-family and style to measure.
+      const testSpan = document.createElement('span');
+      testSpan.style.visibility = 'hidden';
+      testSpan.style.position = 'absolute';
+      testSpan.style.whiteSpace = 'nowrap';
+      testSpan.style.lineHeight = '1';
+      testSpan.innerText = text || ' ';
+
+      // Copy font styling class name from container's actual text element if possible
+      const firstChild = container.firstElementChild as HTMLElement;
+      if (firstChild) {
+        testSpan.className = firstChild.className;
+        testSpan.classList.remove('animate-marquee', 'animate-blink', 'animate-siren');
+      }
+      
+      document.body.appendChild(testSpan);
+
+      // Binary search for the best font size (in px)
+      let min = 10;
+      let max = 400; // reasonable maximum font size in px
+      let bestSize = min;
+      const targetWidth = clientWidth * 0.94; // 94% width safety margin
+      const targetHeight = clientHeight * 0.82; // 82% height safety margin
+
+      for (let i = 0; i < 10; i++) {
+        const mid = (min + max) / 2;
+        testSpan.style.fontSize = `${mid}px`;
+        
+        const width = testSpan.offsetWidth;
+        const height = testSpan.offsetHeight;
+
+        if (width <= targetWidth && height <= targetHeight) {
+          bestSize = mid;
+          min = mid;
         } else {
-          weightedLen += 0.62; // Standard alphanumeric characters are narrower
+          max = mid;
         }
       }
-      weightedLen = Math.max(weightedLen, 1);
 
-      // We want text width to be within 86% of container width for safety margin
-      const maxFontSizeWidth = (clientWidth * 0.86) / weightedLen;
+      document.body.removeChild(testSpan);
 
-      // 2. Calculate size based on container height to fit vertically
-      const maxFontSizeHeight = clientHeight * 0.72;
-
-      // 3. Pick the smaller of the two, then apply user-selected multiplier
-      let targetSize = Math.min(maxFontSizeWidth, maxFontSizeHeight) * sizeMultiplier;
-
-      // Absolute upper limits to prevent wrapping and overflow under extreme aspect ratios
-      const absoluteMax = Math.min((clientWidth * 0.86) / weightedLen, clientHeight * 0.72);
-      if (targetSize > absoluteMax) {
-        targetSize = absoluteMax;
-      }
-
-      setFontSize(`${targetSize}px`);
+      // Apply the sizeMultiplier to the best calculated safe size
+      const finalSize = bestSize * sizeMultiplier;
+      setFontSize(`${finalSize}px`);
     };
 
     // Run initial calculation

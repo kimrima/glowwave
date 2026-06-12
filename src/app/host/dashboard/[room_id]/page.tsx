@@ -1013,7 +1013,7 @@ export default function HostDashboard() {
                   <input
                     type="text"
                     value={customText}
-                    onChange={(e) => setCustomText(e.target.value)}
+                    onChange={(e) => setCustomText(e.target.value.slice(0, 15))}
                     placeholder="즉석 구호 입력 (예: 소리질러!)"
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-white text-sm font-semibold"
                     maxLength={15}
@@ -1031,7 +1031,7 @@ export default function HostDashboard() {
                     
                     const customPreset: Preset = {
                       bg_color: customBgColor,
-                      text: customText,
+                      text: customText.trim() || 'GLOW WAVE',
                       text_color: isWhite ? '#000000' : '#FFFFFF',
                       effect: customEffect,
                       speed: calculatedSpeed,
@@ -1315,8 +1315,8 @@ export default function HostDashboard() {
                   <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">출력 문구</label>
                   <input
                     type="text"
-                    value={editingPreset.text}
-                    onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value }))}
+                    value={editingPreset.text || ''}
+                    onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, 15) }))}
                     className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-sm font-semibold"
                     maxLength={15}
                   />
@@ -1350,6 +1350,26 @@ export default function HostDashboard() {
                         </button>
                       );
                     })}
+
+                    {/* Custom Color Palette Picker for Paid Tiers */}
+                    {room?.tier !== 'free' && (
+                      <div 
+                        className="h-9 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center" 
+                        style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                        title="커스텀 색상 선택"
+                      >
+                        <input
+                          type="color"
+                          value={editingPreset.bg_color}
+                          onChange={(e) => setEditingPreset(prev => ({ ...prev!, bg_color: e.target.value }))}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+                        />
+                        {!['#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
+                          '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'].includes(editingPreset.bg_color) && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1382,134 +1402,152 @@ export default function HostDashboard() {
                           </button>
                         );
                       })}
+
+                      {/* Custom Color Palette Picker for Paid Tiers (Secondary Color) */}
+                      {room?.tier !== 'free' && (
+                        <div 
+                          className="h-9 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center" 
+                          style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                          title="커스텀 보조 색상 선택"
+                        >
+                          <input
+                            type="color"
+                            value={editingPreset.bg_color_secondary || '#000000'}
+                            onChange={(e) => setEditingPreset(prev => ({ ...prev!, bg_color_secondary: e.target.value }))}
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+                          />
+                          {editingPreset.bg_color_secondary && !['#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
+                            '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'].includes(editingPreset.bg_color_secondary) && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
 
-                {/* Row 1: Font Family + Color */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 색상</label>
-                    <div className="flex gap-2 h-9 items-center">
-                      <button
-                        type="button"
-                        onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#FFFFFF' }))}
-                        className={`flex-1 py-1.5 rounded-full border text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                          editingPreset.text_color === '#FFFFFF'
-                            ? 'border-white bg-white/10 text-white font-extrabold'
-                            : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
-                        }`}
-                      >
-                        <span className="w-3 h-3 rounded-full bg-white border border-black/20" />
-                        <span>흰색 글씨</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#000000' }))}
-                        className={`flex-1 py-1.5 rounded-full border text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                          editingPreset.text_color === '#000000'
-                            ? 'border-white bg-white/10 text-white font-extrabold'
-                            : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
-                        }`}
-                      >
-                        <span className="w-3 h-3 rounded-full bg-black border border-white/20" />
-                        <span>검은색 글씨</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
-                    <div className="grid grid-cols-4 gap-0.5 bg-black/40 p-1 rounded-full border border-white/5 h-9 items-center font-medium">
-                      {[
-                        { val: 'sans-thin', label: '얇은고딕' },
-                        { val: 'sans-thick', label: '두꺼운고딕' },
-                        { val: 'serif', label: '명조' },
-                        { val: 'neon', label: '네온' }
-                      ].map((item) => (
-                        <button
-                          type="button"
-                          key={item.val}
-                          onClick={() => setEditingPreset(prev => ({ ...prev!, font_family: item.val as any }))}
-                          className={`py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
-                            (editingPreset.font_family || 'sans-thin') === item.val
-                              ? 'bg-white text-black shadow-sm font-extrabold'
-                              : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
-                          }`}
-                        >
-                          {item.label}
-                        </button>
-                      ))}
-                    </div>
+                {/* 글자 색상 */}
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 색상</label>
+                  <div className="flex gap-3 h-10 items-center">
+                    <button
+                      type="button"
+                      onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#FFFFFF' }))}
+                      className={`flex-1 h-full rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        editingPreset.text_color === '#FFFFFF'
+                          ? 'border-white bg-white/10 text-white font-extrabold shadow-sm'
+                          : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      <span className="w-3.5 h-3.5 rounded-full bg-white border border-black/20" />
+                      <span>흰색 글씨</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#000000' }))}
+                      className={`flex-1 h-full rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        editingPreset.text_color === '#000000'
+                          ? 'border-white bg-white/10 text-white font-extrabold shadow-sm'
+                          : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      <span className="w-3.5 h-3.5 rounded-full bg-black border border-white/20" />
+                      <span>검은색 글씨</span>
+                    </button>
                   </div>
                 </div>
 
-                {/* Row 2: Font Size Slider + Effect */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                      <span>글자 크기</span>
-                      <span className="text-indigo-400 font-extrabold">{editingPreset.font_size || 100}%</span>
-                    </div>
-                    <div className="flex items-center h-9">
-                      <input
-                        type="range"
-                        min="30"
-                        max="100"
-                        value={editingPreset.font_size || 100}
-                        onChange={(e) => {
-                          const size = parseInt(e.target.value);
-                          setEditingPreset(prev => ({ ...prev!, font_size: size }));
-                        }}
-                        className="premium-slider w-full"
-                      />
-                    </div>
+                {/* 글꼴 스타일 */}
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
+                  <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 h-11 items-center font-medium">
+                    {[
+                      { val: 'sans-thin', label: '얇은고딕' },
+                      { val: 'sans-thick', label: '두꺼운고딕' },
+                      { val: 'serif', label: '명조' },
+                      { val: 'neon', label: '네온' }
+                    ].map((item) => (
+                      <button
+                        type="button"
+                        key={item.val}
+                        onClick={() => setEditingPreset(prev => ({ ...prev!, font_family: item.val as any }))}
+                        className={`h-full rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          (editingPreset.font_family || 'sans-thin') === item.val
+                            ? 'bg-white text-black shadow-sm font-extrabold'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
                   </div>
+                </div>
 
-                  <div>
-                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">모션 효과</label>
-                    <div className="grid grid-cols-5 gap-0.5 bg-black/40 p-1 rounded-full border border-white/5 h-9 items-center font-medium">
-                      {[
-                        { val: 'none', label: '정적' },
-                        { val: 'blink', label: '깜빡' },
-                        { val: 'marquee', label: '흐름' },
-                        { val: 'countdown', label: '타이머' },
-                        { val: 'luckydraw_wait', label: '추첨' }
-                      ].map((item) => (
-                        <button
-                          type="button"
-                          key={item.val}
-                          onClick={() => {
-                            const currentStep = getSpeedFactor(editingPreset.effect === 'luckydraw_wait' ? 'blink' : (editingPreset.effect as any), editingPreset.speed);
-                            
-                            setEditingPreset(prev => {
-                              const updated: Preset = { 
-                                ...prev!, 
-                                effect: item.val as any, 
-                                speed: getSpeedMs(item.val === 'luckydraw_wait' ? 'blink' : (item.val as any), currentStep)
-                              };
-                              if (item.val === 'countdown') {
-                                if (updated.countdown_seconds === undefined) updated.countdown_seconds = 10;
-                                if (updated.result_text === undefined) updated.result_text = 'START';
-                              }
-                              if (item.val === 'luckydraw_wait') {
-                                if (updated.text === undefined || updated.text === 'GLOW WAVE') updated.text = '당첨!';
-                                if (updated.result_text === undefined) updated.result_text = '아쉽네요! 다음 기회에..';
-                                updated.text_color = '#FFD700';
-                              }
-                              return updated;
-                            });
-                          }}
-                          className={`py-1 rounded-full text-[9px] font-bold transition-all cursor-pointer ${
-                            (editingPreset.effect === 'luckydraw' || editingPreset.effect === 'luckydraw_wait' ? 'luckydraw_wait' : editingPreset.effect) === item.val
-                              ? 'bg-white text-black shadow-sm font-extrabold'
-                              : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
-                          }`}
-                        >
-                          {item.label}
-                        </button>
-                      ))}
-                    </div>
+                {/* 글자 크기 */}
+                <div>
+                  <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                    <span>글자 크기</span>
+                    <span className="text-indigo-400 font-extrabold">{editingPreset.font_size || 100}%</span>
+                  </div>
+                  <div className="flex items-center h-10">
+                    <input
+                      type="range"
+                      min="30"
+                      max="100"
+                      value={editingPreset.font_size || 100}
+                      onChange={(e) => {
+                        const size = parseInt(e.target.value);
+                        setEditingPreset(prev => ({ ...prev!, font_size: size }));
+                      }}
+                      className="premium-slider w-full"
+                    />
+                  </div>
+                </div>
+
+                {/* 모션 효과 */}
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">모션 효과</label>
+                  <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 h-11 items-center font-medium">
+                    {[
+                      { val: 'none', label: '정적' },
+                      { val: 'blink', label: '깜빡' },
+                      { val: 'marquee', label: '흐름' },
+                      { val: 'countdown', label: '타이머' },
+                      { val: 'luckydraw_wait', label: '추첨' }
+                    ].map((item) => (
+                      <button
+                        type="button"
+                        key={item.val}
+                        onClick={() => {
+                          const currentStep = getSpeedFactor(editingPreset.effect === 'luckydraw_wait' ? 'blink' : (editingPreset.effect as any), editingPreset.speed);
+                          
+                          setEditingPreset(prev => {
+                            const updated: Preset = { 
+                              ...prev!, 
+                              effect: item.val as any, 
+                              speed: getSpeedMs(item.val === 'luckydraw_wait' ? 'blink' : (item.val as any), currentStep)
+                            };
+                            if (item.val === 'countdown') {
+                              if (updated.countdown_seconds === undefined) updated.countdown_seconds = 10;
+                              if (updated.result_text === undefined) updated.result_text = 'START';
+                            }
+                            if (item.val === 'luckydraw_wait') {
+                              if (updated.text === undefined || updated.text === 'GLOW WAVE') updated.text = '당첨!';
+                              if (updated.result_text === undefined) updated.result_text = '아쉽네요! 다음 기회에..';
+                              updated.text_color = '#FFD700';
+                            }
+                            return updated;
+                          });
+                        }}
+                        className={`h-full rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                          (editingPreset.effect === 'luckydraw' || editingPreset.effect === 'luckydraw_wait' ? 'luckydraw_wait' : editingPreset.effect) === item.val
+                            ? 'bg-white text-black shadow-sm font-extrabold'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -1564,11 +1602,11 @@ export default function HostDashboard() {
                       <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">종료 시 출력 문구 (Result Text)</label>
                       <input
                         type="text"
-                        value={editingPreset.result_text || 'START'}
-                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value }))}
+                        value={editingPreset.result_text || ''}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, 15) }))}
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
                         maxLength={15}
-                        placeholder="예: START, 축하합니다!, GO!"
+                        placeholder="START"
                       />
                     </div>
                   </div>
@@ -1581,11 +1619,11 @@ export default function HostDashboard() {
                       <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">당첨 시 출력 문구 (Winner Text)</label>
                       <input
                         type="text"
-                        value={editingPreset.text || '당첨!'}
-                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value }))}
+                        value={editingPreset.text || ''}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, 15) }))}
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
                         maxLength={15}
-                        placeholder="예: 👑 당첨! 축하합니다!"
+                        placeholder="당첨!"
                       />
                     </div>
 
@@ -1593,11 +1631,11 @@ export default function HostDashboard() {
                       <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">낙첨 시 출력 문구 (Loser Text)</label>
                       <input
                         type="text"
-                        value={editingPreset.result_text || '아쉽네요! 다음 기회에..'}
-                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value }))}
+                        value={editingPreset.result_text || ''}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, 15) }))}
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
                         maxLength={15}
-                        placeholder="예: 아쉽지만 다음 기회에.. 😢"
+                        placeholder="아쉽네요! 다음 기회에.."
                       />
                     </div>
                   </div>
@@ -1613,11 +1651,20 @@ export default function HostDashboard() {
                   type="button"
                   onClick={() => {
                     if (editingPresetIndex === null || !editingPreset) return;
+                    const normalized: Preset = {
+                      ...editingPreset,
+                      text: editingPreset.text.trim() || (editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw' ? '당첨!' : 'GLOW WAVE'),
+                      result_text: (editingPreset.effect === 'countdown') 
+                        ? (editingPreset.result_text?.trim() || 'START')
+                        : (editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw')
+                          ? (editingPreset.result_text?.trim() || '아쉽네요! 다음 기회에..')
+                          : editingPreset.result_text
+                    };
                     const updated = [...presets];
                     if (editingPresetIndex === presets.length) {
-                      updated.push(editingPreset);
+                      updated.push(normalized);
                     } else {
-                      updated[editingPresetIndex] = editingPreset;
+                      updated[editingPresetIndex] = normalized;
                     }
                     setPresets(updated);
                     localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
@@ -1632,15 +1679,24 @@ export default function HostDashboard() {
                   type="button"
                   onClick={() => {
                     if (editingPresetIndex === null || !editingPreset) return;
+                    const normalized: Preset = {
+                      ...editingPreset,
+                      text: editingPreset.text.trim() || (editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw' ? '당첨!' : 'GLOW WAVE'),
+                      result_text: (editingPreset.effect === 'countdown') 
+                        ? (editingPreset.result_text?.trim() || 'START')
+                        : (editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw')
+                          ? (editingPreset.result_text?.trim() || '아쉽네요! 다음 기회에..')
+                          : editingPreset.result_text
+                    };
                     const updated = [...presets];
                     if (editingPresetIndex === presets.length) {
-                      updated.push(editingPreset);
+                      updated.push(normalized);
                     } else {
-                      updated[editingPresetIndex] = editingPreset;
+                      updated[editingPresetIndex] = normalized;
                     }
                     setPresets(updated);
                     localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
-                    triggerPreset(editingPreset, editingPresetIndex);
+                    triggerPreset(normalized, editingPresetIndex);
                     setEditingPresetIndex(null);
                     setEditingPreset(null);
                   }}
