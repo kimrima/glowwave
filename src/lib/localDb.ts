@@ -416,6 +416,83 @@ export const localDb = {
     }
   },
 
+  async extendRoom(roomId: string, extraHours: number = 24): Promise<boolean> {
+    if (isSupabaseConfigured() && supabase) {
+      // 1. Fetch current room details
+      const { data: room, error: fetchErr } = await supabase
+        .from('rooms')
+        .select('*')
+        .eq('id', roomId)
+        .maybeSingle();
+
+      if (fetchErr || !room) {
+        console.error('[localDb] Supabase extendRoom fetch error:', fetchErr);
+        return false;
+      }
+
+      // 2. Calculate new created_at timestamp to add duration
+      const now = Date.now();
+      const currentCreatedTime = new Date(room.created_at).getTime();
+      const currentExpirationTime = currentCreatedTime + 24 * 60 * 60 * 1000;
+      const newExpirationTime = Math.max(now, currentExpirationTime) + extraHours * 60 * 60 * 1000;
+      const newCreatedAtISO = new Date(newExpirationTime - 24 * 60 * 60 * 1000).toISOString();
+
+      // 3. Update room's created_at field
+      const { error: updateErr } = await supabase
+        .from('rooms')
+        .update({ created_at: newCreatedAtISO })
+        .eq('id', roomId);
+
+      if (updateErr) {
+        console.error('[localDb] Supabase extendRoom update error:', updateErr);
+        return false;
+      }
+
+      // 4. Log the extended payment (20% discount applied)
+      const config = TIER_CONFIGS[room.tier as TierType];
+      const discountedPrice = Math.round(config.priceKrw * 0.8);
+      await this.addPayment(
+        room.email,
+        room.host_session_token,
+        roomId,
+        room.tier as TierType,
+        discountedPrice,
+        'completed'
+      );
+
+      return true;
+    } else {
+      this.loadFromDisk();
+      const room = this.rooms.get(roomId);
+      if (room) {
+        // Calculate new created_at timestamp to add duration
+        const now = Date.now();
+        const currentCreatedTime = new Date(room.created_at).getTime();
+        const currentExpirationTime = currentCreatedTime + 24 * 60 * 60 * 1000;
+        const newExpirationTime = Math.max(now, currentExpirationTime) + extraHours * 60 * 60 * 1000;
+        const newCreatedAtISO = new Date(newExpirationTime - 24 * 60 * 60 * 1000).toISOString();
+
+        room.created_at = newCreatedAtISO;
+        this.saveToDisk();
+
+        // Log the extended payment (20% discount applied)
+        const config = TIER_CONFIGS[room.tier];
+        const discountedPrice = Math.round(config.priceKrw * 0.8);
+        await this.addPayment(
+          room.email,
+          room.host_session_token,
+          roomId,
+          room.tier,
+          discountedPrice,
+          'completed'
+        );
+
+        return true;
+      }
+      return false;
+    }
+  },
+
   addClient(roomId: string, clientId: string, controller: ReadableStreamDefaultController, role?: string): void {
     if (!this.clients.has(roomId)) {
       this.clients.set(roomId, []);

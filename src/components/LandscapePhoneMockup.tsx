@@ -83,7 +83,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
           isDuoSiren ? 'animate-siren' : isBlink ? 'animate-blink' : ''
         }`}
         style={{ 
-          backgroundColor: isLuckyDrawWait ? preset.bg_color : undefined,
+          backgroundColor: isDuoSiren ? undefined : preset.bg_color,
           border: isLuckyDrawWait ? `2px solid ${preset.bg_color_secondary || '#FFD700'}` : 'none',
           '--blink-duration': `${preset.speed || 1000}ms`,
           '--siren-color-1': preset.bg_color,

@@ -212,9 +212,11 @@ export default function HostSetup() {
 
             {/* Tiers List */}
             <div className="flex flex-col gap-3">
-              {(Object.keys(TIER_CONFIGS) as TierType[]).map((tierKey) => {
-                const cfg = TIER_CONFIGS[tierKey];
-                const isSelected = selectedTier === tierKey;
+              {(Object.keys(TIER_CONFIGS) as TierType[])
+                .filter((tierKey) => tierKey !== 'max')
+                .map((tierKey) => {
+                  const cfg = TIER_CONFIGS[tierKey];
+                  const isSelected = selectedTier === tierKey;
                 return (
                   <button
                     key={tierKey}

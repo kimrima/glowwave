@@ -91,6 +91,11 @@ export default function HostDashboard() {
   const [upgradeStep, setUpgradeStep] = useState<'select' | 'payment' | 'success'>('select');
   const [selectedUpgradeTier, setSelectedUpgradeTier] = useState<TierType | null>(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
+
+  // Time Extension Modal States
+  const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
+  const [extendStep, setExtendStep] = useState<'info' | 'payment' | 'success'>('info');
+  const [isExtending, setIsExtending] = useState(false);
   
   // Real-time states
   const [presets, setPresets] = useState<Preset[]>([]);
@@ -124,6 +129,47 @@ export default function HostDashboard() {
   // Preset Live Edit States
   const [editingPresetIndex, setEditingPresetIndex] = useState<number | null>(null);
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
+
+  // Expiration countdown state
+  const [timeRemaining, setTimeRemaining] = useState<string>('');
+
+  // Accidental Navigation Warning & Expiration Countdown Timer
+  useEffect(() => {
+    // 1. Native beforeunload handler to intercept page refresh or tab close
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = ''; // Standard browser dialog prompt
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // 2. Room expiration ticker (24-hour limit countdown)
+    if (!room?.created_at) return;
+    const calculateTime = () => {
+      const createdTime = new Date(room.created_at).getTime();
+      const expireTime = createdTime + 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      const diff = expireTime - now;
+
+      if (diff <= 0) {
+        setTimeRemaining('만료됨');
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      setTimeRemaining(`${hours}시간 ${minutes}분 ${seconds}초`);
+    };
+
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      clearInterval(interval);
+    };
+  }, [room?.created_at]);
 
   // Supabase & SSE references
   const supabaseChannelRef = useRef<any>(null);
@@ -495,8 +541,42 @@ export default function HostDashboard() {
     const currentTier = room?.tier || 'free';
     const currentOrder = TIER_ORDER[currentTier] ?? 0;
     return Object.keys(TIER_CONFIGS).filter(
-      (key) => TIER_ORDER[key] > currentOrder
+      (key) => TIER_ORDER[key] > currentOrder && key !== 'max'
     ) as TierType[];
+  };
+
+  const handleExtendRoom = async () => {
+    if (!roomId || !token) return;
+    setIsExtending(true);
+    try {
+      const res = await fetch(`/api/room/extend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          room_id: roomId,
+          host_session_token: token
+        })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || '시간 연장 처리 중 오류가 발생했습니다.');
+      }
+
+      const data = await res.json();
+      if (room) {
+        setRoom({
+          ...room,
+          created_at: data.created_at
+        });
+      }
+      setExtendStep('success');
+    } catch (err: any) {
+      console.error(err);
+      alert(`오류: ${err.message}`);
+    } finally {
+      setIsExtending(false);
+    }
   };
 
   const handleUpgrade = async () => {
@@ -761,13 +841,17 @@ export default function HostDashboard() {
 
       {/* Header */}
       <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-black text-white tracking-tight font-outfit text-sm uppercase">GlowWave Host Remote</span>
           </div>
           
           <button 
-            onClick={() => router.push('/')}
+            onClick={() => {
+              if (confirm("정말 대시보드(리모컨)에서 나가시겠습니까?\n현재 실시간으로 연출 중인 전광판 송출이 중단되지는 않지만, 대시보드 제어 세션이 닫히니다.")) {
+                router.push('/');
+              }
+            }}
             className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all"
             title="나가기"
           >
@@ -777,7 +861,7 @@ export default function HostDashboard() {
       </header>
 
       {/* Unified HUD Status Bar */}
-      <section className="max-w-7xl mx-auto px-6 pt-6 w-full">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 w-full">
         <div className="glass-effect rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 bg-[#12121a] border border-white/5">
           <div className="flex flex-wrap items-center gap-6">
             <div>
@@ -817,6 +901,36 @@ export default function HostDashboard() {
                 )}
               </div>
             </div>
+
+            <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
+
+            <div className="flex items-center gap-3">
+              <div>
+                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">남은 시간 (Time Left)</span>
+                <span className={`text-xs sm:text-sm font-black font-mono tracking-tight block mt-1 ${
+                  timeRemaining === '만료됨' || timeRemaining.startsWith('0시간') || timeRemaining.startsWith('1시간') || timeRemaining.startsWith('2시간')
+                    ? 'text-red-500 animate-pulse' 
+                    : 'text-zinc-300'
+                }`}>
+                  {timeRemaining || '--:--:--'}
+                </span>
+              </div>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  setExtendStep('info');
+                  setIsExtendModalOpen(true);
+                }}
+                className={`px-2.5 py-1 rounded text-[10px] font-extrabold transition-all cursor-pointer select-none border ${
+                  timeRemaining === '만료됨' || timeRemaining.startsWith('0시간') || timeRemaining.startsWith('1시간') || timeRemaining.startsWith('2시간')
+                    ? 'border-amber-500/40 text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 animate-pulse'
+                    : 'border-zinc-700 text-zinc-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                시간 연장
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -830,7 +944,7 @@ export default function HostDashboard() {
       </section>
 
       {/* Main Grid */}
-      <main className="max-w-7xl mx-auto px-6 py-6 flex-1 grid lg:grid-cols-12 gap-8 w-full">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 grid lg:grid-cols-12 gap-8 w-full">
         
         {/* Left Column: Cockpit (Presets & Free-text edit) */}
         <div className="lg:col-span-8 flex flex-col gap-6">
@@ -1047,12 +1161,12 @@ export default function HostDashboard() {
                 </button>
               </div>
 
-              {/* iOS style Segmented Controls Row (Flex layout) */}
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-4 pt-3.5 border-t border-white/5">
+              {/* iOS style Segmented Controls Row (Responsive Grid layout) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-3.5 border-t border-white/5">
                 {/* 배경 테마 */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">테마:</span>
-                  <div className="flex items-center gap-1.5 bg-black/45 px-2 py-1 rounded-full border border-white/5 h-8">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">배경 테마</span>
+                  <div className="flex flex-wrap items-center gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 min-h-10">
                     {[
                       '#EF4444', '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#EC4899', '#FFFFFF', '#0B0B0F'
                     ].map((hex) => (
@@ -1088,12 +1202,12 @@ export default function HostDashboard() {
                 </div>
 
                 {/* 글자 크기 (30% ~ 100% Range Slider) */}
-                <div className="flex flex-col gap-1.5 min-w-[140px] flex-1">
+                <div className="flex flex-col gap-1.5">
                   <div className="flex justify-between text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                    <span>글자 크기:</span>
+                    <span>글자 크기</span>
                     <span className="text-indigo-400 font-extrabold">{customFontSize}%</span>
                   </div>
-                  <div className="flex items-center h-8">
+                  <div className="flex items-center bg-black/45 px-3 rounded-xl border border-white/5 h-10">
                     <input
                       type="range"
                       min="30"
@@ -1106,12 +1220,12 @@ export default function HostDashboard() {
                 </div>
 
                 {/* 글꼴 스타일 */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">스타일:</span>
-                  <div className="inline-flex bg-black/45 p-1 rounded-full border border-white/5 h-8 items-center">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">글꼴 스타일</span>
+                  <div className="grid grid-cols-4 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 h-10 items-center">
                     {[
-                      { val: 'sans-thin', label: '얇은고딕' },
-                      { val: 'sans-thick', label: '두꺼운고딕' },
+                      { val: 'sans-thin', label: '얇은' },
+                      { val: 'sans-thick', label: '두꺼운' },
                       { val: 'serif', label: '명조' },
                       { val: 'neon', label: '네온' }
                     ].map((item) => (
@@ -1119,10 +1233,10 @@ export default function HostDashboard() {
                         type="button"
                         key={item.val}
                         onClick={() => setCustomFontFamily(item.val as any)}
-                        className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                        className={`h-full rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
                           customFontFamily === item.val
                             ? 'bg-white text-black font-extrabold shadow-sm'
-                            : 'text-zinc-400 hover:text-white'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}
                       >
                         {item.label}
@@ -1132,22 +1246,22 @@ export default function HostDashboard() {
                 </div>
 
                 {/* 모션 효과 */}
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">효과:</span>
-                  <div className="inline-flex bg-black/45 p-1 rounded-full border border-white/5 h-8 items-center">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">모션 효과</span>
+                  <div className="grid grid-cols-3 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 h-10 items-center">
                     {[
                       { val: 'none', label: '정적' },
-                      { val: 'blink', label: '깜빡이' },
-                      { val: 'marquee', label: '흐르기' }
+                      { val: 'blink', label: '깜빡' },
+                      { val: 'marquee', label: '흐름' }
                     ].map((item) => (
                       <button
                         type="button"
                         key={item.val}
                         onClick={() => setCustomEffect(item.val as any)}
-                        className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                        className={`h-full rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
                           customEffect === item.val
                             ? 'bg-white text-black font-extrabold shadow-sm'
-                            : 'text-zinc-400 hover:text-white'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}
                       >
                         {item.label}
@@ -1904,6 +2018,159 @@ export default function HostDashboard() {
                     setIsUpgradeModalOpen(false);
                     setUpgradeStep('select');
                     setSelectedUpgradeTier(null);
+                  }}
+                  className="w-full py-4 mt-2 rounded-2xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all cursor-pointer shadow-lg"
+                >
+                  대시보드로 돌아가기
+                </button>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* 13. Room Time Extension Modal Dialog */}
+      {isExtendModalOpen && room && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-effect border border-white/10 rounded-3xl w-full max-w-md p-7 relative z-10 animate-in fade-in zoom-in-95 duration-150 text-left flex flex-col gap-6 text-white bg-[#12121a]">
+            
+            {/* Header */}
+            <div className="flex justify-between items-center pb-4 border-b border-white/10">
+              <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
+                방 시간 연장 (Extend Session)
+              </h3>
+              {!isExtending && extendStep !== 'success' && (
+                <button
+                  onClick={() => setIsExtendModalOpen(false)}
+                  className="text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg transition-colors cursor-pointer text-xs font-bold hover:bg-white/5"
+                >
+                  닫기
+                </button>
+              )}
+            </div>
+
+            {/* Content Switcher */}
+            {extendStep === 'info' && (
+              <div className="flex flex-col gap-5 text-left">
+                <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl">
+                  <span className="font-extrabold text-indigo-300 block mb-1">안내</span>
+                  방의 활성 시간을 <strong className="text-white">24시간 연장</strong>합니다.<br />
+                  연장 후에도 기존에 접속해 있던 관객들의 링크 및 QR 코드는 변경 없이 그대로 유지됩니다.
+                </div>
+                
+                <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-2.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">현재 티어</span>
+                    <span className="text-white font-extrabold uppercase">{room.tier} Plan</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-zinc-500">현재 만료 예정 시각</span>
+                    <span className="text-zinc-300 font-mono">
+                      {new Date(new Date(room.created_at).getTime() + 24 * 60 * 60 * 1000).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-t border-white/5 pt-2">
+                    <span className="text-indigo-400 font-bold">연장 후 만료 예정 시각</span>
+                    <span className="text-indigo-300 font-mono font-bold">
+                      {new Date(Math.max(Date.now(), new Date(room.created_at).getTime() + 24 * 60 * 60 * 1000) + 24 * 60 * 60 * 1000).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setExtendStep('payment')}
+                  className="w-full py-4 rounded-2xl bg-white text-black hover:bg-zinc-200 font-extrabold text-sm transition-all duration-200 cursor-pointer shadow-lg shadow-white/5"
+                >
+                  결제 단계로 이동하기
+                </button>
+              </div>
+            )}
+
+            {extendStep === 'payment' && (
+              <div className="flex flex-col gap-5 text-left">
+                <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  방 연장 24시간 이용권을 결제합니다.<br />
+                  기존 이용 요금 대비 <strong className="text-indigo-300">20% 할인된 장기 고객 혜택가</strong>가 자동 적용됩니다.
+                </div>
+
+                <div className="bg-black/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3.5">
+                  <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">가상 결제 모듈 시뮬레이터</span>
+                  
+                  <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
+                    <span className="text-zinc-400">결제 대상 상품</span>
+                    <span className="text-white font-extrabold">24시간 시간 연장 이용권</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
+                    <span className="text-zinc-400">정가</span>
+                    <span className="text-zinc-500 line-through font-mono">
+                      {TIER_CONFIGS[room.tier].priceKrw.toLocaleString()}원
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
+                    <span className="text-zinc-400">연장 할인 (20%)</span>
+                    <span className="text-red-400 font-bold">
+                      -{Math.round(TIER_CONFIGS[room.tier].priceKrw * 0.2).toLocaleString()}원
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center text-xs sm:text-sm">
+                    <span className="text-zinc-400">최종 결제 금액</span>
+                    <span className="text-indigo-300 font-black font-mono">
+                      {Math.round(TIER_CONFIGS[room.tier].priceKrw * 0.8).toLocaleString()}원
+                    </span>
+                  </div>
+                </div>
+
+                {/* 환불 취소 불가 고지 */}
+                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-xs text-red-400 leading-relaxed">
+                  <span className="font-extrabold block mb-1">경고 (환불/취소 정책 동의)</span>
+                  방 시간 연장은 결제 완료 즉시 예약 리소스가 즉시 할당되어 24시간 연장 처리가 실행되므로, 단순 변심으로 인한 **환불 및 결제 취소가 엄격히 불가능**합니다. 이에 동의하시는 경우에만 결제를 진행해 주세요.
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setExtendStep('info')}
+                    disabled={isExtending}
+                    className="flex-1 py-4 rounded-2xl bg-white/5 text-zinc-400 font-bold hover:bg-white/10 hover:text-white transition-all text-sm cursor-pointer disabled:opacity-50 border border-white/5"
+                  >
+                    이전으로
+                  </button>
+                  
+                  <button
+                    onClick={handleExtendRoom}
+                    disabled={isExtending}
+                    className="flex-1 py-4 rounded-2xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg"
+                  >
+                    {isExtending ? (
+                      <span>승인 중...</span>
+                    ) : (
+                      <span>결제 승인 완료</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {extendStep === 'success' && (
+              <div className="flex flex-col items-center text-center gap-5 py-4">
+                <span className="text-xs font-black text-emerald-400 uppercase tracking-widest px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                  Success
+                </span>
+                
+                <h4 className="text-lg sm:text-xl font-black text-white">시간 연장 완료</h4>
+                
+                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-sm">
+                  방 시간이 성공적으로 **24시간 연장**되었습니다.<br />
+                  관람객 접속용 링크 및 QR 코드는 변함 없이 기존 것 그대로 정상 가동됩니다.
+                </p>
+
+                <button
+                  onClick={() => {
+                    setIsExtendModalOpen(false);
+                    setExtendStep('info');
                   }}
                   className="w-full py-4 mt-2 rounded-2xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all cursor-pointer shadow-lg"
                 >
