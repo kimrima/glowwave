@@ -66,7 +66,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
     preset.font_size || 100
   );
 
-  const isDuoSiren = isBlink && !!preset.bg_color_secondary;
+  const isDuoSiren = (isBlink && !!preset.bg_color_secondary) || isLuckyDraw;
 
   return (
     <div className="@container w-full max-w-[420px] aspect-[1.91/1] bg-black rounded-[9%] border-[1.2cqw] border-zinc-800 shadow-2xl p-[2.2cqw] flex items-center justify-center overflow-hidden relative">
@@ -83,11 +83,11 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
           isDuoSiren ? 'animate-siren' : isBlink ? 'animate-blink' : ''
         }`}
         style={{ 
-          backgroundColor: isLuckyDraw ? '#FFD700' : isLuckyDrawWait ? '#0B0B0F' : preset.bg_color,
-          border: isLuckyDrawWait ? '2px solid #FFD700' : 'none',
+          backgroundColor: isLuckyDrawWait ? preset.bg_color : undefined,
+          border: isLuckyDrawWait ? `2px solid ${preset.bg_color_secondary || '#FFD700'}` : 'none',
           '--blink-duration': `${preset.speed || 1000}ms`,
           '--siren-color-1': preset.bg_color,
-          '--siren-color-2': preset.bg_color_secondary || '#3B82F6'
+          '--siren-color-2': preset.bg_color_secondary || '#FFD700'
         } as React.CSSProperties}
       >
         {isMarquee ? (
@@ -107,7 +107,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
           <div 
             className={`text-center whitespace-nowrap overflow-hidden px-[2cqw] select-none max-w-full leading-none tracking-tighter ${getFontFamilyClass()}`}
             style={{ 
-              color: isLuckyDraw ? '#000000' : isLuckyDrawWait ? '#FFD700' : preset.text_color,
+              color: preset.text_color,
               fontSize,
               zIndex: 10,
               animation: isLuckyDrawWait ? 'preset-card-pulse 1.2s ease-in-out infinite' : undefined

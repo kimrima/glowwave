@@ -107,7 +107,7 @@ export default function AudienceRoom() {
   const isLuckyDrawWait = currentPreset.effect === 'luckydraw_wait';
   const isWinner = isLuckyDraw && currentPreset.lucky_draw_winner_id === audienceUuid;
   const isBlink = currentPreset.effect === 'blink';
-  const isDuoSiren = isBlink && !!currentPreset.bg_color_secondary;
+  const isDuoSiren = (isBlink && !!currentPreset.bg_color_secondary) || isWinner;
 
   // Compute text to display on screen
   const displayText = isCountdown 
@@ -531,15 +531,13 @@ export default function AudienceRoom() {
         ref={containerRef}
         className={`w-full h-full flex items-center justify-center transition-colors duration-300 ${
           isDuoSiren ? 'animate-siren' : currentPreset.effect === 'blink' ? 'animate-blink' : ''
-        } ${
-          isWinner ? 'animate-blink' : ''
         }`}
         style={{ 
-          backgroundColor: isWinner ? '#FFD700' : isLuckyDraw ? '#0B0B0F' : isLuckyDrawWait ? '#0B0B0F' : currentPreset.bg_color,
-          border: isLuckyDrawWait ? '8px solid #FFD700' : 'none',
-          '--blink-duration': isWinner ? '150ms' : `${currentPreset.speed || 1000}ms`,
+          backgroundColor: isLuckyDrawWait ? currentPreset.bg_color : (!isWinner && isLuckyDraw) ? '#0B0B0F' : undefined,
+          border: isLuckyDrawWait ? `8px solid ${currentPreset.bg_color_secondary || '#FFD700'}` : 'none',
+          '--blink-duration': `${currentPreset.speed || 1000}ms`,
           '--siren-color-1': currentPreset.bg_color,
-          '--siren-color-2': currentPreset.bg_color_secondary || '#3B82F6'
+          '--siren-color-2': currentPreset.bg_color_secondary || '#FFD700'
         } as React.CSSProperties}
       >
         {currentPreset.effect === 'marquee' ? (
@@ -559,7 +557,7 @@ export default function AudienceRoom() {
           <div 
             className={`text-center whitespace-nowrap overflow-hidden px-8 select-none max-w-full leading-none tracking-tighter ${getFontFamilyClass(currentPreset.font_family)}`}
             style={{ 
-              color: isWinner ? '#000000' : isLuckyDraw ? '#F3F4F6' : isLuckyDrawWait ? '#FFD700' : currentPreset.text_color,
+              color: currentPreset.text_color,
               fontSize,
               zIndex: 10,
               animation: isLuckyDrawWait ? 'preset-card-pulse 1.2s ease-in-out infinite' : undefined

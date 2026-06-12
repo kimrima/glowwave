@@ -22,7 +22,7 @@ export default function useFitText(text: string, effect: string, sizePercent: nu
       // Marquee is scrolling text: it flows offscreen horizontally. 
       // Thus, only the vertical height is the scaling limit.
       if (effect === 'marquee') {
-        const targetHeightSize = clientHeight * 0.42 * sizeMultiplier;
+        const targetHeightSize = clientHeight * 0.72 * sizeMultiplier;
         setFontSize(`${targetHeightSize}px`);
         return;
       }
@@ -37,13 +37,19 @@ export default function useFitText(text: string, effect: string, sizePercent: nu
       testSpan.innerText = text || ' ';
 
       // Copy font styling class name from container's actual text element if possible
-      const firstChild = container.firstElementChild as HTMLElement;
-      if (firstChild) {
-        testSpan.className = firstChild.className;
-        testSpan.classList.remove('animate-marquee', 'animate-blink', 'animate-siren');
+      const textElement = container.querySelector('[class*="font-sign-"]') as HTMLElement;
+      if (textElement) {
+        testSpan.className = textElement.className;
+        testSpan.classList.remove('animate-marquee', 'animate-blink', 'animate-siren', 'animate-pulse');
+      } else {
+        const firstChild = container.firstElementChild as HTMLElement;
+        if (firstChild) {
+          testSpan.className = firstChild.className;
+          testSpan.classList.remove('animate-marquee', 'animate-blink', 'animate-siren', 'animate-pulse');
+        }
       }
       
-      document.body.appendChild(testSpan);
+      container.appendChild(testSpan);
 
       // Binary search for the best font size (in px)
       let min = 10;
@@ -67,7 +73,7 @@ export default function useFitText(text: string, effect: string, sizePercent: nu
         }
       }
 
-      document.body.removeChild(testSpan);
+      container.removeChild(testSpan);
 
       // Apply the sizeMultiplier to the best calculated safe size
       const finalSize = bestSize * sizeMultiplier;
