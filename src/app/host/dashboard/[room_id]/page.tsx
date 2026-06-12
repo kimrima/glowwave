@@ -947,22 +947,22 @@ export default function HostDashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 grid lg:grid-cols-12 gap-8 w-full">
         
         {/* Left Column: Cockpit (Presets & Free-text edit) */}
-        <div className="lg:col-span-8 flex flex-col gap-6">
+        <div className="lg:col-span-8 flex flex-col gap-6 w-full min-w-0">
           
           {/* Quick Triggers Dashboard */}
-          <div className="glass-effect rounded-2xl p-6 bg-[#12121a]">
+          <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a]">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-indigo-400" />
                 <h2 className="text-sm font-bold text-white font-outfit">원터치 연출 보드 (Quick Preset Board)</h2>
               </div>
               
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 {/* 6 Preset Miniature Previews Toggle */}
                 <button
                   type="button"
                   onClick={() => setShowMiniPreviews(prev => !prev)}
-                  className="flex items-center gap-2 bg-white/[0.02] border border-white/5 px-3 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
+                  className="flex items-center gap-1.5 bg-white/[0.02] border border-white/5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
                 >
                   <span>카드 미리보기</span>
                   <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${showMiniPreviews ? 'bg-indigo-500' : 'bg-zinc-700'}`}>
@@ -974,7 +974,7 @@ export default function HostDashboard() {
                 <button
                   type="button"
                   onClick={() => setIsTransmitterLocked(prev => !prev)}
-                  className="flex items-center gap-2 bg-white/[0.02] border border-white/5 px-3 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
+                  className="flex items-center gap-1.5 bg-white/[0.02] border border-white/5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
                 >
                   <span>실시간 송출</span>
                   <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${!isTransmitterLocked ? 'bg-emerald-500' : 'bg-zinc-700'}`}>
@@ -1112,7 +1112,7 @@ export default function HostDashboard() {
           </div>
 
           {/* Custom Customizer Input for On-the-fly Triggering */}
-          <div className="glass-effect rounded-2xl p-6 bg-[#12121a]">
+          <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a]">
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <Volume2 className="w-4 h-4 text-zinc-400" />
@@ -1295,9 +1295,9 @@ export default function HostDashboard() {
         </div>
 
         {/* Right Column: Live Preview & Admission QR Sharing */}
-        <div className="lg:col-span-4 flex flex-col gap-6">
+        <div className="lg:col-span-4 flex flex-col gap-6 w-full min-w-0">
           {/* LIVE ON AIR Preview Card */}
-          <div className="glass-effect rounded-2xl p-6 flex flex-col items-center bg-[#12121a]">
+          <div className="glass-effect rounded-2xl p-4 sm:p-6 flex flex-col items-center bg-[#12121a]">
             <div className="flex items-center gap-2 mb-2 self-start">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
               <h2 className="text-sm font-bold text-white uppercase tracking-wider">LIVE ON AIR</h2>
@@ -1318,7 +1318,7 @@ export default function HostDashboard() {
             )}
           </div>
 
-          <div className="glass-effect rounded-2xl p-6 flex flex-col items-center text-center bg-[#12121a]">
+          <div className="glass-effect rounded-2xl p-4 sm:p-6 flex flex-col items-center text-center bg-[#12121a]">
             <Share2 className="w-6 h-6 text-indigo-400 mb-3" />
             <h2 className="text-lg font-bold text-white mb-1">관객 입장안내 (Admission QR)</h2>
             <p className="text-xs text-zinc-500 mb-6">관객들이 카메라로 스캔하여 즉시 입장할 수 있도록 스크린에 QR을 띄우거나 링크를 복사해 주세요.</p>
