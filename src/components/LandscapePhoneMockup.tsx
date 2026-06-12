@@ -10,16 +10,16 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
   // Styles for the font families matching global CSS definitions
   const getFontFamilyClass = () => {
     switch (preset.font_family) {
-      case 'sans':
-        return 'font-sign-sans font-black';
+      case 'sans-thin':
+        return 'font-sign-sans-thin font-bold';
+      case 'sans-thick':
+        return 'font-sign-sans-thick font-black';
       case 'serif':
-        return 'font-sign-serif font-black';
+        return 'font-sign-serif font-bold';
       case 'neon':
         return 'font-sign-neon font-black';
-      case 'dot':
-        return 'font-sign-dot font-black';
       default:
-        return 'font-sign-sans font-black';
+        return 'font-sign-sans-thin font-bold';
     }
   };
 
@@ -75,6 +75,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
 
       {/* Screen Display Area */}
       <div 
+        key={preset.trigger_id || 'mockup'}
         ref={containerRef}
         className={`absolute inset-[2.2cqw] rounded-[6.5%] overflow-hidden flex items-center justify-center transition-colors duration-200 ${
           isBlink ? 'animate-blink' : ''
@@ -102,7 +103,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
           </div>
         ) : (
           <div 
-            className={`text-center whitespace-nowrap overflow-hidden px-[10cqw] select-none max-w-full leading-none tracking-tighter ${getFontFamilyClass()}`}
+            className={`text-center whitespace-nowrap overflow-hidden px-[2cqw] select-none max-w-full leading-none tracking-tighter ${getFontFamilyClass()}`}
             style={{ 
               color: preset.text_color,
               fontSize,

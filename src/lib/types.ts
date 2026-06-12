@@ -7,9 +7,10 @@ export interface Preset {
   effect: EffectType;
   speed: number; // Duration in milliseconds or scroll speed indicator
   font_size?: 'auto' | 'small' | 'medium' | 'large' | 'huge';
-  font_family?: 'sans' | 'serif' | 'neon' | 'dot';
+  font_family?: 'sans-thin' | 'sans-thick' | 'serif' | 'neon';
   countdown_seconds?: number;
   result_text?: string;
+  trigger_id?: string;
 }
 
 export type TierType = 'free' | 'lite' | 'pro' | 'max';

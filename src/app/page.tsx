@@ -7,20 +7,28 @@ import { Preset, EffectType } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import QRScannerModal from '@/components/QRScannerModal';
 
-const getSpeedFactor = (speed: number, effect: string) => {
+const getSpeedFactor = (ms: number, effect: string) => {
   if (effect === 'blink') {
-    return Math.min(100, Math.max(1, Math.round((2050 - speed) / 20)));
-  } else if (effect === 'marquee') {
-    return Math.min(100, Math.max(1, Math.round((15140 - speed) / 140)));
+    return Math.max(1, Math.min(100, Math.round(((2000 - ms) * 99) / 1950 + 1)));
+  }
+  if (effect === 'marquee') {
+    return Math.max(1, Math.min(100, Math.round(((15000 - ms) * 99) / 14000 + 1)));
+  }
+  if (effect === 'gradient') {
+    return Math.max(1, Math.min(100, Math.round(((20000 - ms) * 99) / 19000 + 1)));
   }
   return 50;
 };
 
 const getSpeedMs = (factor: number, effect: string) => {
   if (effect === 'blink') {
-    return Math.round(2050 - factor * 20);
-  } else if (effect === 'marquee') {
-    return Math.round(15140 - factor * 140);
+    return Math.round(2000 - (factor - 1) * (1950 / 99));
+  }
+  if (effect === 'marquee') {
+    return Math.round(15000 - (factor - 1) * (14000 / 99));
+  }
+  if (effect === 'gradient') {
+    return Math.round(20000 - (factor - 1) * (19000 / 99));
   }
   return 1000;
 };
@@ -104,10 +112,10 @@ export default function Home() {
   const [demoSpeedStep, setDemoSpeedStep] = useState(3);
   const [demoPreset, setDemoPreset] = useState<Preset>({
     bg_color: '#8B5CF6',
-    text: 'CROWDGLOW',
+    text: 'GLOWWAVE',
     text_color: '#FFFFFF',
     effect: 'none',
-    speed: 5000
+    speed: 1000
   });
 
   // Modal/Scanner for Room Join
@@ -418,11 +426,14 @@ export default function Home() {
                         key={eff}
                         type="button"
                         onClick={() => {
-                          handleDemoPresetChange('effect', eff);
                           let newSpeed = 1000;
                           if (eff === 'blink') newSpeed = 400;
                           else if (eff === 'marquee') newSpeed = 6000;
-                          handleDemoPresetChange('speed', newSpeed);
+                          setDemoPreset(prev => ({
+                            ...prev,
+                            effect: eff,
+                            speed: newSpeed
+                          }));
                         }}
                         className={`flex-1 py-2 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
                           demoPreset.effect === eff 

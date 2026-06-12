@@ -124,10 +124,16 @@ body {
   transform: translateY(1px) scale(0.97);
 }
 
-/* Premium typography variables for the signboard screen */
-.font-sign-sans {
-  font-family: var(--font-black-han-sans), var(--font-plus-jakarta-sans), ui-sans-serif, system-ui, sans-serif;
+.font-sign-sans-thin {
+  font-family: var(--font-plus-jakarta-sans), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+}
+
+.font-sign-sans-thick {
+  font-family: var(--font-black-han-sans), sans-serif;
   font-weight: 900;
+  display: inline-block;
+  transform: translateY(0.04em);
 }
 
 .font-sign-serif {
@@ -139,12 +145,6 @@ body {
   font-family: var(--font-orbitron), sans-serif;
   font-weight: 900;
   text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor;
-}
-
-.font-sign-dot {
-  font-family: var(--font-geist-mono), 'Courier New', Courier, monospace;
-  font-weight: 900;
-  letter-spacing: 0.05em;
 }
 
 /* iOS Style Thick Premium Slider Range input */

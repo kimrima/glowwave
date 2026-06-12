@@ -55,24 +55,24 @@ export default function useFitText(text: string, effect: string, sizeOption: str
           (charCode >= 0x4e00 && charCode <= 0x9fff) || // CJK Ideographs
           (charCode >= 0x3000 && charCode <= 0x303f)    // CJK Symbols
         ) {
-          weightedLen += 1.05; // CJK characters are square and wider
+          weightedLen += 1.15; // CJK characters are square and wider
         } else {
-          weightedLen += 0.58; // Standard alphanumeric characters are narrower
+          weightedLen += 0.62; // Standard alphanumeric characters are narrower
         }
       }
       weightedLen = Math.max(weightedLen, 1);
 
-      // We want text width to be within 88% of container width for safety margin
-      const maxFontSizeWidth = (clientWidth * 0.88) / weightedLen;
+      // We want text width to be within 86% of container width for safety margin
+      const maxFontSizeWidth = (clientWidth * 0.86) / weightedLen;
 
       // 2. Calculate size based on container height to fit vertically
-      const maxFontSizeHeight = clientHeight * 0.68;
+      const maxFontSizeHeight = clientHeight * 0.72;
 
       // 3. Pick the smaller of the two, then apply user-selected multiplier
       let targetSize = Math.min(maxFontSizeWidth, maxFontSizeHeight) * sizeMultiplier;
 
       // Absolute upper limits to prevent wrapping and overflow under extreme aspect ratios
-      const absoluteMax = Math.min((clientWidth * 0.92) / weightedLen, clientHeight * 0.78);
+      const absoluteMax = Math.min((clientWidth * 0.86) / weightedLen, clientHeight * 0.72);
       if (targetSize > absoluteMax) {
         targetSize = absoluteMax;
       }

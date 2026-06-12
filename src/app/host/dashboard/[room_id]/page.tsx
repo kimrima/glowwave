@@ -27,12 +27,12 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 
 const defaults: Preset[] = [
-  { bg_color: '#0B0B0F', text: '앰비언트', text_color: '#FFFFFF', effect: 'none', speed: 1000 },
-  { bg_color: '#EF4444', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200 },
-  { bg_color: '#8B5CF6', text: '그라데이션', text_color: '#FFFFFF', effect: 'gradient', speed: 8000 },
-  { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 10, result_text: 'START' },
-  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000 },
-  { bg_color: '#10B981', text: '사운드 싱크', text_color: '#FFFFFF', effect: 'equalizer', speed: 1000 },
+  { bg_color: '#0B0B0F', text: '앰비언트', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin' },
+  { bg_color: '#EF4444', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200, font_family: 'sans-thin' },
+  { bg_color: '#8B5CF6', text: '그라데이션', text_color: '#FFFFFF', effect: 'gradient', speed: 8000, font_family: 'sans-thin' },
+  { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 10, result_text: 'START', font_family: 'sans-thin' },
+  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000, font_family: 'sans-thin' },
+  { bg_color: '#10B981', text: '사운드 싱크', text_color: '#FFFFFF', effect: 'equalizer', speed: 1000, font_family: 'sans-thin' },
 ];
 
 interface MiniCountdownPreviewProps {
@@ -105,14 +105,15 @@ export default function HostDashboard() {
     text: 'GlowWave', 
     text_color: '#FFFFFF', 
     effect: 'none', 
-    speed: 1000 
+    speed: 1000,
+    font_family: 'sans-thin'
   });
 
   // Custom instant message state values
   const [customText, setCustomText] = useState('열정');
   const [customBgColor, setCustomBgColor] = useState('#EF4444');
   const [customFontSize, setCustomFontSize] = useState<'auto' | 'small' | 'medium' | 'large' | 'huge'>('auto');
-  const [customFontFamily, setCustomFontFamily] = useState<'sans' | 'serif' | 'neon' | 'dot'>('sans');
+  const [customFontFamily, setCustomFontFamily] = useState<'sans-thin' | 'sans-thick' | 'serif' | 'neon'>('sans-thin');
   const [customEffect, setCustomEffect] = useState<EffectType>('none');
   const [customSpeed, setCustomSpeed] = useState(50); // range 1-100
 
@@ -333,6 +334,11 @@ export default function HostDashboard() {
           changed = true;
         }
 
+        if ((p.font_family as any) === 'sans' || (p.font_family as any) === 'dot' || !p.font_family) {
+          p.font_family = 'sans-thin';
+          changed = true;
+        }
+
         if (idx === 2 && p.effect !== 'gradient') {
           p.bg_color = '#8B5CF6';
           p.text = '그라데이션';
@@ -523,21 +529,28 @@ export default function HostDashboard() {
   // 4. Trigger Preset Broadcast Signal
   const triggerPreset = async (preset: Preset, index: number) => {
     if (!roomId || !token) return;
+
+    // Inject unique trigger_id for animation & countdown reset
+    const presetWithTrigger: Preset = {
+      ...preset,
+      trigger_id: Date.now().toString()
+    };
+
     setActivePresetIndex(index);
-    setCurrentBroadcastPreset(preset);
+    setCurrentBroadcastPreset(presetWithTrigger);
 
     if (isSupabaseConfigured() && supabaseChannelRef.current && supabase) {
       // Send directly over WebSockets in-memory broadcast
       supabaseChannelRef.current.send({
         type: 'broadcast',
         event: 'render',
-        payload: preset
+        payload: presetWithTrigger
       });
       // Also update the current state in Supabase so newly joined spectators sync properly
-      supabase.from('rooms').update({ current_state: preset }).eq('id', roomId).then(({ error }) => {
+      supabase.from('rooms').update({ current_state: presetWithTrigger }).eq('id', roomId).then(({ error }) => {
         if (error) console.error('[Dashboard] Error persisting current state:', error);
       });
-      console.log(`[Dashboard] Broadcast preset: ${preset.text} via Supabase Channel`);
+      console.log(`[Dashboard] Broadcast preset: ${presetWithTrigger.text} via Supabase Channel`);
     } else {
       // Fallback: POST to Broadcast Route
       try {
@@ -546,7 +559,7 @@ export default function HostDashboard() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             host_session_token: token,
-            preset
+            preset: presetWithTrigger
           })
         });
 
@@ -554,7 +567,7 @@ export default function HostDashboard() {
           const data = await response.json();
           throw new Error(data.error || '전송 실패');
         }
-        console.log(`[Dashboard] Broadcast preset: ${preset.text} via Local API`);
+        console.log(`[Dashboard] Broadcast preset: ${presetWithTrigger.text} via Local API`);
       } catch (err: any) {
         console.error('Trigger preset error:', err);
         alert(`전송 오류: ${err.message}`);
@@ -741,31 +754,29 @@ export default function HostDashboard() {
                 <h2 className="text-sm font-bold text-white font-outfit">원터치 연출 보드 (Quick Preset Board)</h2>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 {/* 6 Preset Miniature Previews Toggle */}
                 <button
                   type="button"
                   onClick={() => setShowMiniPreviews(prev => !prev)}
-                  className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    showMiniPreviews 
-                      ? 'border-indigo-500/20 bg-indigo-500/10 text-indigo-300' 
-                      : 'border-white/5 bg-white/5 text-zinc-400 hover:text-white'
-                  }`}
+                  className="flex items-center gap-2 bg-white/[0.02] border border-white/5 px-3 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
                 >
-                  <span>카드 미리보기: {showMiniPreviews ? 'ON' : 'OFF'}</span>
+                  <span>카드 미리보기</span>
+                  <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${showMiniPreviews ? 'bg-indigo-500' : 'bg-zinc-700'}`}>
+                    <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${showMiniPreviews ? 'translate-x-3.5' : 'translate-x-0'}`} />
+                  </div>
                 </button>
 
                 {/* Safety Transmission Lock Toggle */}
                 <button
                   type="button"
                   onClick={() => setIsTransmitterLocked(prev => !prev)}
-                  className={`px-3 py-1.5 rounded-xl border text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    isTransmitterLocked 
-                      ? 'border-red-500/20 bg-red-500/10 text-red-400' 
-                      : 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-                  }`}
+                  className="flex items-center gap-2 bg-white/[0.02] border border-white/5 px-3 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
                 >
-                  <span>{isTransmitterLocked ? '송출 잠금' : '실시간 송출'}</span>
+                  <span>실시간 송출</span>
+                  <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${!isTransmitterLocked ? 'bg-emerald-500' : 'bg-zinc-700'}`}>
+                    <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${!isTransmitterLocked ? 'translate-x-3.5' : 'translate-x-0'}`} />
+                  </div>
                 </button>
               </div>
             </div>
@@ -1030,10 +1041,10 @@ export default function HostDashboard() {
                   <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">스타일:</span>
                   <div className="inline-flex bg-black/45 p-1 rounded-full border border-white/5 h-8 items-center">
                     {[
-                      { val: 'sans', label: '고딕' },
+                      { val: 'sans-thin', label: '얇은고딕' },
+                      { val: 'sans-thick', label: '두꺼운고딕' },
                       { val: 'serif', label: '명조' },
-                      { val: 'neon', label: '네온' },
-                      { val: 'dot', label: '도트' }
+                      { val: 'neon', label: '네온' }
                     ].map((item) => (
                       <button
                         type="button"
@@ -1300,17 +1311,17 @@ export default function HostDashboard() {
                     <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
                     <div className="grid grid-cols-4 gap-0.5 bg-black/40 p-1 rounded-full border border-white/5 h-9 items-center font-medium">
                       {[
-                        { val: 'sans', label: '고딕' },
+                        { val: 'sans-thin', label: '얇은고딕' },
+                        { val: 'sans-thick', label: '두꺼운고딕' },
                         { val: 'serif', label: '명조' },
-                        { val: 'neon', label: '네온' },
-                        { val: 'dot', label: '도트' }
+                        { val: 'neon', label: '네온' }
                       ].map((item) => (
                         <button
                           type="button"
                           key={item.val}
                           onClick={() => setEditingPreset(prev => ({ ...prev!, font_family: item.val as any }))}
                           className={`py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
-                            (editingPreset.font_family || 'sans') === item.val
+                            (editingPreset.font_family || 'sans-thin') === item.val
                               ? 'bg-white text-black shadow-sm font-extrabold'
                               : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                           }`}

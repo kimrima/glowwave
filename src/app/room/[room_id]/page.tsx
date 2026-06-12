@@ -22,6 +22,21 @@ export default function AudienceRoom() {
   const [showSafariTip, setShowSafariTip] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  const getFontFamilyClass = (fontFamily?: string) => {
+    switch (fontFamily) {
+      case 'sans-thin':
+        return 'font-sign-sans-thin font-bold';
+      case 'sans-thick':
+        return 'font-sign-sans-thick font-black';
+      case 'serif':
+        return 'font-sign-serif font-bold';
+      case 'neon':
+        return 'font-sign-neon font-black';
+      default:
+        return 'font-sign-sans-thin font-bold';
+    }
+  };
+
   // Immersive UI and auto-hide states
   const [showEnterOverlay, setShowEnterOverlay] = useState(true);
   const [showControls, setShowControls] = useState(true);
@@ -78,9 +93,20 @@ export default function AudienceRoom() {
 
   const initAudio = async () => {
     try {
-      if (audioContextRef.current) return;
+      if (audioContextRef.current) {
+        if (audioContextRef.current.state === 'suspended') {
+          await audioContextRef.current.resume();
+        }
+        return;
+      }
+      if (typeof window === 'undefined') return;
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContextClass) return;
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn('Microphone API not available (HTTP context or unsupported browser)');
+        return;
+      }
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       streamRef.current = stream;
@@ -94,25 +120,6 @@ export default function AudienceRoom() {
 
       const source = audioCtx.createMediaStreamSource(stream);
       source.connect(analyser);
-
-      const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-
-      const updateData = () => {
-        if (!analyserRef.current) return;
-        analyserRef.current.getByteFrequencyData(dataArray);
-        
-        // Map 32 bins to 16 bands
-        const newFreqs = new Array(16).fill(0);
-        for (let i = 0; i < 16; i++) {
-          const val = (dataArray[i * 2] + dataArray[i * 2 + 1]) / 2;
-          newFreqs[i] = Math.max(0, (val / 255) * 100);
-        }
-        setAudioFreqs(newFreqs);
-        animationFrameRef.current = requestAnimationFrame(updateData);
-      };
-
-      updateData();
     } catch (err) {
       console.warn('Microphone access denied or not supported for real equalizer:', err);
     }
@@ -134,14 +141,44 @@ export default function AudienceRoom() {
     analyserRef.current = null;
   };
 
-  // Trigger initAudio when currentPreset.effect === 'equalizer' and welcome screen is closed
+  // Trigger initAudio and update loops when currentPreset.effect === 'equalizer' and welcome screen is closed
   useEffect(() => {
+    let active = true;
+    let frameId: number | null = null;
+    
+    const bufferLength = analyserRef.current ? analyserRef.current.frequencyBinCount : 32;
+    const dataArray = new Uint8Array(bufferLength);
+
+    const updateLoop = () => {
+      if (!active) return;
+      if (analyserRef.current && currentPreset.effect === 'equalizer') {
+        analyserRef.current.getByteFrequencyData(dataArray);
+        const newFreqs = new Array(16).fill(0);
+        for (let i = 0; i < 16; i++) {
+          const val = (dataArray[i * 2] + dataArray[i * 2 + 1]) / 2;
+          newFreqs[i] = Math.max(0, (val / 255) * 100);
+        }
+        setAudioFreqs(newFreqs);
+      }
+      frameId = requestAnimationFrame(updateLoop);
+    };
+
     if (currentPreset.effect === 'equalizer' && !showEnterOverlay) {
-      initAudio();
+      initAudio().then(() => {
+        if (analyserRef.current) {
+          updateLoop();
+        }
+      });
     } else {
-      stopAudio();
+      setAudioFreqs(new Array(16).fill(0));
     }
-    return () => stopAudio();
+
+    return () => {
+      active = false;
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+    };
   }, [currentPreset.effect, showEnterOverlay]);
 
   // Compute text to display on screen
@@ -475,6 +512,15 @@ export default function AudienceRoom() {
       
       {/* Landscape forced Warning overlay */}
       <div className="fixed inset-0 bg-[#0B0B0F] flex flex-col justify-center items-center text-center px-6 text-white z-50 md:hidden portrait-overlay">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push('/');
+          }}
+          className="absolute top-6 left-6 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-extrabold text-zinc-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 cursor-pointer z-50"
+        >
+          &larr; 뒤로가기
+        </button>
         <div className="relative mb-6">
           <Smartphone className="w-16 h-16 text-indigo-400 animate-pulse" />
           <RotateCw className="w-6 h-6 text-indigo-300 absolute -bottom-1 -right-1 animate-spin" style={{ animationDuration: '3s' }} />
@@ -549,6 +595,7 @@ export default function AudienceRoom() {
 
       {/* Main Display Screen */}
       <div 
+        key={currentPreset.trigger_id || 'audience'}
         ref={containerRef}
         className={`w-full h-full flex items-center justify-center transition-colors duration-300 ${
           currentPreset.effect === 'blink' ? 'animate-blink' : ''
@@ -564,12 +611,7 @@ export default function AudienceRoom() {
         {currentPreset.effect === 'marquee' ? (
           <div className="w-full overflow-hidden whitespace-nowrap flex items-center">
             <span 
-              className={`animate-marquee inline-block font-black select-none leading-none ${
-                currentPreset.font_family === 'sans' ? 'font-sign-sans' : 
-                currentPreset.font_family === 'serif' ? 'font-sign-serif' : 
-                currentPreset.font_family === 'neon' ? 'font-sign-neon' : 
-                currentPreset.font_family === 'dot' ? 'font-sign-dot' : 'font-sign-sans'
-              }`}
+              className={`animate-marquee inline-block select-none leading-none ${getFontFamilyClass(currentPreset.font_family)}`}
               style={{ 
                 color: currentPreset.text_color,
                 fontSize,
@@ -581,18 +623,20 @@ export default function AudienceRoom() {
           </div>
         ) : (
           <div 
-            className={`font-black text-center whitespace-nowrap overflow-hidden px-8 select-none max-w-full leading-none tracking-tighter ${
-              currentPreset.font_family === 'sans' ? 'font-sign-sans' : 
-              currentPreset.font_family === 'serif' ? 'font-sign-serif' : 
-              currentPreset.font_family === 'neon' ? 'font-sign-neon' : 
-              currentPreset.font_family === 'dot' ? 'font-sign-dot' : 'font-sign-sans'
-            }`}
+            className={`text-center whitespace-nowrap overflow-hidden px-8 select-none max-w-full leading-none tracking-tighter ${getFontFamilyClass(currentPreset.font_family)}`}
             style={{ 
               color: currentPreset.text_color,
               fontSize
             }}
           >
             {displayText}
+          </div>
+        )}
+
+        {/* Microphone Help Notice if Equalizer is active but Mic permission is blocked/unconfigured */}
+        {currentPreset.effect === 'equalizer' && !audioContextRef.current && (
+          <div className="absolute top-[35%] text-center text-[10px] text-zinc-500 font-bold z-10 px-6 max-w-md pointer-events-none select-none">
+            🎤 사운드 싱크 기능을 위해 주소창 좌측 자물쇠 아이콘을 눌러 마이크 권한을 허용해 주세요.
           </div>
         )}
 
@@ -694,6 +738,7 @@ export default function AudienceRoom() {
               toggleFullscreen();
               requestWakeLock();
               resetControlsTimer();
+              initAudio(); // Request mic permission and pre-resume AudioContext
             }}
             className="px-8 py-4 rounded-xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all shadow-xl hover:shadow-white/10 flex items-center gap-1.5 cursor-pointer"
           >
