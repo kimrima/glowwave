@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef } from 'react';
+
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 /**
  * Hook to dynamically calculate font size to fit text perfectly on 1 line 
@@ -8,7 +10,7 @@ export default function useFitText(text: string, effect: string, sizePercent: nu
   const containerRef = useRef<HTMLDivElement>(null);
   const [fontSize, setFontSize] = useState<string>('8vw'); // Fallback style before layout computation
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 

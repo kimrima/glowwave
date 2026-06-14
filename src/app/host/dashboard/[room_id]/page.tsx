@@ -887,14 +887,14 @@ export default function HostDashboard() {
         <div className="glass-effect rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 bg-[#12121a] border border-white/5">
           <div className="flex flex-wrap items-center gap-6">
             <div>
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">Event Code</span>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">방 코드</span>
               <span className="text-xl font-mono font-black text-white select-all">{roomId}</span>
             </div>
             
             <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
             
             <div>
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">Live Audience</span>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">실시간 접속자</span>
               <span className="text-xl font-black text-white flex items-baseline gap-1">
                 <span>{activeParticipants}</span>
                 <span className="text-[10px] text-zinc-500 font-bold">/ {room?.max_participants}명</span>
@@ -904,7 +904,7 @@ export default function HostDashboard() {
             <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
 
             <div>
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">Active Plan</span>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">사용 중인 요금제</span>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-white/5 uppercase border border-white/5">
                   {room?.tier}
@@ -918,7 +918,7 @@ export default function HostDashboard() {
                     }}
                     className="text-[9px] font-bold text-indigo-400 hover:text-indigo-300 cursor-pointer transition-colors"
                   >
-                    Upgrade
+                    업그레이드
                   </button>
                 )}
               </div>
@@ -928,7 +928,7 @@ export default function HostDashboard() {
 
             <div className="flex items-center gap-3">
               <div>
-                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">남은 시간 (Time Left)</span>
+                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">남은 시간</span>
                 <span className={`text-xs sm:text-sm font-black font-mono tracking-tight block mt-1 ${
                   timeRemaining === '만료됨' || timeRemaining.startsWith('0시간') || timeRemaining.startsWith('1시간') || timeRemaining.startsWith('2시간')
                     ? 'text-red-500 animate-pulse' 
@@ -956,10 +956,10 @@ export default function HostDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">System Status</span>
+            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">시스템 연결 상태</span>
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-              <span>{channelStatus === 'connected' ? 'CONNECTED' : 'CONNECTING'}</span>
+              <span>{channelStatus === 'connected' ? '연결됨' : '연결 중'}</span>
             </div>
           </div>
         </div>

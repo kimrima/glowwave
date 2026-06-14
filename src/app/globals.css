@@ -197,12 +197,16 @@ body {
 
 /* Direct Animation Classes to guarantee speed slider overrides work */
 .animate-marquee {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
   animation: marquee var(--marquee-duration, 6000ms) linear infinite !important;
 }
 
 .animate-marquee-seamless {
   display: inline-flex;
   white-space: nowrap;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
   animation: marquee-seamless var(--marquee-duration, 6000ms) linear infinite !important;
 }
 

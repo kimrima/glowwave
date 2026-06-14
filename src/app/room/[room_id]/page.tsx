@@ -131,6 +131,7 @@ export default function AudienceRoom() {
   const [isRoomInactive, setIsRoomInactive] = useState(false);
   const [isIOSUserAndNotStandalone, setIsIOSUserAndNotStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   // Technical Refs for Wake Lock & Real-time
   const wakeLockRef = useRef<any>(null);
@@ -144,13 +145,14 @@ export default function AudienceRoom() {
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     
-    // Automatically show Safari hint to iOS users on first render
+    // Check iOS and Standalone Mode on first render
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(ios);
-    const isStandalone = (window.navigator as any).standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+    const isStandaloneMode = (window.navigator as any).standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+    setIsStandalone(isStandaloneMode);
+    
     if (ios) {
-      setShowSafariTip(true);
-      if (!isStandalone) {
+      if (!isStandaloneMode) {
         setIsIOSUserAndNotStandalone(true);
       }
     }
@@ -473,31 +475,33 @@ export default function AudienceRoom() {
       `}</style>
 
       {/* Floating Control Toolbar */}
-      <div className={`absolute top-6 left-6 z-40 flex items-center gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleFullscreen();
-          }}
-          className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
-        >
-          {isFullscreen ? '화면 축소' : '전체화면 전환'}
-        </button>
-        {isIOS && (
+      {!isStandalone && (
+        <div className={`absolute top-6 left-6 z-40 flex items-center gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              setShowSafariTip(true);
+              toggleFullscreen();
             }}
             className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
           >
-            아이폰 사파리 팁
+            {isFullscreen ? '화면 축소' : '전체화면 전환'}
           </button>
-        )}
-      </div>
+          {isIOS && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowSafariTip(true);
+              }}
+              className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
+            >
+              아이폰 사파리 팁
+            </button>
+          )}
+        </div>
+      )}
 
       {/* iOS Safari Home Screen Tooltip */}
-      {showSafariTip && (
+      {showSafariTip && !isStandalone && (
         <div className={`fixed top-6 left-6 right-6 md:left-auto md:w-80 bg-black/95 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-xs text-zinc-300 shadow-2xl z-50 animate-in fade-in slide-in-from-top-4 duration-200 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="flex justify-between items-center mb-2">
             <span className="font-bold text-white flex items-center gap-1.5">
@@ -527,7 +531,6 @@ export default function AudienceRoom() {
 
       {/* Main Display Screen */}
       <div 
-        key={currentPreset.trigger_id || 'audience'}
         ref={containerRef}
         className={`w-full h-full flex items-center justify-center transition-colors duration-300 ${
           isDuoSiren ? 'animate-siren' : currentPreset.effect === 'blink' ? 'animate-blink' : ''
@@ -586,7 +589,7 @@ export default function AudienceRoom() {
             showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
           }`}
         >
-          <span>나도 이런 파티 연출하기</span>
+          <span>나만의 전광판 만들기(무료)</span>
         </button>
 
       </div>
