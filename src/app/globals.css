@@ -176,7 +176,7 @@ body {
   border-radius: 50%;
   background: #ffffff;
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), -310px 0 0 300px rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), -3010px 0 0 3000px rgba(99, 102, 241, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.2);
   transition: all 0.15s ease;
 }
@@ -184,7 +184,7 @@ body {
 .premium-slider::-webkit-slider-thumb:hover {
   background: #ffffff;
   transform: scale(1.08);
-  box-shadow: 0 0 14px rgba(255, 255, 255, 1), -310px 0 0 300px rgba(99, 102, 241, 0.85);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 1), -3010px 0 0 3000px rgba(99, 102, 241, 0.85);
 }
 
 /* 쫀득한 spring animation scale-down active effect for pads */
@@ -198,6 +198,21 @@ body {
 /* Direct Animation Classes to guarantee speed slider overrides work */
 .animate-marquee {
   animation: marquee var(--marquee-duration, 6000ms) linear infinite !important;
+}
+
+.animate-marquee-seamless {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: marquee-seamless var(--marquee-duration, 6000ms) linear infinite !important;
+}
+
+@keyframes marquee-seamless {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-12.5%, 0, 0);
+  }
 }
 
 .animate-blink {

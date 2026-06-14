@@ -91,17 +91,19 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
         } as React.CSSProperties}
       >
         {isMarquee ? (
-          <div className="w-full overflow-hidden whitespace-nowrap flex items-center">
-            <span 
-              className={`animate-marquee inline-block select-none leading-none ${getFontFamilyClass()}`}
+          <div className="w-full overflow-hidden flex items-center">
+            <div 
+              className={`animate-marquee-seamless select-none leading-none flex whitespace-nowrap ${getFontFamilyClass()}`}
               style={{ 
                 color: preset.text_color,
                 fontSize,
                 '--marquee-duration': `${preset.speed || 6000}ms`
               } as React.CSSProperties}
             >
-              {displayText} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {displayText}
-            </span>
+              {[...Array(8)].map((_, i) => (
+                <span key={i} style={{ paddingRight: '4rem' }}>{displayText}</span>
+              ))}
+            </div>
           </div>
         ) : (
           <div 

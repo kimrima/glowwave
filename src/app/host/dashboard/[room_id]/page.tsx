@@ -27,10 +27,10 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 
 const defaults: Preset[] = [
-  { bg_color: '#0B0B0F', text: '앰비언트', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#EF4444', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200, bg_color_secondary: '#000000', font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#0B0B0F', text: '단색', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#000000', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200, bg_color_secondary: '#FFFFFF', font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#FF0000', text: '경찰 사이렌', text_color: '#FFFFFF', effect: 'blink', speed: 150, bg_color_secondary: '#0000FF', font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 10, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000, font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1000, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100 },
 ];
@@ -389,6 +389,19 @@ export default function HostDashboard() {
           changed = true;
         }
 
+        // Migrate index 0: '앰비언트' -> '단색'
+        if (idx === 0 && p.text === '앰비언트') {
+          p.text = '단색';
+          changed = true;
+        }
+
+        // Migrate index 1: '사이키' color update to black/white
+        if (idx === 1 && p.text === '사이키' && p.bg_color === '#EF4444' && p.bg_color_secondary === '#000000') {
+          p.bg_color = '#000000';
+          p.bg_color_secondary = '#FFFFFF';
+          changed = true;
+        }
+
         // Migrate index 2: from gradient to police siren duo-flash
         if (idx === 2 && ((p.effect as string) === 'gradient' || p.text.includes('그라데이션') || p.text.includes('경찰'))) {
           p.bg_color = '#FF0000';
@@ -401,12 +414,21 @@ export default function HostDashboard() {
           changed = true;
         }
 
-        if (idx === 3 && p.text.includes('카운트다운') && p.effect !== 'countdown') {
-          p.effect = 'countdown';
-          p.countdown_seconds = p.countdown_seconds || 10;
-          p.result_text = p.result_text || 'START';
-          p.font_size = 100;
-          changed = true;
+        if (idx === 3 && p.text.includes('카운트다운')) {
+          let updatedToCountdown = false;
+          if (p.effect !== 'countdown') {
+            p.effect = 'countdown';
+            updatedToCountdown = true;
+            changed = true;
+          }
+          if (p.countdown_seconds === 10 || p.countdown_seconds === undefined) {
+            p.countdown_seconds = 5;
+            changed = true;
+          }
+          if (updatedToCountdown) {
+            p.result_text = p.result_text || 'START';
+            p.font_size = 100;
+          }
         }
 
         // Migrate index 5: from equalizer to lucky draw wait roulette
@@ -1016,21 +1038,24 @@ export default function HostDashboard() {
                     {showMiniPreviews && (
                       <div 
                         className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-2xl"
-                        style={{ opacity: preset.bg_color === '#FFFFFF' ? 0.35 : 0.45 }}
+                        style={{ opacity: preset.effect === 'blink' ? 1.0 : (preset.bg_color === '#FFFFFF' ? 0.35 : 0.45) }}
                       >
                         {preset.effect === 'blink' && (
                           <div 
-                            className="w-full h-full" 
+                            className="w-full h-full absolute inset-0 animate-siren" 
                             style={{
-                              backgroundColor: preset.text_color || '#FFFFFF',
-                              animation: `preset-card-flash ${preset.speed || 400}ms infinite`
-                            }}
+                              '--siren-color-1': preset.bg_color,
+                              '--siren-color-2': preset.bg_color_secondary || '#0B0B0F',
+                              '--blink-duration': `${preset.speed || 200}ms`
+                            } as React.CSSProperties}
                           />
                         )}
                         {preset.effect === 'marquee' && (
-                          <div className="w-full h-full flex items-center justify-center select-none text-[11px] font-black tracking-widest whitespace-nowrap" style={{ color: preset.text_color }}>
-                            <div className="animate-marquee inline-block" style={{ '--marquee-duration': `${(preset.speed || 6000) * 1.5}ms` } as any}>
-                              {preset.text} &nbsp;&nbsp;&nbsp;&nbsp; {preset.text}
+                          <div className="w-full h-full flex items-center select-none text-[11px] font-black tracking-widest overflow-hidden" style={{ color: preset.text_color }}>
+                            <div className="animate-marquee-seamless flex whitespace-nowrap" style={{ '--marquee-duration': `${(preset.speed || 6000) * 1.5}ms` } as any}>
+                              {[...Array(8)].map((_, i) => (
+                                <span key={i} style={{ paddingRight: '2rem' }}>{preset.text}</span>
+                              ))}
                             </div>
                           </div>
                         )}
@@ -1684,30 +1709,42 @@ export default function HostDashboard() {
                 {/* 글자 색상 */}
                 <div className="pt-3 border-t border-white/5">
                   <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 색상</label>
-                  <div className="flex gap-3 h-10 items-center">
+                  <div className="grid grid-cols-3 gap-2 h-10 items-center font-medium">
                     <button
                       type="button"
                       onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#FFFFFF' }))}
-                      className={`flex-1 h-full rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      className={`h-full rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                         editingPreset.text_color === '#FFFFFF'
                           ? 'border-white bg-white/10 text-white font-extrabold shadow-sm'
                           : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
                       }`}
                     >
-                      <span className="w-3.5 h-3.5 rounded-full bg-white border border-black/20" />
-                      <span>흰색 글씨</span>
+                      <span className="w-3 h-3 rounded-full bg-white border border-black/20" />
+                      <span>흰색</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#000000' }))}
-                      className={`flex-1 h-full rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                      className={`h-full rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                         editingPreset.text_color === '#000000'
                           ? 'border-white bg-white/10 text-white font-extrabold shadow-sm'
                           : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
                       }`}
                     >
-                      <span className="w-3.5 h-3.5 rounded-full bg-black border border-white/20" />
-                      <span>검은색 글씨</span>
+                      <span className="w-3 h-3 rounded-full bg-black border border-white/20" />
+                      <span>검은색</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: '#FFD700' }))}
+                      className={`h-full rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        editingPreset.text_color === '#FFD700'
+                          ? 'border-white bg-white/10 text-white font-extrabold shadow-sm'
+                          : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      <span className="w-3 h-3 rounded-full bg-[#FFD700] border border-white/10" />
+                      <span>노란색</span>
                     </button>
                   </div>
                 </div>

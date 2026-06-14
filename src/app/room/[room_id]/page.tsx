@@ -541,17 +541,19 @@ export default function AudienceRoom() {
         } as React.CSSProperties}
       >
         {currentPreset.effect === 'marquee' ? (
-          <div className="w-full overflow-hidden whitespace-nowrap flex items-center">
-            <span 
-              className={`animate-marquee inline-block select-none leading-none ${getFontFamilyClass(currentPreset.font_family)}`}
+          <div className="w-full overflow-hidden flex items-center">
+            <div 
+              className={`animate-marquee-seamless select-none leading-none flex whitespace-nowrap ${getFontFamilyClass(currentPreset.font_family)}`}
               style={{ 
                 color: currentPreset.text_color,
                 fontSize,
                 '--marquee-duration': `${currentPreset.speed || 6000}ms`
               } as React.CSSProperties}
             >
-              {displayText} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {displayText}
-            </span>
+              {[...Array(8)].map((_, i) => (
+                <span key={i} style={{ paddingRight: '4rem' }}>{displayText}</span>
+              ))}
+            </div>
           </div>
         ) : (
           <div 
