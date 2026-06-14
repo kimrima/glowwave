@@ -23,6 +23,8 @@ export default function HostSetup() {
   const [selectedTier, setSelectedTier] = useState<TierType>('free');
   const [hostEmail, setHostEmail] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [passcode, setPasscode] = useState('');
+  const [passcodeError, setPasscodeError] = useState('');
   
   // Checkout Modal State
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -49,6 +51,13 @@ export default function HostSetup() {
       return;
     }
     setEmailError('');
+
+    // Passcode Validation
+    if (selectedTier !== 'free' && passcode && (passcode.length < 4 || passcode.length > 6)) {
+      setPasscodeError('비밀번호는 4~6자리의 숫자여야 합니다.');
+      return;
+    }
+    setPasscodeError('');
     setIsProcessing(true);
 
     try {
@@ -59,6 +68,7 @@ export default function HostSetup() {
         body: JSON.stringify({
           email: hostEmail,
           tier: selectedTier,
+          passcode: selectedTier !== 'free' && passcode ? passcode : undefined,
         }),
       });
 
@@ -209,6 +219,38 @@ export default function HostSetup() {
                 <p className="text-[10px] text-zinc-500 mt-2 font-medium">이메일만으로 결제 정보를 식별하고 나중에 복구할 수 있습니다.</p>
               )}
             </div>
+
+            {/* Passcode Input Field (Paid Tiers Only) */}
+            {selectedTier !== 'free' && (
+              <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 animate-in fade-in slide-in-from-top-3 duration-200">
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                  방 입장 비밀번호 (숫자 4~6자리, 선택사항)
+                </label>
+                <input
+                  type="password"
+                  value={passcode}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/[^0-9]/g, '');
+                    if (val.length <= 6) {
+                      setPasscode(val);
+                      setPasscodeError('');
+                    }
+                  }}
+                  placeholder="예: 1234"
+                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white tracking-widest text-center text-sm font-black focus:outline-none focus:border-white font-mono"
+                  maxLength={6}
+                />
+                {passcodeError ? (
+                  <p className="text-xs text-red-400 mt-2">
+                    {passcodeError}
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-zinc-500 mt-2 font-medium">
+                    비밀번호를 설정하면 올바른 번호를 입력한 관객만 전광판에 참여할 수 있습니다. 비워두면 비밀번호 없이 즉시 접속됩니다.
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Tiers List */}
             <div className="flex flex-col gap-3">

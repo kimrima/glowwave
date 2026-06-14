@@ -64,6 +64,7 @@ export interface Room {
   status: 'active' | 'inactive';
   max_participants: number;
   created_at: string;
+  passcode?: string;
 }
 
 export interface Payment {

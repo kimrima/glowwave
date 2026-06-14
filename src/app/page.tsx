@@ -44,6 +44,10 @@ export default function Home() {
   // Active spectator room states for resume/cleanup
   const [lastJoinedRoomId, setLastJoinedRoomId] = useState<string | null>(null);
   const [isAudienceRoomActive, setIsAudienceRoomActive] = useState<boolean>(false);
+  const [recentRooms, setRecentRooms] = useState<any[]>([]);
+
+  const hostRooms = recentRooms.filter(r => r.role === 'host');
+  const audienceRooms = recentRooms.filter(r => r.role === 'audience');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -96,6 +100,37 @@ export default function Home() {
             setLastJoinedRoomId(null);
           });
       }
+
+      // Load recent rooms list
+      const recentRaw = localStorage.getItem('glowwave_recent_rooms');
+      let loaded: any[] = [];
+      if (recentRaw) {
+        try {
+          loaded = JSON.parse(recentRaw);
+        } catch (e) {}
+      }
+      
+      // Fallback migration for existing single room items
+      if (loaded.length === 0) {
+        if (savedActiveId) {
+          loaded.push({
+            roomId: savedActiveId,
+            role: 'host',
+            createdAt: new Date().toISOString()
+          });
+        }
+        if (savedJoinedId && savedJoinedId !== savedActiveId) {
+          loaded.push({
+            roomId: savedJoinedId,
+            role: 'audience',
+            createdAt: new Date().toISOString()
+          });
+        }
+        if (loaded.length > 0) {
+          localStorage.setItem('glowwave_recent_rooms', JSON.stringify(loaded));
+        }
+      }
+      setRecentRooms(loaded);
     }
   }, [activeRoomId]);
 
@@ -186,30 +221,6 @@ export default function Home() {
         }}
       />
 
-      {isRoomStillActive && activeRoomId && activeRoomToken && (
-        <div className="bg-indigo-600 text-white py-2.5 px-6 text-center text-xs font-semibold flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 relative z-50">
-          <span>이전의 활성화된 방이 존재합니다 (방 코드: {activeRoomId})</span>
-          <Link
-            href={`/host/dashboard/${activeRoomId}?token=${activeRoomToken}`}
-            className="px-2.5 py-0.5 rounded bg-white text-indigo-600 hover:bg-zinc-100 transition-all font-bold text-[11px]"
-          >
-            대시보드로 돌아가기 &rarr;
-          </Link>
-        </div>
-      )}
-
-      {isAudienceRoomActive && lastJoinedRoomId && (
-        <div className="bg-emerald-600 text-white py-2.5 px-6 text-center text-xs font-semibold flex items-center justify-center gap-2 animate-in slide-in-from-top duration-300 relative z-50">
-          <span>이전에 참여하던 전광판 방이 존재합니다 (방 코드: {lastJoinedRoomId})</span>
-          <Link
-            href={`/room/${lastJoinedRoomId}`}
-            className="px-2.5 py-0.5 rounded bg-white text-emerald-600 hover:bg-zinc-100 transition-all font-bold text-[11px]"
-          >
-            관객으로 재진입하기 &rarr;
-          </Link>
-        </div>
-      )}
-
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-white/5 bg-[#030305]/60 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -262,6 +273,99 @@ export default function Home() {
               현장 QR 코드 스캔 또는 참여 코드를 통해 수백 명의 관객 스마트폰 화면 색상과 구호를 실시간 동기화하여 압도적인 시각 효과를 연출하세요.
             </p>
           </div>
+
+          {/* Recent Signboard List (Role-separated & Top-positioned) */}
+          {recentRooms.length > 0 && (
+            <div className="max-w-4xl mx-auto mb-12 px-2 animate-in fade-in duration-300">
+              <div className="grid md:grid-cols-2 gap-6">
+                
+                {/* Hosted Rooms Column */}
+                <div className="flex flex-col gap-3">
+                  <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1.5 font-mono text-left">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                    <span>내가 만든 전광판 (Hosted Signboards)</span>
+                  </h3>
+                  <div className="flex flex-col gap-3">
+                    {hostRooms.length > 0 ? (
+                      hostRooms.map((item) => (
+                        <div 
+                          key={item.roomId} 
+                          className="glass-effect rounded-2xl p-4 border border-indigo-500/10 hover:border-indigo-500/20 bg-indigo-500/[0.01] flex items-center justify-between transition-all duration-300"
+                        >
+                          <div className="flex flex-col gap-0.5 text-left min-w-0 pr-3">
+                            <h4 className="text-base font-mono font-black text-white tracking-wider truncate">
+                              {item.roomId}
+                            </h4>
+                            <span className="text-[9px] text-zinc-500 font-mono">
+                              {new Date(item.createdAt).toLocaleDateString('ko-KR', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                          <Link
+                            href={`/host/dashboard/${item.roomId}`}
+                            className="px-3.5 py-2 rounded-xl text-[10px] font-black bg-indigo-600 hover:bg-indigo-500 text-white transition-all flex items-center gap-1 shrink-0"
+                          >
+                            대시보드 &rarr;
+                          </Link>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 text-center text-zinc-500 font-semibold text-[10px] leading-relaxed">
+                        개설한 전광판 내역이 없습니다.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Attended Rooms Column */}
+                <div className="flex flex-col gap-3">
+                  <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 font-mono text-left">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>내가 참여한 전광판 (Attended Signboards)</span>
+                  </h3>
+                  <div className="flex flex-col gap-3">
+                    {audienceRooms.length > 0 ? (
+                      audienceRooms.map((item) => (
+                        <div 
+                          key={item.roomId} 
+                          className="glass-effect rounded-2xl p-4 border border-emerald-500/10 hover:border-emerald-500/20 bg-emerald-500/[0.01] flex items-center justify-between transition-all duration-300"
+                        >
+                          <div className="flex flex-col gap-0.5 text-left min-w-0 pr-3">
+                            <h4 className="text-base font-mono font-black text-white tracking-wider truncate">
+                              {item.roomId}
+                            </h4>
+                            <span className="text-[9px] text-zinc-500 font-mono">
+                              {new Date(item.createdAt).toLocaleDateString('ko-KR', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                          <Link
+                            href={`/room/${item.roomId}`}
+                            className="px-3.5 py-2 rounded-xl text-[10px] font-black bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1 shrink-0"
+                          >
+                            관객뷰 입장 &rarr;
+                          </Link>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 text-center text-zinc-500 font-semibold text-[10px] leading-relaxed">
+                        참여한 전광판 내역이 없습니다.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
 
           {/* Core Side-by-Side Action Cards - Bento Grid Style */}
           <div className="grid md:grid-cols-12 gap-6 max-w-4xl mx-auto mb-10">
@@ -325,6 +429,8 @@ export default function Home() {
               </button>
             </div>
           </div>
+
+
 
         </div>
       </section>

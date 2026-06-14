@@ -125,6 +125,12 @@ export default function AudienceRoom() {
     currentPreset.font_size || 100
   );
 
+  // Passcode States
+  const [passcodeLocked, setPasscodeLocked] = useState(false);
+  const [enteredPasscode, setEnteredPasscode] = useState('');
+  const [passcodeChecking, setPasscodeChecking] = useState(false);
+  const [passcodeErrorMsg, setPasscodeErrorMsg] = useState('');
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isHardCapped, setIsHardCapped] = useState(false);
@@ -183,6 +189,41 @@ export default function AudienceRoom() {
     }
   };
 
+  const handlePasscodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!enteredPasscode) return;
+    setPasscodeChecking(true);
+    setPasscodeErrorMsg('');
+
+    try {
+      const response = await fetch(`/api/room/${roomId}/verify-passcode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode: enteredPasscode })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || '비밀번호가 올바르지 않습니다.');
+      }
+
+      // Success
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`glowwave_passcode_${roomId}`, enteredPasscode);
+      }
+      setPasscodeLocked(false);
+      
+      // Load and connect
+      connectRealtime(roomId, enteredPasscode);
+      requestWakeLock();
+    } catch (err: any) {
+      console.error(err);
+      setPasscodeErrorMsg(err.message || '인증 실패');
+    } finally {
+      setPasscodeChecking(false);
+    }
+  };
+
   const validateAndConnect = async (isReconnect = false) => {
     if (!roomId) return;
     if (!isReconnect) setLoading(true);
@@ -233,12 +274,58 @@ export default function AudienceRoom() {
       }
       setIsHardCapped(false);
 
+      // Verify Passcode if room is password-locked
+      let verifiedPass = '';
+      if (roomData.has_passcode) {
+        const savedPass = localStorage.getItem(`glowwave_passcode_${roomId}`) || '';
+        if (savedPass) {
+          // Verify saved passcode
+          const verifyRes = await fetch(`/api/room/${roomId}/verify-passcode`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ passcode: savedPass })
+          });
+          if (verifyRes.ok) {
+            verifiedPass = savedPass;
+            setPasscodeLocked(false);
+          } else {
+            // Saved passcode is invalid
+            localStorage.removeItem(`glowwave_passcode_${roomId}`);
+            setPasscodeLocked(true);
+            setLoading(false);
+            return;
+          }
+        } else {
+          // No saved passcode
+          setPasscodeLocked(true);
+          setLoading(false);
+          return;
+        }
+      } else {
+        setPasscodeLocked(false);
+      }
+
       if (typeof window !== 'undefined') {
         localStorage.setItem('glowwave_last_joined_room_id', roomId);
+        
+        // Add to recent rooms list
+        try {
+          const recentRaw = localStorage.getItem('glowwave_recent_rooms');
+          let recents = recentRaw ? JSON.parse(recentRaw) : [];
+          recents = recents.filter((r: any) => r.roomId !== roomId);
+          recents.unshift({
+            roomId: roomId,
+            role: 'audience',
+            createdAt: new Date().toISOString()
+          });
+          localStorage.setItem('glowwave_recent_rooms', JSON.stringify(recents.slice(0, 5)));
+        } catch (e) {
+          console.error('Failed to update recent rooms list:', e);
+        }
       }
 
       if (!isReconnect) {
-        connectRealtime(roomId);
+        connectRealtime(roomId, verifiedPass);
         requestWakeLock();
         setLoading(false);
       }
@@ -253,7 +340,7 @@ export default function AudienceRoom() {
     }
   };
 
-  const connectRealtime = (roomCode: string) => {
+  const connectRealtime = (roomCode: string, validatedPasscode?: string) => {
     if (eventSourceRef.current) eventSourceRef.current.close();
     if (supabaseChannelRef.current && supabase) supabase.removeChannel(supabaseChannelRef.current);
 
@@ -284,7 +371,8 @@ export default function AudienceRoom() {
       supabaseChannelRef.current = channel;
     } else {
       console.log('[Room] Connecting to Local SSE Stream');
-      const eventSource = new EventSource(`/api/room/${roomCode}/stream?role=audience&uuid=${audienceUuid}`);
+      const passParam = validatedPasscode ? `&passcode=${encodeURIComponent(validatedPasscode)}` : '';
+      const eventSource = new EventSource(`/api/room/${roomCode}/stream?role=audience&uuid=${audienceUuid}${passParam}`);
       eventSourceRef.current = eventSource;
 
       eventSource.onmessage = (event) => {
@@ -351,8 +439,9 @@ export default function AudienceRoom() {
       if (document.visibilityState === 'visible') {
         await requestWakeLock();
         if (roomId && audienceUuid) {
+          const cachedPass = typeof window !== 'undefined' ? localStorage.getItem(`glowwave_passcode_${roomId}`) || '' : '';
           validateAndConnect(true);
-          connectRealtime(roomId);
+          connectRealtime(roomId, cachedPass);
         }
       } else {
         releaseWakeLock();
@@ -435,6 +524,67 @@ export default function AudienceRoom() {
     );
   }
 
+  if (passcodeLocked) {
+    return (
+      <div className="fixed inset-0 bg-[#0B0B0F] flex items-center justify-center px-6 text-center text-white z-50">
+        <form onSubmit={handlePasscodeSubmit} className="glass-effect p-8 rounded-3xl max-w-sm w-full border border-white/5 flex flex-col gap-6 bg-[#12121a]">
+          <div className="flex flex-col gap-2">
+            <div className="w-12 h-12 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
+              <Lock className="w-5 h-5" />
+            </div>
+            <h2 className="text-lg font-black text-white mt-2">비밀번호가 필요한 방입니다</h2>
+            <p className="text-xs text-zinc-400 leading-relaxed font-semibold">
+              이 방은 입장 비밀번호 보안이 활성화되어 있습니다.<br />
+              방장이 제공한 숫자 4~6자리 비밀번호를 입력해 주세요.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <input
+              type="password"
+              pattern="[0-9]*"
+              inputMode="numeric"
+              value={enteredPasscode}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^0-9]/g, '');
+                if (val.length <= 6) {
+                  setEnteredPasscode(val);
+                  setPasscodeErrorMsg('');
+                }
+              }}
+              placeholder="숫자 비밀번호 입력"
+              className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3.5 text-center text-white tracking-widest text-base font-black focus:outline-none focus:border-indigo-500 uppercase font-mono"
+              maxLength={6}
+              disabled={passcodeChecking}
+              autoFocus
+            />
+            {passcodeErrorMsg && (
+              <p className="text-xs text-red-500 font-bold mt-1">{passcodeErrorMsg}</p>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => router.push('/')}
+              className="flex-1 py-3.5 rounded-xl bg-white/5 text-zinc-400 font-bold hover:bg-white/10 hover:text-white transition-all text-xs border border-white/5 cursor-pointer"
+            >
+              홈으로 가기
+            </button>
+            <button
+              type="submit"
+              disabled={passcodeChecking || enteredPasscode.length < 4}
+              className="flex-1 py-3.5 rounded-xl bg-white text-black font-extrabold text-xs hover:bg-zinc-200 transition-all disabled:opacity-50 cursor-pointer"
+            >
+              {passcodeChecking ? '검증 중...' : '입장하기'}
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
+  // Define a local reference to roomData if needed, but since roomData was block scoped in validateAndConnect, we use a fallback label.
   return (
     <div 
       ref={containerRef} 
@@ -544,18 +694,35 @@ export default function AudienceRoom() {
         } as React.CSSProperties}
       >
         {currentPreset.effect === 'marquee' ? (
-          <div className="w-full overflow-hidden flex items-center">
+          <div className="w-full overflow-hidden flex items-center whitespace-nowrap">
+            {/* Track 1 */}
             <div 
-              className={`animate-marquee-seamless select-none leading-none flex whitespace-nowrap ${getFontFamilyClass(currentPreset.font_family)}`}
+              className={`animate-marquee-seamless select-none leading-none flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(currentPreset.font_family)}`}
               style={{ 
                 color: currentPreset.text_color,
                 fontSize,
                 '--marquee-duration': `${currentPreset.speed || 6000}ms`
               } as React.CSSProperties}
             >
-              {[...Array(8)].map((_, i) => (
-                <span key={i} style={{ paddingRight: '4rem' }}>{displayText}</span>
-              ))}
+              <span>{displayText}</span>
+              <span>{displayText}</span>
+              <span>{displayText}</span>
+              <span>{displayText}</span>
+            </div>
+            {/* Track 2 */}
+            <div 
+              className={`animate-marquee-seamless select-none leading-none flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(currentPreset.font_family)}`}
+              style={{ 
+                color: currentPreset.text_color,
+                fontSize,
+                '--marquee-duration': `${currentPreset.speed || 6000}ms`
+              } as React.CSSProperties}
+              aria-hidden="true"
+            >
+              <span>{displayText}</span>
+              <span>{displayText}</span>
+              <span>{displayText}</span>
+              <span>{displayText}</span>
             </div>
           </div>
         ) : (

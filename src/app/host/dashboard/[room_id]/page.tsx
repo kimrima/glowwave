@@ -96,6 +96,12 @@ export default function HostDashboard() {
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
   const [extendStep, setExtendStep] = useState<'info' | 'payment' | 'success'>('info');
   const [isExtending, setIsExtending] = useState(false);
+
+  // Passcode Settings States
+  const [isPasscodeDrawerOpen, setIsPasscodeDrawerOpen] = useState(false);
+  const [passcodeVal, setPasscodeVal] = useState('');
+  const [isPasscodeUpdating, setIsPasscodeUpdating] = useState(false);
+  const [passcodeUpdateError, setPasscodeUpdateError] = useState('');
   
   // Real-time states
   const [presets, setPresets] = useState<Preset[]>([]);
@@ -142,11 +148,12 @@ export default function HostDashboard() {
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
 
-    // 2. Room expiration ticker (24-hour limit countdown)
+    // 2. Room expiration ticker (6-hour for free, 24-hour for paid)
     if (!room?.created_at) return;
     const calculateTime = () => {
       const createdTime = new Date(room.created_at).getTime();
-      const expireTime = createdTime + 24 * 60 * 60 * 1000;
+      const limitMs = room.tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+      const expireTime = createdTime + limitMs;
       const now = Date.now();
       const diff = expireTime - now;
 
@@ -456,6 +463,24 @@ export default function HostDashboard() {
 
       setPresets(loadedPresets);
 
+      // Save/update to recent rooms list
+      if (typeof window !== 'undefined') {
+        try {
+          const recentRaw = localStorage.getItem('glowwave_recent_rooms');
+          let recents = recentRaw ? JSON.parse(recentRaw) : [];
+          recents = recents.filter((r: any) => r.roomId !== roomId);
+          recents.unshift({
+            roomId: roomId,
+            role: 'host',
+            createdAt: roomData.created_at || new Date().toISOString(),
+            tier: roomData.tier
+          });
+          localStorage.setItem('glowwave_recent_rooms', JSON.stringify(recents.slice(0, 5)));
+        } catch (e) {
+          console.error('Failed to update recent rooms list:', e);
+        }
+      }
+
       if (initialPreset) {
         if (emojiRegex.test(initialPreset.text)) {
           initialPreset.text = initialPreset.text.replace(emojiRegex, '').trim();
@@ -641,6 +666,42 @@ export default function HostDashboard() {
       alert(`오류: ${err.message}`);
     } finally {
       setIsUpgrading(false);
+    }
+  };
+
+  const handleUpdatePasscode = async (newPasscode?: string) => {
+    if (!roomId || !token) return;
+    setIsPasscodeUpdating(true);
+    setPasscodeUpdateError('');
+    try {
+      const res = await fetch(`/api/room/update-passcode`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          room_id: roomId,
+          host_session_token: token,
+          passcode: newPasscode || null
+        })
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || '비밀번호 변경 처리 중 오류가 발생했습니다.');
+      }
+
+      // Sync React state
+      if (room) {
+        setRoom({
+          ...room,
+          passcode: newPasscode || undefined
+        });
+      }
+      setIsPasscodeDrawerOpen(false);
+    } catch (err: any) {
+      console.error(err);
+      setPasscodeUpdateError(err.message || '비밀번호를 변경하지 못했습니다.');
+    } finally {
+      setIsPasscodeUpdating(false);
     }
   };
 
@@ -924,6 +985,31 @@ export default function HostDashboard() {
               </div>
             </div>
 
+            {room && room.tier !== 'free' && (
+              <>
+                <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
+                <div>
+                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">방 비밀번호</span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-[#ffffff]/[0.03] border border-white/5 font-mono">
+                      {room.passcode ? `🔒 ${room.passcode}` : '🔓 설정 없음'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPasscodeVal(room.passcode || '');
+                        setPasscodeUpdateError('');
+                        setIsPasscodeDrawerOpen(true);
+                      }}
+                      className="text-[9px] font-bold text-indigo-400 hover:text-indigo-300 cursor-pointer transition-colors"
+                    >
+                      설정/변경
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
 
             <div className="flex items-center gap-3">
@@ -941,8 +1027,14 @@ export default function HostDashboard() {
               <button
                 type="button"
                 onClick={() => {
-                  setExtendStep('info');
-                  setIsExtendModalOpen(true);
+                  if (room?.tier === 'free') {
+                    setSelectedUpgradeTier(null);
+                    setUpgradeStep('select');
+                    setIsUpgradeModalOpen(true);
+                  } else {
+                    setExtendStep('info');
+                    setIsExtendModalOpen(true);
+                  }
                 }}
                 className={`px-2.5 py-1 rounded text-[10px] font-extrabold transition-all cursor-pointer select-none border ${
                   timeRemaining === '만료됨' || timeRemaining.startsWith('0시간') || timeRemaining.startsWith('1시간') || timeRemaining.startsWith('2시간')
@@ -1249,16 +1341,17 @@ export default function HostDashboard() {
                   <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">글꼴 스타일</span>
                   <div className="grid grid-cols-4 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 h-10 items-center">
                     {[
-                      { val: 'sans-thin', label: '얇은' },
-                      { val: 'sans-thick', label: '두꺼운' },
-                      { val: 'serif', label: '명조' },
-                      { val: 'neon', label: '네온' }
+                      { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', -apple-system, sans-serif", fontWeight: 700 } },
+                      { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
+                      { val: 'serif', label: '클래식명조', style: { fontFamily: "'ChosunMyeongjo', serif", fontWeight: 400 } },
+                      { val: 'neon', label: '스포티', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } }
                     ].map((item) => (
                       <button
                         type="button"
                         key={item.val}
                         onClick={() => setCustomFontFamily(item.val as any)}
-                        className={`h-full rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                        style={item.style}
+                        className={`h-full rounded-lg text-[10px] transition-all cursor-pointer ${
                           customFontFamily === item.val
                             ? 'bg-white text-black font-extrabold shadow-sm'
                             : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
@@ -1754,16 +1847,17 @@ export default function HostDashboard() {
                   <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
                   <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 h-11 items-center font-medium">
                     {[
-                      { val: 'sans-thin', label: '얇은고딕' },
-                      { val: 'sans-thick', label: '두꺼운고딕' },
-                      { val: 'serif', label: '명조' },
-                      { val: 'neon', label: '네온' }
+                      { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', -apple-system, sans-serif", fontWeight: 700 } },
+                      { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
+                      { val: 'serif', label: '클래식명조', style: { fontFamily: "'ChosunMyeongjo', serif", fontWeight: 400 } },
+                      { val: 'neon', label: '스포티', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } }
                     ].map((item) => (
                       <button
                         type="button"
                         key={item.val}
                         onClick={() => setEditingPreset(prev => ({ ...prev!, font_family: item.val as any }))}
-                        className={`h-full rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        style={item.style}
+                        className={`h-full rounded-lg text-xs transition-all cursor-pointer ${
                           (editingPreset.font_family || 'sans-thin') === item.val
                             ? 'bg-white text-black shadow-sm font-extrabold'
                             : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
@@ -2219,6 +2313,86 @@ export default function HostDashboard() {
               </div>
             )}
 
+          </div>
+        </div>
+      )}
+
+      {/* 14. Passcode Settings Modal Dialog */}
+      {isPasscodeDrawerOpen && room && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-effect border border-white/10 rounded-3xl w-full max-w-md p-7 relative z-10 animate-in fade-in zoom-in-95 duration-150 text-left flex flex-col gap-6 text-white bg-[#12121a]">
+            {/* Header */}
+            <div className="flex justify-between items-center pb-4 border-b border-white/10">
+              <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
+                방 비밀번호 설정 (Security Passcode)
+              </h3>
+              {!isPasscodeUpdating && (
+                <button
+                  type="button"
+                  onClick={() => setIsPasscodeDrawerOpen(false)}
+                  className="text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg transition-colors cursor-pointer text-xs font-bold hover:bg-white/5"
+                >
+                  닫기
+                </button>
+              )}
+            </div>
+
+            {/* Form */}
+            <div className="flex flex-col gap-4 text-left">
+              <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                방에 비밀번호를 설정하여 허가되지 않은 사용자의 무단 입장을 방지할 수 있습니다. 4~6자리의 숫자로 입력하세요.
+              </div>
+
+              <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2">입장 비밀번호</label>
+                  <input
+                    type="text"
+                    value={passcodeVal}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      if (val.length <= 6) {
+                        setPasscodeVal(val);
+                      }
+                    }}
+                    placeholder="비밀번호 없이 즉시 입장하려면 비워두세요"
+                    className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-center text-white tracking-widest text-sm font-black focus:outline-none focus:border-indigo-500 uppercase font-mono"
+                    maxLength={6}
+                    disabled={isPasscodeUpdating}
+                  />
+                </div>
+                {passcodeUpdateError && (
+                  <p className="text-xs text-red-400 font-bold">{passcodeUpdateError}</p>
+                )}
+              </div>
+
+              <div className="flex gap-3 mt-2">
+                {room.passcode && (
+                  <button
+                    type="button"
+                    onClick={() => handleUpdatePasscode('')}
+                    disabled={isPasscodeUpdating}
+                    className="flex-1 py-4 rounded-2xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all font-extrabold text-sm border border-red-500/20 disabled:opacity-50"
+                  >
+                    비밀번호 해제
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (passcodeVal && (passcodeVal.length < 4 || passcodeVal.length > 6)) {
+                      setPasscodeUpdateError('비밀번호는 4~6자리의 숫자여야 합니다.');
+                      return;
+                    }
+                    handleUpdatePasscode(passcodeVal);
+                  }}
+                  disabled={isPasscodeUpdating}
+                  className="flex-1 py-4 rounded-2xl bg-white text-black hover:bg-zinc-200 transition-all font-extrabold text-sm disabled:opacity-50"
+                >
+                  {isPasscodeUpdating ? '저장 중...' : '저장 완료'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

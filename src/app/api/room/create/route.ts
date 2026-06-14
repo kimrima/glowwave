@@ -14,7 +14,7 @@ function generateRoomId(): string {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, tier } = body as { email: string; tier: TierType };
+    const { email, tier, passcode } = body as { email: string; tier: TierType; passcode?: string };
 
     if (!email || !tier || !TIER_CONFIGS[tier]) {
       return NextResponse.json({ error: 'Missing or invalid fields' }, { status: 400 });
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     }
 
     // Create room
-    const room = await localDb.createRoom(roomId, email, tier, hostSessionToken);
+    const room = await localDb.createRoom(roomId, email, tier, hostSessionToken, passcode);
     
     // Set status based on Tier. Paid tiers start as 'inactive' until payment success
     if (tier !== 'free') {

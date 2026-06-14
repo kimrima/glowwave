@@ -19,9 +19,18 @@ export async function GET(
     });
   }
 
-  // Extract role and uuid query parameters
+  // Extract role, uuid, and passcode query parameters
   const role = request.nextUrl.searchParams.get('role') || 'audience';
   const uuid = request.nextUrl.searchParams.get('uuid') || '';
+  const passcode = request.nextUrl.searchParams.get('passcode') || '';
+
+  // Enforce passcode check if active on the room and role is audience
+  if (room.passcode && role === 'audience' && room.passcode !== passcode) {
+    return new Response(JSON.stringify({ error: '비밀번호가 올바르지 않거나 입력되지 않았습니다.' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   // Set up ReadableStream for Server-Sent Events (SSE)
   let clientId = '';

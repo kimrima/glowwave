@@ -44,6 +44,7 @@ export async function GET(
       current_participants: localDb.getClientCount(roomId),
       created_at: room.created_at,
       current_state: await localDb.getCurrentState(roomId),
+      has_passcode: !!room.passcode,
     });
   } catch (error: any) {
     console.error('Room status check error:', error);

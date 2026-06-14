@@ -1,4 +1,26 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 @import "tailwindcss";
+
+@font-face {
+  font-family: 'GmarketSansBold';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001-2@1.1/GmarketSansBold.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'LeeSaManRu-Bold';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2205@1.0/LeeSaManRu-Bold.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'ChosunMyeongjo';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/ChosunMyeongjo.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
 
 @theme {
   --color-background: #0B0B0F;
@@ -125,24 +147,24 @@ body {
 }
 
 .font-sign-sans-thin {
-  font-family: var(--font-plus-jakarta-sans), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  font-weight: 600;
-}
-
-.font-sign-sans-thick {
-  font-family: var(--font-black-han-sans), sans-serif;
-  font-weight: 900;
-  display: inline-block;
-  transform: translateY(0.04em);
-}
-
-.font-sign-serif {
-  font-family: var(--font-gowun-batang), Georgia, serif;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   font-weight: 700;
 }
 
+.font-sign-sans-thick {
+  font-family: 'GmarketSansBold', sans-serif;
+  font-weight: 900;
+  display: inline-block;
+  transform: translateY(0.02em);
+}
+
+.font-sign-serif {
+  font-family: 'ChosunMyeongjo', serif;
+  font-weight: normal;
+}
+
 .font-sign-neon {
-  font-family: var(--font-orbitron), sans-serif;
+  font-family: 'LeeSaManRu-Bold', sans-serif;
   font-weight: 900;
   text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor;
 }
@@ -199,14 +221,19 @@ body {
 .animate-marquee {
   will-change: transform;
   transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
   animation: marquee var(--marquee-duration, 6000ms) linear infinite !important;
 }
 
 .animate-marquee-seamless {
   display: inline-flex;
   white-space: nowrap;
+  flex-shrink: 0;
   will-change: transform;
   transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
   animation: marquee-seamless var(--marquee-duration, 6000ms) linear infinite !important;
 }
 
@@ -215,7 +242,7 @@ body {
     transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translate3d(-12.5%, 0, 0);
+    transform: translate3d(-100%, 0, 0);
   }
 }
 

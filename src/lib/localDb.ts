@@ -139,12 +139,19 @@ export const localDb = {
 
   async cleanupExpiredRooms(): Promise<void> {
     if (isSupabaseConfigured() && supabase) {
+      const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       
-      // Perform delete on rooms older than 24 hours
-      const { error: roomErr } = await supabase.from('rooms').delete().lt('created_at', twentyFourHoursAgo);
+      // Perform delete on free rooms older than 6 hours
+      const { error: freeErr } = await supabase.from('rooms').delete().eq('tier', 'free').lt('created_at', sixHoursAgo);
+      if (freeErr) {
+        console.error('[localDb] Supabase cleanup free rooms error:', freeErr);
+      }
+
+      // Perform delete on paid rooms older than 24 hours
+      const { error: roomErr } = await supabase.from('rooms').delete().neq('tier', 'free').lt('created_at', twentyFourHoursAgo);
       if (roomErr) {
-        console.error('[localDb] Supabase cleanup rooms error:', roomErr);
+        console.error('[localDb] Supabase cleanup paid rooms error:', roomErr);
       }
       
       const { error: payErr } = await supabase.from('payments').delete().lt('created_at', twentyFourHoursAgo);
@@ -154,11 +161,11 @@ export const localDb = {
     } else {
       this.loadFromDisk();
       const now = new Date();
-      const expiryPeriodMs = 24 * 60 * 60 * 1000; // 24 hours
       let changed = false;
 
       for (const [roomId, room] of this.rooms.entries()) {
         const createdAt = new Date(room.created_at);
+        const expiryPeriodMs = room.tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
         if (now.getTime() - createdAt.getTime() > expiryPeriodMs) {
           console.log(`[localDb] Expiring room: ${roomId} created at ${room.created_at}`);
           
@@ -186,7 +193,7 @@ export const localDb = {
     }
   },
 
-  async createRoom(roomId: string, email: string, tier: TierType, hostSessionToken: string): Promise<Room> {
+  async createRoom(roomId: string, email: string, tier: TierType, hostSessionToken: string, passcode?: string): Promise<Room> {
     await this.cleanupExpiredRooms();
     const config = TIER_CONFIGS[tier];
     const newRoom: Room = {
@@ -197,6 +204,7 @@ export const localDb = {
       status: tier === 'free' ? 'active' : 'inactive',
       max_participants: config.maxParticipants,
       created_at: new Date().toISOString(),
+      passcode,
     };
 
     if (isSupabaseConfigured() && supabase) {
@@ -208,6 +216,7 @@ export const localDb = {
         status: newRoom.status,
         max_participants: config.maxParticipants,
         created_at: newRoom.created_at,
+        passcode,
       });
       if (error) {
         console.error('[localDb] Supabase createRoom error:', error);
@@ -390,12 +399,15 @@ export const localDb = {
     const config = TIER_CONFIGS[newTier];
     if (!config) return false;
 
+    const nowISO = new Date().toISOString();
+
     if (isSupabaseConfigured() && supabase) {
       const { error } = await supabase
         .from('rooms')
         .update({ 
           tier: newTier, 
-          max_participants: config.maxParticipants 
+          max_participants: config.maxParticipants,
+          created_at: nowISO
         })
         .eq('id', roomId);
       if (error) {
@@ -409,6 +421,7 @@ export const localDb = {
       if (room) {
         room.tier = newTier;
         room.max_participants = config.maxParticipants;
+        room.created_at = nowISO;
         this.saveToDisk();
         return true;
       }
@@ -533,5 +546,28 @@ export const localDb = {
         client.controller.enqueue(encoder.encode(payload));
       } catch (err) {}
     });
+  },
+
+  async updateRoomPasscode(roomId: string, passcode?: string): Promise<boolean> {
+    if (isSupabaseConfigured() && supabase) {
+      const { error } = await supabase
+        .from('rooms')
+        .update({ passcode })
+        .eq('id', roomId);
+      if (error) {
+        console.error('[localDb] Supabase updateRoomPasscode error:', error);
+        return false;
+      }
+      return true;
+    } else {
+      this.loadFromDisk();
+      const room = this.rooms.get(roomId);
+      if (room) {
+        room.passcode = passcode;
+        this.saveToDisk();
+        return true;
+      }
+      return false;
+    }
   }
 };

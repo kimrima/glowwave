@@ -90,18 +90,35 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
         } as React.CSSProperties}
       >
         {isMarquee ? (
-          <div className="w-full overflow-hidden flex items-center">
+          <div className="w-full overflow-hidden flex items-center whitespace-nowrap">
+            {/* Track 1 */}
             <div 
-              className={`animate-marquee-seamless select-none leading-none flex whitespace-nowrap ${getFontFamilyClass()}`}
+              className={`animate-marquee-seamless select-none leading-none flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass()}`}
               style={{ 
                 color: preset.text_color,
                 fontSize,
                 '--marquee-duration': `${preset.speed || 6000}ms`
               } as React.CSSProperties}
             >
-              {[...Array(8)].map((_, i) => (
-                <span key={i} style={{ paddingRight: '4rem' }}>{displayText}</span>
-              ))}
+              <span>{displayText}</span>
+              <span>{displayText}</span>
+              <span>{displayText}</span>
+              <span>{displayText}</span>
+            </div>
+            {/* Track 2 */}
+            <div 
+              className={`animate-marquee-seamless select-none leading-none flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass()}`}
+              style={{ 
+                color: preset.text_color,
+                fontSize,
+                '--marquee-duration': `${preset.speed || 6000}ms`
+              } as React.CSSProperties}
+              aria-hidden="true"
+            >
+              <span>{displayText}</span>
+              <span>{displayText}</span>
+              <span>{displayText}</span>
+              <span>{displayText}</span>
             </div>
           </div>
         ) : (
