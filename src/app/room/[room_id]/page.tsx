@@ -135,6 +135,7 @@ export default function AudienceRoom() {
   const [passcodeChecking, setPasscodeChecking] = useState(false);
   const [passcodeErrorMsg, setPasscodeErrorMsg] = useState('');
   const [wakeLockError, setWakeLockError] = useState(false);
+  const [showLowPowerToast, setShowLowPowerToast] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -192,6 +193,10 @@ export default function AudienceRoom() {
         await document.exitFullscreen();
         setIsFullscreen(false);
       }
+      // Re-request wake lock since entering/exiting fullscreen can reset it
+      setTimeout(() => {
+        requestWakeLock();
+      }, 300);
     } catch (err) {
       console.warn('Fullscreen API block:', err);
       setShowSafariTip(true);
@@ -431,10 +436,12 @@ export default function AudienceRoom() {
         wakeLockRef.current = lock;
         console.log('[WakeLock] Screen Wake Lock is active');
         setWakeLockError(false);
+        setShowLowPowerToast(false);
       } catch (err: any) {
         console.warn(`[WakeLock] Failed to lock screen sleep: ${err.message}`);
         if (!wakeLockRef.current) {
           setWakeLockError(true);
+          setShowLowPowerToast(true);
         }
       }
     }
@@ -451,6 +458,29 @@ export default function AudienceRoom() {
       }
     }
   };
+
+  // Toast timer auto-dismissal
+  useEffect(() => {
+    if (showLowPowerToast) {
+      const timer = setTimeout(() => {
+        setShowLowPowerToast(false);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [showLowPowerToast]);
+
+  // Robust interaction-based wake lock re-requesting
+  useEffect(() => {
+    const handleGesture = () => {
+      requestWakeLock();
+    };
+    window.addEventListener('click', handleGesture);
+    window.addEventListener('touchstart', handleGesture);
+    return () => {
+      window.removeEventListener('click', handleGesture);
+      window.removeEventListener('touchstart', handleGesture);
+    };
+  }, []);
 
   useEffect(() => {
     if (audienceUuid) {
@@ -892,6 +922,29 @@ export default function AudienceRoom() {
           </button>
         </div>
       </div>
+      )}
+
+      {/* Floating Low Power Mode Warning Toast */}
+      {showLowPowerToast && (
+        <div className="fixed top-[calc(env(safe-area-inset-top,0px)+16px)] left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm bg-amber-500/10 backdrop-blur-md border border-amber-500/20 rounded-2xl p-4 shadow-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="p-1 rounded-lg bg-amber-500/20 text-amber-300 shrink-0">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div className="flex-1 text-left">
+            <h4 className="text-xs font-bold text-amber-300">화면 꺼짐 안내</h4>
+            <p className="text-[10px] text-zinc-300 font-medium leading-relaxed mt-0.5">
+              기기의 <strong>저전력 모드</strong>가 켜져 있으면 화면이 꺼질 수 있습니다. 꺼짐 방지를 위해 설정을 해제해 주세요.
+            </p>
+          </div>
+          <button 
+            onClick={() => setShowLowPowerToast(false)}
+            className="text-zinc-500 hover:text-white font-bold text-xs p-1"
+          >
+            ✕
+          </button>
+        </div>
       )}
     </div>
   );

@@ -2136,30 +2136,65 @@ export default function HostDashboard() {
             {/* Content Switcher */}
             {upgradeStep === 'select' && (
               <div className="flex flex-col gap-5 text-left">
-                <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl">
-                  <span className="font-extrabold text-indigo-300 block mb-1">안내</span>
-                  인원 제한을 늘리기 위해 플랜을 즉시 올릴 수 있습니다.<br />
-                  업그레이드 후에도 <strong className="text-white">기존 입장 QR 코드 및 링크는 변경 없이 그대로 유지</strong>되며 실시간으로 한도가 확장됩니다.
-                </div>
+                {room?.tier === 'free' ? (
+                  <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent p-5 flex flex-col gap-3.5">
+                    {/* Decorative glow background */}
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+                    
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <div className="flex items-center gap-2 text-indigo-300 text-xs font-black uppercase tracking-wider">
+                        <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                        무료 플랜 제한 안내
+                      </div>
+                      <span className="text-[10px] text-zinc-400 font-bold bg-white/5 px-2 py-0.5 rounded-full">6시간 제한</span>
+                    </div>
+
+                    <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-medium">
+                      현재 기본(무료) 플랜을 사용 중이며, <span className="text-white font-bold underline decoration-indigo-400 decoration-2 underline-offset-4">시간 연장이 불가능</span>합니다. 지속적인 이용을 위해 요금제 업그레이드가 필요합니다.
+                    </p>
+
+                    <div className="pt-2 mt-1 border-t border-white/5 flex flex-col gap-2">
+                      <span className="text-[11px] font-black text-indigo-300 tracking-wider uppercase">업그레이드 혜택</span>
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px] font-semibold text-zinc-300">
+                        <div className="flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          <span>24시간 사용 연장</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          <span>방 비밀번호 잠금</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          <span>커스텀 색상 팔레트</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          <span>다중 당첨자 추첨 (최대 10명)</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 col-span-2 mt-0.5 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1.5 rounded-lg">
+                          <svg className="w-3.5 h-3.5 text-indigo-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          <span className="text-zinc-300">참여자 정원 증설 (Lite: 60명 / Pro: 250명)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 p-4 flex flex-col gap-2">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 rounded-full blur-xl pointer-events-none" />
+                    <div className="flex items-center gap-1.5 text-indigo-300 text-xs font-black uppercase tracking-wider">
+                      💡 실시간 한도 확장
+                    </div>
+                    <p className="text-xs text-zinc-300 leading-normal">
+                      인원 제한을 늘리기 위해 플랜을 즉시 올릴 수 있으며, 업그레이드 후에도 <strong className="text-white">기존 입장 QR 코드 및 링크는 변경 없이 그대로 유지</strong>됩니다.
+                    </p>
+                  </div>
+                )}
 
                 {room?.tier === 'free' && (
-                  <div className="text-xs sm:text-sm text-zinc-350 leading-relaxed bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex flex-col gap-2">
-                    <span className="font-extrabold text-amber-400 flex items-center gap-1">
-                      💡 무료 플랜 제한 안내
-                    </span>
-                    <p className="font-medium text-zinc-300">
-                      기본(무료) 플랜은 6시간 사용 시간 제한 및 <strong className="text-white">시간 연장이 불가능</strong>하며, 지속 사용을 위해서는 요금제 업그레이드가 필요합니다.
-                    </p>
-                    <div className="border-t border-white/5 pt-2 mt-1">
-                      <strong className="text-indigo-300 block mb-1">업그레이드 시 추가되는 혜택:</strong>
-                      <ul className="list-disc list-inside space-y-1 text-zinc-300 text-[11px] font-semibold">
-                        <li>방 사용 가능 시간 <strong className="text-white">24시간</strong> 제공 및 지속 연장 가능</li>
-                        <li>비밀번호로 무단 입장을 방지하는 <strong className="text-white">방 비밀번호 설정</strong></li>
-                        <li>원하는 컬러를 자유롭게 적용하는 <strong className="text-white">커스텀 색상 팔레트</strong></li>
-                        <li>추첨 시 <strong className="text-white">다중 추첨인원 지정</strong> (최대 10명)</li>
-                        <li>동시 참여자 정원 증설 (Lite: 100명, Pro: 500명)</li>
-                      </ul>
-                    </div>
+                  <div className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.02] border border-white/5 text-[10px] text-zinc-400 leading-normal">
+                    <span>💡</span>
+                    <span>업그레이드 후에도 <strong>입장용 QR 코드와 링크 주소는 동일하게 유지</strong>됩니다.</span>
                   </div>
                 )}
                 
