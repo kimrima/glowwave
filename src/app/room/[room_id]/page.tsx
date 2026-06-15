@@ -105,7 +105,10 @@ export default function AudienceRoom() {
   const isCountdown = currentPreset.effect === 'countdown';
   const isLuckyDraw = currentPreset.effect === 'luckydraw';
   const isLuckyDrawWait = currentPreset.effect === 'luckydraw_wait';
-  const isWinner = isLuckyDraw && currentPreset.lucky_draw_winner_id === audienceUuid;
+  const isWinner = isLuckyDraw && (
+    currentPreset.lucky_draw_winner_id === audienceUuid ||
+    (currentPreset.lucky_draw_winner_ids && currentPreset.lucky_draw_winner_ids.includes(audienceUuid))
+  );
   const isBlink = currentPreset.effect === 'blink';
   const isDuoSiren = (isBlink && !!currentPreset.bg_color_secondary) || isWinner;
 
@@ -130,6 +133,7 @@ export default function AudienceRoom() {
   const [enteredPasscode, setEnteredPasscode] = useState('');
   const [passcodeChecking, setPasscodeChecking] = useState(false);
   const [passcodeErrorMsg, setPasscodeErrorMsg] = useState('');
+  const [wakeLockError, setWakeLockError] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -150,6 +154,7 @@ export default function AudienceRoom() {
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
+      requestWakeLock();
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     
@@ -322,7 +327,7 @@ export default function AudienceRoom() {
             role: 'audience',
             createdAt: new Date().toISOString()
           });
-          localStorage.setItem('glowwave_recent_rooms', JSON.stringify(recents.slice(0, 5)));
+          localStorage.setItem('glowwave_recent_rooms', JSON.stringify(recents.slice(0, 50)));
         } catch (e) {
           console.error('Failed to update recent rooms list:', e);
         }
@@ -414,10 +419,17 @@ export default function AudienceRoom() {
   const requestWakeLock = async () => {
     if ('wakeLock' in navigator) {
       try {
+        if (wakeLockRef.current) {
+          try {
+            await wakeLockRef.current.release();
+          } catch (e) {}
+        }
         wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
         console.log('[WakeLock] Screen Wake Lock is active');
+        setWakeLockError(false);
       } catch (err: any) {
         console.warn(`[WakeLock] Failed to lock screen sleep: ${err.message}`);
+        setWakeLockError(true);
       }
     }
   };
@@ -629,9 +641,9 @@ export default function AudienceRoom() {
       `}</style>
 
       {/* Floating Control Toolbar */}
-      {!isStandalone && (
-        <div className={`absolute top-[calc(env(safe-area-inset-top,0px)+24px)] left-6 z-40 flex items-center gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-          {!isIOS ? (
+      <div className={`absolute top-[calc(env(safe-area-inset-top,0px)+24px)] left-6 z-40 flex flex-wrap items-center gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        {!isStandalone && (
+          !isIOS ? (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -651,9 +663,14 @@ export default function AudienceRoom() {
             >
               아이폰 전체화면 가이드
             </button>
-          )}
-        </div>
-      )}
+          )
+        )}
+        {wakeLockError && (
+          <span className="px-3.5 py-2 rounded-xl bg-amber-500/20 backdrop-blur-md border border-amber-500/30 text-[9px] text-amber-300 font-extrabold flex items-center gap-1.5 select-none shadow-lg animate-pulse">
+            ⚠️ 저전력 모드로 인해 화면이 꺼질 수 있습니다.
+          </span>
+        )}
+      </div>
 
       {/* iOS Safari/Chrome Home Screen Tooltip */}
       {showSafariTip && !isStandalone && (
@@ -700,7 +717,9 @@ export default function AudienceRoom() {
       {/* Main Display Screen */}
       <div 
         ref={containerRef}
-        className={`w-full h-full flex items-center justify-center transition-colors duration-300 ${
+        className={`w-full h-full flex items-center justify-center ${
+          (isDuoSiren || currentPreset.effect === 'blink') ? '' : 'transition-colors duration-300'
+        } ${
           isDuoSiren ? 'animate-siren' : currentPreset.effect === 'blink' ? 'animate-blink' : ''
         }`}
         style={{ 
@@ -793,6 +812,11 @@ export default function AudienceRoom() {
           </div>
           
           <h2 className="text-xl font-black text-white mb-2">전광판 동기화 준비 완료</h2>
+          
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-[10px] text-amber-300 leading-normal max-w-xs text-left mb-6 font-semibold flex items-start gap-1.5 z-10 animate-in fade-in duration-200">
+            <span className="shrink-0 mt-0.5">⚠️</span>
+            <span>스마트폰의 <b>[저전력 모드]</b>가 켜져 있으면 화면 꺼짐 방지가 정상 작동하지 않습니다. 원활한 연출을 위해 저전력 모드를 해제해 주세요.</span>
+          </div>
           
           {isIOSUserAndNotStandalone ? (
             <div className="glass-effect p-6 rounded-2xl max-w-sm border border-white/5 bg-[#12121a] mb-6 flex flex-col gap-4 text-left font-sans">

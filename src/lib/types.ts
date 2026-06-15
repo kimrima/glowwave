@@ -12,7 +12,9 @@ export interface Preset {
   result_text?: string;
   trigger_id?: string;
   bg_color_secondary?: string; // For duo-color flashing
-  lucky_draw_winner_id?: string; // Persistent UUID of the winner
+  lucky_draw_winner_id?: string; // Persistent UUID of the winner (backward compatible)
+  lucky_draw_winner_ids?: string[]; // Multiple winner UUIDs
+  lucky_draw_count?: number; // Desired number of winners
 }
 
 export type TierType = 'free' | 'lite' | 'pro' | 'max';

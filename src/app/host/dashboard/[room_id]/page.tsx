@@ -21,7 +21,8 @@ import {
   CreditCard,
   Plus,
   Trash2,
-  Slash
+  Slash,
+  Lock
 } from 'lucide-react';
 import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -29,11 +30,11 @@ import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 
 const defaults: Preset[] = [
   { bg_color: '#0B0B0F', text: '단색', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#7C3AED', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1000, font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#3B82F6', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1000, font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#FF0000', text: '경찰 사이렌', text_color: '#FFFFFF', effect: 'blink', speed: 150, bg_color_secondary: '#0000FF', font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1000, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100, lucky_draw_count: 1 },
   { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1000, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
 ];
 
 interface MiniCountdownPreviewProps {
@@ -415,8 +416,8 @@ export default function HostDashboard() {
             delete p.bg_color_secondary;
             needsUpdate = true;
           }
-          if (p.bg_color !== '#7C3AED') {
-            p.bg_color = '#7C3AED';
+          if (p.bg_color !== '#3B82F6') {
+            p.bg_color = '#3B82F6'; // New default blue color
             needsUpdate = true;
           }
           if (p.speed !== 1000) {
@@ -440,34 +441,44 @@ export default function HostDashboard() {
           changed = true;
         }
 
-        if (idx === 3 && p.text.includes('카운트다운')) {
-          let updatedToCountdown = false;
-          if (p.effect !== 'countdown') {
-            p.effect = 'countdown';
-            updatedToCountdown = true;
-            changed = true;
+        // Migrate index 3: If it was the old default '카운트다운' or equalizer/raffle, change to new default '당첨!' (Lucky draw wait)
+        if (idx === 3 && (p.text === '카운트다운' || p.text === '당첨!' || (p.effect as string) === 'equalizer' || p.text.includes('사운드') || p.text.includes('이퀄라이저') || p.text.includes('당첨'))) {
+          let needsUpdate = false;
+          if (p.text !== '당첨!') {
+            p.text = '당첨!';
+            needsUpdate = true;
           }
-          if (p.countdown_seconds === 10 || p.countdown_seconds === undefined) {
-            p.countdown_seconds = 5;
-            changed = true;
-          }
-          if (updatedToCountdown) {
-            p.result_text = p.result_text || 'START';
+          if (p.effect !== 'luckydraw_wait') {
+            p.effect = 'luckydraw_wait';
+            p.bg_color = '#0B0B0F';
+            p.text_color = '#FFD700';
+            p.speed = 1000;
+            p.bg_color_secondary = '#FFD700';
+            p.result_text = '아쉽네요! 다음 기회에..';
             p.font_size = 100;
+            needsUpdate = true;
           }
+          if (needsUpdate) changed = true;
         }
 
-        // Migrate index 5: from equalizer to lucky draw wait roulette
-        if (idx === 5 && ((p.effect as string) === 'equalizer' || p.text.includes('사운드') || p.text.includes('이퀄라이저') || p.text.includes('당첨'))) {
-          p.bg_color = '#0B0B0F';
-          p.text = '당첨!';
-          p.text_color = '#FFD700';
-          p.effect = 'luckydraw_wait';
-          p.speed = 1000;
-          p.bg_color_secondary = '#FFD700';
-          p.result_text = '아쉽네요! 다음 기회에..';
-          p.font_size = 100;
-          changed = true;
+        // Migrate index 5: If it was the old default '당첨!' (or old equalizer), change to new default '카운트다운'
+        if (idx === 5 && (p.text === '당첨!' || p.text === '카운트다운' || (p.effect as string) === 'equalizer' || p.text.includes('사운드') || p.text.includes('이퀄라이저'))) {
+          let needsUpdate = false;
+          if (p.text !== '카운트다운') {
+            p.text = '카운트다운';
+            needsUpdate = true;
+          }
+          if (p.effect !== 'countdown') {
+            p.effect = 'countdown';
+            p.bg_color = '#8B5CF6';
+            p.text_color = '#FFFFFF';
+            p.speed = 1000;
+            p.countdown_seconds = 5;
+            p.result_text = 'START';
+            p.font_size = 100;
+            needsUpdate = true;
+          }
+          if (needsUpdate) changed = true;
         }
 
         if (changed) {
@@ -494,7 +505,7 @@ export default function HostDashboard() {
             createdAt: roomData.created_at || new Date().toISOString(),
             tier: roomData.tier
           });
-          localStorage.setItem('glowwave_recent_rooms', JSON.stringify(recents.slice(0, 5)));
+          localStorage.setItem('glowwave_recent_rooms', JSON.stringify(recents.slice(0, 50)));
         } catch (e) {
           console.error('Failed to update recent rooms list:', e);
         }
@@ -813,13 +824,18 @@ export default function HostDashboard() {
       candidateUuids.push('mock-winner-uuid-' + Math.floor(Math.random() * 1000));
     }
 
-    const randomIndex = Math.floor(Math.random() * candidateUuids.length);
-    const winnerId = candidateUuids[randomIndex];
+    // Determine the number of winners to draw
+    const drawCount = currentBroadcastPreset.lucky_draw_count || 1;
+    
+    // Draw unique winners
+    const shuffled = [...candidateUuids].sort(() => 0.5 - Math.random());
+    const winnerIds = shuffled.slice(0, drawCount);
 
     const drawResultPreset: Preset = {
       ...currentBroadcastPreset,
       effect: 'luckydraw',
-      lucky_draw_winner_id: winnerId,
+      lucky_draw_winner_id: winnerIds[0], // backward compatibility for first winner
+      lucky_draw_winner_ids: winnerIds,
       trigger_id: Date.now().toString()
     };
 
@@ -1065,6 +1081,20 @@ export default function HostDashboard() {
               >
                 시간 연장
               </button>
+
+              {room?.tier === 'free' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedUpgradeTier(null);
+                    setUpgradeStep('select');
+                    setIsUpgradeModalOpen(true);
+                  }}
+                  className="px-2.5 py-1 rounded text-[10px] font-extrabold transition-all cursor-pointer select-none border border-indigo-500/30 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-white"
+                >
+                  요금제 업그레이드
+                </button>
+              )}
             </div>
           </div>
 
@@ -1447,13 +1477,18 @@ export default function HostDashboard() {
             </div>
 
             {currentBroadcastPreset.effect === 'luckydraw_wait' && (
-              <button
-                type="button"
-                onClick={handleDrawWinner}
-                className="w-full mt-4 py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black text-xs tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl shadow-amber-500/20 animate-bounce cursor-pointer border border-amber-300"
-              >
-                <span>결과 발표 (추첨 완료)</span>
-              </button>
+              <div className="w-full mt-4 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleDrawWinner}
+                  className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black text-xs tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl shadow-amber-500/20 animate-bounce cursor-pointer border border-amber-300"
+                >
+                  <span>결과 발표 (추첨 완료)</span>
+                </button>
+                <p className="text-[10px] text-zinc-400 text-center leading-relaxed font-semibold">
+                  ⚠️ [결과 발표] 버튼을 누르면 현재 접속해 있는 관객 중 <b>단 1명만</b> 무작위로 당첨자로 선정되어 해당 관객 스마트폰 화면에 당첨 문구가 나타나며, 나머지 관객 화면에는 꽝 문구가 나타납니다.
+                </p>
+              </div>
             )}
           </div>
 
@@ -1838,6 +1873,36 @@ export default function HostDashboard() {
                         placeholder="아쉽네요! 다음 기회에.."
                       />
                     </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">당첨 인원 수 (Winners Count)</label>
+                      {room?.tier === 'free' ? (
+                        <div className="flex items-center gap-2 bg-black/40 border border-white/5 rounded-lg px-4 py-2.5 text-xs text-zinc-500 font-semibold select-none">
+                          <Lock className="w-3.5 h-3.5" />
+                          <span>1명 (무료 테스트 플랜 고정)</span>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-full border border-white/5">
+                          {[1, 2, 3, 5, 10].map((num) => (
+                            <button
+                              type="button"
+                              key={num}
+                              onClick={() => setEditingPreset(prev => ({ ...prev!, lucky_draw_count: num }))}
+                              className={`py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                                (editingPreset.lucky_draw_count || 1) === num
+                                  ? 'bg-white text-black font-extrabold shadow-sm'
+                                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                              }`}
+                            >
+                              {num}명
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {room?.tier === 'free' && (
+                        <p className="text-[9px] text-zinc-500 mt-1 font-medium">💡 기본형(Lite) 이상의 요금제로 업그레이드하면 최대 10명까지 다중 추첨이 가능합니다.</p>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -2076,6 +2141,27 @@ export default function HostDashboard() {
                   인원 제한을 늘리기 위해 플랜을 즉시 올릴 수 있습니다.<br />
                   업그레이드 후에도 <strong className="text-white">기존 입장 QR 코드 및 링크는 변경 없이 그대로 유지</strong>되며 실시간으로 한도가 확장됩니다.
                 </div>
+
+                {room?.tier === 'free' && (
+                  <div className="text-xs sm:text-sm text-zinc-350 leading-relaxed bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex flex-col gap-2">
+                    <span className="font-extrabold text-amber-400 flex items-center gap-1">
+                      💡 무료 플랜 제한 안내
+                    </span>
+                    <p className="font-medium text-zinc-300">
+                      기본(무료) 플랜은 6시간 사용 시간 제한 및 <strong className="text-white">시간 연장이 불가능</strong>하며, 지속 사용을 위해서는 요금제 업그레이드가 필요합니다.
+                    </p>
+                    <div className="border-t border-white/5 pt-2 mt-1">
+                      <strong className="text-indigo-300 block mb-1">업그레이드 시 추가되는 혜택:</strong>
+                      <ul className="list-disc list-inside space-y-1 text-zinc-300 text-[11px] font-semibold">
+                        <li>방 사용 가능 시간 <strong className="text-white">24시간</strong> 제공 및 지속 연장 가능</li>
+                        <li>비밀번호로 무단 입장을 방지하는 <strong className="text-white">방 비밀번호 설정</strong></li>
+                        <li>원하는 컬러를 자유롭게 적용하는 <strong className="text-white">커스텀 색상 팔레트</strong></li>
+                        <li>추첨 시 <strong className="text-white">다중 추첨인원 지정</strong> (최대 10명)</li>
+                        <li>동시 참여자 정원 증설 (Lite: 100명, Pro: 500명)</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
                 
                 <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">업그레이드할 플랜 선택</span>
                 <div className="flex flex-col gap-3">

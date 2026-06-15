@@ -50,7 +50,8 @@ export default function RecoveryPage() {
       }
 
       setMessage(data.message);
-      setRecoveredRooms(data.rooms || []);
+      const sortedRooms = (data.rooms || []).sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setRecoveredRooms(sortedRooms);
       setHasSearched(true);
     } catch (err: any) {
       console.error(err);
@@ -67,7 +68,6 @@ export default function RecoveryPage() {
       <header className="border-b border-white/5 bg-[#0B0B0F]/80 backdrop-blur-md pt-[calc(env(safe-area-inset-top,0px)+12px)]">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-white">
-            <Sparkles className="w-5 h-5 text-indigo-400" />
             <span>GlowWave</span>
           </Link>
           <Link href="/" className="text-xs text-zinc-400 hover:text-white flex items-center gap-1.5 font-medium transition-all">

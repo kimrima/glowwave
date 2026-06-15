@@ -45,9 +45,28 @@ export default function Home() {
   const [lastJoinedRoomId, setLastJoinedRoomId] = useState<string | null>(null);
   const [isAudienceRoomActive, setIsAudienceRoomActive] = useState<boolean>(false);
   const [recentRooms, setRecentRooms] = useState<any[]>([]);
+  
+  interface RoomDetail {
+    tier: string;
+    createdAt: string;
+    isExpired: boolean;
+    timeLeftText: string;
+    loaded: boolean;
+  }
+  const [roomDetails, setRoomDetails] = useState<Record<string, RoomDetail>>({});
 
-  const hostRooms = recentRooms.filter(r => r.role === 'host');
-  const audienceRooms = recentRooms.filter(r => r.role === 'audience');
+  const sortedRecentRooms = [...recentRooms].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  
+  const activeRecentRooms = sortedRecentRooms.filter(room => {
+    const detail = roomDetails[room.roomId];
+    if (detail && detail.loaded && detail.isExpired) {
+      return false;
+    }
+    return true;
+  });
+
+  const hostRooms = activeRecentRooms.filter(r => r.role === 'host');
+  const audienceRooms = activeRecentRooms.filter(r => r.role === 'audience');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -133,6 +152,75 @@ export default function Home() {
       setRecentRooms(loaded);
     }
   }, [activeRoomId]);
+
+  useEffect(() => {
+    if (recentRooms.length === 0) return;
+
+    const uniqueRoomIds = Array.from(new Set(recentRooms.map(r => r.roomId)));
+
+    const fetchStatuses = async () => {
+      const results: Record<string, RoomDetail> = {};
+      
+      await Promise.all(
+        uniqueRoomIds.map(async (id) => {
+          try {
+            const res = await fetch(`/api/room/${id}/status`);
+            if (res.ok) {
+              const data = await res.json();
+              
+              const createdTime = new Date(data.created_at).getTime();
+              const limitMs = data.tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+              const expireTime = createdTime + limitMs;
+              const diff = expireTime - Date.now();
+              
+              let timeLeftText = '';
+              let isExpired = false;
+              if (diff <= 0 || data.status !== 'active') {
+                isExpired = true;
+                timeLeftText = '만료됨';
+              } else {
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                if (hours > 0) {
+                  timeLeftText = `${hours}시간 ${minutes}분 남음`;
+                } else {
+                  timeLeftText = `${minutes}분 남음`;
+                }
+              }
+
+              results[id] = {
+                tier: data.tier,
+                createdAt: data.created_at,
+                isExpired,
+                timeLeftText,
+                loaded: true
+              };
+            } else {
+              results[id] = {
+                tier: 'free',
+                createdAt: new Date().toISOString(),
+                isExpired: true,
+                timeLeftText: '만료됨',
+                loaded: true
+              };
+            }
+          } catch (e) {
+            results[id] = {
+              tier: 'free',
+              createdAt: new Date().toISOString(),
+              isExpired: true,
+              timeLeftText: '만료됨',
+              loaded: true
+            };
+          }
+        })
+      );
+
+      setRoomDetails(prev => ({ ...prev, ...results }));
+    };
+
+    fetchStatuses();
+  }, [recentRooms]);
 
   const cleanExpiredRoom = (id: string) => {
     localStorage.removeItem('glowwave_active_host_room_id');
@@ -286,32 +374,63 @@ export default function Home() {
                   </h3>
                   <div className="flex flex-col gap-3">
                     {hostRooms.length > 0 ? (
-                      hostRooms.map((item) => (
-                        <div 
-                          key={item.roomId} 
-                          className="glass-effect rounded-2xl p-4 border border-indigo-500/10 hover:border-indigo-500/20 bg-indigo-500/[0.01] flex items-center justify-between transition-all duration-300"
-                        >
-                          <div className="flex flex-col gap-0.5 text-left min-w-0 pr-3">
-                            <h4 className="text-base font-mono font-black text-white tracking-wider truncate">
-                              {item.roomId}
-                            </h4>
-                            <span className="text-[9px] text-zinc-500 font-mono">
-                              {new Date(item.createdAt).toLocaleDateString('ko-KR', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
-                          <Link
-                            href={`/host/dashboard/${item.roomId}`}
-                            className="px-3.5 py-2 rounded-xl text-[10px] font-black bg-indigo-600 hover:bg-indigo-500 text-white transition-all flex items-center gap-1 shrink-0"
+                      hostRooms.map((item) => {
+                        const details = roomDetails[item.roomId];
+                        return (
+                          <div 
+                            key={item.roomId} 
+                            className="glass-effect rounded-2xl p-4 border border-indigo-500/10 hover:border-indigo-500/20 bg-indigo-500/[0.01] flex items-center justify-between transition-all duration-300"
                           >
-                            대시보드 &rarr;
-                          </Link>
-                        </div>
-                      ))
+                            <div className="flex flex-col gap-0.5 text-left min-w-0 pr-3">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h4 className="text-base font-mono font-black text-white tracking-wider truncate">
+                                  {item.roomId}
+                                </h4>
+                                {details ? (
+                                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize ${
+                                    details.tier === 'free' 
+                                      ? 'bg-zinc-800 text-zinc-400' 
+                                      : details.tier === 'lite'
+                                        ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                        : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                                  }`}>
+                                    {details.tier === 'free' ? '무료' : details.tier === 'lite' ? '라이트' : '프로'}
+                                  </span>
+                                ) : item.tier ? (
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize bg-zinc-800 text-zinc-400">
+                                    {item.tier === 'free' ? '무료' : item.tier === 'lite' ? '라이트' : '프로'}
+                                  </span>
+                                ) : null}
+                              </div>
+                              
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[9px] text-zinc-500 font-mono">
+                                  {new Date(item.createdAt).toLocaleDateString('ko-KR', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                                <span className="text-[9px] text-zinc-500">·</span>
+                                {details ? (
+                                  <span className={`text-[9px] font-bold font-mono ${details.isExpired ? 'text-red-500' : 'text-emerald-400'}`}>
+                                    {details.timeLeftText}
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] text-zinc-500 font-mono">조회 중...</span>
+                                )}
+                              </div>
+                            </div>
+                            <Link
+                              href={`/host/dashboard/${item.roomId}`}
+                              className="px-3.5 py-2 rounded-xl text-[10px] font-black bg-indigo-600 hover:bg-indigo-500 text-white transition-all flex items-center gap-1 shrink-0"
+                            >
+                              대시보드 &rarr;
+                            </Link>
+                          </div>
+                        );
+                      })
                     ) : (
                       <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 text-center text-zinc-500 font-semibold text-[10px] leading-relaxed">
                         개설한 전광판 내역이 없습니다.
@@ -328,32 +447,59 @@ export default function Home() {
                   </h3>
                   <div className="flex flex-col gap-3">
                     {audienceRooms.length > 0 ? (
-                      audienceRooms.map((item) => (
-                        <div 
-                          key={item.roomId} 
-                          className="glass-effect rounded-2xl p-4 border border-emerald-500/10 hover:border-emerald-500/20 bg-emerald-500/[0.01] flex items-center justify-between transition-all duration-300"
-                        >
-                          <div className="flex flex-col gap-0.5 text-left min-w-0 pr-3">
-                            <h4 className="text-base font-mono font-black text-white tracking-wider truncate">
-                              {item.roomId}
-                            </h4>
-                            <span className="text-[9px] text-zinc-500 font-mono">
-                              {new Date(item.createdAt).toLocaleDateString('ko-KR', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
-                          <Link
-                            href={`/room/${item.roomId}`}
-                            className="px-3.5 py-2 rounded-xl text-[10px] font-black bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1 shrink-0"
+                      audienceRooms.map((item) => {
+                        const details = roomDetails[item.roomId];
+                        return (
+                          <div 
+                            key={item.roomId} 
+                            className="glass-effect rounded-2xl p-4 border border-emerald-500/10 hover:border-emerald-500/20 bg-emerald-500/[0.01] flex items-center justify-between transition-all duration-300"
                           >
-                            관객뷰 입장 &rarr;
-                          </Link>
-                        </div>
-                      ))
+                            <div className="flex flex-col gap-0.5 text-left min-w-0 pr-3">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h4 className="text-base font-mono font-black text-white tracking-wider truncate">
+                                  {item.roomId}
+                                </h4>
+                                {details && (
+                                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize ${
+                                    details.tier === 'free' 
+                                      ? 'bg-zinc-800 text-zinc-400' 
+                                      : details.tier === 'lite'
+                                        ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                        : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                                  }`}>
+                                    {details.tier === 'free' ? '무료' : details.tier === 'lite' ? '라이트' : '프로'}
+                                  </span>
+                                )}
+                              </div>
+                              
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[9px] text-zinc-500 font-mono">
+                                  {new Date(item.createdAt).toLocaleDateString('ko-KR', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                                <span className="text-[9px] text-zinc-500">·</span>
+                                {details ? (
+                                  <span className={`text-[9px] font-bold font-mono ${details.isExpired ? 'text-red-500' : 'text-emerald-400'}`}>
+                                    {details.timeLeftText}
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] text-zinc-500 font-mono">조회 중...</span>
+                                )}
+                              </div>
+                            </div>
+                            <Link
+                              href={`/room/${item.roomId}`}
+                              className="px-3.5 py-2 rounded-xl text-[10px] font-black bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1 shrink-0"
+                            >
+                              관객뷰 입장 &rarr;
+                            </Link>
+                          </div>
+                        );
+                      })
                     ) : (
                       <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 text-center text-zinc-500 font-semibold text-[10px] leading-relaxed">
                         참여한 전광판 내역이 없습니다.

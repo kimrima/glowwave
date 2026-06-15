@@ -78,7 +78,9 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
       {/* Screen Display Area */}
       <div 
         ref={containerRef}
-        className={`absolute inset-[2.2cqw] rounded-[6.5%] overflow-hidden flex items-center justify-center transition-colors duration-200 ${
+        className={`absolute inset-[2.2cqw] rounded-[6.5%] overflow-hidden flex items-center justify-center ${
+          (isDuoSiren || isBlink) ? '' : 'transition-colors duration-200'
+        } ${
           isDuoSiren ? 'animate-siren' : isBlink ? 'animate-blink' : ''
         }`}
         style={{ 
