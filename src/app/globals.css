@@ -22,6 +22,20 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: 'NeoDgm';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2207-01@1.0/NeoDgm.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'TmonMonsori';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/TmonMonsori.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
 @theme {
   --color-background: #0B0B0F;
   --color-foreground: #F3F4F6;
@@ -169,6 +183,16 @@ body {
   text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor;
 }
 
+.font-sign-pixel {
+  font-family: 'NeoDgm', sans-serif;
+  font-weight: normal;
+}
+
+.font-sign-plump {
+  font-family: 'TmonMonsori', sans-serif;
+  font-weight: normal;
+}
+
 /* iOS Style Thick Premium Slider Range input */
 .premium-slider {
   -webkit-appearance: none;
@@ -271,5 +295,88 @@ body {
 @keyframes preset-card-breath {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.05; }
+}
+
+/* Premium Special Effects Particle Animations */
+@keyframes float-heart {
+  0% {
+    transform: translateY(110vh) scale(0.5) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  90% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(-20vh) scale(1.1) rotate(15deg);
+    opacity: 0;
+  }
+}
+
+@keyframes sway-heart {
+  0%, 100% {
+    margin-left: -15px;
+  }
+  50% {
+    margin-left: 15px;
+  }
+}
+
+.animate-heart {
+  position: absolute;
+  bottom: -60px;
+  pointer-events: none;
+  animation: float-heart var(--heart-duration, 6s) infinite linear, sway-heart var(--heart-sway, 3s) infinite ease-in-out;
+  will-change: transform, opacity;
+}
+
+@keyframes float-confetti {
+  0% {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0.3;
+  }
+}
+
+@keyframes sway-confetti {
+  0%, 100% {
+    margin-left: -20px;
+  }
+  50% {
+    margin-left: 20px;
+  }
+}
+
+.animate-confetti {
+  position: absolute;
+  top: -60px;
+  pointer-events: none;
+  animation: float-confetti var(--confetti-duration, 5s) infinite linear, sway-confetti var(--confetti-sway, 2s) infinite ease-in-out;
+  will-change: transform, opacity;
+}
+
+@keyframes twinkle-star {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(0.6) rotate(0deg);
+    filter: drop-shadow(0 0 2px currentColor);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(180deg);
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+}
+
+.animate-star {
+  position: absolute;
+  pointer-events: none;
+  animation: twinkle-star var(--star-duration, 4s) infinite ease-in-out;
+  will-change: opacity, transform, filter;
 }
 

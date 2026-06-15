@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Preset } from '@/lib/types';
 import useFitText from '@/hooks/useFitText';
 
@@ -18,10 +18,58 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
         return 'font-sign-serif font-bold';
       case 'neon':
         return 'font-sign-neon font-black';
+      case 'pixel':
+        return 'font-sign-pixel';
+      case 'plump':
+        return 'font-sign-plump font-black';
       default:
         return 'font-sign-sans-thin font-bold';
     }
   };
+
+  // Memoized special effect particles to avoid re-generating random attributes on every render
+  const specialEffectParticles = useMemo(() => {
+    const effect = preset.special_effect;
+    if (!effect || effect === 'none') return [];
+    
+    const count = effect === 'stars' ? 15 : effect === 'confetti' ? 20 : 12; // Fewer particles for the small mockup
+    const particles = [];
+    
+    for (let i = 0; i < count; i++) {
+      if (effect === 'hearts') {
+        particles.push({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          fontSize: `${8 + Math.random() * 12}px`,
+          delay: `${Math.random() * 5}s`,
+          duration: `${4 + Math.random() * 4}s`,
+          sway: `${2 + Math.random() * 2}s`,
+          color: ['#EF4444', '#EC4899', '#F472B6', '#F43F5E', '#D946EF'][Math.floor(Math.random() * 5)]
+        });
+      } else if (effect === 'confetti') {
+        particles.push({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          fontSize: `${6 + Math.random() * 10}px`,
+          delay: `${Math.random() * 4}s`,
+          duration: `${3 + Math.random() * 3}s`,
+          sway: `${1.5 + Math.random() * 1.5}s`,
+          color: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#14B8A6'][Math.floor(Math.random() * 7)]
+        });
+      } else if (effect === 'stars') {
+        particles.push({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          fontSize: `${3 + Math.random() * 4}px`,
+          delay: `${Math.random() * 3}s`,
+          duration: `${2 + Math.random() * 3}s`,
+          color: ['#FFF', '#FEF08A', '#A5F3FC', '#F472B6', '#C084FC'][Math.floor(Math.random() * 5)]
+        });
+      }
+    }
+    return particles;
+  }, [preset.special_effect]);
 
   // Countdown state for mockup ticking
   const [countdownVal, setCountdownVal] = useState<number | string>(preset.countdown_seconds || 10);
@@ -91,8 +139,73 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
           '--siren-color-2': preset.bg_color_secondary || '#FFD700'
         } as React.CSSProperties}
       >
+        {/* Special Effects Layer for Mockup */}
+        {preset.special_effect && preset.special_effect !== 'none' && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+            {specialEffectParticles.map((p) => {
+              if (preset.special_effect === 'hearts') {
+                return (
+                  <div
+                    key={p.id}
+                    className="animate-heart"
+                    style={{
+                      left: p.left,
+                      fontSize: p.fontSize,
+                      color: p.color,
+                      animationDelay: `${p.delay}, 0s`,
+                      '--heart-duration': p.duration,
+                      '--heart-sway': p.sway
+                    } as React.CSSProperties}
+                  >
+                    ❤️
+                  </div>
+                );
+              } else if (preset.special_effect === 'confetti') {
+                const shapes = ['🎉', '✨', '■', '●', '▲', '✦'];
+                const shape = shapes[p.id % shapes.length];
+                return (
+                  <div
+                    key={p.id}
+                    className="animate-confetti"
+                    style={{
+                      left: p.left,
+                      fontSize: p.fontSize,
+                      color: p.color,
+                      animationDelay: `${p.delay}, 0s`,
+                      '--confetti-duration': p.duration,
+                      '--confetti-sway': p.sway
+                    } as React.CSSProperties}
+                  >
+                    {shape}
+                  </div>
+                );
+              } else if (preset.special_effect === 'stars') {
+                const starGlyphs = ['✦', '★', '✧', '•'];
+                const glyph = starGlyphs[p.id % starGlyphs.length];
+                return (
+                  <div
+                    key={p.id}
+                    className="animate-star"
+                    style={{
+                      left: p.left,
+                      top: p.top,
+                      fontSize: p.fontSize,
+                      color: p.color,
+                      animationDelay: p.delay,
+                      '--star-duration': p.duration
+                    } as React.CSSProperties}
+                  >
+                    {glyph}
+                  </div>
+                );
+              }
+              return null;
+            })}
+          </div>
+        )}
+
         {isMarquee ? (
-          <div key={preset.trigger_id} className="w-full overflow-hidden flex items-center whitespace-nowrap font-sans">
+          <div key={preset.trigger_id} className="w-full overflow-hidden flex items-center whitespace-nowrap font-sans relative z-10">
             {/* Track 1 */}
             <div 
               className={`animate-marquee-seamless select-none leading-none flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass()}`}

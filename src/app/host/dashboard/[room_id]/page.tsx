@@ -126,9 +126,10 @@ export default function HostDashboard() {
   const [customText, setCustomText] = useState('GLOW WAVE');
   const [customBgColor, setCustomBgColor] = useState('#EF4444');
   const [customFontSize, setCustomFontSize] = useState<number>(100);
-  const [customFontFamily, setCustomFontFamily] = useState<'sans-thin' | 'sans-thick' | 'serif' | 'neon'>('sans-thin');
+  const [customFontFamily, setCustomFontFamily] = useState<'sans-thin' | 'sans-thick' | 'serif' | 'neon' | 'pixel' | 'plump'>('sans-thin');
   const [customEffect, setCustomEffect] = useState<EffectType>('none');
   const [customSpeed, setCustomSpeed] = useState(50); // range 1-100
+  const [customSpecialEffect, setCustomSpecialEffect] = useState<'none' | 'hearts' | 'confetti' | 'stars'>('none');
 
   // Safety transmitter lock & miniature preview toggles
   const [isTransmitterLocked, setIsTransmitterLocked] = useState(false);
@@ -137,6 +138,23 @@ export default function HostDashboard() {
   // Preset Live Edit States
   const [editingPresetIndex, setEditingPresetIndex] = useState<number | null>(null);
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
+
+  const handleFontSelect = (fontVal: 'sans-thin' | 'sans-thick' | 'serif' | 'neon' | 'pixel' | 'plump', isEdit: boolean) => {
+    const isPremium = fontVal === 'neon' || fontVal === 'pixel' || fontVal === 'plump';
+    if (isPremium && room?.tier === 'free') {
+      if (confirm('이 글꼴은 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?')) {
+        setSelectedUpgradeTier(null);
+        setUpgradeStep('select');
+        setIsUpgradeModalOpen(true);
+      }
+      return;
+    }
+    if (isEdit) {
+      setEditingPreset(prev => ({ ...prev!, font_family: fontVal }));
+    } else {
+      setCustomFontFamily(fontVal);
+    }
+  };
 
   // Expiration countdown state
   const [timeRemaining, setTimeRemaining] = useState<string>('');
@@ -1073,28 +1091,17 @@ export default function HostDashboard() {
                     setIsExtendModalOpen(true);
                   }
                 }}
-                className={`px-2.5 py-1 rounded text-[10px] font-extrabold transition-all cursor-pointer select-none border ${
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-black transition-all duration-200 cursor-pointer select-none border tracking-wider flex items-center gap-1 ${
                   timeRemaining === '만료됨' || timeRemaining.startsWith('0시간') || timeRemaining.startsWith('1시간') || timeRemaining.startsWith('2시간')
-                    ? 'border-amber-500/40 text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 animate-pulse'
-                    : 'border-zinc-700 text-zinc-400 hover:text-white hover:bg-white/5'
+                    ? 'border-amber-500/20 text-amber-400 bg-amber-500/5 hover:bg-amber-500/15 hover:border-amber-500/40 shadow-sm'
+                    : 'border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 hover:border-white/20'
                 }`}
               >
-                시간 연장
+                <span>시간 연장</span>
+                {(timeRemaining === '만료됨' || timeRemaining.startsWith('0시간') || timeRemaining.startsWith('1시간') || timeRemaining.startsWith('2시간')) && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                )}
               </button>
-
-              {room?.tier === 'free' && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedUpgradeTier(null);
-                    setUpgradeStep('select');
-                    setIsUpgradeModalOpen(true);
-                  }}
-                  className="px-2.5 py-1 rounded text-[10px] font-extrabold transition-all cursor-pointer select-none border border-indigo-500/30 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-white"
-                >
-                  요금제 업그레이드
-                </button>
-              )}
             </div>
           </div>
 
@@ -1319,7 +1326,8 @@ export default function HostDashboard() {
                       effect: customEffect,
                       speed: calculatedSpeed,
                       font_size: customFontSize,
-                      font_family: customFontFamily
+                      font_family: customFontFamily,
+                      special_effect: customSpecialEffect
                     };
                     triggerPreset(customPreset, -1);
                   }}
@@ -1330,7 +1338,7 @@ export default function HostDashboard() {
               </div>
 
               {/* iOS style Segmented Controls Row (Responsive Grid layout) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-3.5 border-t border-white/5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 pt-3.5 border-t border-white/5">
                 {/* 배경 테마 */}
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">배경 테마</span>
@@ -1390,19 +1398,21 @@ export default function HostDashboard() {
                 {/* 글꼴 스타일 */}
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">글꼴 스타일</span>
-                  <div className="grid grid-cols-4 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 h-10 items-center">
+                  <div className="grid grid-cols-3 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 items-center">
                     {[
                       { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', -apple-system, sans-serif", fontWeight: 700 } },
                       { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
                       { val: 'serif', label: '클래식명조', style: { fontFamily: "'ChosunMyeongjo', serif", fontWeight: 400 } },
-                      { val: 'neon', label: '스포티', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } }
+                      { val: 'neon', label: '스포티 🌟', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } },
+                      { val: 'pixel', label: '레트로도트 🌟', style: { fontFamily: "'NeoDgm', sans-serif", fontWeight: 400 } },
+                      { val: 'plump', label: '둥글몽글 🌟', style: { fontFamily: "'TmonMonsori', sans-serif", fontWeight: 900 } }
                     ].map((item) => (
                       <button
                         type="button"
                         key={item.val}
-                        onClick={() => setCustomFontFamily(item.val as any)}
+                        onClick={() => handleFontSelect(item.val as any, false)}
                         style={item.style}
-                        className={`h-full rounded-lg text-[10px] transition-all cursor-pointer ${
+                        className={`py-2 px-1 rounded-lg text-[10px] transition-all cursor-pointer ${
                           customFontFamily === item.val
                             ? 'bg-white text-black font-extrabold shadow-sm'
                             : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
@@ -1429,6 +1439,43 @@ export default function HostDashboard() {
                         onClick={() => setCustomEffect(item.val as any)}
                         className={`h-full rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
                           customEffect === item.val
+                            ? 'bg-white text-black font-extrabold shadow-sm'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 특수 효과 */}
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">특수 효과 🌟</span>
+                  <div className="grid grid-cols-4 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 items-center min-h-10">
+                    {[
+                      { val: 'none', label: '없음' },
+                      { val: 'hearts', label: '하트 🌟' },
+                      { val: 'confetti', label: '꽃가루 🌟' },
+                      { val: 'stars', label: '별빛 🌟' }
+                    ].map((item) => (
+                      <button
+                        type="button"
+                        key={item.val}
+                        onClick={() => {
+                          const isPremium = item.val !== 'none';
+                          if (isPremium && room?.tier === 'free') {
+                            if (confirm('특수 효과는 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?')) {
+                              setSelectedUpgradeTier(null);
+                              setUpgradeStep('select');
+                              setIsUpgradeModalOpen(true);
+                            }
+                            return;
+                          }
+                          setCustomSpecialEffect(item.val as any);
+                        }}
+                        className={`py-2 px-0.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer ${
+                          customSpecialEffect === item.val
                             ? 'bg-white text-black font-extrabold shadow-sm'
                             : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}
@@ -1952,20 +1999,59 @@ export default function HostDashboard() {
                 {/* 글꼴 스타일 */}
                 <div>
                   <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
-                  <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 h-11 items-center font-medium">
+                  <div className="grid grid-cols-3 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 items-center font-medium">
                     {[
                       { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', -apple-system, sans-serif", fontWeight: 700 } },
                       { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
                       { val: 'serif', label: '클래식명조', style: { fontFamily: "'ChosunMyeongjo', serif", fontWeight: 400 } },
-                      { val: 'neon', label: '스포티', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } }
+                      { val: 'neon', label: '스포티 🌟', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } },
+                      { val: 'pixel', label: '레트로도트 🌟', style: { fontFamily: "'NeoDgm', sans-serif", fontWeight: 400 } },
+                      { val: 'plump', label: '둥글몽글 🌟', style: { fontFamily: "'TmonMonsori', sans-serif", fontWeight: 900 } }
                     ].map((item) => (
                       <button
                         type="button"
                         key={item.val}
-                        onClick={() => setEditingPreset(prev => ({ ...prev!, font_family: item.val as any }))}
+                        onClick={() => handleFontSelect(item.val as any, true)}
                         style={item.style}
-                        className={`h-full rounded-lg text-xs transition-all cursor-pointer ${
+                        className={`py-2 px-1 rounded-lg text-xs transition-all cursor-pointer ${
                           (editingPreset.font_family || 'sans-thin') === item.val
+                            ? 'bg-white text-black shadow-sm font-extrabold'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 특수 효과 */}
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">특수 효과 🌟</label>
+                  <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 h-11 items-center font-medium font-sans">
+                    {[
+                      { val: 'none', label: '없음' },
+                      { val: 'hearts', label: '하트 🌟' },
+                      { val: 'confetti', label: '꽃가루 🌟' },
+                      { val: 'stars', label: '별빛 🌟' }
+                    ].map((item) => (
+                      <button
+                        type="button"
+                        key={item.val}
+                        onClick={() => {
+                          const isPremium = item.val !== 'none';
+                          if (isPremium && room?.tier === 'free') {
+                            if (confirm('특수 효과는 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?')) {
+                              setSelectedUpgradeTier(null);
+                              setUpgradeStep('select');
+                              setIsUpgradeModalOpen(true);
+                            }
+                            return;
+                          }
+                          setEditingPreset(prev => ({ ...prev!, special_effect: item.val as any }));
+                        }}
+                        className={`h-full rounded-lg text-[10px] transition-all cursor-pointer ${
+                          (editingPreset.special_effect || 'none') === item.val
                             ? 'bg-white text-black shadow-sm font-extrabold'
                             : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}

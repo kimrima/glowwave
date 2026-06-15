@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   RotateCw, 
@@ -32,6 +32,10 @@ export default function AudienceRoom() {
         return 'font-sign-serif font-bold';
       case 'neon':
         return 'font-sign-neon font-black';
+      case 'pixel':
+        return 'font-sign-pixel';
+      case 'plump':
+        return 'font-sign-plump font-black';
       default:
         return 'font-sign-sans-thin font-bold';
     }
@@ -64,6 +68,50 @@ export default function AudienceRoom() {
 
   // Countdown timer state
   const [countdownVal, setCountdownVal] = useState<number | string>(currentPreset.countdown_seconds || 10);
+
+  // Memoized special effect particles to avoid re-generating random attributes on every render
+  const specialEffectParticles = useMemo(() => {
+    const effect = currentPreset.special_effect;
+    if (!effect || effect === 'none') return [];
+    
+    const count = effect === 'stars' ? 35 : effect === 'confetti' ? 45 : 30; // Hearts: 30, Stars: 35, Confetti: 45
+    const particles = [];
+    
+    for (let i = 0; i < count; i++) {
+      if (effect === 'hearts') {
+        particles.push({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          fontSize: `${18 + Math.random() * 26}px`,
+          delay: `${Math.random() * 6}s`,
+          duration: `${4 + Math.random() * 5}s`,
+          sway: `${2 + Math.random() * 3}s`,
+          color: ['#EF4444', '#EC4899', '#F472B6', '#F43F5E', '#D946EF'][Math.floor(Math.random() * 5)]
+        });
+      } else if (effect === 'confetti') {
+        particles.push({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          fontSize: `${12 + Math.random() * 20}px`,
+          delay: `${Math.random() * 5}s`,
+          duration: `${3 + Math.random() * 4}s`,
+          sway: `${1.5 + Math.random() * 2}s`,
+          color: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#14B8A6'][Math.floor(Math.random() * 7)]
+        });
+      } else if (effect === 'stars') {
+        particles.push({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          fontSize: `${4 + Math.random() * 8}px`,
+          delay: `${Math.random() * 4}s`,
+          duration: `${2 + Math.random() * 4}s`,
+          color: ['#FFF', '#FEF08A', '#A5F3FC', '#F472B6', '#C084FC'][Math.floor(Math.random() * 5)]
+        });
+      }
+    }
+    return particles;
+  }, [currentPreset.special_effect]);
 
   // Trigger countdown timer decrement when currentPreset effect is set to countdown
   useEffect(() => {
@@ -753,7 +801,7 @@ export default function AudienceRoom() {
       {/* Main Display Screen */}
       <div 
         ref={containerRef}
-        className={`w-full h-full flex items-center justify-center ${
+        className={`w-full h-full flex items-center justify-center relative ${
           (isDuoSiren || currentPreset.effect === 'blink') ? '' : 'transition-colors duration-300'
         } ${
           isDuoSiren ? 'animate-siren' : currentPreset.effect === 'blink' ? 'animate-blink' : ''
@@ -766,8 +814,73 @@ export default function AudienceRoom() {
           '--siren-color-2': currentPreset.bg_color_secondary || '#FFD700'
         } as React.CSSProperties}
       >
+        {/* Special Effects Particle Layer */}
+        {currentPreset.special_effect && currentPreset.special_effect !== 'none' && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+            {specialEffectParticles.map((p) => {
+              if (currentPreset.special_effect === 'hearts') {
+                return (
+                  <div
+                    key={p.id}
+                    className="animate-heart text-shadow-lg"
+                    style={{
+                      left: p.left,
+                      fontSize: p.fontSize,
+                      color: p.color,
+                      animationDelay: `${p.delay}, 0s`,
+                      '--heart-duration': p.duration,
+                      '--heart-sway': p.sway
+                    } as React.CSSProperties}
+                  >
+                    ❤️
+                  </div>
+                );
+              } else if (currentPreset.special_effect === 'confetti') {
+                const shapes = ['🎉', '✨', '■', '●', '▲', '✦'];
+                const shape = shapes[p.id % shapes.length];
+                return (
+                  <div
+                    key={p.id}
+                    className="animate-confetti"
+                    style={{
+                      left: p.left,
+                      fontSize: p.fontSize,
+                      color: p.color,
+                      animationDelay: `${p.delay}, 0s`,
+                      '--confetti-duration': p.duration,
+                      '--confetti-sway': p.sway
+                    } as React.CSSProperties}
+                  >
+                    {shape}
+                  </div>
+                );
+              } else if (currentPreset.special_effect === 'stars') {
+                const starGlyphs = ['✦', '★', '🌟', '✧', '•'];
+                const glyph = starGlyphs[p.id % starGlyphs.length];
+                return (
+                  <div
+                    key={p.id}
+                    className="animate-star"
+                    style={{
+                      left: p.left,
+                      top: p.top,
+                      fontSize: p.fontSize,
+                      color: p.color,
+                      animationDelay: p.delay,
+                      '--star-duration': p.duration
+                    } as React.CSSProperties}
+                  >
+                    {glyph}
+                  </div>
+                );
+              }
+              return null;
+            })}
+          </div>
+        )}
+
         {currentPreset.effect === 'marquee' ? (
-          <div key={currentPreset.trigger_id} className="w-full overflow-hidden flex items-center whitespace-nowrap">
+          <div key={currentPreset.trigger_id} className="w-full overflow-hidden flex items-center whitespace-nowrap relative z-10">
             {/* Track 1 */}
             <div 
               className={`animate-marquee-seamless select-none leading-none flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(currentPreset.font_family)}`}
@@ -800,7 +913,7 @@ export default function AudienceRoom() {
           </div>
         ) : (
           <div 
-            className={`text-center whitespace-nowrap overflow-hidden px-8 select-none max-w-full leading-none tracking-tighter ${getFontFamilyClass(currentPreset.font_family)}`}
+            className={`text-center whitespace-nowrap overflow-hidden px-8 select-none max-w-full leading-none tracking-tighter relative z-10 ${getFontFamilyClass(currentPreset.font_family)}`}
             style={{ 
               color: currentPreset.text_color,
               fontSize,

@@ -7,7 +7,7 @@ export interface Preset {
   effect: EffectType;
   speed: number; // Duration in milliseconds or scroll speed indicator
   font_size?: number; // Font size multiplier percentage (30 to 100)
-  font_family?: 'sans-thin' | 'sans-thick' | 'serif' | 'neon';
+  font_family?: 'sans-thin' | 'sans-thick' | 'serif' | 'neon' | 'pixel' | 'plump';
   countdown_seconds?: number;
   result_text?: string;
   trigger_id?: string;
@@ -15,6 +15,7 @@ export interface Preset {
   lucky_draw_winner_id?: string; // Persistent UUID of the winner (backward compatible)
   lucky_draw_winner_ids?: string[]; // Multiple winner UUIDs
   lucky_draw_count?: number; // Desired number of winners
+  special_effect?: 'none' | 'hearts' | 'confetti' | 'stars';
 }
 
 export type TierType = 'free' | 'lite' | 'pro' | 'max';
