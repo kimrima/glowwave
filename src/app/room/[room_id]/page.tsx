@@ -50,6 +50,7 @@ export default function AudienceRoom() {
     controlsTimerRef.current = setTimeout(() => {
       setShowControls(false);
     }, 3000);
+    requestWakeLock();
   };
 
   // Current Signboard Display State
@@ -154,7 +155,6 @@ export default function AudienceRoom() {
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
-      requestWakeLock();
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     
@@ -420,16 +420,22 @@ export default function AudienceRoom() {
     if ('wakeLock' in navigator) {
       try {
         if (wakeLockRef.current) {
-          try {
-            await wakeLockRef.current.release();
-          } catch (e) {}
+          console.log('[WakeLock] Already active, skipping request');
+          return;
         }
-        wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+        const lock = await (navigator as any).wakeLock.request('screen');
+        lock.addEventListener('release', () => {
+          console.log('[WakeLock] Released by browser/system');
+          wakeLockRef.current = null;
+        });
+        wakeLockRef.current = lock;
         console.log('[WakeLock] Screen Wake Lock is active');
         setWakeLockError(false);
       } catch (err: any) {
         console.warn(`[WakeLock] Failed to lock screen sleep: ${err.message}`);
-        setWakeLockError(true);
+        if (!wakeLockRef.current) {
+          setWakeLockError(true);
+        }
       }
     }
   };
