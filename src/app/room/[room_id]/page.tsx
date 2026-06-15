@@ -196,6 +196,7 @@ export default function AudienceRoom() {
 
   // Technical Refs for Wake Lock & Real-time
   const wakeLockRef = useRef<any>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const supabaseChannelRef = useRef<any>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
@@ -521,6 +522,11 @@ export default function AudienceRoom() {
   useEffect(() => {
     const handleGesture = () => {
       requestWakeLock();
+      if (videoRef.current) {
+        videoRef.current.play().catch((err) => {
+          console.warn('[WakeLock] iOS video sleep prevention loop playback blocked:', err);
+        });
+      }
     };
     window.addEventListener('click', handleGesture);
     window.addEventListener('touchstart', handleGesture);
@@ -538,6 +544,9 @@ export default function AudienceRoom() {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
         await requestWakeLock();
+        if (videoRef.current) {
+          videoRef.current.play().catch(() => {});
+        }
         if (roomId && audienceUuid) {
           const cachedPass = typeof window !== 'undefined' ? localStorage.getItem(`glowwave_passcode_${roomId}`) || '' : '';
           validateAndConnect(true);
@@ -887,7 +896,7 @@ export default function AudienceRoom() {
         )}
 
         {currentPreset.effect === 'marquee' ? (
-          <div key={currentPreset.trigger_id} className="w-full overflow-hidden flex items-center whitespace-nowrap relative z-10">
+          <div key={currentPreset.trigger_id} className="w-full overflow-hidden flex items-center whitespace-nowrap relative z-10 py-[2vh]">
             {/* Track 1 */}
             <div 
               className={`animate-marquee-seamless select-none leading-[1.2] flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(currentPreset.font_family)}`}
@@ -1034,6 +1043,11 @@ export default function AudienceRoom() {
               setShowEnterOverlay(false);
               toggleFullscreen();
               requestWakeLock();
+              if (videoRef.current) {
+                videoRef.current.play().catch((err) => {
+                  console.warn('[WakeLock] Entry click video playback blocked:', err);
+                });
+              }
               resetControlsTimer();
             }}
             className="px-8 py-4 rounded-xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all shadow-xl hover:shadow-white/10 flex items-center gap-1.5 cursor-pointer"
@@ -1066,6 +1080,16 @@ export default function AudienceRoom() {
           </button>
         </div>
       )}
+
+      {/* Invisible silent video loop to force-keep iOS devices awake */}
+      <video
+        ref={videoRef}
+        playsInline
+        muted
+        loop
+        style={{ position: 'fixed', opacity: 0.001, pointerEvents: 'none', width: '4px', height: '4px', left: '0px', bottom: '0px', zIndex: -100 }}
+        src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAr9tZGF0AAACoAYF//+///AAAAMmF2Y0MBZAAK/+EAGWdkAAqs2V+WXAWyAAADAAIAAAMAYB4kSywBAAZo6+PLIsAAAAAYc3R0cwAAAAAAAAABAAAAAQAAAgAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAACtwAAAAEAAAAUc3RjbwAAAAAAAAABAAAAMAAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNTQuNjMuMTA0"
+      />
     </div>
   );
 }

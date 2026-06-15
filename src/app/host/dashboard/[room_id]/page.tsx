@@ -1186,13 +1186,12 @@ export default function HostDashboard() {
               <button
                 type="button"
                 onClick={() => setActiveCategory('custom')}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none border ${
+                className={`flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none border ${
                   activeCategory === 'custom'
                     ? 'bg-white text-black border-white shadow-sm'
                     : 'bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white hover:bg-white/[0.05]'
                 }`}
               >
-                <span>💾</span>
                 <span>내 프리셋</span>
               </button>
               {TEMPLATE_CATEGORIES.map((cat) => (
@@ -1200,13 +1199,12 @@ export default function HostDashboard() {
                   type="button"
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none border ${
+                  className={`flex items-center px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none border ${
                     activeCategory === cat.id
                       ? 'bg-white text-black border-white shadow-sm'
                       : 'bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white hover:bg-white/[0.05]'
                   }`}
                 >
-                  <span>{cat.icon}</span>
                   <span>{cat.label}</span>
                 </button>
               ))}
@@ -1639,28 +1637,30 @@ export default function HostDashboard() {
               <h2 className="text-sm font-bold text-white uppercase tracking-wider">LIVE ON AIR</h2>
             </div>
             <p className="text-[11px] text-zinc-500 mb-4 self-start">현재 모든 관객 화면에 송출 중인 실시간 연출 화면입니다.</p>
-            <div className="w-full flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl relative group overflow-hidden">
-              <LandscapePhoneMockup preset={currentBroadcastPreset} />
-              
-              {/* Desktop Hover Overlay */}
+            <div className="w-full max-w-[420px] flex flex-col items-center">
+              <div className="w-full flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl relative group overflow-hidden">
+                <LandscapePhoneMockup preset={currentBroadcastPreset} />
+                
+                {/* Desktop Hover Overlay */}
+                <button
+                  type="button"
+                  onClick={() => setIsStandaloneFullscreen(true)}
+                  className="hidden lg:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-2 text-white font-bold text-xs cursor-pointer"
+                >
+                  <Maximize2 className="w-5 h-5 text-indigo-400" />
+                  내 화면에 전체화면으로 띄우기
+                </button>
+              </div>
+
               <button
                 type="button"
                 onClick={() => setIsStandaloneFullscreen(true)}
-                className="hidden lg:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-2 text-white font-bold text-xs cursor-pointer"
+                className="mt-3 w-full py-2 px-4 rounded-xl bg-white/5 hover:bg-white/10 active:scale-[0.99] text-white font-bold text-xs tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer border border-white/10 hover:border-white/20 shadow-md"
               >
-                <Maximize2 className="w-5 h-5 text-indigo-400" />
-                내 화면에 전체화면으로 띄우기
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>내 기기를 전광판으로 사용 (전체화면)</span>
               </button>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setIsStandaloneFullscreen(true)}
-              className="mt-3 w-full py-2.5 px-4 rounded-xl bg-indigo-600/90 hover:bg-indigo-600 hover:scale-[1.01] active:scale-[0.99] text-white font-black text-xs tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer border border-indigo-500/30 shadow-lg shadow-indigo-600/10"
-            >
-              <Maximize2 className="w-4 h-4" />
-              <span>내 기기를 전광판으로 사용 (전체화면)</span>
-            </button>
 
             {currentBroadcastPreset.effect === 'luckydraw_wait' && (
               <div className="w-full mt-4 flex flex-col gap-2">
@@ -2254,66 +2254,91 @@ export default function HostDashboard() {
 
             {/* Footer Buttons */}
             <div className="p-6 border-t border-white/5 bg-black/20 flex flex-col gap-4">
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (editingPresetIndex === null || !editingPreset) return;
-                    const normalized: Preset = {
-                      ...editingPreset,
-                      text: editingPreset.text.trim(),
-                      result_text: (editingPreset.effect === 'countdown') 
-                        ? (editingPreset.result_text?.trim() || 'START')
-                        : (editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw')
-                          ? (editingPreset.result_text?.trim() || '아쉽네요! 다음 기회에..')
-                          : editingPreset.result_text
-                    };
-                    const updated = [...presets];
-                    if (editingPresetIndex === presets.length) {
-                      updated.push(normalized);
-                    } else {
-                      updated[editingPresetIndex] = normalized;
-                    }
-                    setPresets(updated);
-                    localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
-                    setActiveCategory('custom'); // Auto-switch to personal presets tab
-                    setEditingPresetIndex(null);
-                    setEditingPreset(null);
-                  }}
-                  className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-bold hover:bg-white/10 transition-all text-xs cursor-pointer"
-                >
-                  저장만 하기
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (editingPresetIndex === null || !editingPreset) return;
-                    const normalized: Preset = {
-                      ...editingPreset,
-                      text: editingPreset.text.trim(),
-                      result_text: (editingPreset.effect === 'countdown') 
-                        ? (editingPreset.result_text?.trim() || 'START')
-                        : (editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw')
-                          ? (editingPreset.result_text?.trim() || '아쉽네요! 다음 기회에..')
-                          : editingPreset.result_text
-                    };
-                    const updated = [...presets];
-                    if (editingPresetIndex === presets.length) {
-                      updated.push(normalized);
-                    } else {
-                      updated[editingPresetIndex] = normalized;
-                    }
-                    setPresets(updated);
-                    localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
-                    triggerPreset(normalized, editingPresetIndex);
-                    setActiveCategory('custom'); // Auto-switch to personal presets tab
-                    setEditingPresetIndex(null);
-                    setEditingPreset(null);
-                  }}
-                  className="btn-primary flex-1 py-3 rounded-xl text-xs font-bold cursor-pointer"
-                >
-                  저장 후 바로 송출
-                </button>
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (editingPresetIndex === null || !editingPreset) return;
+                      const normalized: Preset = {
+                        ...editingPreset,
+                        text: editingPreset.text.trim(),
+                        result_text: (editingPreset.effect === 'countdown') 
+                          ? (editingPreset.result_text?.trim() || 'START')
+                          : (editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw')
+                            ? (editingPreset.result_text?.trim() || '아쉽네요! 다음 기회에..')
+                            : editingPreset.result_text
+                      };
+                      const updated = [...presets];
+                      if (editingPresetIndex === presets.length) {
+                        updated.push(normalized);
+                      } else {
+                        updated[editingPresetIndex] = normalized;
+                      }
+                      setPresets(updated);
+                      localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
+                      setActiveCategory('custom'); // Auto-switch to personal presets tab
+                      setEditingPresetIndex(null);
+                      setEditingPreset(null);
+                    }}
+                    className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-bold hover:bg-white/10 transition-all text-xs cursor-pointer"
+                  >
+                    저장만 하기
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (editingPresetIndex === null || !editingPreset) return;
+                      const normalized: Preset = {
+                        ...editingPreset,
+                        text: editingPreset.text.trim(),
+                        result_text: (editingPreset.effect === 'countdown') 
+                          ? (editingPreset.result_text?.trim() || 'START')
+                          : (editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw')
+                            ? (editingPreset.result_text?.trim() || '아쉽네요! 다음 기회에..')
+                            : editingPreset.result_text
+                      };
+                      const updated = [...presets];
+                      if (editingPresetIndex === presets.length) {
+                        updated.push(normalized);
+                      } else {
+                        updated[editingPresetIndex] = normalized;
+                      }
+                      setPresets(updated);
+                      localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
+                      triggerPreset(normalized, editingPresetIndex);
+                      setActiveCategory('custom'); // Auto-switch to personal presets tab
+                      setEditingPresetIndex(null);
+                      setEditingPreset(null);
+                    }}
+                    className="btn-primary flex-1 py-3 rounded-xl text-xs font-bold cursor-pointer"
+                  >
+                    저장 후 바로 송출
+                  </button>
+                </div>
+                {editingPresetIndex === presets.length && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (editingPresetIndex === null || !editingPreset) return;
+                      const normalized: Preset = {
+                        ...editingPreset,
+                        text: editingPreset.text.trim(),
+                        result_text: (editingPreset.effect === 'countdown') 
+                          ? (editingPreset.result_text?.trim() || 'START')
+                          : (editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw')
+                            ? (editingPreset.result_text?.trim() || '아쉽네요! 다음 기회에..')
+                            : editingPreset.result_text
+                      };
+                      triggerPreset(normalized, -1);
+                      setEditingPresetIndex(null);
+                      setEditingPreset(null);
+                    }}
+                    className="w-full py-2.5 rounded-xl border border-dashed border-zinc-700 bg-transparent text-zinc-400 hover:text-white hover:border-zinc-500 hover:bg-white/5 font-bold transition-all text-[11px] cursor-pointer"
+                  >
+                    저장 없이 바로 송출 (1회성 송출)
+                  </button>
+                )}
               </div>
 
               {/* Reset, Delete, Cancel as simple clean links */}
@@ -2420,11 +2445,19 @@ export default function HostDashboard() {
                         </div>
                         <div className="flex items-center gap-1.5">
                           <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                          <span>커스텀 색상 팔레트</span>
+                          <span>무제한 프리셋 저장</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                          <span>다중 당첨자 추첨 (최대 10명)</span>
+                          <span>다중 추첨 (최대 10명)</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          <span>프리미엄 폰트 제공</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                          <span>화려한 특수효과 잠금해제</span>
                         </div>
                         <div className="flex items-center gap-1.5 col-span-2 mt-0.5 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1.5 rounded-lg">
                           <svg className="w-3.5 h-3.5 text-indigo-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -2829,8 +2862,43 @@ export default function HostDashboard() {
 
 // 12. Host Standalone Fullscreen Signboard Component
 function HostFullscreenSignboard({ preset, onClose }: { preset: Preset; onClose: () => void }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { fontSize } = useFitText(preset.text || '', preset.effect || 'none', preset.font_size || 100);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const wakeLockRef = useRef<any>(null);
+
+  // Countdown logic if preset effect is countdown
+  const [countdownVal, setCountdownVal] = useState<number | string>(preset.countdown_seconds || 10);
+  useEffect(() => {
+    if (preset.effect === 'countdown') {
+      const startSec = preset.countdown_seconds || 10;
+      setCountdownVal(startSec);
+      const timer = setInterval(() => {
+        setCountdownVal((prev) => {
+          if (typeof prev === 'number') {
+            if (prev <= 1) {
+              return preset.result_text || 'START';
+            }
+            return prev - 1;
+          }
+          return prev;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [preset.text, preset.effect, preset.countdown_seconds, preset.result_text]);
+
+  const isLuckyDrawWait = preset.effect === 'luckydraw_wait';
+  const displayText = preset.effect === 'countdown'
+    ? String(countdownVal)
+    : isLuckyDrawWait
+      ? '추첨 대기 중'
+      : (preset.text || '');
+
+  // Use dynamic fitting hook to sync text sizes proportional to viewport container dimensions
+  const { containerRef, fontSize } = useFitText(
+    displayText,
+    preset.effect || 'none',
+    preset.font_size || 100
+  );
 
   // Exiting triggers
   useEffect(() => {
@@ -2840,6 +2908,69 @@ function HostFullscreenSignboard({ preset, onClose }: { preset: Preset; onClose:
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
+
+  const requestWakeLock = async () => {
+    if ('wakeLock' in navigator) {
+      try {
+        if (wakeLockRef.current) {
+          console.log('[HostWakeLock] Already active, skipping request');
+          return;
+        }
+        const lock = await (navigator as any).wakeLock.request('screen');
+        lock.addEventListener('release', () => {
+          console.log('[HostWakeLock] Released by browser/system');
+          wakeLockRef.current = null;
+        });
+        wakeLockRef.current = lock;
+        console.log('[HostWakeLock] Screen Wake Lock is active');
+      } catch (err: any) {
+        console.warn(`[HostWakeLock] Failed to lock screen sleep: ${err.message}`);
+      }
+    }
+  };
+
+  const releaseWakeLock = async () => {
+    if (wakeLockRef.current) {
+      try {
+        await wakeLockRef.current.release();
+        wakeLockRef.current = null;
+        console.log('[HostWakeLock] Screen Wake Lock released');
+      } catch (err: any) {
+        console.error(err);
+      }
+    }
+  };
+
+  // Start sleep-prevention looping video immediately since this is triggered by user gesture click
+  useEffect(() => {
+    requestWakeLock();
+    if (videoRef.current) {
+      videoRef.current.play().catch((err) => {
+        console.warn('[WakeLock] Host video sleep prevention loop playback blocked:', err);
+      });
+    }
+    return () => {
+      releaseWakeLock();
+    };
+  }, []);
+
+  // Monitor visibility change to re-request Wake Lock
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        await requestWakeLock();
+        if (videoRef.current) {
+          videoRef.current.play().catch(() => {});
+        }
+      } else {
+        releaseWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // Special effect particles
   const particles = useMemo(() => {
@@ -2883,27 +3014,6 @@ function HostFullscreenSignboard({ preset, onClose }: { preset: Preset; onClose:
     return arr;
   }, [preset.special_effect]);
 
-  // Countdown logic if preset effect is countdown
-  const [countdownVal, setCountdownVal] = useState<number | string>(preset.countdown_seconds || 10);
-  useEffect(() => {
-    if (preset.effect === 'countdown') {
-      const startSec = preset.countdown_seconds || 10;
-      setCountdownVal(startSec);
-      const timer = setInterval(() => {
-        setCountdownVal((prev) => {
-          if (typeof prev === 'number') {
-            if (prev <= 1) {
-              return preset.result_text || 'START';
-            }
-            return prev - 1;
-          }
-          return prev;
-        });
-      }, 1000);
-      return () => clearInterval(timer);
-    }
-  }, [preset.text, preset.effect, preset.countdown_seconds, preset.result_text]);
-
   const isDuoSiren = preset.effect === 'blink' && !!preset.bg_color_secondary;
   const isBlink = preset.effect === 'blink';
   const isMarquee = preset.effect === 'marquee';
@@ -2920,7 +3030,7 @@ function HostFullscreenSignboard({ preset, onClose }: { preset: Preset; onClose:
     }
   };
 
-  const displayText = preset.effect === 'countdown' ? countdownVal : (preset.text || '');
+
 
   // Floating controls visibility auto-hide
   const [showExitBtn, setShowExitBtn] = useState(true);
@@ -2931,6 +3041,10 @@ function HostFullscreenSignboard({ preset, onClose }: { preset: Preset; onClose:
 
   const triggerResetControls = () => {
     setShowExitBtn(true);
+    requestWakeLock();
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
   };
 
   return (
@@ -3023,7 +3137,7 @@ function HostFullscreenSignboard({ preset, onClose }: { preset: Preset; onClose:
       )}
 
       {isMarquee ? (
-        <div className="w-full overflow-hidden flex items-center whitespace-nowrap relative z-10">
+        <div className="w-full overflow-hidden flex items-center whitespace-nowrap relative z-10 py-[2vh]">
           <div 
             className={`animate-marquee-seamless select-none leading-[1.2] flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(preset.font_family)}`}
             style={{ 
@@ -3078,6 +3192,16 @@ function HostFullscreenSignboard({ preset, onClose }: { preset: Preset; onClose:
       <div className={`absolute bottom-6 left-6 z-40 text-[10px] text-zinc-500 transition-opacity duration-300 ${showExitBtn ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         화면을 더블클릭하거나 ESC 키를 누르면 종료됩니다.
       </div>
+
+      {/* Invisible silent video loop to force-keep iOS devices awake */}
+      <video
+        ref={videoRef}
+        playsInline
+        muted
+        loop
+        style={{ position: 'fixed', opacity: 0.001, pointerEvents: 'none', width: '4px', height: '4px', left: '0px', bottom: '0px', zIndex: -100 }}
+        src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAr9tZGF0AAACoAYF//+///AAAAMmF2Y0MBZAAK/+EAGWdkAAqs2V+WXAWyAAADAAIAAAMAYB4kSywBAAZo6+PLIsAAAAAYc3R0cwAAAAAAAAABAAAAAQAAAgAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAACtwAAAAEAAAAUc3RjbwAAAAAAAAABAAAAMAAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNTQuNjMuMTA0"
+      />
     </div>
   );
 }

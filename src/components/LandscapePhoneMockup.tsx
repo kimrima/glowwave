@@ -212,7 +212,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
         )}
 
         {isMarquee ? (
-          <div key={preset.trigger_id} className="w-full overflow-hidden flex items-center whitespace-nowrap font-sans relative z-10">
+          <div key={preset.trigger_id} className="w-full overflow-hidden flex items-center whitespace-nowrap font-sans relative z-10 py-[2cqh]">
             {/* Track 1 */}
             <div 
               className={`animate-marquee-seamless select-none leading-[1.2] flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass()}`}
