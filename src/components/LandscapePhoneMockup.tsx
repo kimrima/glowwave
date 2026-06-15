@@ -152,9 +152,11 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
                       left: p.left,
                       fontSize: p.fontSize,
                       color: p.color,
-                      animationDelay: `${p.delay}, 0s`,
-                      '--heart-duration': p.duration,
-                      '--heart-sway': p.sway
+                      animationName: 'float-heart, sway-heart',
+                      animationDuration: `${p.duration}, ${p.sway}`,
+                      animationTimingFunction: 'linear, ease-in-out',
+                      animationIterationCount: 'infinite, infinite',
+                      animationDelay: `${p.delay}, 0s`
                     } as React.CSSProperties}
                   >
                     ❤️
@@ -171,9 +173,11 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
                       left: p.left,
                       fontSize: p.fontSize,
                       color: p.color,
-                      animationDelay: `${p.delay}, 0s`,
-                      '--confetti-duration': p.duration,
-                      '--confetti-sway': p.sway
+                      animationName: 'float-confetti, sway-confetti',
+                      animationDuration: `${p.duration}, ${p.sway}`,
+                      animationTimingFunction: 'linear, ease-in-out',
+                      animationIterationCount: 'infinite, infinite',
+                      animationDelay: `${p.delay}, 0s`
                     } as React.CSSProperties}
                   >
                     {shape}
@@ -191,8 +195,11 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
                       top: p.top,
                       fontSize: p.fontSize,
                       color: p.color,
-                      animationDelay: p.delay,
-                      '--star-duration': p.duration
+                      animationName: 'twinkle-star',
+                      animationDuration: p.duration,
+                      animationTimingFunction: 'ease-in-out',
+                      animationIterationCount: 'infinite',
+                      animationDelay: p.delay
                     } as React.CSSProperties}
                   >
                     {glyph}

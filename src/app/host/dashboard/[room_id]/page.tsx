@@ -139,6 +139,25 @@ export default function HostDashboard() {
   const [editingPresetIndex, setEditingPresetIndex] = useState<number | null>(null);
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
 
+  const getFontFamilyClass = (fontFamily?: string) => {
+    switch (fontFamily) {
+      case 'sans-thin':
+        return 'font-sign-sans-thin font-bold';
+      case 'sans-thick':
+        return 'font-sign-sans-thick font-black';
+      case 'serif':
+        return 'font-sign-serif font-bold';
+      case 'neon':
+        return 'font-sign-neon font-black';
+      case 'pixel':
+        return 'font-sign-pixel';
+      case 'plump':
+        return 'font-sign-plump font-black';
+      default:
+        return 'font-sign-sans-thin font-bold';
+    }
+  };
+
   const handleFontSelect = (fontVal: 'sans-thin' | 'sans-thick' | 'serif' | 'neon' | 'pixel' | 'plump', isEdit: boolean) => {
     const isPremium = fontVal === 'neon' || fontVal === 'pixel' || fontVal === 'plump';
     if (isPremium && room?.tier === 'free') {
@@ -1231,8 +1250,8 @@ export default function HostDashboard() {
                       }} 
                     />
                     
-                    <div className="text-center relative z-10 select-none">
-                      <div className="font-extrabold text-xs sm:text-sm tracking-tight font-outfit uppercase">
+                    <div className="text-center relative z-10 select-none w-full px-2">
+                      <div className={`text-xs sm:text-sm tracking-tight uppercase line-clamp-2 ${getFontFamilyClass(preset.font_family)}`}>
                         {preset.text}
                       </div>
                     </div>
@@ -1404,7 +1423,7 @@ export default function HostDashboard() {
                       { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
                       { val: 'serif', label: '클래식명조', style: { fontFamily: "'ChosunMyeongjo', serif", fontWeight: 400 } },
                       { val: 'neon', label: '스포티 🌟', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } },
-                      { val: 'pixel', label: '레트로도트 🌟', style: { fontFamily: "'NeoDgm', sans-serif", fontWeight: 400 } },
+                      { val: 'pixel', label: '레트로도트 🌟', style: { fontFamily: "'NeoDunggeunmo', sans-serif", fontWeight: 400 } },
                       { val: 'plump', label: '둥글몽글 🌟', style: { fontFamily: "'TmonMonsori', sans-serif", fontWeight: 900 } }
                     ].map((item) => (
                       <button
@@ -2005,7 +2024,7 @@ export default function HostDashboard() {
                       { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
                       { val: 'serif', label: '클래식명조', style: { fontFamily: "'ChosunMyeongjo', serif", fontWeight: 400 } },
                       { val: 'neon', label: '스포티 🌟', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } },
-                      { val: 'pixel', label: '레트로도트 🌟', style: { fontFamily: "'NeoDgm', sans-serif", fontWeight: 400 } },
+                      { val: 'pixel', label: '레트로도트 🌟', style: { fontFamily: "'NeoDunggeunmo', sans-serif", fontWeight: 400 } },
                       { val: 'plump', label: '둥글몽글 🌟', style: { fontFamily: "'TmonMonsori', sans-serif", fontWeight: 900 } }
                     ].map((item) => (
                       <button
