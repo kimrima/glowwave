@@ -138,6 +138,7 @@ export default function AudienceRoom() {
   const [isIOSUserAndNotStandalone, setIsIOSUserAndNotStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isChromeIOS, setIsChromeIOS] = useState(false);
 
   // Technical Refs for Wake Lock & Real-time
   const wakeLockRef = useRef<any>(null);
@@ -154,6 +155,8 @@ export default function AudienceRoom() {
     // Check iOS and Standalone Mode on first render
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(ios);
+    const isChrome = /CriOS/i.test(navigator.userAgent);
+    setIsChromeIOS(isChrome);
     const isStandaloneMode = (window.navigator as any).standalone === true || window.matchMedia('(display-mode: standalone)').matches;
     setIsStandalone(isStandaloneMode);
     
@@ -627,16 +630,17 @@ export default function AudienceRoom() {
       {/* Floating Control Toolbar */}
       {!isStandalone && (
         <div className={`absolute top-6 left-6 z-40 flex items-center gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleFullscreen();
-            }}
-            className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
-          >
-            {isFullscreen ? '화면 축소' : '전체화면 전환'}
-          </button>
-          {isIOS && (
+          {!isIOS ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFullscreen();
+              }}
+              className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
+            >
+              {isFullscreen ? '화면 축소' : '전체화면 전환'}
+            </button>
+          ) : (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -644,19 +648,19 @@ export default function AudienceRoom() {
               }}
               className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
             >
-              아이폰 사파리 팁
+              아이폰 전체화면 가이드
             </button>
           )}
         </div>
       )}
 
-      {/* iOS Safari Home Screen Tooltip */}
+      {/* iOS Safari/Chrome Home Screen Tooltip */}
       {showSafariTip && !isStandalone && (
         <div className={`fixed top-6 left-6 right-6 md:left-auto md:w-80 bg-black/95 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-xs text-zinc-300 shadow-2xl z-50 animate-in fade-in slide-in-from-top-4 duration-200 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="flex justify-between items-center mb-2">
             <span className="font-bold text-white flex items-center gap-1.5">
               <Smartphone className="w-4 h-4 text-indigo-400" />
-              아이폰 Safari 전체화면 팁
+              {isChromeIOS ? '아이폰 Chrome 전체화면 팁' : '아이폰 Safari 전체화면 팁'}
             </span>
             <button 
               onClick={(e) => {
@@ -668,13 +672,26 @@ export default function AudienceRoom() {
               ×
             </button>
           </div>
-          <p className="leading-relaxed mb-3 text-zinc-400">
-            아이폰 사파리 브라우저는 기본 주소창과 탭이 숨겨지지 않습니다. 아래 방법으로 앱처럼 실행하시면 완벽한 전체화면으로 이용 가능합니다.
+          <p className="leading-relaxed mb-3 text-zinc-400 font-medium">
+            {isChromeIOS 
+              ? '아이폰 크롬 브라우저는 기본 주소창과 메뉴바가 숨겨지지 않습니다. 아래 방법으로 앱처럼 실행하시면 완벽한 전체화면으로 이용 가능합니다.'
+              : '아이폰 사파리 브라우저는 기본 주소창과 탭이 숨겨지지 않습니다. 아래 방법으로 앱처럼 실행하시면 완벽한 전체화면으로 이용 가능합니다.'
+            }
           </p>
-          <div className="bg-white/5 rounded-xl p-3 text-[10px] flex flex-col gap-2 text-zinc-400 leading-normal border border-white/5">
-            <div>1. 사파리 화면 하단 [공유 버튼]을 누릅니다.</div>
-            <div>2. 목록 중 [홈 화면에 추가]를 클릭합니다.</div>
-            <div>3. 바탕화면에 설치된 아이콘을 눌러 실행하면 완벽한 전체화면 앱으로 구동됩니다.</div>
+          <div className="bg-white/5 rounded-xl p-3 text-[10px] flex flex-col gap-2 text-zinc-400 leading-normal border border-white/5 font-medium">
+            {isChromeIOS ? (
+              <>
+                <div>1. 크롬 화면의 <b>[공유 버튼]</b>(우측 상단 주소창 옆 또는 하단 메뉴의 공유 아이콘)을 누릅니다.</div>
+                <div>2. 목록 중 <b>[홈 화면에 추가]</b>를 클릭합니다.</div>
+                <div>3. 바탕화면에 설치된 아이콘을 눌러 실행하면 완벽한 전체화면 앱으로 구동됩니다.</div>
+              </>
+            ) : (
+              <>
+                <div>1. 사파리 화면 하단 중앙의 <b>[공유 버튼]</b>(네모에서 위로 화살표가 나가는 모양)을 누릅니다.</div>
+                <div>2. 목록 중 <b>[홈 화면에 추가]</b>를 클릭합니다.</div>
+                <div>3. 바탕화면에 설치된 아이콘을 눌러 실행하면 완벽한 전체화면 앱으로 구동됩니다.</div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -777,28 +794,48 @@ export default function AudienceRoom() {
           <h2 className="text-xl font-black text-white mb-2">전광판 동기화 준비 완료</h2>
           
           {isIOSUserAndNotStandalone ? (
-            <div className="glass-effect p-6 rounded-2xl max-w-sm border border-white/5 bg-[#12121a] mb-6 flex flex-col gap-4 text-left">
+            <div className="glass-effect p-6 rounded-2xl max-w-sm border border-white/5 bg-[#12121a] mb-6 flex flex-col gap-4 text-left font-sans">
               <div className="flex items-center gap-2 border-b border-white/5 pb-2">
                 <Smartphone className="w-4.5 h-4.5" />
                 <h3 className="font-bold text-xs text-white">아이폰(iOS) 전체화면 설정 권장</h3>
               </div>
               <p className="text-[11px] text-zinc-400 leading-relaxed font-medium">
-                아이폰 Safari 브라우저는 주소창과 메뉴바를 숨길 수 없어 일반 브라우저로 접속 시 전광판이 잘려 보입니다. 
-                아래 순서대로 <b>'홈 화면에 추가'</b>하여 실행하시면 완벽한 전체화면 앱으로 이용 가능합니다.
+                {isChromeIOS 
+                  ? '아이폰 크롬 브라우저는 주소창과 메뉴바를 숨길 수 없어 일반 브라우저로 접속 시 전광판이 잘려 보입니다. 아래 순서대로 홈 화면에 추가하여 실행하시면 완벽한 전체화면 앱으로 이용 가능합니다.'
+                  : '아이폰 사파리 브라우저는 주소창과 메뉴바를 숨길 수 없어 일반 브라우저로 접속 시 전광판이 잘려 보입니다. 아래 순서대로 홈 화면에 추가하여 실행하시면 완벽한 전체화면 앱으로 이용 가능합니다.'
+                }
               </p>
               <div className="bg-white/5 rounded-xl p-3 text-[10px] flex flex-col gap-2 text-zinc-300 leading-normal border border-white/5 font-medium">
-                <div className="flex gap-1.5">
-                  <span className="text-zinc-500 font-bold">1.</span>
-                  <span>화면 하단 중앙의 <b>[공유 버튼]</b>을 클릭합니다.</span>
-                </div>
-                <div className="flex gap-1.5 border-t border-white/5 pt-1.5">
-                  <span className="text-zinc-500 font-bold">2.</span>
-                  <span>메뉴 중 <b>[홈 화면에 추가]</b>를 선택합니다.</span>
-                </div>
+                {isChromeIOS ? (
+                  <>
+                    <div className="flex gap-1.5">
+                      <span className="text-zinc-500 font-bold">1.</span>
+                      <span>크롬 화면의 <b>[공유 버튼]</b>(우측 상단 주소창 옆 또는 하단 메뉴의 공유 아이콘)을 클릭합니다.</span>
+                    </div>
+                    <div className="flex gap-1.5 border-t border-white/5 pt-1.5">
+                      <span className="text-zinc-500 font-bold">2.</span>
+                      <span>메뉴 목록 중 <b>[홈 화면에 추가]</b>를 선택합니다.</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex gap-1.5">
+                      <span className="text-zinc-500 font-bold">1.</span>
+                      <span>사파리 화면 하단 중앙의 <b>[공유 버튼]</b>(네모에 위 화살표 모양)을 클릭합니다.</span>
+                    </div>
+                    <div className="flex gap-1.5 border-t border-white/5 pt-1.5">
+                      <span className="text-zinc-500 font-bold">2.</span>
+                      <span>메뉴 목록 중 <b>[홈 화면에 추가]</b>를 선택합니다.</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex gap-1.5 border-t border-white/5 pt-1.5">
                   <span className="text-zinc-500 font-bold">3.</span>
                   <span>바탕화면에 생성된 <b>GlowWave 아이콘</b>으로 재접속해 주세요.</span>
                 </div>
+              </div>
+              <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3 text-[9px] text-indigo-300 leading-normal font-bold">
+                💡 이미 홈 화면에 GlowWave 앱을 추가하셨다면, 홈 화면에서 앱을 직접 실행하시고 입장 코드 <span className="text-white font-mono bg-white/10 px-1 rounded">{roomId}</span>를 입력하여 참여하시는 것이 가장 편리합니다!
               </div>
               <p className="text-[9px] text-zinc-500 text-center font-medium">
                 ※ 홈 화면에 추가하지 않고 그냥 브라우저로 이용하려면 아래 버튼을 누르세요.

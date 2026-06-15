@@ -311,7 +311,7 @@ export default function HostDashboard() {
     setAuthErrorMessage(null);
 
     try {
-      const response = await fetch(`/api/room/${roomId}/status`);
+      const response = await fetch(`/api/room/${roomId}/status?token=${token}`);
       if (!response.ok) {
         let errorMsg = '이 방의 생성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오.';
         try {
@@ -349,6 +349,7 @@ export default function HostDashboard() {
         status: roomData.status,
         max_participants: roomData.max_participants,
         created_at: roomData.created_at,
+        passcode: roomData.passcode,
       });
 
       let initialPreset: Preset | null = null;
@@ -532,7 +533,7 @@ export default function HostDashboard() {
         
         // Silent session validation
         try {
-          const response = await fetch(`/api/room/${roomId}/status`);
+          const response = await fetch(`/api/room/${roomId}/status?token=${token}`);
           if (!response.ok) {
             if (response.status === 404) {
               console.warn('[Dashboard] Room not found or expired during visibility check.');
@@ -563,6 +564,7 @@ export default function HostDashboard() {
             tier: roomData.tier,
             status: roomData.status,
             max_participants: roomData.max_participants,
+            passcode: roomData.passcode,
           } : null);
 
         } catch (err) {
@@ -646,7 +648,7 @@ export default function HostDashboard() {
       }
 
       // Refresh room details from database
-      const syncResponse = await fetch(`/api/room/${roomId}/status`);
+      const syncResponse = await fetch(`/api/room/${roomId}/status?token=${token}`);
       if (syncResponse.ok) {
         const roomData = await syncResponse.json();
         setRoom({
@@ -657,6 +659,7 @@ export default function HostDashboard() {
           status: roomData.status,
           max_participants: roomData.max_participants,
           created_at: roomData.created_at,
+          passcode: roomData.passcode,
         });
       }
 
@@ -992,7 +995,7 @@ export default function HostDashboard() {
                   <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">방 비밀번호</span>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-[#ffffff]/[0.03] border border-white/5 font-mono">
-                      {room.passcode ? `🔒 ${room.passcode}` : '🔓 설정 없음'}
+                      {room.passcode ? room.passcode : '설정 없음'}
                     </span>
                     <button
                       type="button"
@@ -1474,7 +1477,7 @@ export default function HostDashboard() {
               </button>
               
               <button
-                onClick={() => window.open(`/host/present/${roomId}`, '_blank')}
+                onClick={() => window.open(`/host/present/${roomId}?token=${token}`, '_blank')}
                 className="w-full py-3 rounded-xl bg-indigo-500 font-bold text-white text-xs hover:bg-indigo-600 transition-all flex items-center justify-center cursor-pointer shadow-lg shadow-indigo-500/10"
               >
                 새 창으로 관객 안내 스크린 열기

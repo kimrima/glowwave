@@ -11,6 +11,9 @@ export async function GET(
     const resolvedParams = await params;
     const roomId = (resolvedParams.roomId as string).toUpperCase();
 
+    const { searchParams } = new URL(request.url);
+    const queryToken = searchParams.get('token');
+
     const dbConfigured = isSupabaseConfigured();
     let room;
     let dbErrorMsg = null;
@@ -36,6 +39,8 @@ export async function GET(
       }, { status: isDbError ? 500 : 404 });
     }
 
+    const isHost = queryToken === room.host_session_token;
+
     return NextResponse.json({
       room_id: room.id,
       tier: room.tier,
@@ -45,6 +50,7 @@ export async function GET(
       created_at: room.created_at,
       current_state: await localDb.getCurrentState(roomId),
       has_passcode: !!room.passcode,
+      ...(isHost ? { passcode: room.passcode } : {})
     });
   } catch (error: any) {
     console.error('Room status check error:', error);

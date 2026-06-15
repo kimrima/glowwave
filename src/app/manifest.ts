@@ -17,5 +17,11 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/x-icon',
       },
     ],
+    // Custom properties to enable automatic PWA link capturing on Android Chrome
+    ...({
+      launch_handler: {
+        client_mode: ['focus-existing', 'auto']
+      }
+    } as any)
   };
 }
