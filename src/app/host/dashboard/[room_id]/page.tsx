@@ -27,6 +27,7 @@ import {
 import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
+import { TEMPLATE_CATEGORIES } from '@/lib/templates';
 
 const defaults: Preset[] = [
   { bg_color: '#0B0B0F', text: '단색', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
@@ -134,6 +135,8 @@ export default function HostDashboard() {
   // Safety transmitter lock & miniature preview toggles
   const [isTransmitterLocked, setIsTransmitterLocked] = useState(false);
   const [showMiniPreviews, setShowMiniPreviews] = useState(true);
+
+  const [activeCategory, setActiveCategory] = useState<'custom' | 'busking' | 'sports' | 'party' | 'anniversary' | 'store'>('custom');
 
   // Preset Live Edit States
   const [editingPresetIndex, setEditingPresetIndex] = useState<number | null>(null);
@@ -1175,18 +1178,78 @@ export default function HostDashboard() {
               </div>
             </div>
 
+            {/* Category tabs scroll bar */}
+            <div className="flex gap-2 overflow-x-auto pb-3.5 mb-4 scrollbar-none border-b border-white/5">
+              <button
+                type="button"
+                onClick={() => setActiveCategory('custom')}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none border ${
+                  activeCategory === 'custom'
+                    ? 'bg-white text-black border-white shadow-sm'
+                    : 'bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+                }`}
+              >
+                <span>💾</span>
+                <span>내 프리셋</span>
+              </button>
+              {TEMPLATE_CATEGORIES.map((cat) => (
+                <button
+                  type="button"
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap select-none border ${
+                    activeCategory === cat.id
+                      ? 'bg-white text-black border-white shadow-sm'
+                      : 'bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+                  }`}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.label}</span>
+                </button>
+              ))}
+            </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {presets.map((preset, index) => {
-                const isActive = activePresetIndex === index;
+              {(activeCategory === 'custom' ? presets : (TEMPLATE_CATEGORIES.find(c => c.id === activeCategory)?.presets || [])).map((preset, index) => {
+                const isActive = currentBroadcastPreset.text === preset.text &&
+                                 currentBroadcastPreset.bg_color === preset.bg_color &&
+                                 currentBroadcastPreset.font_family === preset.font_family &&
+                                 currentBroadcastPreset.special_effect === preset.special_effect &&
+                                 currentBroadcastPreset.effect === preset.effect;
                 return (
                   <div
                     key={index}
                     onClick={() => {
+                      // Block premium templates/presets on Free tier
+                      const isPremiumFont = preset.font_family === 'neon' || preset.font_family === 'pixel' || preset.font_family === 'plump';
+                      const isPremiumEffect = preset.special_effect === 'hearts' || preset.special_effect === 'confetti' || preset.special_effect === 'stars';
+                      if ((isPremiumFont || isPremiumEffect) && room?.tier === 'free') {
+                        if (confirm('이 템플릿은 유료 요금제(Lite 이상) 전용 폰트 또는 특수 효과를 사용하고 있습니다. 요금제를 업그레이드하시겠습니까?')) {
+                          setSelectedUpgradeTier(null);
+                          setUpgradeStep('select');
+                          setIsUpgradeModalOpen(true);
+                        }
+                        return;
+                      }
+
                       if (isTransmitterLocked) {
-                        setEditingPresetIndex(index);
-                        setEditingPreset({ ...preset });
+                        if (activeCategory === 'custom') {
+                          setEditingPresetIndex(index);
+                          setEditingPreset({ ...preset });
+                        } else {
+                          // Check tier limit: custom presets cannot exceed 6 on free tier
+                          if (room?.tier === 'free' && presets.length >= 6) {
+                            setSelectedUpgradeTier(null);
+                            setUpgradeStep('select');
+                            setIsUpgradeModalOpen(true);
+                            return;
+                          }
+                          // Import template as a new custom preset in edit drawer
+                          setEditingPresetIndex(presets.length);
+                          setEditingPreset({ ...preset });
+                        }
                       } else {
-                        triggerPreset(preset, index);
+                        triggerPreset(preset, activeCategory === 'custom' ? index : -1);
                       }
                     }}
                     className={`h-24 rounded-2xl border flex items-center justify-center p-6 relative overflow-hidden transition-all duration-300 cursor-pointer active-spring-pad group`}
@@ -1261,11 +1324,24 @@ export default function HostDashboard() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation(); // Avoid triggering preset
-                        setEditingPresetIndex(index);
-                        setEditingPreset({ ...preset });
+                        if (activeCategory === 'custom') {
+                          setEditingPresetIndex(index);
+                          setEditingPreset({ ...preset });
+                        } else {
+                          // Check tier limit: custom presets cannot exceed 6 on free tier
+                          if (room?.tier === 'free' && presets.length >= 6) {
+                            setSelectedUpgradeTier(null);
+                            setUpgradeStep('select');
+                            setIsUpgradeModalOpen(true);
+                            return;
+                          }
+                          // Import template as a new custom preset
+                          setEditingPresetIndex(presets.length);
+                          setEditingPreset({ ...preset });
+                        }
                       }}
                       className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/20 text-white/50 hover:text-white hover:bg-black/50 transition-all z-20 cursor-pointer shadow-sm border border-white/5"
-                      title="수정"
+                      title={activeCategory === 'custom' ? "수정" : "내 프리셋으로 가져와 편집"}
                     >
                       <Edit3 className="w-3 h-3" />
                     </button>
@@ -1274,34 +1350,36 @@ export default function HostDashboard() {
               })}
 
               {/* + Custom Preset Card Slot */}
-              <div
-                onClick={() => {
-                  // Check tier limit: Free is limited to 6 presets max
-                  if (room?.tier === 'free' && presets.length >= 6) {
-                    setSelectedUpgradeTier(null);
-                    setUpgradeStep('select');
-                    setIsUpgradeModalOpen(true);
-                    return;
-                  }
-                  
-                  // Else, open edit drawer to add custom preset
-                  const newPreset: Preset = {
-                    bg_color: '#EF4444',
-                    text: '새 연출',
-                    text_color: '#FFFFFF',
-                    effect: 'none',
-                    speed: 1000
-                  };
-                  setEditingPresetIndex(presets.length);
-                  setEditingPreset(newPreset);
-                }}
-                className="h-24 rounded-2xl border border-dashed border-white/10 hover:border-white/30 bg-transparent flex items-center justify-center p-6 transition-all hover:bg-white/[0.01] active:scale-[0.97] cursor-pointer text-zinc-500 hover:text-white"
-              >
-                <div className="flex items-center gap-1.5">
-                  <Plus className="w-4 h-4" />
-                  <span className="text-sm font-bold">새 연출 추가</span>
+              {activeCategory === 'custom' && (
+                <div
+                  onClick={() => {
+                    // Check tier limit: Free is limited to 6 presets max
+                    if (room?.tier === 'free' && presets.length >= 6) {
+                      setSelectedUpgradeTier(null);
+                      setUpgradeStep('select');
+                      setIsUpgradeModalOpen(true);
+                      return;
+                    }
+                    
+                    // Else, open edit drawer to add custom preset
+                    const newPreset: Preset = {
+                      bg_color: '#EF4444',
+                      text: '새 연출',
+                      text_color: '#FFFFFF',
+                      effect: 'none',
+                      speed: 1000
+                    };
+                    setEditingPresetIndex(presets.length);
+                    setEditingPreset(newPreset);
+                  }}
+                  className="h-24 rounded-2xl border border-dashed border-white/10 hover:border-white/30 bg-transparent flex items-center justify-center p-6 transition-all hover:bg-white/[0.01] active:scale-[0.97] cursor-pointer text-zinc-500 hover:text-white"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <Plus className="w-4 h-4" />
+                    <span className="text-sm font-bold">새 연출 추가</span>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -2129,6 +2207,7 @@ export default function HostDashboard() {
                     }
                     setPresets(updated);
                     localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
+                    setActiveCategory('custom'); // Auto-switch to personal presets tab
                     setEditingPresetIndex(null);
                     setEditingPreset(null);
                   }}
@@ -2158,6 +2237,7 @@ export default function HostDashboard() {
                     setPresets(updated);
                     localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
                     triggerPreset(normalized, editingPresetIndex);
+                    setActiveCategory('custom'); // Auto-switch to personal presets tab
                     setEditingPresetIndex(null);
                     setEditingPreset(null);
                   }}
