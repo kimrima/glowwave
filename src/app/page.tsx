@@ -222,7 +222,7 @@ export default function Home() {
       />
 
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#030305]/60 backdrop-blur-md">
+      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#030305]/60 backdrop-blur-md pt-[env(safe-area-inset-top,0px)]">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-black text-xl tracking-tight text-white font-outfit">
             <span>GlowWave</span>
@@ -275,8 +275,7 @@ export default function Home() {
           </div>
 
           {/* Recent Signboard List (Role-separated & Top-positioned) */}
-          {recentRooms.length > 0 && (
-            <div className="max-w-4xl mx-auto mb-12 px-2 animate-in fade-in duration-300">
+          <div className="max-w-4xl mx-auto mb-12 px-2 animate-in fade-in duration-300">
               <div className="grid md:grid-cols-2 gap-6">
                 
                 {/* Hosted Rooms Column */}
@@ -365,7 +364,6 @@ export default function Home() {
 
               </div>
             </div>
-          )}
 
           {/* Core Side-by-Side Action Cards - Bento Grid Style */}
           <div className="grid md:grid-cols-12 gap-6 max-w-4xl mx-auto mb-10">

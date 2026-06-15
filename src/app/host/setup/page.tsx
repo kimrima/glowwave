@@ -151,7 +151,7 @@ export default function HostSetup() {
       <div className="absolute bottom-[10%] right-[-10%] neon-glow-circle-2 opacity-30" />
 
       {/* Header */}
-      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10">
+      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10 pt-[env(safe-area-inset-top,0px)]">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-black text-xl tracking-tight text-white font-outfit">
             <span>GlowWave</span>

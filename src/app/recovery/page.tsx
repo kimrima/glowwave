@@ -64,7 +64,7 @@ export default function RecoveryPage() {
     <div className="min-h-screen bg-[#0B0B0F] text-foreground flex flex-col justify-between">
       
       {/* Header */}
-      <header className="border-b border-white/5 bg-[#0B0B0F]/80 backdrop-blur-md">
+      <header className="border-b border-white/5 bg-[#0B0B0F]/80 backdrop-blur-md pt-[env(safe-area-inset-top,0px)]">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight text-white">
             <Sparkles className="w-5 h-5 text-indigo-400" />

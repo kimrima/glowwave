@@ -926,7 +926,7 @@ export default function HostDashboard() {
       <div className="absolute bottom-[20%] right-[-10%] neon-glow-circle-2 opacity-25" />
 
       {/* Header */}
-      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10">
+      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10 pt-[env(safe-area-inset-top,0px)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-black text-white tracking-tight font-outfit text-sm uppercase">GlowWave Host Remote</span>
