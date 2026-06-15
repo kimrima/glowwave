@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { 
@@ -22,19 +22,21 @@ import {
   Plus,
   Trash2,
   Slash,
-  Lock
+  Lock,
+  Maximize2
 } from 'lucide-react';
 import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import { TEMPLATE_CATEGORIES } from '@/lib/templates';
+import useFitText from '@/hooks/useFitText';
 
 const defaults: Preset[] = [
   { bg_color: '#0B0B0F', text: '단색', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#3B82F6', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1000, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#FF0000', text: '경찰 사이렌', text_color: '#FFFFFF', effect: 'blink', speed: 150, bg_color_secondary: '#0000FF', font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1000, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100, lucky_draw_count: 1 },
-  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000, font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#3B82F6', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1527, font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#FF0000', text: '경찰 사이렌', text_color: '#FFFFFF', effect: 'blink', speed: 1527, bg_color_secondary: '#0000FF', font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1527, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100, lucky_draw_count: 1 },
+  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 11606, font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
 ];
 
@@ -129,8 +131,9 @@ export default function HostDashboard() {
   const [customFontSize, setCustomFontSize] = useState<number>(100);
   const [customFontFamily, setCustomFontFamily] = useState<'sans-thin' | 'sans-thick' | 'serif' | 'neon' | 'pixel' | 'plump'>('sans-thin');
   const [customEffect, setCustomEffect] = useState<EffectType>('none');
-  const [customSpeed, setCustomSpeed] = useState(50); // range 1-100
+  const [customSpeed, setCustomSpeed] = useState(25); // range 1-100
   const [customSpecialEffect, setCustomSpecialEffect] = useState<'none' | 'hearts' | 'confetti' | 'stars'>('none');
+  const [isStandaloneFullscreen, setIsStandaloneFullscreen] = useState(false);
 
   // Safety transmitter lock & miniature preview toggles
   const [isTransmitterLocked, setIsTransmitterLocked] = useState(false);
@@ -1434,152 +1437,172 @@ export default function HostDashboard() {
                 </button>
               </div>
 
-              {/* iOS style Segmented Controls Row (Responsive Grid layout) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 pt-3.5 border-t border-white/5">
-                {/* 배경 테마 */}
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">배경 테마</span>
-                  <div className="flex flex-wrap items-center gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 min-h-10">
-                    {[
-                      '#EF4444', '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#EC4899', '#FFFFFF', '#0B0B0F'
-                    ].map((hex) => (
-                      <button
-                        key={hex}
-                        type="button"
-                        onClick={() => setCustomBgColor(hex)}
-                        className={`w-5 h-5 rounded-full border cursor-pointer transition-all ${
-                          customBgColor === hex
-                            ? 'border-white scale-110 shadow-md'
-                            : 'border-transparent hover:scale-105'
-                        }`}
-                        style={{ backgroundColor: hex }}
-                      />
-                    ))}
-                    
-                    {/* Custom Color Picker for Paid Tiers */}
-                    {room?.tier !== 'free' && (
-                      <div 
-                        className="w-5 h-5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0" 
-                        style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
-                        title="커스텀 색상 선택"
-                      >
-                        <input
-                          type="color"
-                          value={customBgColor}
-                          onChange={(e) => setCustomBgColor(e.target.value)}
-                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+              {/* iOS style Segmented Controls Row (Responsive Grid layout - Spaced 2-Row Layout) */}
+              <div className="flex flex-col gap-6 pt-3.5 border-t border-white/5">
+                {/* Row 1: Theme, Size, Font Style */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                  {/* 배경 테마 */}
+                  <div className="lg:col-span-3 flex flex-col gap-1.5">
+                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">배경 테마</span>
+                    <div className="flex flex-wrap items-center gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 min-h-10">
+                      {[
+                        '#EF4444', '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#EC4899', '#FFFFFF', '#0B0B0F'
+                      ].map((hex) => (
+                        <button
+                          key={hex}
+                          type="button"
+                          onClick={() => setCustomBgColor(hex)}
+                          className={`w-5 h-5 rounded-full border cursor-pointer transition-all ${
+                            customBgColor === hex
+                              ? 'border-white scale-110 shadow-md'
+                              : 'border-transparent hover:scale-105'
+                          }`}
+                          style={{ backgroundColor: hex }}
                         />
-                      </div>
-                    )}
+                      ))}
+                      
+                      {/* Custom Color Picker for Paid Tiers */}
+                      {room?.tier !== 'free' && (
+                        <div 
+                          className="w-5 h-5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0" 
+                          style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                          title="커스텀 색상 선택"
+                        >
+                          <input
+                            type="color"
+                            value={customBgColor}
+                            onChange={(e) => setCustomBgColor(e.target.value)}
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 글자 크기 (30% ~ 100% Range Slider) */}
+                  <div className="lg:col-span-3 flex flex-col gap-1.5">
+                    <div className="flex justify-between text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                      <span>글자 크기</span>
+                      <span className="text-indigo-400 font-extrabold">{customFontSize}%</span>
+                    </div>
+                    <div className="flex items-center bg-black/45 px-3 rounded-xl border border-white/5 h-10">
+                      <input
+                        type="range"
+                        min="30"
+                        max="100"
+                        value={customFontSize}
+                        onChange={(e) => setCustomFontSize(parseInt(e.target.value))}
+                        className="premium-slider w-full"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 글꼴 스타일 */}
+                  <div className="lg:col-span-6 flex flex-col gap-1.5">
+                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">글꼴 스타일</span>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 items-center">
+                      {[
+                        { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', -apple-system, sans-serif", fontWeight: 700 } },
+                        { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
+                        { val: 'serif', label: '나눔명조', style: { fontFamily: "'Nanum Myeongjo', serif", fontWeight: 700 } },
+                        { val: 'neon', label: '스포티', isPremium: true, style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } },
+                        { val: 'pixel', label: '레트로도트', isPremium: true, style: { fontFamily: "'NeoDunggeunmo', sans-serif", fontWeight: 400 } },
+                        { val: 'plump', label: '둥글몽글', isPremium: true, style: { fontFamily: "'TmonMonsori', sans-serif", fontWeight: 900 } }
+                      ].map((item) => (
+                        <button
+                          type="button"
+                          key={item.val}
+                          onClick={() => handleFontSelect(item.val as any, false)}
+                          style={item.style}
+                          className={`py-2.5 px-0.5 rounded-lg text-[10px] transition-all cursor-pointer ${
+                            customFontFamily === item.val
+                              ? 'bg-white text-black font-extrabold shadow-sm'
+                              : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          <span className="flex flex-col items-center justify-center gap-0.5">
+                            <span>{item.label}</span>
+                            {item.isPremium && (
+                              <span className="px-1 py-[0.5px] rounded-[3px] text-[7px] font-black tracking-wide uppercase bg-violet-500/20 border border-violet-500/30 text-violet-400">
+                                PRO
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* 글자 크기 (30% ~ 100% Range Slider) */}
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex justify-between text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                    <span>글자 크기</span>
-                    <span className="text-indigo-400 font-extrabold">{customFontSize}%</span>
+                {/* Row 2: Motion Effect, Special Effect */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-4 border-t border-white/5">
+                  {/* 모션 효과 */}
+                  <div className="lg:col-span-4 flex flex-col gap-1.5">
+                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">모션 효과</span>
+                    <div className="grid grid-cols-3 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 h-10 items-center">
+                      {[
+                        { val: 'none', label: '정적' },
+                        { val: 'blink', label: '깜빡' },
+                        { val: 'marquee', label: '흐름' }
+                      ].map((item) => (
+                        <button
+                          type="button"
+                          key={item.val}
+                          onClick={() => setCustomEffect(item.val as any)}
+                          className={`h-full rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                            customEffect === item.val
+                              ? 'bg-white text-black font-extrabold shadow-sm'
+                              : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center bg-black/45 px-3 rounded-xl border border-white/5 h-10">
-                    <input
-                      type="range"
-                      min="30"
-                      max="100"
-                      value={customFontSize}
-                      onChange={(e) => setCustomFontSize(parseInt(e.target.value))}
-                      className="premium-slider w-full"
-                    />
-                  </div>
-                </div>
 
-                {/* 글꼴 스타일 */}
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">글꼴 스타일</span>
-                  <div className="grid grid-cols-3 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 items-center">
-                    {[
-                      { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', -apple-system, sans-serif", fontWeight: 700 } },
-                      { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
-                      { val: 'serif', label: '클래식명조', style: { fontFamily: "'ChosunMyeongjo', serif", fontWeight: 400 } },
-                      { val: 'neon', label: '스포티 🌟', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } },
-                      { val: 'pixel', label: '레트로도트 🌟', style: { fontFamily: "'NeoDunggeunmo', sans-serif", fontWeight: 400 } },
-                      { val: 'plump', label: '둥글몽글 🌟', style: { fontFamily: "'TmonMonsori', sans-serif", fontWeight: 900 } }
-                    ].map((item) => (
-                      <button
-                        type="button"
-                        key={item.val}
-                        onClick={() => handleFontSelect(item.val as any, false)}
-                        style={item.style}
-                        className={`py-2 px-1 rounded-lg text-[10px] transition-all cursor-pointer ${
-                          customFontFamily === item.val
-                            ? 'bg-white text-black font-extrabold shadow-sm'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 모션 효과 */}
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">모션 효과</span>
-                  <div className="grid grid-cols-3 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 h-10 items-center">
-                    {[
-                      { val: 'none', label: '정적' },
-                      { val: 'blink', label: '깜빡' },
-                      { val: 'marquee', label: '흐름' }
-                    ].map((item) => (
-                      <button
-                        type="button"
-                        key={item.val}
-                        onClick={() => setCustomEffect(item.val as any)}
-                        className={`h-full rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                          customEffect === item.val
-                            ? 'bg-white text-black font-extrabold shadow-sm'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 특수 효과 */}
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">특수 효과 🌟</span>
-                  <div className="grid grid-cols-4 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 items-center min-h-10">
-                    {[
-                      { val: 'none', label: '없음' },
-                      { val: 'hearts', label: '하트 🌟' },
-                      { val: 'confetti', label: '꽃가루 🌟' },
-                      { val: 'stars', label: '별빛 🌟' }
-                    ].map((item) => (
-                      <button
-                        type="button"
-                        key={item.val}
-                        onClick={() => {
-                          const isPremium = item.val !== 'none';
-                          if (isPremium && room?.tier === 'free') {
-                            if (confirm('특수 효과는 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?')) {
-                              setSelectedUpgradeTier(null);
-                              setUpgradeStep('select');
-                              setIsUpgradeModalOpen(true);
+                  {/* 특수 효과 */}
+                  <div className="lg:col-span-8 flex flex-col gap-1.5">
+                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">특수 효과</span>
+                    <div className="grid grid-cols-4 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 items-center min-h-10">
+                      {[
+                        { val: 'none', label: '없음' },
+                        { val: 'hearts', label: '하트', isPremium: true },
+                        { val: 'confetti', label: '꽃가루', isPremium: true },
+                        { val: 'stars', label: '별빛', isPremium: true }
+                      ].map((item) => (
+                        <button
+                          type="button"
+                          key={item.val}
+                          onClick={() => {
+                            const isPremium = item.val !== 'none';
+                            if (isPremium && room?.tier === 'free') {
+                              if (confirm('특수 효과는 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?')) {
+                                setSelectedUpgradeTier(null);
+                                setUpgradeStep('select');
+                                setIsUpgradeModalOpen(true);
+                              }
+                              return;
                             }
-                            return;
-                          }
-                          setCustomSpecialEffect(item.val as any);
-                        }}
-                        className={`py-2 px-0.5 rounded-lg text-[9px] font-bold transition-all cursor-pointer ${
-                          customSpecialEffect === item.val
-                            ? 'bg-white text-black font-extrabold shadow-sm'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
-                        }`}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
+                            setCustomSpecialEffect(item.val as any);
+                          }}
+                          className={`py-2 px-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                            customSpecialEffect === item.val
+                              ? 'bg-white text-black font-extrabold shadow-sm'
+                              : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          <span className="flex items-center justify-center gap-1">
+                            <span>{item.label}</span>
+                            {item.isPremium && (
+                              <span className="px-1 py-[0.5px] rounded-[3px] text-[7px] font-black tracking-wide uppercase bg-violet-500/20 border border-violet-500/30 text-violet-400 shrink-0">
+                                PRO
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1616,9 +1639,28 @@ export default function HostDashboard() {
               <h2 className="text-sm font-bold text-white uppercase tracking-wider">LIVE ON AIR</h2>
             </div>
             <p className="text-[11px] text-zinc-500 mb-4 self-start">현재 모든 관객 화면에 송출 중인 실시간 연출 화면입니다.</p>
-            <div className="w-full flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl">
+            <div className="w-full flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl relative group overflow-hidden">
               <LandscapePhoneMockup preset={currentBroadcastPreset} />
+              
+              {/* Desktop Hover Overlay */}
+              <button
+                type="button"
+                onClick={() => setIsStandaloneFullscreen(true)}
+                className="hidden lg:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-2 text-white font-bold text-xs cursor-pointer"
+              >
+                <Maximize2 className="w-5 h-5 text-indigo-400" />
+                내 화면에 전체화면으로 띄우기
+              </button>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setIsStandaloneFullscreen(true)}
+              className="mt-3 w-full py-2.5 px-4 rounded-xl bg-indigo-600/90 hover:bg-indigo-600 hover:scale-[1.01] active:scale-[0.99] text-white font-black text-xs tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer border border-indigo-500/30 shadow-lg shadow-indigo-600/10"
+            >
+              <Maximize2 className="w-4 h-4" />
+              <span>내 기기를 전광판으로 사용 (전체화면)</span>
+            </button>
 
             {currentBroadcastPreset.effect === 'luckydraw_wait' && (
               <div className="w-full mt-4 flex flex-col gap-2">
@@ -1718,6 +1760,19 @@ export default function HostDashboard() {
           
           {/* Drawer Panel */}
           <div className="absolute inset-y-0 right-0 max-w-md w-full bg-[#12121a] border-l border-white/5 shadow-2xl flex flex-col justify-between z-10 animate-in slide-in-from-right duration-250">
+            
+            {/* Floating Preview Card on Left for Desktop/Tablet Screens */}
+            <div className="hidden lg:block absolute right-[calc(100%+24px)] top-6 z-20 w-[420px]">
+              <div className="glass-effect rounded-2xl p-5 bg-[#12121a]/95 border border-white/10 shadow-2xl flex flex-col items-center">
+                <span className="text-[10px] font-black font-mono text-indigo-400 uppercase mb-3 tracking-widest">실시간 연출 미리보기 (Floating Sync)</span>
+                <LandscapePhoneMockup preset={editingPreset} />
+                <div className="mt-3.5 text-[9.5px] text-zinc-400 text-center font-semibold leading-normal">
+                  수정창 좌측 빈 공간에 연출 화면이 고정됩니다.<br/>
+                  스크롤을 내려도 항상 변경 사항을 실시간으로 확인할 수 있습니다.
+                </div>
+              </div>
+            </div>
+
             <div className="flex flex-col flex-1 overflow-y-auto">
               
               {/* Header */}
@@ -1736,7 +1791,7 @@ export default function HostDashboard() {
               </div>
 
               {/* Landscape Live Preview Mockup Inside Drawer */}
-              <div className="p-6 border-b border-white/5 bg-black/40 flex flex-col items-center">
+              <div className="p-6 border-b border-white/5 bg-black/40 flex flex-col items-center lg:hidden">
                 <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-3 tracking-wider">실시간 연출 미리보기 (Mockup Sync)</span>
                 <LandscapePhoneMockup preset={editingPreset} />
               </div>
@@ -1825,9 +1880,9 @@ export default function HostDashboard() {
                             none: defaults[0],
                             blink: defaults[1],
                             marquee: defaults[4],
-                            countdown: defaults[3],
-                            luckydraw_wait: defaults[5],
-                            luckydraw: defaults[5]
+                            countdown: defaults[5],
+                            luckydraw_wait: defaults[3],
+                            luckydraw: defaults[3]
                           };
                           const defaultVal = effectDefaults[item.val as EffectType];
                           setEditingPreset(prev => ({
@@ -2100,10 +2155,10 @@ export default function HostDashboard() {
                     {[
                       { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', -apple-system, sans-serif", fontWeight: 700 } },
                       { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
-                      { val: 'serif', label: '클래식명조', style: { fontFamily: "'ChosunMyeongjo', serif", fontWeight: 400 } },
-                      { val: 'neon', label: '스포티 🌟', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } },
-                      { val: 'pixel', label: '레트로도트 🌟', style: { fontFamily: "'NeoDunggeunmo', sans-serif", fontWeight: 400 } },
-                      { val: 'plump', label: '둥글몽글 🌟', style: { fontFamily: "'TmonMonsori', sans-serif", fontWeight: 900 } }
+                      { val: 'serif', label: '나눔명조', style: { fontFamily: "'Nanum Myeongjo', serif", fontWeight: 700 } },
+                      { val: 'neon', label: '스포티', isPremium: true, style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } },
+                      { val: 'pixel', label: '레트로도트', isPremium: true, style: { fontFamily: "'NeoDunggeunmo', sans-serif", fontWeight: 400 } },
+                      { val: 'plump', label: '둥글몽글', isPremium: true, style: { fontFamily: "'TmonMonsori', sans-serif", fontWeight: 900 } }
                     ].map((item) => (
                       <button
                         type="button"
@@ -2116,7 +2171,14 @@ export default function HostDashboard() {
                             : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}
                       >
-                        {item.label}
+                        <span className="flex flex-col items-center justify-center gap-0.5">
+                          <span>{item.label}</span>
+                          {item.isPremium && (
+                            <span className="px-1 py-[0.5px] rounded-[3px] text-[7px] font-black tracking-wide uppercase bg-violet-500/20 border border-violet-500/30 text-violet-400">
+                              PRO
+                            </span>
+                          )}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -2124,13 +2186,13 @@ export default function HostDashboard() {
 
                 {/* 특수 효과 */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">특수 효과 🌟</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">특수 효과</label>
                   <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 h-11 items-center font-medium font-sans">
                     {[
                       { val: 'none', label: '없음' },
-                      { val: 'hearts', label: '하트 🌟' },
-                      { val: 'confetti', label: '꽃가루 🌟' },
-                      { val: 'stars', label: '별빛 🌟' }
+                      { val: 'hearts', label: '하트', isPremium: true },
+                      { val: 'confetti', label: '꽃가루', isPremium: true },
+                      { val: 'stars', label: '별빛', isPremium: true }
                     ].map((item) => (
                       <button
                         type="button"
@@ -2153,7 +2215,14 @@ export default function HostDashboard() {
                             : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                         }`}
                       >
-                        {item.label}
+                        <span className="flex items-center justify-center gap-1">
+                          <span>{item.label}</span>
+                          {item.isPremium && (
+                            <span className="px-1 py-[0.5px] rounded-[3px] text-[7px] font-black tracking-wide uppercase bg-violet-500/20 border border-violet-500/30 text-violet-400 shrink-0">
+                              PRO
+                            </span>
+                          )}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -2744,6 +2813,271 @@ export default function HostDashboard() {
           </div>
         </div>
       )}
+
+      {/* Standalone Fullscreen View Overlay */}
+      {isStandaloneFullscreen && (
+        <div className="fixed inset-0 z-50 bg-black flex items-center justify-center animate-in fade-in duration-200">
+          <HostFullscreenSignboard 
+            preset={currentBroadcastPreset} 
+            onClose={() => setIsStandaloneFullscreen(false)} 
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 12. Host Standalone Fullscreen Signboard Component
+function HostFullscreenSignboard({ preset, onClose }: { preset: Preset; onClose: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { fontSize } = useFitText(preset.text || '', preset.effect || 'none', preset.font_size || 100);
+
+  // Exiting triggers
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  // Special effect particles
+  const particles = useMemo(() => {
+    const effect = preset.special_effect;
+    if (!effect || effect === 'none') return [];
+    const count = effect === 'stars' ? 35 : effect === 'confetti' ? 45 : 30;
+    const arr = [];
+    for (let i = 0; i < count; i++) {
+      if (effect === 'hearts') {
+        arr.push({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          fontSize: `${18 + Math.random() * 26}px`,
+          delay: `${Math.random() * 6}s`,
+          duration: `${4 + Math.random() * 5}s`,
+          sway: `${2 + Math.random() * 3}s`,
+          color: ['#EF4444', '#EC4899', '#F472B6', '#F43F5E', '#D946EF'][Math.floor(Math.random() * 5)]
+        });
+      } else if (effect === 'confetti') {
+        arr.push({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          fontSize: `${12 + Math.random() * 20}px`,
+          delay: `${Math.random() * 5}s`,
+          duration: `${3 + Math.random() * 4}s`,
+          sway: `${1.5 + Math.random() * 2}s`,
+          color: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#14B8A6'][Math.floor(Math.random() * 7)]
+        });
+      } else if (effect === 'stars') {
+        arr.push({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          fontSize: `${4 + Math.random() * 8}px`,
+          delay: `${Math.random() * 4}s`,
+          duration: `${2 + Math.random() * 4}s`,
+          color: ['#FFF', '#FEF08A', '#A5F3FC', '#F472B6', '#C084FC'][Math.floor(Math.random() * 5)]
+        });
+      }
+    }
+    return arr;
+  }, [preset.special_effect]);
+
+  // Countdown logic if preset effect is countdown
+  const [countdownVal, setCountdownVal] = useState<number | string>(preset.countdown_seconds || 10);
+  useEffect(() => {
+    if (preset.effect === 'countdown') {
+      const startSec = preset.countdown_seconds || 10;
+      setCountdownVal(startSec);
+      const timer = setInterval(() => {
+        setCountdownVal((prev) => {
+          if (typeof prev === 'number') {
+            if (prev <= 1) {
+              return preset.result_text || 'START';
+            }
+            return prev - 1;
+          }
+          return prev;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [preset.text, preset.effect, preset.countdown_seconds, preset.result_text]);
+
+  const isDuoSiren = preset.effect === 'blink' && !!preset.bg_color_secondary;
+  const isBlink = preset.effect === 'blink';
+  const isMarquee = preset.effect === 'marquee';
+
+  const getFontFamilyClass = (fontFamily?: string) => {
+    switch (fontFamily) {
+      case 'sans-thin': return 'font-sign-sans-thin font-bold';
+      case 'sans-thick': return 'font-sign-sans-thick font-black';
+      case 'serif': return 'font-sign-serif font-bold';
+      case 'neon': return 'font-sign-neon font-black';
+      case 'pixel': return 'font-sign-pixel';
+      case 'plump': return 'font-sign-plump font-black';
+      default: return 'font-sign-sans-thin font-bold';
+    }
+  };
+
+  const displayText = preset.effect === 'countdown' ? countdownVal : (preset.text || '');
+
+  // Floating controls visibility auto-hide
+  const [showExitBtn, setShowExitBtn] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowExitBtn(false), 3000);
+    return () => clearTimeout(timer);
+  }, [showExitBtn]);
+
+  const triggerResetControls = () => {
+    setShowExitBtn(true);
+  };
+
+  return (
+    <div 
+      ref={containerRef}
+      onClick={triggerResetControls}
+      onDoubleClick={onClose}
+      className={`w-full h-full flex items-center justify-center relative select-none ${
+        (isDuoSiren || isBlink) ? '' : 'transition-colors duration-300'
+      } ${
+        isDuoSiren ? 'animate-siren' : isBlink ? 'animate-blink' : ''
+      }`}
+      style={{ 
+        backgroundColor: isDuoSiren ? undefined : preset.bg_color,
+        '--blink-duration': `${preset.speed || 1000}ms`,
+        '--siren-color-1': preset.bg_color,
+        '--siren-color-2': preset.bg_color_secondary || '#FFD700'
+      } as React.CSSProperties}
+    >
+      {/* Special Effects Particle Layer */}
+      {preset.special_effect && preset.special_effect !== 'none' && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          {particles.map((p: any) => {
+            if (preset.special_effect === 'hearts') {
+              return (
+                <div
+                  key={p.id}
+                  className="animate-heart text-shadow-lg"
+                  style={{
+                    left: p.left,
+                    fontSize: p.fontSize,
+                    color: p.color,
+                    animationName: 'float-heart, sway-heart',
+                    animationDuration: `${p.duration}, ${p.sway}`,
+                    animationTimingFunction: 'linear, ease-in-out',
+                    animationIterationCount: 'infinite, infinite',
+                    animationDelay: `${p.delay}, 0s`
+                  } as React.CSSProperties}
+                >
+                  ❤️
+                </div>
+              );
+            } else if (preset.special_effect === 'confetti') {
+              const shapes = ['🎉', '✨', '■', '●', '▲', '✦'];
+              const shape = shapes[p.id % shapes.length];
+              return (
+                <div
+                  key={p.id}
+                  className="animate-confetti"
+                  style={{
+                    left: p.left,
+                    fontSize: p.fontSize,
+                    color: p.color,
+                    animationName: 'float-confetti, sway-confetti',
+                    animationDuration: `${p.duration}, ${p.sway}`,
+                    animationTimingFunction: 'linear, ease-in-out',
+                    animationIterationCount: 'infinite, infinite',
+                    animationDelay: `${p.delay}, 0s`
+                  } as React.CSSProperties}
+                >
+                  {shape}
+                </div>
+              );
+            } else if (preset.special_effect === 'stars') {
+              const starGlyphs = ['✦', '★', '🌟', '✧', '•'];
+              const glyph = starGlyphs[p.id % starGlyphs.length];
+              return (
+                <div
+                  key={p.id}
+                  className="animate-star"
+                  style={{
+                    left: p.left,
+                    top: p.top,
+                    fontSize: p.fontSize,
+                    color: p.color,
+                    animationName: 'twinkle-star',
+                    animationDuration: p.duration,
+                    animationTimingFunction: 'ease-in-out',
+                    animationIterationCount: 'infinite',
+                    animationDelay: p.delay
+                  } as React.CSSProperties}
+                >
+                  {glyph}
+                </div>
+              );
+            }
+            return null;
+          })}
+        </div>
+      )}
+
+      {isMarquee ? (
+        <div className="w-full overflow-hidden flex items-center whitespace-nowrap relative z-10">
+          <div 
+            className={`animate-marquee-seamless select-none leading-[1.2] flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(preset.font_family)}`}
+            style={{ 
+              color: preset.text_color,
+              fontSize,
+              '--marquee-duration': `${preset.speed || 6000}ms`
+            } as React.CSSProperties}
+          >
+            <span>{displayText}</span>
+            <span>{displayText}</span>
+            <span>{displayText}</span>
+            <span>{displayText}</span>
+          </div>
+          <div 
+            className={`animate-marquee-seamless select-none leading-[1.2] flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(preset.font_family)}`}
+            style={{ 
+              color: preset.text_color,
+              fontSize,
+              '--marquee-duration': `${preset.speed || 6000}ms`
+            } as React.CSSProperties}
+            aria-hidden="true"
+          >
+            <span>{displayText}</span>
+            <span>{displayText}</span>
+            <span>{displayText}</span>
+            <span>{displayText}</span>
+          </div>
+        </div>
+      ) : (
+        <div 
+          className={`text-center whitespace-nowrap px-8 select-none max-w-full leading-[1.2] tracking-tighter relative z-10 ${getFontFamilyClass(preset.font_family)}`}
+          style={{ 
+            color: preset.text_color,
+            fontSize,
+            zIndex: 10
+          }}
+        >
+          {displayText}
+        </div>
+      )}
+
+      {/* Floating Exit buttons overlay */}
+      <div className={`absolute top-6 left-6 z-40 transition-opacity duration-300 ${showExitBtn ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <button
+          onClick={onClose}
+          className="py-2.5 px-5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/10 text-white font-bold text-xs tracking-wider flex items-center gap-2 cursor-pointer shadow-lg active:scale-95 transition-all"
+        >
+          <span>닫기 (Exit)</span>
+        </button>
+      </div>
+
+      <div className={`absolute bottom-6 left-6 z-40 text-[10px] text-zinc-500 transition-opacity duration-300 ${showExitBtn ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        화면을 더블클릭하거나 ESC 키를 누르면 종료됩니다.
+      </div>
     </div>
   );
 }

@@ -890,7 +890,7 @@ export default function AudienceRoom() {
           <div key={currentPreset.trigger_id} className="w-full overflow-hidden flex items-center whitespace-nowrap relative z-10">
             {/* Track 1 */}
             <div 
-              className={`animate-marquee-seamless select-none leading-none flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(currentPreset.font_family)}`}
+              className={`animate-marquee-seamless select-none leading-[1.2] flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(currentPreset.font_family)}`}
               style={{ 
                 color: currentPreset.text_color,
                 fontSize,
@@ -904,7 +904,7 @@ export default function AudienceRoom() {
             </div>
             {/* Track 2 */}
             <div 
-              className={`animate-marquee-seamless select-none leading-none flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(currentPreset.font_family)}`}
+              className={`animate-marquee-seamless select-none leading-[1.2] flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(currentPreset.font_family)}`}
               style={{ 
                 color: currentPreset.text_color,
                 fontSize,
@@ -920,7 +920,7 @@ export default function AudienceRoom() {
           </div>
         ) : (
           <div 
-            className={`text-center whitespace-nowrap overflow-hidden px-8 select-none max-w-full leading-none tracking-tighter relative z-10 ${getFontFamilyClass(currentPreset.font_family)}`}
+            className={`text-center whitespace-nowrap px-8 select-none max-w-full leading-[1.2] tracking-tighter relative z-10 ${getFontFamilyClass(currentPreset.font_family)}`}
             style={{ 
               color: currentPreset.text_color,
               fontSize,

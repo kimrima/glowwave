@@ -18,7 +18,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '앵콜! 앵콜! 🎸',
         text_color: '#FFFFFF',
         effect: 'blink',
-        speed: 600,
+        speed: 1527,
         font_family: 'neon',
         font_size: 100,
         special_effect: 'hearts'
@@ -38,7 +38,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '귀호강 중.. 🎧',
         text_color: '#FFFFFF',
         effect: 'marquee',
-        speed: 4000,
+        speed: 11606,
         font_family: 'sans-thick',
         font_size: 100,
         special_effect: 'stars'
@@ -48,7 +48,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '완벽한 라이브 🎤',
         text_color: '#FFFFFF',
         effect: 'blink',
-        speed: 1000,
+        speed: 1527,
         font_family: 'plump',
         font_size: 100,
         special_effect: 'hearts'
@@ -68,7 +68,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '꿀보이스 녹아요 🍯',
         text_color: '#FFFFFF',
         effect: 'marquee',
-        speed: 3500,
+        speed: 11606,
         font_family: 'sans-thin',
         font_size: 100,
         special_effect: 'stars'
@@ -86,7 +86,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '골이다!!! ⚽',
         text_color: '#FFFFFF',
         effect: 'blink',
-        speed: 150,
+        speed: 1527,
         font_family: 'sans-thick',
         font_size: 100,
         special_effect: 'confetti'
@@ -96,7 +96,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '대~한민국! 짝짝!',
         text_color: '#FFFFFF',
         effect: 'blink',
-        speed: 600,
+        speed: 1527,
         font_family: 'sans-thick',
         font_size: 100,
         special_effect: 'confetti'
@@ -106,7 +106,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '나이스 샷! 🏌️‍♂️',
         text_color: '#FFFFFF',
         effect: 'marquee',
-        speed: 4000,
+        speed: 11606,
         font_family: 'neon',
         font_size: 100,
         special_effect: 'stars'
@@ -127,7 +127,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '역전 가자!!! ⚡',
         text_color: '#00FF66',
         effect: 'blink',
-        speed: 300,
+        speed: 1527,
         font_family: 'neon',
         font_size: 100,
         special_effect: 'confetti'
@@ -137,7 +137,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '수비! 수비! 🛡️',
         text_color: '#FFFFFF',
         effect: 'blink',
-        speed: 500,
+        speed: 1527,
         font_family: 'sans-thick',
         font_size: 100,
         special_effect: 'none'
@@ -154,7 +154,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: 'DANCE TIME ⚡',
         text_color: '#00FFCC',
         effect: 'blink',
-        speed: 200,
+        speed: 1527,
         font_family: 'neon',
         font_size: 100,
         special_effect: 'confetti'
@@ -164,7 +164,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: "LET'S GET WILD! 🕶️",
         text_color: '#FFFFFF',
         effect: 'blink',
-        speed: 400,
+        speed: 1527,
         font_family: 'neon',
         font_size: 100,
         special_effect: 'stars'
@@ -175,7 +175,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '소리 질러!!! 🙌',
         text_color: '#FFFFFF',
         effect: 'blink',
-        speed: 250,
+        speed: 1527,
         font_family: 'sans-thick',
         font_size: 100,
         special_effect: 'confetti'
@@ -185,7 +185,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '짠! 잔을 들어라! 🍻',
         text_color: '#FFFFFF',
         effect: 'blink',
-        speed: 800,
+        speed: 1527,
         font_family: 'plump',
         font_size: 100,
         special_effect: 'confetti'
@@ -195,7 +195,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '밤새 달려! 🌙',
         text_color: '#00FF66',
         effect: 'marquee',
-        speed: 3000,
+        speed: 11606,
         font_family: 'neon',
         font_size: 100,
         special_effect: 'stars'
@@ -206,7 +206,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: 'PARTY TONIGHT 🎉',
         text_color: '#FFFFFF',
         effect: 'blink',
-        speed: 300,
+        speed: 1527,
         font_family: 'sans-thick',
         font_size: 100,
         special_effect: 'confetti'
@@ -223,7 +223,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: 'HAPPY BIRTHDAY 🎂',
         text_color: '#FFFFFF',
         effect: 'blink',
-        speed: 1200,
+        speed: 1527,
         font_family: 'plump',
         font_size: 100,
         special_effect: 'confetti'
@@ -253,7 +253,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: 'HAPPY 100 DAYS 🎉',
         text_color: '#FFFFFF',
         effect: 'blink',
-        speed: 1000,
+        speed: 1527,
         font_family: 'plump',
         font_size: 100,
         special_effect: 'confetti'
@@ -263,7 +263,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '꽃길만 걷자 🌸',
         text_color: '#DB2777',
         effect: 'marquee',
-        speed: 4000,
+        speed: 11606,
         font_family: 'serif',
         font_size: 100,
         special_effect: 'hearts'
@@ -300,7 +300,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '신메뉴 출시! 🥐',
         text_color: '#FFE4E6',
         effect: 'marquee',
-        speed: 5000,
+        speed: 11606,
         font_family: 'serif',
         font_size: 100,
         special_effect: 'stars'
@@ -310,7 +310,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '질서 유지 부탁드립니다',
         text_color: '#FFFFFF',
         effect: 'blink',
-        speed: 1500,
+        speed: 1527,
         font_family: 'sans-thin',
         font_size: 100,
         special_effect: 'none'
@@ -330,7 +330,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: 'WIFI: GLOW_WAVE',
         text_color: '#FFFFFF',
         effect: 'marquee',
-        speed: 4000,
+        speed: 11606,
         font_family: 'sans-thin',
         font_size: 100,
         special_effect: 'none'
@@ -340,7 +340,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '테이크아웃 10% 할인 🥤',
         text_color: '#FFFFFF',
         effect: 'marquee',
-        speed: 3000,
+        speed: 11606,
         font_family: 'sans-thick',
         font_size: 100,
         special_effect: 'none'

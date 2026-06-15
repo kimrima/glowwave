@@ -35,7 +35,7 @@ export default function useFitText(text: string, effect: string, sizePercent: nu
       testSpan.style.visibility = 'hidden';
       testSpan.style.position = 'absolute';
       testSpan.style.whiteSpace = 'nowrap';
-      testSpan.style.lineHeight = '1';
+      testSpan.style.lineHeight = '1.2';
       testSpan.innerText = text || ' ';
 
       // Copy font styling class name from container's actual text element if possible
