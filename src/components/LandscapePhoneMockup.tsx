@@ -90,7 +90,7 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
         } as React.CSSProperties}
       >
         {isMarquee ? (
-          <div className="w-full overflow-hidden flex items-center whitespace-nowrap">
+          <div key={preset.trigger_id} className="w-full overflow-hidden flex items-center whitespace-nowrap font-sans">
             {/* Track 1 */}
             <div 
               className={`animate-marquee-seamless select-none leading-none flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass()}`}

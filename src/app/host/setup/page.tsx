@@ -13,7 +13,7 @@ export default function HostSetup() {
   // Default presets: reconfigured to Solid, Psychedelic, Police Siren, Countdown, Scroll, Lucky Draw
   const defaultPresets: Preset[] = [
     { bg_color: '#0B0B0F', text: '단색', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
-    { bg_color: '#000000', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200, bg_color_secondary: '#FFFFFF', font_family: 'sans-thin', font_size: 100 },
+    { bg_color: '#7C3AED', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1000, font_family: 'sans-thin', font_size: 100 },
     { bg_color: '#FF0000', text: '경찰 사이렌', text_color: '#FFFFFF', effect: 'blink', speed: 150, bg_color_secondary: '#0000FF', font_family: 'sans-thin', font_size: 100 },
     { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
     { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000, font_family: 'sans-thin', font_size: 100 },
@@ -151,7 +151,7 @@ export default function HostSetup() {
       <div className="absolute bottom-[10%] right-[-10%] neon-glow-circle-2 opacity-30" />
 
       {/* Header */}
-      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10 pt-[env(safe-area-inset-top,0px)]">
+      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-black text-xl tracking-tight text-white font-outfit">
             <span>GlowWave</span>

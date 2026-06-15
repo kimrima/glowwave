@@ -144,6 +144,7 @@ export default function AudienceRoom() {
   const wakeLockRef = useRef<any>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const supabaseChannelRef = useRef<any>(null);
+  const fullscreenRef = useRef<HTMLDivElement>(null);
 
   // Fullscreen Change Listener
   useEffect(() => {
@@ -177,10 +178,10 @@ export default function AudienceRoom() {
   }, []);
 
   const toggleFullscreen = async () => {
-    if (!containerRef.current) return;
+    if (!fullscreenRef.current) return;
     try {
       if (!document.fullscreenElement) {
-        await containerRef.current.requestFullscreen();
+        await fullscreenRef.current.requestFullscreen();
         setIsFullscreen(true);
       } else {
         await document.exitFullscreen();
@@ -590,7 +591,7 @@ export default function AudienceRoom() {
   // Define a local reference to roomData if needed, but since roomData was block scoped in validateAndConnect, we use a fallback label.
   return (
     <div 
-      ref={containerRef} 
+      ref={fullscreenRef} 
       className="fixed inset-0 overflow-hidden select-none bg-black cursor-none"
       onClick={resetControlsTimer}
       onMouseMove={resetControlsTimer}
@@ -604,7 +605,7 @@ export default function AudienceRoom() {
             e.stopPropagation();
             router.push('/');
           }}
-          className="absolute top-6 left-6 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-extrabold text-zinc-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 cursor-pointer z-50"
+          className="absolute top-[calc(env(safe-area-inset-top,0px)+24px)] left-6 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-extrabold text-zinc-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 cursor-pointer z-50"
         >
           &larr; 뒤로가기
         </button>
@@ -629,7 +630,7 @@ export default function AudienceRoom() {
 
       {/* Floating Control Toolbar */}
       {!isStandalone && (
-        <div className={`absolute top-6 left-6 z-40 flex items-center gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`absolute top-[calc(env(safe-area-inset-top,0px)+24px)] left-6 z-40 flex items-center gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           {!isIOS ? (
             <button
               onClick={(e) => {
@@ -656,7 +657,7 @@ export default function AudienceRoom() {
 
       {/* iOS Safari/Chrome Home Screen Tooltip */}
       {showSafariTip && !isStandalone && (
-        <div className={`fixed top-6 left-6 right-6 md:left-auto md:w-80 bg-black/95 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-xs text-zinc-300 shadow-2xl z-50 animate-in fade-in slide-in-from-top-4 duration-200 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <div className={`fixed top-[calc(env(safe-area-inset-top,0px)+24px)] left-6 right-6 md:left-auto md:w-80 bg-black/95 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-xs text-zinc-300 shadow-2xl z-50 animate-in fade-in slide-in-from-top-4 duration-200 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="flex justify-between items-center mb-2">
             <span className="font-bold text-white flex items-center gap-1.5">
               <Smartphone className="w-4 h-4 text-indigo-400" />
@@ -711,7 +712,7 @@ export default function AudienceRoom() {
         } as React.CSSProperties}
       >
         {currentPreset.effect === 'marquee' ? (
-          <div className="w-full overflow-hidden flex items-center whitespace-nowrap">
+          <div key={currentPreset.trigger_id} className="w-full overflow-hidden flex items-center whitespace-nowrap">
             {/* Track 1 */}
             <div 
               className={`animate-marquee-seamless select-none leading-none flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(currentPreset.font_family)}`}

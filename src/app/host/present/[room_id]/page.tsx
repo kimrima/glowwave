@@ -179,7 +179,7 @@ export default function PresentationView() {
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Top Header */}
-      <header className="flex items-center justify-between z-10">
+      <header className="flex items-center justify-between z-10 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
         <div className="flex items-center gap-2">
           <span className="font-bold text-xl tracking-tight text-white">GlowWave</span>
         </div>

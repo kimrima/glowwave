@@ -85,14 +85,35 @@ export default function useFitText(text: string, effect: string, sizePercent: nu
     // Run initial calculation
     calculateSize();
 
-    // Re-run on resize
-    const resizeObserver = new ResizeObserver(() => {
+    const resizeTimeouts: number[] = [];
+    const triggerDelayedCalculations = () => {
       calculateSize();
+      const t1 = window.setTimeout(calculateSize, 100);
+      const t2 = window.setTimeout(calculateSize, 300);
+      const t3 = window.setTimeout(calculateSize, 600);
+      resizeTimeouts.push(t1, t2, t3);
+    };
+
+    // Re-run on element resize
+    const resizeObserver = new ResizeObserver(() => {
+      triggerDelayedCalculations();
     });
     resizeObserver.observe(container);
 
+    window.addEventListener('resize', triggerDelayedCalculations);
+    window.addEventListener('orientationchange', triggerDelayedCalculations);
+
+    // Run extra scheduled passes in case mount sizes are still layout-fluid
+    const mountTimeout1 = window.setTimeout(calculateSize, 150);
+    const mountTimeout2 = window.setTimeout(calculateSize, 400);
+
     return () => {
       resizeObserver.disconnect();
+      window.removeEventListener('resize', triggerDelayedCalculations);
+      window.removeEventListener('orientationchange', triggerDelayedCalculations);
+      window.clearTimeout(mountTimeout1);
+      window.clearTimeout(mountTimeout2);
+      resizeTimeouts.forEach((t) => window.clearTimeout(t));
     };
   }, [text, effect, sizePercent]);
 

@@ -20,7 +20,8 @@ import {
   X,
   CreditCard,
   Plus,
-  Trash2
+  Trash2,
+  Slash
 } from 'lucide-react';
 import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -28,7 +29,7 @@ import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 
 const defaults: Preset[] = [
   { bg_color: '#0B0B0F', text: '단색', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#000000', text: '사이키', text_color: '#FFFFFF', effect: 'blink', speed: 200, bg_color_secondary: '#FFFFFF', font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#7C3AED', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1000, font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#FF0000', text: '경찰 사이렌', text_color: '#FFFFFF', effect: 'blink', speed: 150, bg_color_secondary: '#0000FF', font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 3000, font_family: 'sans-thin', font_size: 100 },
@@ -403,11 +404,28 @@ export default function HostDashboard() {
           changed = true;
         }
 
-        // Migrate index 1: '사이키' color update to black/white
-        if (idx === 1 && p.text === '사이키' && p.bg_color === '#EF4444' && p.bg_color_secondary === '#000000') {
-          p.bg_color = '#000000';
-          p.bg_color_secondary = '#FFFFFF';
-          changed = true;
+        // Migrate index 1: '사이키' -> '부드러운 깜빡이' (single-color fading blink)
+        if (idx === 1 && (p.text === '사이키' || p.text === '부드러운 깜빡이')) {
+          let needsUpdate = false;
+          if (p.text !== '부드러운 깜빡이') {
+            p.text = '부드러운 깜빡이';
+            needsUpdate = true;
+          }
+          if (p.bg_color_secondary !== undefined && p.bg_color_secondary !== null) {
+            delete p.bg_color_secondary;
+            needsUpdate = true;
+          }
+          if (p.bg_color !== '#7C3AED') {
+            p.bg_color = '#7C3AED';
+            needsUpdate = true;
+          }
+          if (p.speed !== 1000) {
+            p.speed = 1000;
+            needsUpdate = true;
+          }
+          if (needsUpdate) {
+            changed = true;
+          }
         }
 
         // Migrate index 2: from gradient to police siren duo-flash
@@ -926,7 +944,7 @@ export default function HostDashboard() {
       <div className="absolute bottom-[20%] right-[-10%] neon-glow-circle-2 opacity-25" />
 
       {/* Header */}
-      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10 pt-[env(safe-area-inset-top,0px)]">
+      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-black text-white tracking-tight font-outfit text-sm uppercase">GlowWave Host Remote</span>
@@ -1663,6 +1681,24 @@ export default function HostDashboard() {
                 {(editingPreset.effect === 'blink' || editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw') && (
                   <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
                     <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">보조 배경 색상 (듀오 사이키/당첨 번쩍임/경계선 색상용)</label>
+                    <div className="flex gap-2 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => setEditingPreset(prev => {
+                          const copy = { ...prev! };
+                          delete copy.bg_color_secondary;
+                          return copy;
+                        })}
+                        className={`h-9 px-3 rounded-lg border border-dashed text-[10px] font-black cursor-pointer transition-all flex items-center justify-center gap-1.5 ${
+                          !editingPreset.bg_color_secondary 
+                            ? 'border-white bg-white/10 text-white shadow-md font-extrabold' 
+                            : 'border-white/10 text-zinc-500 hover:border-white/30 hover:text-zinc-400'
+                        }`}
+                      >
+                        <Slash className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                        <span>단색 (부드러운 깜빡이)</span>
+                      </button>
+                    </div>
                     <div className="grid grid-cols-6 gap-2">
                       {[
                         '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
@@ -1709,6 +1745,9 @@ export default function HostDashboard() {
                         </div>
                       )}
                     </div>
+                    <p className="text-[10px] text-zinc-500 mt-2.5 leading-relaxed font-medium">
+                      💡 <b>단색 (부드러운 깜빡이)</b> 선택 시, 배경색이 서서히 밝아지고 어두워지는 자연스러운 페이드 점멸이 작동합니다. 보조 배경 색상을 지정하면 두 색상이 정밀 교대하며 강력하게 번쩍이는 <b>사이렌(사이키) 효과</b>가 적용됩니다.
+                    </p>
                   </div>
                 )}
 
