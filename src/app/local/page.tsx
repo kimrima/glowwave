@@ -11,6 +11,7 @@ import {
   RefreshCw, 
   Edit3 
 } from 'lucide-react';
+import jsQR from 'jsqr';
 import { Preset, EffectType } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import { TEMPLATE_CATEGORIES } from '@/lib/templates';
@@ -138,6 +139,12 @@ function LocalSignboardContent() {
   const [importMessage, setImportMessage] = useState('');
   const [importError, setImportError] = useState('');
 
+  // Camera QR scanner states & references
+  const [isScanning, setIsScanning] = useState(false);
+  const scannerVideoRef = useRef<HTMLVideoElement | null>(null);
+  const scannerCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const scannerStreamRef = useRef<MediaStream | null>(null);
+
   const getFontFamilyClass = (fontFamily?: string) => {
     switch (fontFamily) {
       case 'sans-thin': return 'font-sign-sans-thin font-bold';
@@ -169,6 +176,152 @@ function LocalSignboardContent() {
     }
     return 1000;
   };
+
+  // Helper to import presets from API by key
+  const handleImportByScannedKey = (key: string) => {
+    setIsImportLoading(true);
+    setImportError('');
+    setImportMessage('공유받은 프리셋 연출 팩을 다운로드하고 있습니다...');
+    const emojiRegex = /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+
+    fetch(`/api/preset-share?key=${key.toUpperCase()}`)
+      .then(res => {
+        if (!res.ok) {
+          return res.json().then(d => { throw new Error(d.error || '가져오기 실패') });
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data.presets) && data.presets.length > 0) {
+          const cleanedPresets = data.presets.map((p: Preset) => {
+            if (emojiRegex.test(p.text)) {
+              p.text = p.text.replace(emojiRegex, '').trim();
+            }
+            if (typeof p.font_size === 'string' || p.font_size === undefined) {
+              p.font_size = 100;
+            }
+            return p;
+          });
+
+          setPresets(cleanedPresets);
+          localStorage.setItem('glowwave_local_presets', JSON.stringify(cleanedPresets));
+          
+          setCurrentBroadcastPreset(cleanedPresets[0]);
+          applyPresetToController(cleanedPresets[0]);
+          localStorage.setItem('glowwave_local_active_preset', JSON.stringify(cleanedPresets[0]));
+          setActivePresetIndex(0);
+
+          setImportMessage('가져오기 성공! 잠시 후 자동으로 전광판이 열립니다. 🎉');
+          
+          setTimeout(() => {
+            setIsImportLoading(false);
+            setIsStandaloneFullscreen(true);
+          }, 1200);
+        } else {
+          throw new Error('올바르지 않은 프리셋 데이터 형식입니다.');
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        setImportError(err.message || '만료되었거나 올바르지 않은 공유 코드입니다.');
+      });
+  };
+
+  // Camera QR code scanner mechanics
+  const startScanning = async () => {
+    setIsScanning(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+      scannerStreamRef.current = stream;
+      if (scannerVideoRef.current) {
+        scannerVideoRef.current.srcObject = stream;
+        scannerVideoRef.current.setAttribute('playsinline', 'true'); // Required for iOS Safari
+        scannerVideoRef.current.play();
+        requestAnimationFrame(tickScanner);
+      }
+    } catch (err) {
+      console.error('Camera access error:', err);
+      alert('카메라 접근 권한이 필요합니다. 브라우저 설정에서 카메라 권한을 허용해 주세요.');
+      setIsScanning(false);
+    }
+  };
+
+  const stopScanning = () => {
+    setIsScanning(false);
+    if (scannerStreamRef.current) {
+      scannerStreamRef.current.getTracks().forEach(track => track.stop());
+      scannerStreamRef.current = null;
+    }
+    if (scannerVideoRef.current) {
+      scannerVideoRef.current.srcObject = null;
+    }
+  };
+
+  const tickScanner = () => {
+    if (!scannerStreamRef.current) return;
+
+    const video = scannerVideoRef.current;
+    if (!video || video.readyState !== video.HAVE_ENOUGH_DATA) {
+      requestAnimationFrame(tickScanner);
+      return;
+    }
+
+    const canvas = scannerCanvasRef.current || document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) {
+      requestAnimationFrame(tickScanner);
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: 'dontInvert'
+    });
+
+    if (code) {
+      console.log('Scanned PWA QR Code:', code.data);
+      let importKey = '';
+      try {
+        const url = new URL(code.data);
+        importKey = url.searchParams.get('import') || '';
+      } catch (e) {
+        const trimmed = code.data.trim().toUpperCase();
+        if (trimmed.length === 6 && /^[A-Z2-9]+$/.test(trimmed)) {
+          importKey = trimmed;
+        }
+      }
+
+      if (importKey) {
+        setIsScanning(false);
+        if (scannerStreamRef.current) {
+          scannerStreamRef.current.getTracks().forEach(track => track.stop());
+          scannerStreamRef.current = null;
+        }
+        if (scannerVideoRef.current) {
+          scannerVideoRef.current.srcObject = null;
+        }
+        handleImportByScannedKey(importKey);
+      } else {
+        requestAnimationFrame(tickScanner);
+      }
+    } else {
+      requestAnimationFrame(tickScanner);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (scannerStreamRef.current) {
+        scannerStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
 
   // 1. Initial State Hydration
   useEffect(() => {
@@ -220,53 +373,8 @@ function LocalSignboardContent() {
       const params = new URLSearchParams(window.location.search);
       const importKey = params.get('import');
       if (importKey) {
-        setIsImportLoading(true);
-        setImportMessage('공유받은 프리셋 연출 팩을 다운로드하고 있습니다...');
-        
-        fetch(`/api/preset-share?key=${importKey.toUpperCase()}`)
-          .then(res => {
-            if (!res.ok) {
-              return res.json().then(d => { throw new Error(d.error || '가져오기 실패') });
-            }
-            return res.json();
-          })
-          .then(data => {
-            if (Array.isArray(data.presets) && data.presets.length > 0) {
-              const cleanedPresets = data.presets.map((p: Preset) => {
-                if (emojiRegex.test(p.text)) {
-                  p.text = p.text.replace(emojiRegex, '').trim();
-                }
-                if (typeof p.font_size === 'string' || p.font_size === undefined) {
-                  p.font_size = 100;
-                }
-                return p;
-              });
-
-              setPresets(cleanedPresets);
-              localStorage.setItem('glowwave_local_presets', JSON.stringify(cleanedPresets));
-              
-              setCurrentBroadcastPreset(cleanedPresets[0]);
-              applyPresetToController(cleanedPresets[0]);
-              localStorage.setItem('glowwave_local_active_preset', JSON.stringify(cleanedPresets[0]));
-              setActivePresetIndex(0);
-
-              setImportMessage('가져오기 성공! 잠시 후 자동으로 전광판이 열립니다. 🎉');
-              
-              setTimeout(() => {
-                setIsImportLoading(false);
-                setIsStandaloneFullscreen(true);
-              }, 1200);
-            } else {
-              throw new Error('올바르지 않은 프리셋 데이터 형식입니다.');
-            }
-          })
-          .catch(err => {
-            console.error(err);
-            setImportError(err.message || '만료되었거나 올바르지 않은 공유 코드입니다.');
-          })
-          .finally(() => {
-            window.history.replaceState({}, document.title, window.location.pathname);
-          });
+        handleImportByScannedKey(importKey);
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
   }, []);
@@ -1594,9 +1702,9 @@ function LocalSignboardContent() {
             </button>
 
             <div className="text-center mb-6">
-              <h2 className="text-xl font-black text-white leading-tight font-outfit">보관함 및 연출 공유 (Vault & Share)</h2>
-              <p className="text-xs text-zinc-500 mt-1.5 font-medium">
-                작성하신 커스텀 프리셋 패키지를 기기에 백업 저장하거나 다른 폰으로 즉시 무선 전송할 수 있습니다.
+              <h2 className="text-xl font-black text-white leading-tight font-outfit font-sans">보관함 및 연출 공유</h2>
+              <p className="text-xs text-zinc-500 mt-1.5 font-medium font-sans">
+                프리셋 패키지를 기기에 백업하고 무선으로 즉시 공유합니다.
               </p>
             </div>
 
@@ -1606,13 +1714,13 @@ function LocalSignboardContent() {
                 { tab: 'slots', label: '테마 보관함' },
                 { tab: 'share', label: '기기 간 무선 전송 (QR)' },
                 { tab: 'sync', label: '멀티 싱크 방 만들기' },
-                { tab: 'guide', label: '가이드 & 설정 리셋' }
+                { tab: 'guide', label: '데이터 백업 안내' }
               ].map((t) => (
                 <button
                   key={t.tab}
                   type="button"
                   onClick={() => setVaultTab(t.tab as any)}
-                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors shrink-0 ${
+                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-all active:scale-95 shrink-0 font-sans ${
                     vaultTab === t.tab 
                       ? 'bg-white/5 border border-white/15 text-white' 
                       : 'text-zinc-500 hover:text-white hover:bg-white/[0.02]'
@@ -1627,9 +1735,9 @@ function LocalSignboardContent() {
             {vaultTab === 'slots' && (
               <div className="space-y-5 animate-in fade-in duration-200">
                 <div className="bg-black/30 border border-white/5 rounded-2xl p-4.5">
-                  <h4 className="text-xs font-bold text-white mb-1.5">테마 보관함 슬롯</h4>
-                  <p className="text-[10.5px] text-zinc-400 leading-normal">
-                    현재 대시보드의 모든 프리셋을 슬롯에 통째로 백업 저장해두어, 상황(예: 블랙핑크 콘서트용, 축구 응원용)에 맞게 원클릭으로 교체해 불러올 수 있습니다.
+                  <h4 className="text-xs font-bold text-white mb-1 font-sans">테마 보관함 슬롯</h4>
+                  <p className="text-[10.5px] text-zinc-400 leading-normal font-sans">
+                    현재 프리셋 구성을 슬롯에 저장해 두고 원클릭으로 즉시 교체합니다.
                   </p>
                 </div>
 
@@ -1638,13 +1746,13 @@ function LocalSignboardContent() {
                     type="text"
                     value={newSlotName}
                     onChange={(e) => setNewSlotName(e.target.value.slice(0, 15))}
-                    placeholder="저장할 테마 이름 (예: 한화이글스)"
-                    className="flex-1 bg-black/45 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-xs font-semibold"
+                    placeholder="저장할 테마 이름 (예: 블랙핑크)"
+                    className="flex-1 bg-black/45 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-xs font-semibold font-sans"
                     maxLength={15}
                   />
                   <button
                     onClick={handleSaveSlotPackage}
-                    className="px-4 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-650 text-white text-xs font-bold transition-colors cursor-pointer shrink-0 shadow"
+                    className="px-4 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-bold transition-all cursor-pointer shrink-0 shadow active:scale-95 font-sans"
                   >
                     슬롯 저장
                   </button>
@@ -1656,18 +1764,18 @@ function LocalSignboardContent() {
                       <div
                         key={idx}
                         onClick={() => handleLoadSlotPackage(idx)}
-                        className="group flex items-center justify-between p-3.5 bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-white/10 rounded-xl cursor-pointer transition-all"
+                        className="group flex items-center justify-between p-3.5 bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-white/10 rounded-xl cursor-pointer transition-all active:scale-[0.99]"
                       >
-                        <div className="min-w-0 pr-4">
+                        <div className="min-w-0 pr-4 font-sans">
                           <span className="text-xs font-bold text-white block truncate">{slot.name}</span>
                           <span className="text-[9px] text-zinc-500 font-mono mt-0.5 block">프리셋 {slot.presets?.length || 0}개 수록</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-indigo-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity">불러오기 &rarr;</span>
+                          <span className="text-[10px] text-indigo-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity font-sans">불러오기 &rarr;</span>
                           <button
                             type="button"
                             onClick={(e) => handleDeleteSlotPackage(idx, e)}
-                            className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-white/5 rounded transition-all cursor-pointer"
+                            className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-white/5 rounded transition-all cursor-pointer active:scale-90"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -1675,8 +1783,8 @@ function LocalSignboardContent() {
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-xl border border-dashed border-white/5 bg-white/[0.01] p-8 text-center text-zinc-500 font-semibold text-[10px]">
-                      저장된 보관 테마가 없습니다. 위 입력창에 이름을 적고 저장해 보세요!
+                    <div className="rounded-xl border border-dashed border-white/5 bg-white/[0.01] p-8 text-center text-zinc-500 font-semibold text-[10px] font-sans">
+                      저장된 테마가 없습니다. 이름을 적고 슬롯을 추가해보세요.
                     </div>
                   )}
                 </div>
@@ -1687,63 +1795,103 @@ function LocalSignboardContent() {
             {vaultTab === 'share' && (
               <div className="space-y-5 animate-in fade-in duration-200">
                 <div className="bg-black/30 border border-white/5 rounded-2xl p-4.5">
-                  <h4 className="text-xs font-bold text-white mb-1.5">기기 간 전송 및 백업 (QR/코드)</h4>
-                  <p className="text-[10.5px] text-zinc-400 leading-normal">
-                    PC 대시보드에서 만든 세팅을 스마트폰 카메라로 비추면, 폰에 즉시 프리셋들이 자동 적용되고 전광판이 시작됩니다. 복잡한 파일 탐색 없이 무선으로 간편하게 전송할 수 있습니다.
+                  <h4 className="text-xs font-bold text-white mb-1 font-sans">기기 간 전송 (QR/코드)</h4>
+                  <p className="text-[10.5px] text-zinc-400 leading-normal font-sans">
+                    현재 세팅을 다른 스마트폰이나 기기로 간편하게 무선 전송 또는 백업할 수 있습니다.
                   </p>
                 </div>
 
-                <div className="bg-black/50 border border-white/5 p-4 rounded-2xl flex flex-col items-center gap-3.5 text-center min-h-[160px] justify-center relative">
-                  {isSharingLoading ? (
-                    <span className="text-xs text-zinc-500 animate-pulse">임시 무선 연동 토큰 생성 중...</span>
-                  ) : shareQrUrl ? (
-                    <div className="flex flex-col items-center gap-2.5 animate-in fade-in duration-200">
-                      <div className="bg-white p-2.5 rounded-2xl shadow-xl">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={shareQrUrl} alt="Preset Share QR" className="w-40 h-40 rounded-lg" />
+                {/* Section A: Send (공유하기) */}
+                <div className="border border-white/5 rounded-2xl p-4 space-y-3 bg-[#0d0d15]/40">
+                  <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block font-sans">연출 팩 보내기 (QR 생성)</span>
+                  
+                  <div className="bg-black/30 border border-white/5 p-3 rounded-xl flex flex-col items-center gap-3 text-center min-h-[120px] justify-center relative">
+                    {isSharingLoading ? (
+                      <span className="text-xs text-zinc-500 animate-pulse font-sans">임시 무선 연동 토큰 생성 중...</span>
+                    ) : shareQrUrl ? (
+                      <div className="flex flex-col items-center gap-2 animate-in fade-in duration-200">
+                        <div className="bg-white p-2 rounded-xl shadow-xl">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={shareQrUrl} alt="Preset Share QR" className="w-36 h-36 rounded-lg" />
+                        </div>
+                        <span className="text-[9.5px] text-zinc-400 font-bold font-sans">
+                          📱 상대방 기기의 기본 카메라이나 스캐너로 비추면 바로 적용됩니다.
+                        </span>
+                        
+                        <div className="flex items-center gap-1.5 mt-1 bg-[#12121a] px-3 py-1.5 rounded-xl border border-white/5">
+                          <span className="text-[11px] font-mono text-zinc-400 font-bold uppercase tracking-widest">{exportCode}</span>
+                          <button
+                            onClick={handleCopyShareCodeText}
+                            className="text-[9px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors active:scale-95 font-sans"
+                          >
+                            {isCodeCopied ? '복사 완료' : '코드 복사'}
+                          </button>
+                        </div>
                       </div>
-                      <span className="text-[9.5px] text-zinc-400 leading-relaxed font-bold">
-                        📱 스마트폰 기본 카메라로 찍으면 즉시 내 대시보드에 복사 적용됩니다!
-                      </span>
-                      
-                      <div className="flex items-center gap-1.5 mt-1 bg-[#12121a] px-3 py-1.5 rounded-xl border border-white/5">
-                        <span className="text-[11px] font-mono text-zinc-400 font-bold uppercase tracking-widest">{exportCode}</span>
+                    ) : (
+                      <button
+                        onClick={handleGenerateShareCode}
+                        className="w-full py-3.5 rounded-xl bg-white text-black font-extrabold text-xs shadow-lg hover:bg-zinc-200 transition-all cursor-pointer flex items-center justify-center active:scale-95 font-sans"
+                      >
+                        무선 전송용 QR 코드 생성
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section B: Receive (불러오기) */}
+                <div className="border border-white/5 rounded-2xl p-4 space-y-3 bg-[#0d0d15]/40">
+                  <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block font-sans">연출 팩 받기 (스캔 / 입력)</span>
+
+                  {isScanning ? (
+                    <div className="flex flex-col items-center gap-3 animate-in fade-in duration-200">
+                      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-white/10 flex items-center justify-center">
+                        <video
+                          ref={scannerVideoRef}
+                          className="w-full h-full object-cover"
+                          playsInline
+                          muted
+                        />
+                        {/* Custom Neon laser scanning line overlay */}
+                        <div className="absolute inset-x-0 h-0.5 bg-indigo-500/80 animate-bounce top-1/2 shadow-[0_0_8px_#6366f1]" />
+                        <canvas ref={scannerCanvasRef} className="hidden" />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={stopScanning}
+                        className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all cursor-pointer active:scale-95 font-sans"
+                      >
+                        스캔 취소
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <button
+                        type="button"
+                        onClick={startScanning}
+                        className="w-full py-3.5 rounded-xl border border-dashed border-white/15 hover:border-indigo-500 hover:bg-white/[0.02] text-zinc-300 hover:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 font-sans"
+                      >
+                        카메라로 QR 스캔하기
+                      </button>
+
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={shareCodeInput}
+                          onChange={(e) => setShareCodeInput(e.target.value.toUpperCase())}
+                          placeholder="6자리 공유 코드 입력 (예: X8Y3ZA)"
+                          className="flex-1 bg-black/45 border border-white/10 rounded-xl px-3.5 py-2.5 text-white tracking-widest text-center text-xs font-black focus:outline-none focus:border-indigo-500 uppercase font-mono"
+                          maxLength={6}
+                        />
                         <button
-                          onClick={handleCopyShareCodeText}
-                          className="text-[9px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors"
+                          onClick={handleImportShareCode}
+                          className="px-4.5 rounded-xl bg-white text-black text-xs font-black hover:bg-zinc-200 transition-colors cursor-pointer shrink-0 active:scale-95 font-sans"
                         >
-                          {isCodeCopied ? '복사 완료' : '코드 복사'}
+                          불러오기
                         </button>
                       </div>
                     </div>
-                  ) : (
-                    <button
-                      onClick={handleGenerateShareCode}
-                      className="w-full py-4.5 rounded-xl bg-white text-black font-extrabold text-xs shadow-lg hover:bg-zinc-200 transition-all cursor-pointer flex items-center justify-center"
-                    >
-                      무선 전송용 QR 코드 생성
-                    </button>
                   )}
-                </div>
-
-                <div className="flex flex-col gap-2 pt-2">
-                  <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">수동 받기: 공유 코드 입력</span>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={shareCodeInput}
-                      onChange={(e) => setShareCodeInput(e.target.value.toUpperCase())}
-                      placeholder="6자리 공유 코드 입력 (예: X8Y3ZA)"
-                      className="flex-1 bg-black/45 border border-white/10 rounded-xl px-3.5 py-2.5 text-white tracking-widest text-center text-xs font-black focus:outline-none focus:border-indigo-500 uppercase font-mono"
-                      maxLength={6}
-                    />
-                    <button
-                      onClick={handleImportShareCode}
-                      className="px-4.5 rounded-xl bg-white text-black text-xs font-black hover:bg-zinc-200 transition-colors cursor-pointer shrink-0"
-                    >
-                      불러오기
-                    </button>
-                  </div>
                 </div>
               </div>
             )}
@@ -1752,48 +1900,48 @@ function LocalSignboardContent() {
             {vaultTab === 'sync' && (
               <div className="space-y-5 animate-in fade-in duration-200">
                 <div className="bg-black/30 border border-white/5 rounded-2xl p-4.5">
-                  <h4 className="text-xs font-bold text-white mb-1.5">멀티 싱크 방 개설 & 프리셋 연동</h4>
-                  <p className="text-[10.5px] text-zinc-400 leading-normal">
-                    1인 모드에서 다듬은 내 개인 프리셋들을 그대로 이관하여 무료 또는 프리미엄 멀티 싱크 방을 개설할 수 있습니다. 개설 후 생성되는 QR코드를 여러 관객의 스마트폰 카메라로 스캔하면 방장이 제어하는 신호대로 모든 관객의 화면이 동시에 일치하여 번쩍이게 됩니다.
+                  <h4 className="text-xs font-bold text-white mb-1 font-sans">멀티 싱크 방 만들기</h4>
+                  <p className="text-[10.5px] text-zinc-400 leading-normal font-sans">
+                    현재 프리셋을 연동하여 여러 관객의 화면을 동시에 일치시켜 제어할 수 있는 멀티 싱크 방을 개설합니다.
                   </p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   {/* Option A */}
-                  <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left">
+                  <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left active:scale-[0.99]">
                     <div>
-                      <span className="text-[9px] font-mono text-zinc-500 font-extrabold uppercase block tracking-wider mb-2">FREE PLAN IMPORT</span>
-                      <h3 className="text-sm font-black text-white mb-2">일부 제한 연동 (무료 방)</h3>
-                      <p className="text-[11px] text-zinc-400 leading-relaxed mb-4">
-                        상위 6개 프리셋만 동기화하여 무료 방을 개설합니다. (유료 전용 폰트 및 파티클은 기본 서체/효과 없음으로 자동 다운그레이드 변환됩니다.)
+                      <span className="text-[9px] font-mono text-zinc-500 font-extrabold uppercase block tracking-wider mb-2">FREE PLAN</span>
+                      <h3 className="text-sm font-black text-white mb-2 font-sans">일부 제한 연동 (무료 방)</h3>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed mb-4 font-sans">
+                        상위 6개 프리셋만 동기화하여 무료 방을 개설합니다. (유료 폰트 및 파티클은 자동 제외)
                       </p>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => handleStartImportRoom('free')}
-                      className="w-full py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 font-bold text-xs transition-all cursor-pointer text-center"
+                      className="w-full py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 font-bold text-xs transition-all cursor-pointer text-center active:scale-95 font-sans"
                     >
-                      무료 방 개설 및 필터 연동
+                      무료 방 개설
                     </button>
                   </div>
 
                   {/* Option B */}
-                  <div className="rounded-2xl p-5 border border-indigo-500/30 bg-indigo-500/[0.03] hover:bg-indigo-500/[0.06] transition-all flex flex-col justify-between text-left relative overflow-hidden group shadow-lg shadow-indigo-500/5">
+                  <div className="rounded-2xl p-5 border border-indigo-500/30 bg-indigo-500/[0.03] hover:bg-indigo-500/[0.06] transition-all flex flex-col justify-between text-left relative overflow-hidden group shadow-lg shadow-indigo-500/5 active:scale-[0.99]">
                     <div>
-                      <span className="text-[9px] font-mono text-indigo-400 font-extrabold block tracking-wider mb-2">PREMIUM PLAN IMPORT</span>
-                      <h3 className="text-sm font-black text-white mb-2">무손실 100% 연동 (유료 방)</h3>
-                      <p className="text-[11px] text-zinc-400 leading-relaxed mb-4">
-                        내가 단독 모드에서 공들여 디자인한 모든 프리셋과 스포티/도트/둥글몽글 폰트, 하트/꽃가루/별빛 특수효과를 누수 없이 완벽하게 이관하여 대형 방을 개설합니다.
+                      <span className="text-[9px] font-mono text-indigo-400 font-extrabold block tracking-wider mb-2">PREMIUM PLAN</span>
+                      <h3 className="text-sm font-black text-white mb-2 font-sans">무손실 100% 연동 (유료 방)</h3>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed mb-4 font-sans">
+                        모든 연출 프리셋과 프리미엄 폰트, 별빛/하트 등 특수 효과를 완벽하게 유지하여 개설합니다.
                       </p>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => handleStartImportRoom('premium')}
-                      className="w-full py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-650 text-white font-black text-xs transition-all cursor-pointer text-center"
+                      className="w-full py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-650 text-white font-black text-xs transition-all cursor-pointer text-center active:scale-95 font-sans"
                     >
-                      프리미엄 무손실 연동
+                      프리미엄 방 개설
                     </button>
                   </div>
                 </div>
@@ -1805,24 +1953,23 @@ function LocalSignboardContent() {
               <div className="space-y-6 animate-in fade-in duration-200">
                 <div className="space-y-4 text-xs text-zinc-400 leading-relaxed">
                   <div className="bg-amber-500/[0.03] border border-amber-500/20 p-4.5 rounded-2xl">
-                    <h4 className="text-xs font-bold text-amber-400 mb-1.5">⚠️ 데이터 관리 주의사항</h4>
-                    <p className="text-[10.5px]">
-                      본 사이트는 가입과 로그인이 없는 독립형으로 구성되어 있어, 작성한 디자인 정보는 현재 사용 중인 인터넷 웹브라우저의 <b>로컬 저장공간</b>에 기기 전 전용으로 안전하게 격리되어 보존됩니다.<br />
-                      이에 따라 사용자가 <b>인터넷 브라우저 청소(쿠키, 사이트 캐시 데이터 삭제)</b>를 실행할 경우 저장된 모든 프리셋과 테마 슬롯도 함께 영구 삭제됩니다. 안전한 보관을 위해 연출 팩을 <b>[기기 간 무선 전송 (QR)]</b> 기능을 사용해 스마트폰 등으로 수시 백업/복사해 주시기 바랍니다.
+                    <h4 className="text-xs font-bold text-amber-400 mb-1.5 font-sans">⚠️ 데이터 백업 및 보관</h4>
+                    <p className="text-[10.5px] font-sans">
+                      본 사이트는 가입이 없는 독립형으로 구성되어 디자인 정보는 브라우저의 <b>로컬 저장공간(LocalStorage)</b>에 안전하게 격리되어 보관됩니다.<br />
+                      브라우저 쿠키/캐시를 청소할 경우 모든 데이터가 삭제되므로, 안전한 보관을 위해 연출 팩을 <b>[기기 간 무선 전송]</b> 기능을 사용하여 타 기기에 수시로 백업 및 복제해 두시길 권장합니다.
                     </p>
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-white/5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                  <span className="text-[10px] text-zinc-500 font-semibold">
-                    초기 기본 상태로 복구하려면 리셋을 실행하세요.
+                  <span className="text-[10px] text-zinc-500 font-semibold font-sans">
+                    초기 기본 프리셋 상태로 되돌립니다.
                   </span>
                   <button
                     type="button"
                     onClick={handleResetDashboard}
-                    className="py-2.5 px-4 rounded-xl border border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/15 cursor-pointer text-xs font-bold transition-all text-center self-end sm:self-auto flex items-center justify-center gap-1.5"
+                    className="py-2.5 px-4 rounded-xl border border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/15 cursor-pointer text-xs font-bold transition-all text-center self-end sm:self-auto flex items-center justify-center gap-1.5 active:scale-95 font-sans"
                   >
-                    <RefreshCw className="w-3.5 h-3.5" />
                     <span>대시보드 전체 리셋</span>
                   </button>
                 </div>

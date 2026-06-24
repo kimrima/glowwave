@@ -1,20 +1,78 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
-// In-memory cache map to store shared preset packages temporarily
-const presetShares = new Map<string, { presets: any[]; expiresAt: number }>();
+// Helper to locate package.json with name "glowwave"
+function findWorkspaceRoot(): string {
+  let currentDir = __dirname;
+  for (let i = 0; i < 12; i++) {
+    const pkgPath = path.join(currentDir, 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      try {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+        if (pkg.name === 'glowwave') {
+          return currentDir;
+        }
+      } catch (e) {}
+    }
+    const parent = path.dirname(currentDir);
+    if (parent === currentDir) break;
+    currentDir = parent;
+  }
+  const cwd = process.cwd();
+  if (fs.existsSync(path.join(cwd, 'package.json'))) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
+      if (pkg.name === 'glowwave') return cwd;
+    } catch (e) {}
+  }
+  const desktopDir = path.join(cwd, 'Desktop', '전광판');
+  if (fs.existsSync(desktopDir)) {
+    return desktopDir;
+  }
+  return cwd;
+}
 
-// Run clean-up timer to delete expired codes every 30 seconds
-if (typeof global !== 'undefined') {
-  const globalStore = global as any;
-  if (!globalStore.presetShareCleanInterval) {
-    globalStore.presetShareCleanInterval = setInterval(() => {
+const rootDir = findWorkspaceRoot();
+const SHARES_FILE = path.join(rootDir, 'src', 'lib', 'preset_shares.json');
+
+// Read shares from file and clean up expired keys automatically
+function readShares(): Record<string, { presets: any[]; expiresAt: number }> {
+  try {
+    if (fs.existsSync(SHARES_FILE)) {
+      const data = fs.readFileSync(SHARES_FILE, 'utf8');
+      const shares = JSON.parse(data);
       const now = Date.now();
-      for (const [key, val] of presetShares.entries()) {
-        if (now > val.expiresAt) {
-          presetShares.delete(key);
+      let changed = false;
+      
+      // Clean up expired keys
+      for (const key of Object.keys(shares)) {
+        if (now > shares[key].expiresAt) {
+          delete shares[key];
+          changed = true;
         }
       }
-    }, 30000);
+      
+      if (changed) {
+        writeShares(shares);
+      }
+      return shares;
+    }
+  } catch (err) {
+    console.error('[preset-share] Error reading shares file:', err);
+  }
+  return {};
+}
+
+function writeShares(shares: Record<string, { presets: any[]; expiresAt: number }>) {
+  try {
+    const dir = path.dirname(SHARES_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(SHARES_FILE, JSON.stringify(shares, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[preset-share] Error writing shares file:', err);
   }
 }
 
@@ -25,15 +83,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid presets format' }, { status: 400 });
     }
 
-    // Generate random 6-character uppercase key
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Avoid confusing characters like O, 0, I, 1
+    const shares = readShares();
+
+    // Generate random 6-character uppercase key (avoid confusing characters like O, 0, I, 1)
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let shareKey = '';
-    for (let i = 0; i < 6; i++) {
-      shareKey += chars.charAt(Math.floor(Math.random() * chars.length));
+    // Let's guarantee uniqueness
+    for (let attempt = 0; attempt < 100; attempt++) {
+      shareKey = '';
+      for (let i = 0; i < 6; i++) {
+        shareKey += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      if (!shares[shareKey]) break;
     }
 
     const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes lifetime
-    presetShares.set(shareKey, { presets, expiresAt });
+    shares[shareKey] = { presets, expiresAt };
+    writeShares(shares);
 
     return NextResponse.json({ shareKey });
   } catch (e) {
@@ -51,9 +117,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Missing key parameter' }, { status: 400 });
     }
 
-    const share = presetShares.get(key);
+    const shares = readShares();
+    const share = shares[key];
+    
     if (!share || Date.now() > share.expiresAt) {
-      if (share) presetShares.delete(key);
+      if (share) {
+        delete shares[key];
+        writeShares(shares);
+      }
       return NextResponse.json({ error: '만료되었거나 유효하지 않은 공유 코드입니다.' }, { status: 404 });
     }
 
