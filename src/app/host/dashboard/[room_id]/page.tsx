@@ -402,17 +402,51 @@ export default function HostDashboard() {
         initialPreset = roomData.current_state;
       }
 
-      // Load presets from localStorage
-      const savedPresets = localStorage.getItem(`glowwave_presets_${roomId}`);
+      // Load presets from localStorage or import staged presets from Solo Standalone Mode
+      const tempImportRaw = localStorage.getItem('glowwave_temp_import_presets');
       let loadedPresets: Preset[] = [];
-      if (savedPresets) {
+      let isImported = false;
+
+      if (tempImportRaw) {
         try {
-          loadedPresets = JSON.parse(savedPresets);
+          const importedPresets = JSON.parse(tempImportRaw) as Preset[];
+          if (Array.isArray(importedPresets) && importedPresets.length > 0) {
+            if (roomData.tier === 'free') {
+              // Free tier: slice to 6 presets, downgrade premium fonts & effects
+              loadedPresets = importedPresets.slice(0, 6).map(p => ({
+                ...p,
+                font_family: (p.font_family === 'neon' || p.font_family === 'pixel' || p.font_family === 'plump') 
+                  ? 'sans-thin' 
+                  : p.font_family,
+                special_effect: (p.special_effect === 'hearts' || p.special_effect === 'confetti' || p.special_effect === 'stars') 
+                  ? 'none' 
+                  : p.special_effect
+              }));
+            } else {
+              // Paid tier: keep all (up to 50)
+              loadedPresets = importedPresets.slice(0, 50);
+            }
+            isImported = true;
+            localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(loadedPresets));
+          }
         } catch (e) {
+          console.error('[Dashboard] Failed to import presets:', e);
+        } finally {
+          localStorage.removeItem('glowwave_temp_import_presets');
+        }
+      }
+
+      if (!isImported) {
+        const savedPresets = localStorage.getItem(`glowwave_presets_${roomId}`);
+        if (savedPresets) {
+          try {
+            loadedPresets = JSON.parse(savedPresets);
+          } catch (e) {
+            loadedPresets = [...defaults];
+          }
+        } else {
           loadedPresets = [...defaults];
         }
-      } else {
-        loadedPresets = [...defaults];
       }
 
       // Migrate presets: remove emojis, convert size to number, and set correct premium effects
@@ -442,86 +476,88 @@ export default function HostDashboard() {
           changed = true;
         }
 
-        // Migrate index 0: '앰비언트' -> '단색'
-        if (idx === 0 && p.text === '앰비언트') {
-          p.text = '단색';
-          changed = true;
-        }
-
-        // Migrate index 1: '사이키' -> '부드러운 깜빡이' (single-color fading blink)
-        if (idx === 1 && (p.text === '사이키' || p.text === '부드러운 깜빡이')) {
-          let needsUpdate = false;
-          if (p.text !== '부드러운 깜빡이') {
-            p.text = '부드러운 깜빡이';
-            needsUpdate = true;
-          }
-          if (p.bg_color_secondary !== undefined && p.bg_color_secondary !== null) {
-            delete p.bg_color_secondary;
-            needsUpdate = true;
-          }
-          if (p.bg_color !== '#3B82F6') {
-            p.bg_color = '#3B82F6'; // New default blue color
-            needsUpdate = true;
-          }
-          if (p.speed !== 1000) {
-            p.speed = 1000;
-            needsUpdate = true;
-          }
-          if (needsUpdate) {
+        if (!isImported) {
+          // Migrate index 0: '앰비언트' -> '단색'
+          if (idx === 0 && p.text === '앰비언트') {
+            p.text = '단색';
             changed = true;
           }
-        }
 
-        // Migrate index 2: to '사이키' white/black flash
-        if (idx === 2 && ((p.effect as string) === 'gradient' || p.text.includes('그라데이션') || p.text.includes('경찰') || p.text === '사이키')) {
-          p.bg_color = '#FFFFFF';
-          p.text = '사이키';
-          p.text_color = '#EF4444';
-          p.effect = 'blink';
-          p.speed = 1527;
-          p.bg_color_secondary = '#0B0B0F';
-          p.font_size = 100;
-          changed = true;
-        }
-
-        // Migrate index 3: If it was the old default '카운트다운' or equalizer/raffle, change to new default '당첨!' (Lucky draw wait)
-        if (idx === 3 && (p.text === '카운트다운' || p.text === '당첨!' || (p.effect as string) === 'equalizer' || p.text.includes('사운드') || p.text.includes('이퀄라이저') || p.text.includes('당첨'))) {
-          let needsUpdate = false;
-          if (p.text !== '당첨!') {
-            p.text = '당첨!';
-            needsUpdate = true;
+          // Migrate index 1: '사이키' -> '부드러운 깜빡이' (single-color fading blink)
+          if (idx === 1 && (p.text === '사이키' || p.text === '부드러운 깜빡이')) {
+            let needsUpdate = false;
+            if (p.text !== '부드러운 깜빡이') {
+              p.text = '부드러운 깜빡이';
+              needsUpdate = true;
+            }
+            if (p.bg_color_secondary !== undefined && p.bg_color_secondary !== null) {
+              delete p.bg_color_secondary;
+              needsUpdate = true;
+            }
+            if (p.bg_color !== '#3B82F6') {
+              p.bg_color = '#3B82F6'; // New default blue color
+              needsUpdate = true;
+            }
+            if (p.speed !== 1000) {
+              p.speed = 1000;
+              needsUpdate = true;
+            }
+            if (needsUpdate) {
+              changed = true;
+            }
           }
-          if (p.effect !== 'luckydraw_wait') {
-            p.effect = 'luckydraw_wait';
-            p.bg_color = '#0B0B0F';
-            p.text_color = '#FFD700';
-            p.speed = 1000;
-            p.bg_color_secondary = '#FFD700';
-            p.result_text = '아쉽네요! 다음 기회에..';
+
+          // Migrate index 2: to '사이키' white/black flash
+          if (idx === 2 && ((p.effect as string) === 'gradient' || p.text.includes('그라데이션') || p.text.includes('경찰') || p.text === '사이키')) {
+            p.bg_color = '#FFFFFF';
+            p.text = '사이키';
+            p.text_color = '#EF4444';
+            p.effect = 'blink';
+            p.speed = 1527;
+            p.bg_color_secondary = '#0B0B0F';
             p.font_size = 100;
-            needsUpdate = true;
+            changed = true;
           }
-          if (needsUpdate) changed = true;
-        }
 
-        // Migrate index 5: If it was the old default '당첨!' (or old equalizer), change to new default '카운트다운'
-        if (idx === 5 && (p.text === '당첨!' || p.text === '카운트다운' || (p.effect as string) === 'equalizer' || p.text.includes('사운드') || p.text.includes('이퀄라이저'))) {
-          let needsUpdate = false;
-          if (p.text !== '카운트다운') {
-            p.text = '카운트다운';
-            needsUpdate = true;
+          // Migrate index 3: If it was the old default '카운트다운' or equalizer/raffle, change to new default '당첨!' (Lucky draw wait)
+          if (idx === 3 && (p.text === '카운트다운' || p.text === '당첨!' || (p.effect as string) === 'equalizer' || p.text.includes('사운드') || p.text.includes('이퀄라이저') || p.text.includes('당첨'))) {
+            let needsUpdate = false;
+            if (p.text !== '당첨!') {
+              p.text = '당첨!';
+              needsUpdate = true;
+            }
+            if (p.effect !== 'luckydraw_wait') {
+              p.effect = 'luckydraw_wait';
+              p.bg_color = '#0B0B0F';
+              p.text_color = '#FFD700';
+              p.speed = 1000;
+              p.bg_color_secondary = '#FFD700';
+              p.result_text = '아쉽네요! 다음 기회에..';
+              p.font_size = 100;
+              needsUpdate = true;
+            }
+            if (needsUpdate) changed = true;
           }
-          if (p.effect !== 'countdown') {
-            p.effect = 'countdown';
-            p.bg_color = '#8B5CF6';
-            p.text_color = '#FFFFFF';
-            p.speed = 1000;
-            p.countdown_seconds = 5;
-            p.result_text = 'START';
-            p.font_size = 100;
-            needsUpdate = true;
+
+          // Migrate index 5: If it was the old default '당첨!' (or old equalizer), change to new default '카운트다운'
+          if (idx === 5 && (p.text === '당첨!' || p.text === '카운트다운' || (p.effect as string) === 'equalizer' || p.text.includes('사운드') || p.text.includes('이퀄라이저'))) {
+            let needsUpdate = false;
+            if (p.text !== '카운트다운') {
+              p.text = '카운트다운';
+              needsUpdate = true;
+            }
+            if (p.effect !== 'countdown') {
+              p.effect = 'countdown';
+              p.bg_color = '#8B5CF6';
+              p.text_color = '#FFFFFF';
+              p.speed = 1000;
+              p.countdown_seconds = 5;
+              p.result_text = 'START';
+              p.font_size = 100;
+              needsUpdate = true;
+            }
+            if (needsUpdate) changed = true;
           }
-          if (needsUpdate) changed = true;
         }
 
         if (changed) {
@@ -530,7 +566,8 @@ export default function HostDashboard() {
         return p;
       });
 
-      if (migrated || !savedPresets) {
+      const hasSavedPresets = !!localStorage.getItem(`glowwave_presets_${roomId}`);
+      if (migrated || isImported || !hasSavedPresets) {
         localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(loadedPresets));
       }
 

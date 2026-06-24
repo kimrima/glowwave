@@ -561,38 +561,56 @@ export default function Home() {
               </div>
             </div>
 
-          {/* Core Side-by-Side Action Cards - Bento Grid Style */}
-          <div className="grid md:grid-cols-12 gap-6 max-w-4xl mx-auto mb-10">
-            {/* Host Action Card (Bento Style: larger width for visual hierarchy) */}
-            <div className="glass-effect rounded-3xl p-8 flex flex-col justify-between border border-white/5 bg-[#0a0a0f]/40 hover:border-indigo-500/20 hover:shadow-[0_0_50px_rgba(99,102,241,0.08)] transition-all duration-300 md:col-span-7 relative group overflow-hidden active-spring-pad">
+          {/* Core Action Cards - Bento Grid Style */}
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-10">
+            {/* 1. Solo Standalone Action Card */}
+            <div className="glass-effect rounded-3xl p-6 flex flex-col justify-between border border-white/5 bg-[#0a0a0f]/40 hover:border-indigo-500/20 hover:shadow-[0_0_50px_rgba(99,102,241,0.08)] transition-all duration-300 relative group overflow-hidden active-spring-pad text-left">
               <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-300" />
-              <div className="mb-10 relative z-10">
-                <span className="text-[9px] font-mono text-indigo-400 font-extrabold uppercase tracking-widest">For Event Host</span>
-                <h2 className="text-xl sm:text-2xl font-black text-white mt-3 mb-3 font-outfit">새 전광판 개설하기</h2>
+              <div className="mb-6 relative z-10">
+                <span className="text-[9px] font-mono text-pink-400 font-extrabold uppercase tracking-widest">Standalone Signboard</span>
+                <h2 className="text-xl font-black text-white mt-3 mb-3 font-outfit">1인 단독 전광판 실행</h2>
                 <p className="text-xs text-zinc-400 leading-relaxed font-semibold">
-                  버스킹 크루, 파티 DJ, 동아리 이벤트를 위해 나만의 실시간 제어 리모컨을 만듭니다. 별도의 회원가입 없이 즉시 방 코드를 획득하고 연출을 시작해 보세요.
+                  로그인이나 방 개설 없이 시간 제한도 없는 무제한 전광판 모드입니다. 나만의 커스텀 디자인 프리셋들을 자유롭게 보관하고 내 스마트폰 화면에 즉시 띄워 보세요!
+                </p>
+              </div>
+              <Link 
+                href="/local" 
+                className="w-full py-3.5 rounded-xl text-center text-xs tracking-wider flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-indigo-500 text-white font-extrabold shadow-lg hover:opacity-95 transition-all z-10"
+              >
+                단독 전광판 바로 실행하기
+              </Link>
+            </div>
+
+            {/* 2. Host Action Card */}
+            <div className="glass-effect rounded-3xl p-6 flex flex-col justify-between border border-white/5 bg-[#0a0a0f]/40 hover:border-indigo-500/20 hover:shadow-[0_0_50px_rgba(99,102,241,0.08)] transition-all duration-300 relative group overflow-hidden active-spring-pad text-left">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-300" />
+              <div className="mb-6 relative z-10">
+                <span className="text-[9px] font-mono text-indigo-400 font-extrabold uppercase tracking-widest">For Event Host</span>
+                <h2 className="text-xl font-black text-white mt-3 mb-3 font-outfit">새 전광판 개설하기</h2>
+                <p className="text-xs text-zinc-400 leading-relaxed font-semibold">
+                  응원단장, 버스커, 단체 행사를 위해 주변 사람들의 스마트폰 화면 색상과 구호를 실시간으로 동기화 제어합니다. 1인 모드의 커스텀 프리셋들을 무손실로 연동할 수 있습니다.
                 </p>
               </div>
               <Link 
                 href="/host/setup" 
-                className="w-full py-4 rounded-xl text-center text-xs tracking-wider flex items-center justify-center gap-2 bg-white text-black font-extrabold shadow-lg hover:bg-zinc-200 transition-all z-10"
+                className="w-full py-3.5 rounded-xl text-center text-xs tracking-wider flex items-center justify-center gap-2 bg-white text-black font-extrabold shadow-lg hover:bg-zinc-200 transition-all z-10"
               >
-                방 개설 및 세팅 시작하기
+                동기화 방 개설하기
               </Link>
             </div>
 
-            {/* Spectator Action Card (Bento Style: compact entry form) */}
-            <div className="glass-effect rounded-3xl p-8 flex flex-col justify-between border border-white/5 bg-[#0a0a0f]/40 hover:border-emerald-500/20 hover:shadow-[0_0_50px_rgba(16,185,129,0.08)] transition-all duration-300 md:col-span-5 relative group overflow-hidden active-spring-pad">
+            {/* 3. Spectator Action Card */}
+            <div className="glass-effect rounded-3xl p-6 flex flex-col justify-between border border-white/5 bg-[#0a0a0f]/40 hover:border-emerald-500/20 hover:shadow-[0_0_50px_rgba(16,185,129,0.08)] transition-all duration-300 relative group overflow-hidden active-spring-pad text-left">
               <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all duration-300" />
-              <div className="relative z-10 mb-6">
+              <div className="relative z-10 mb-4">
                 <span className="text-[9px] font-mono text-emerald-400 font-extrabold uppercase tracking-widest">For Audience</span>
-                <h2 className="text-xl sm:text-2xl font-black text-white mt-3 mb-3 font-outfit">관객으로 참여하기</h2>
-                <p className="text-xs text-zinc-400 leading-relaxed mb-6 font-semibold">
-                  스크린에 안내된 6자리 코드(대문자/숫자)를 입력하거나 카메라를 켜서 QR 코드를 스캔하세요.
+                <h2 className="text-xl font-black text-white mt-3 mb-3 font-outfit">관객으로 참여하기</h2>
+                <p className="text-xs text-zinc-400 leading-relaxed mb-4 font-semibold">
+                  현장 스크린에 안내된 6자리 참여 코드를 입력하거나 카메라를 켜서 QR 코드를 스캔하세요.
                 </p>
                 
                 {/* Direct join code input interface */}
-                <form onSubmit={handleJoinRoomSubmit} className="flex gap-2 mb-3">
+                <form onSubmit={handleJoinRoomSubmit} className="flex gap-2 mb-2">
                   <input
                     type="text"
                     value={joinRoomCode}
@@ -601,25 +619,25 @@ export default function Home() {
                       setJoinError('');
                     }}
                     placeholder="입장 코드 6자리"
-                    className="flex-1 bg-black/60 border border-white/10 rounded-xl px-4 py-3.5 text-center text-white tracking-widest text-xs font-black focus:outline-none focus:border-indigo-500 uppercase font-mono transition-all"
+                    className="flex-1 bg-black/60 border border-white/10 rounded-xl px-3 py-2.5 text-center text-white tracking-widest text-xs font-black focus:outline-none focus:border-indigo-500 uppercase font-mono transition-all"
                     maxLength={6}
                   />
                   <button
                     type="submit"
-                    className="px-5 py-3.5 rounded-xl text-xs font-extrabold shrink-0 flex items-center justify-center gap-1.5 cursor-pointer bg-white text-black hover:bg-zinc-200 transition-all"
+                    className="px-4 py-2.5 rounded-xl text-xs font-extrabold shrink-0 flex items-center justify-center gap-1.5 cursor-pointer bg-white text-black hover:bg-zinc-200 transition-all"
                   >
                     참여
                   </button>
                 </form>
-                {joinError && <p className="text-[10px] text-red-500 mb-4 text-center font-bold">{joinError}</p>}
+                {joinError && <p className="text-[10px] text-red-500 mb-2 text-center font-bold">{joinError}</p>}
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsQRScannerOpen(true)}
-                className="w-full py-3.5 rounded-xl border border-dashed border-white/10 bg-white/5 text-zinc-300 font-extrabold text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer relative z-10"
+                className="w-full py-2.5 rounded-xl border border-dashed border-white/10 bg-white/5 text-zinc-300 font-extrabold text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer relative z-10"
               >
-                카메라로 QR 코드 스캔하기
+                카메라로 QR 스캔 참여
               </button>
             </div>
           </div>

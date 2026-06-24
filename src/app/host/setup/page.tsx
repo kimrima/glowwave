@@ -33,6 +33,37 @@ export default function HostSetup() {
   const [checkoutStep, setCheckoutStep] = useState<'input' | 'done'>('input');
   const [createdRoomInfo, setCreatedRoomInfo] = useState<{ room_id: string; host_session_token: string } | null>(null);
 
+  // Import Status from Solo Signboard
+  const [importStatus, setImportStatus] = useState<'free' | 'premium' | null>(null);
+  const [importedPresetCount, setImportedPresetCount] = useState<number>(0);
+
+  // Check URL parameters for preset importing
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const importParam = params.get('import') as 'free' | 'premium' | null;
+      if (importParam) {
+        setImportStatus(importParam);
+        if (importParam === 'premium') {
+          setSelectedTier('lite'); // Pre-select Lite for premium import path
+        } else {
+          setSelectedTier('free');
+        }
+
+        // Check for staged presets
+        const staged = localStorage.getItem('glowwave_temp_import_presets');
+        if (staged) {
+          try {
+            const parsed = JSON.parse(staged);
+            if (Array.isArray(parsed)) {
+              setImportedPresetCount(parsed.length);
+            }
+          } catch (e) {}
+        }
+      }
+    }
+  }, []);
+
   // Auto-fill email from localStorage if returning host
   useEffect(() => {
     const savedEmail = localStorage.getItem('glowwave_host_email');
@@ -194,6 +225,40 @@ export default function HostSetup() {
             <h2 className="text-xl font-bold text-white mb-2">
               참여 인원 및 요금제 선택
             </h2>
+
+            {/* Dynamic Import Alert/Warning Banner */}
+            {importStatus && (
+              <div className={`rounded-xl p-4 border animate-in fade-in slide-in-from-top-2 duration-300 text-left font-sans ${
+                selectedTier === 'free'
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
+                  : 'bg-indigo-500/10 border-indigo-500/30 text-indigo-200'
+              }`}>
+                <h4 className="text-xs font-black flex items-center gap-1.5 mb-1 text-white">
+                  {selectedTier === 'free' ? (
+                    <>
+                      <span className="shrink-0 text-amber-400">⚠️</span>
+                      <span>1인 프리셋 일부 연동 (무료 제한 모드)</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="shrink-0 text-indigo-400">⚡</span>
+                      <span>1인 프리셋 무손실 연동 (프리미엄 모드)</span>
+                    </>
+                  )}
+                </h4>
+                <p className="text-[10px] text-zinc-400 leading-relaxed font-semibold">
+                  {selectedTier === 'free' ? (
+                    <span>
+                      무료 방 개설 시 1인 모드에서 제작하신 <strong>{importedPresetCount}개 중 상위 6개</strong>만 승계되며, 둥글몽글/스포티/레트로 폰트와 꽃가루/별빛 등의 특수효과는 기본형으로 자동 대체됩니다.
+                    </span>
+                  ) : (
+                    <span>
+                      작성하신 <strong>{importedPresetCount}개의 디자인 프리셋</strong>과 전용 글꼴 및 특수 효과가 단 1%의 유실도 없이 100% 온전하게 승계되어 멀티방으로 이동합니다! 결제 완료 후 즉시 복원됩니다.
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
 
             {/* Email Input Step (No login logic) */}
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
