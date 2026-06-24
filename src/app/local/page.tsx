@@ -2,38 +2,28 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { 
-  RotateCw, 
-  Sliders, 
-  Plus, 
-  Trash2, 
   X, 
+  Trash2, 
+  Slash, 
   Check, 
-  Tv, 
-  Share2, 
-  AlertCircle,
-  Copy,
-  PlusCircle,
-  Volume2,
-  Lock,
-  Edit3,
-  RefreshCw,
-  Maximize2
+  RefreshCw, 
+  Edit3 
 } from 'lucide-react';
 import { Preset, EffectType } from '@/lib/types';
-import useFitText from '@/hooks/useFitText';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import { TEMPLATE_CATEGORIES } from '@/lib/templates';
+import useFitText from '@/hooks/useFitText';
 
-// Predefined gorgeous default presets for solo mode
-const standaloneDefaults: Preset[] = [
-  { bg_color: '#EF4444', text: '화이팅 🔥', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100 },
-  { bg_color: '#3B82F6', text: '부드러운 깜빡이 💫', text_color: '#FFFFFF', effect: 'blink', speed: 1527, font_family: 'plump', font_size: 100 },
-  { bg_color: '#FFFFFF', text: '사이키 ✨', text_color: '#EF4444', effect: 'blink', speed: 1527, bg_color_secondary: '#0B0B0F', font_family: 'sans-thick', font_size: 100 },
-  { bg_color: '#064E3B', text: '영업중 OPEN ☕', text_color: '#FEF08A', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100 },
-  { bg_color: '#C70125', text: '무적 LG ⚾', text_color: '#FFFFFF', effect: 'blink', speed: 1527, font_family: 'sans-thick', font_size: 100, special_effect: 'stars' },
-  { bg_color: '#EC4899', text: 'HAPPY BIRTHDAY 🎂', text_color: '#FFFFFF', effect: 'blink', speed: 1527, font_family: 'plump', font_size: 100, special_effect: 'confetti' }
+// Host-aligned default presets for standalone local mode
+const defaults: Preset[] = [
+  { bg_color: '#0B0B0F', text: '단색', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#3B82F6', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1000, font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#FFFFFF', text: '사이키', text_color: '#EF4444', effect: 'blink', speed: 1527, bg_color_secondary: '#0B0B0F', font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1527, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100, lucky_draw_count: 1 },
+  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 11606, font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
 ];
 
 interface MiniCountdownPreviewProps {
@@ -73,61 +63,103 @@ function MiniCountdownPreview({ preset }: MiniCountdownPreviewProps) {
   );
 }
 
+function LocalSignboardFallback() {
+  return (
+    <div className="min-h-screen bg-[#030305] flex items-center justify-center text-white font-sans">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-8 h-8 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
+        <p className="text-xs text-zinc-400 font-medium">대시보드 로딩 중...</p>
+      </div>
+    </div>
+  );
+}
+
 export default function StandaloneSignboard() {
+  return (
+    <React.Suspense fallback={<LocalSignboardFallback />}>
+      <LocalSignboardContent />
+    </React.Suspense>
+  );
+}
+
+function LocalSignboardContent() {
+  const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Active fullscreen signboard state
-  const [currentPreset, setCurrentPreset] = useState<Preset>({
-    bg_color: '#EF4444',
-    text: '화이팅 🔥',
+  // Active signboard design state
+  const [currentBroadcastPreset, setCurrentBroadcastPreset] = useState<Preset>({
+    bg_color: '#0B0B0F',
+    text: 'GlowWave',
     text_color: '#FFFFFF',
     effect: 'none',
     speed: 1000,
-    font_family: 'sans-thick',
+    font_family: 'sans-thin',
     font_size: 100
   });
 
-  // Local Presets array
-  const [localPresets, setLocalPresets] = useState<Preset[]>([]);
-  
-  // Custom Preset Customizer State
+  // Presets states
+  const [presets, setPresets] = useState<Preset[]>([]);
+  const [activePresetIndex, setActivePresetIndex] = useState<number | null>(0);
+
+  // Custom live editor states
   const [customText, setCustomText] = useState('GLOW WAVE');
   const [customBgColor, setCustomBgColor] = useState('#EF4444');
-  const [customBgColorSecondary, setCustomBgColorSecondary] = useState<string>('');
-  const [customTextColor, setCustomTextColor] = useState('#FFFFFF');
   const [customFontSize, setCustomFontSize] = useState<number>(100);
-  const [customFontFamily, setCustomFontFamily] = useState<'sans-thin' | 'sans-thick' | 'serif' | 'neon' | 'pixel' | 'plump'>('sans-thick');
+  const [customFontFamily, setCustomFontFamily] = useState<'sans-thin' | 'sans-thick' | 'serif' | 'neon' | 'pixel' | 'plump'>('sans-thin');
   const [customEffect, setCustomEffect] = useState<EffectType>('none');
-  const [customSpeed, setCustomSpeed] = useState(25); // 25% initial
+  const [customSpeed, setCustomSpeed] = useState(25); // Range 1 to 100
   const [customSpecialEffect, setCustomSpecialEffect] = useState<'none' | 'hearts' | 'confetti' | 'stars'>('none');
 
-  // Pre-flight Sync Modal State
-  const [isPreflightOpen, setIsPreflightOpen] = useState(false);
-  const [preflightMetrics, setPreflightMetrics] = useState({
-    totalCount: 0,
-    premiumCount: 0,
-    overflowCount: 0
-  });
+  // Control & Share Modal
+  const [isVaultOpen, setIsVaultOpen] = useState(false);
+  const [vaultTab, setVaultTab] = useState<'slots' | 'share' | 'sync' | 'guide'>('slots');
+  const [savedSlots, setSavedSlots] = useState<{ name: string; presets: Preset[] }[]>([]);
+  const [newSlotName, setNewSlotName] = useState('');
 
-  // Fullscreen Signboard Overlay Control
-  const [isFullscreenActive, setIsFullscreenActive] = useState(false);
+  // QR and Code Sharing states
+  const [isSharingLoading, setIsSharingLoading] = useState(false);
+  const [exportCode, setExportCode] = useState('');
+  const [shareQrUrl, setShareQrUrl] = useState('');
+  const [shareCodeInput, setShareCodeInput] = useState('');
+  const [isCodeCopied, setIsCodeCopied] = useState(false);
 
-  // Layout presentation controls
-  const [showMiniPreviews, setShowMiniPreviews] = useState(true);
-  const [isTransmitterLocked, setIsTransmitterLocked] = useState(false);
+  // Fullscreen Signboard View
+  const [isStandaloneFullscreen, setIsStandaloneFullscreen] = useState(false);
+
+  // Active categories
   const [activeCategory, setActiveCategory] = useState<'custom' | 'busking' | 'sports' | 'party' | 'anniversary' | 'store'>('custom');
-  const [activePresetIndex, setActivePresetIndex] = useState<number | null>(null);
 
-  // Preset Live Edit States (Drawer)
+  // Preset Live Edit (Drawer)
   const [editingPresetIndex, setEditingPresetIndex] = useState<number | null>(null);
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
 
-  // Wake Lock Ref & Warnings
-  const wakeLockRef = useRef<any>(null);
-  const [wakeLockSupported, setWakeLockSupported] = useState(true);
-  const [orientationWarning, setOrientationWarning] = useState(false);
+  // URL import loading states
+  const [isImportLoading, setIsImportLoading] = useState(false);
+  const [importMessage, setImportMessage] = useState('');
+  const [importError, setImportError] = useState('');
 
-  // Speed Helper
+  const getFontFamilyClass = (fontFamily?: string) => {
+    switch (fontFamily) {
+      case 'sans-thin': return 'font-sign-sans-thin font-bold';
+      case 'sans-thick': return 'font-sign-sans-thick font-black';
+      case 'serif': return 'font-sign-serif font-bold';
+      case 'neon': return 'font-sign-neon font-black';
+      case 'pixel': return 'font-sign-pixel';
+      case 'plump': return 'font-sign-plump font-black';
+      default: return 'font-sign-sans-thin font-bold';
+    }
+  };
+
+  const getSpeedFactor = (effect: EffectType, ms: number) => {
+    if (effect === 'blink' || effect === 'luckydraw' || effect === 'luckydraw_wait') {
+      return Math.max(1, Math.min(100, Math.round(((2000 - ms) * 99) / 1950 + 1)));
+    }
+    if (effect === 'marquee') {
+      return Math.max(1, Math.min(100, Math.round(((15000 - ms) * 99) / 14000 + 1)));
+    }
+    return 50;
+  };
+
   const getSpeedMs = (effect: EffectType, factor: number) => {
     if (effect === 'blink' || effect === 'luckydraw' || effect === 'luckydraw_wait') {
       return Math.round(2000 - (factor - 1) * (1950 / 99));
@@ -138,228 +170,205 @@ export default function StandaloneSignboard() {
     return 1000;
   };
 
-  const getSpeedFactor = (effect: EffectType, ms: number) => {
-    if (effect === 'blink' || effect === 'luckydraw' || effect === 'luckydraw_wait') {
-      return Math.max(1, Math.min(100, Math.round(((2000 - ms) * 99) / 1950 + 1)));
-    }
-    if (effect === 'marquee') {
-      return Math.max(1, Math.min(100, Math.round(((15000 - ms) * 99) / 14000 + 1)));
-    }
-    return 25;
-  };
-
-  // Font family loader
-  const getFontFamilyClass = (fontFamily?: string) => {
-    switch (fontFamily) {
-      case 'sans-thin':
-        return 'font-sign-sans-thin font-bold';
-      case 'sans-thick':
-        return 'font-sign-sans-thick font-black';
-      case 'serif':
-        return 'font-sign-serif font-bold';
-      case 'neon':
-        return 'font-sign-neon font-black';
-      case 'pixel':
-        return 'font-sign-pixel';
-      case 'plump':
-        return 'font-sign-plump font-black';
-      default:
-        return 'font-sign-sans-thin font-bold';
-    }
-  };
-
-  // 1. Initial Load of Local Presets and Active design state
+  // 1. Initial State Hydration
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Check Wake Lock support
-      if (!('wakeLock' in navigator)) {
-        setWakeLockSupported(false);
-      }
-
-      // Load local presets from localStorage
       const saved = localStorage.getItem('glowwave_local_presets');
       let presetsList: Preset[] = [];
       if (saved) {
         try {
           presetsList = JSON.parse(saved);
         } catch (e) {
-          presetsList = [...standaloneDefaults];
+          presetsList = [...defaults];
         }
       } else {
-        presetsList = [...standaloneDefaults];
+        presetsList = [...defaults];
         localStorage.setItem('glowwave_local_presets', JSON.stringify(presetsList));
       }
-      setLocalPresets(presetsList);
 
-      // Load active preset design state
+      // Migrate presets
+      const emojiRegex = /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+      presetsList = presetsList.map(p => {
+        if (emojiRegex.test(p.text)) {
+          p.text = p.text.replace(emojiRegex, '').trim();
+        }
+        if (typeof p.font_size === 'string' || p.font_size === undefined) {
+          p.font_size = 100;
+        }
+        return p;
+      });
+      setPresets(presetsList);
+
       const savedActive = localStorage.getItem('glowwave_local_active_preset');
-      let activePreset: Preset = presetsList[0] || standaloneDefaults[0];
+      let activePreset: Preset = presetsList[0] || defaults[0];
       if (savedActive) {
         try {
           activePreset = JSON.parse(savedActive);
         } catch (e) {}
       }
-      setCurrentPreset(activePreset);
+      setCurrentBroadcastPreset(activePreset);
       applyPresetToController(activePreset);
 
-      // Detect Screen Orientation (warning if in portrait mode)
-      const checkOrientation = () => {
-        setOrientationWarning(window.innerHeight > window.innerWidth);
-      };
-      checkOrientation();
-      window.addEventListener('resize', checkOrientation);
-      return () => window.removeEventListener('resize', checkOrientation);
+      const savedPackages = localStorage.getItem('glowwave_local_slots');
+      if (savedPackages) {
+        try {
+          setSavedSlots(JSON.parse(savedPackages));
+        } catch (e) {}
+      }
+
+      // Check import search query
+      const params = new URLSearchParams(window.location.search);
+      const importKey = params.get('import');
+      if (importKey) {
+        setIsImportLoading(true);
+        setImportMessage('공유받은 프리셋 연출 팩을 다운로드하고 있습니다...');
+        
+        fetch(`/api/preset-share?key=${importKey.toUpperCase()}`)
+          .then(res => {
+            if (!res.ok) {
+              return res.json().then(d => { throw new Error(d.error || '가져오기 실패') });
+            }
+            return res.json();
+          })
+          .then(data => {
+            if (Array.isArray(data.presets) && data.presets.length > 0) {
+              const cleanedPresets = data.presets.map((p: Preset) => {
+                if (emojiRegex.test(p.text)) {
+                  p.text = p.text.replace(emojiRegex, '').trim();
+                }
+                if (typeof p.font_size === 'string' || p.font_size === undefined) {
+                  p.font_size = 100;
+                }
+                return p;
+              });
+
+              setPresets(cleanedPresets);
+              localStorage.setItem('glowwave_local_presets', JSON.stringify(cleanedPresets));
+              
+              setCurrentBroadcastPreset(cleanedPresets[0]);
+              applyPresetToController(cleanedPresets[0]);
+              localStorage.setItem('glowwave_local_active_preset', JSON.stringify(cleanedPresets[0]));
+              setActivePresetIndex(0);
+
+              setImportMessage('가져오기 성공! 잠시 후 자동으로 전광판이 열립니다. 🎉');
+              
+              setTimeout(() => {
+                setIsImportLoading(false);
+                setIsStandaloneFullscreen(true);
+              }, 1200);
+            } else {
+              throw new Error('올바르지 않은 프리셋 데이터 형식입니다.');
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            setImportError(err.message || '만료되었거나 올바르지 않은 공유 코드입니다.');
+          })
+          .finally(() => {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          });
+      }
     }
   }, []);
 
-  // 2. Request Wake Lock
-  const requestWakeLock = async () => {
-    if (typeof window === 'undefined' || !('wakeLock' in navigator)) return;
-    try {
-      if (wakeLockRef.current) return;
-      wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
-      console.log('[Standalone] Wake Lock active.');
-    } catch (err) {
-      console.warn('[Standalone] Wake Lock failed:', err);
-    }
-  };
-
-  // Release Wake Lock
-  const releaseWakeLock = async () => {
-    if (wakeLockRef.current) {
-      try {
-        await wakeLockRef.current.release();
-        wakeLockRef.current = null;
-        console.log('[Standalone] Wake Lock released.');
-      } catch (e) {}
-    }
-  };
-
-  useEffect(() => {
-    if (isFullscreenActive) {
-      requestWakeLock();
-    } else {
-      releaseWakeLock();
-    }
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && isFullscreenActive) {
-        requestWakeLock();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      releaseWakeLock();
-    };
-  }, [isFullscreenActive]);
-
-  // ESC key listener to exit fullscreen
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreenActive) {
-        setIsFullscreenActive(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreenActive]);
-
-  // 3. Apply preset to controller form fields
   const applyPresetToController = (preset: Preset) => {
     setCustomText(preset.text);
     setCustomBgColor(preset.bg_color);
-    setCustomBgColorSecondary(preset.bg_color_secondary || '');
-    setCustomTextColor(preset.text_color || '#FFFFFF');
     setCustomFontSize(preset.font_size || 100);
-    setCustomFontFamily(preset.font_family as any || 'sans-thin');
+    setCustomFontFamily((preset.font_family as any) || 'sans-thin');
     setCustomEffect(preset.effect || 'none');
     setCustomSpeed(getSpeedFactor(preset.effect || 'none', preset.speed || 1000));
     setCustomSpecialEffect(preset.special_effect || 'none');
   };
 
-  // Broadcast preset trigger
   const triggerPreset = (preset: Preset, index: number) => {
-    setCurrentPreset(preset);
-    if (index !== -1) {
-      setActivePresetIndex(index);
-    }
-    applyPresetToController(preset);
-    localStorage.setItem('glowwave_local_active_preset', JSON.stringify(preset));
+    const presetWithTrigger: Preset = {
+      ...preset,
+      trigger_id: Date.now().toString()
+    };
+    setActivePresetIndex(index);
+    setCurrentBroadcastPreset(presetWithTrigger);
+    applyPresetToController(presetWithTrigger);
+    localStorage.setItem('glowwave_local_active_preset', JSON.stringify(presetWithTrigger));
   };
 
-  // Reset entire dashboard
+  const handleDrawWinner = () => {
+    const drawResultPreset: Preset = {
+      ...currentBroadcastPreset,
+      effect: 'luckydraw',
+      lucky_draw_winner_id: 'local-winner',
+      lucky_draw_winner_ids: ['local-winner'],
+      trigger_id: Date.now().toString()
+    };
+    setCurrentBroadcastPreset(drawResultPreset);
+    localStorage.setItem('glowwave_local_active_preset', JSON.stringify(drawResultPreset));
+  };
+
   const handleResetDashboard = () => {
-    if (confirm('모든 커스텀 프리셋과 설정을 대시보드 초기 상태로 초기화하시겠습니까?\n이 작업은 복구할 수 없습니다.')) {
+    if (confirm('모든 커스텀 프리셋과 슬롯을 대시보드 초기 상태로 초기화하시겠습니까?')) {
       localStorage.removeItem('glowwave_local_presets');
       localStorage.removeItem('glowwave_local_active_preset');
       
-      const defaultList = [...standaloneDefaults];
-      setLocalPresets(defaultList);
-      setCurrentPreset(defaultList[0]);
+      const defaultList = [...defaults];
+      setPresets(defaultList);
+      setCurrentBroadcastPreset(defaultList[0]);
       applyPresetToController(defaultList[0]);
       setActivePresetIndex(0);
       
       localStorage.setItem('glowwave_local_presets', JSON.stringify(defaultList));
       localStorage.setItem('glowwave_local_active_preset', JSON.stringify(defaultList[0]));
+      setIsVaultOpen(false);
     }
   };
 
-  // Save current controller state as local preset
   const handleSaveLocalPreset = () => {
+    const isWhite = customBgColor === '#FFFFFF';
     const newPreset: Preset = {
       bg_color: customBgColor,
       text: customText.trim() || 'GLOW WAVE',
-      text_color: customTextColor,
+      text_color: isWhite ? '#000000' : '#FFFFFF',
       effect: customEffect,
       speed: getSpeedMs(customEffect, customSpeed),
       font_size: customFontSize,
       font_family: customFontFamily,
       special_effect: customSpecialEffect
     };
-    if (customBgColorSecondary) {
-      newPreset.bg_color_secondary = customBgColorSecondary;
-    }
 
-    const updated = [...localPresets, newPreset];
-    setLocalPresets(updated);
+    const updated = [...presets, newPreset];
+    setPresets(updated);
     localStorage.setItem('glowwave_local_presets', JSON.stringify(updated));
-    setCurrentPreset(newPreset);
+    setCurrentBroadcastPreset(newPreset);
     localStorage.setItem('glowwave_local_active_preset', JSON.stringify(newPreset));
     setActivePresetIndex(updated.length - 1);
   };
 
-  // Save changes inside the edit drawer
   const handleSaveEditDrawerPreset = () => {
     if (editingPresetIndex === null || editingPreset === null) return;
 
-    let updated = [...localPresets];
-    if (editingPresetIndex < localPresets.length) {
-      // Modify existing
+    let updated = [...presets];
+    if (editingPresetIndex < presets.length) {
       updated[editingPresetIndex] = editingPreset;
     } else {
-      // Append new
       updated.push(editingPreset);
     }
 
-    setLocalPresets(updated);
+    setPresets(updated);
     localStorage.setItem('glowwave_local_presets', JSON.stringify(updated));
-    setCurrentPreset(editingPreset);
+    setCurrentBroadcastPreset(editingPreset);
     localStorage.setItem('glowwave_local_active_preset', JSON.stringify(editingPreset));
-    setActivePresetIndex(editingPresetIndex < localPresets.length ? editingPresetIndex : updated.length - 1);
+    setActivePresetIndex(editingPresetIndex < presets.length ? editingPresetIndex : updated.length - 1);
     setEditingPresetIndex(null);
     setEditingPreset(null);
   };
 
-  // Delete a local preset
   const handleDeleteLocalPreset = (indexToDelete: number) => {
     if (confirm('이 프리셋을 삭제하시겠습니까?')) {
-      const updated = localPresets.filter((_, idx) => idx !== indexToDelete);
-      setLocalPresets(updated);
+      const updated = presets.filter((_, idx) => idx !== indexToDelete);
+      setPresets(updated);
       localStorage.setItem('glowwave_local_presets', JSON.stringify(updated));
       
-      // Select first preset if current is deleted
       if (updated.length > 0) {
-        setCurrentPreset(updated[0]);
+        setCurrentBroadcastPreset(updated[0]);
         applyPresetToController(updated[0]);
         localStorage.setItem('glowwave_local_active_preset', JSON.stringify(updated[0]));
         setActivePresetIndex(0);
@@ -369,7 +378,109 @@ export default function StandaloneSignboard() {
     }
   };
 
-  // Font family selector logic
+  // Slots Vault Handlers
+  const handleSaveSlotPackage = () => {
+    const name = newSlotName.trim() || `저장된 테마 #${savedSlots.length + 1}`;
+    const newSlot = { name, presets: [...presets] };
+    const updated = [...savedSlots, newSlot];
+    setSavedSlots(updated);
+    localStorage.setItem('glowwave_local_slots', JSON.stringify(updated));
+    setNewSlotName('');
+  };
+
+  const handleLoadSlotPackage = (index: number) => {
+    const slot = savedSlots[index];
+    if (slot && slot.presets && slot.presets.length > 0) {
+      setPresets(slot.presets);
+      localStorage.setItem('glowwave_local_presets', JSON.stringify(slot.presets));
+      setCurrentBroadcastPreset(slot.presets[0]);
+      applyPresetToController(slot.presets[0]);
+      localStorage.setItem('glowwave_local_active_preset', JSON.stringify(slot.presets[0]));
+      setActivePresetIndex(0);
+      setIsVaultOpen(false);
+    }
+  };
+
+  const handleDeleteSlotPackage = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('이 테마 보관 슬롯을 삭제하시겠습니까?')) {
+      const updated = savedSlots.filter((_, idx) => idx !== index);
+      setSavedSlots(updated);
+      localStorage.setItem('glowwave_local_slots', JSON.stringify(updated));
+    }
+  };
+
+  // Wireless Sharing triggers
+  const handleGenerateShareCode = async () => {
+    setIsSharingLoading(true);
+    setExportCode('');
+    setShareQrUrl('');
+    setIsCodeCopied(false);
+    try {
+      const res = await fetch('/api/preset-share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ presets: presets })
+      });
+      if (!res.ok) throw new Error('API failed');
+      const data = await res.json();
+      
+      setExportCode(data.shareKey);
+      const url = `${window.location.origin}/local?import=${data.shareKey}`;
+      setShareQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`);
+    } catch (e) {
+      console.error(e);
+      alert('공유 코드 생성에 실패했습니다.');
+    } finally {
+      setIsSharingLoading(false);
+    }
+  };
+
+  const handleImportShareCode = async () => {
+    const code = shareCodeInput.trim().toUpperCase();
+    if (!code || code.length !== 6) {
+      alert('올바른 6자리 공유 코드를 입력하세요.');
+      return;
+    }
+
+    setIsSharingLoading(true);
+    try {
+      const res = await fetch(`/api/preset-share?key=${code}`);
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || '가져오기 실패');
+      }
+      const data = await res.json();
+      
+      if (Array.isArray(data.presets) && data.presets.length > 0) {
+        setPresets(data.presets);
+        localStorage.setItem('glowwave_local_presets', JSON.stringify(data.presets));
+        setCurrentBroadcastPreset(data.presets[0]);
+        applyPresetToController(data.presets[0]);
+        localStorage.setItem('glowwave_local_active_preset', JSON.stringify(data.presets[0]));
+        setActivePresetIndex(0);
+        
+        setIsVaultOpen(false);
+        setShareCodeInput('');
+        alert('공유받은 프리셋을 정상적으로 동기화했습니다! 🎉');
+      } else {
+        throw new Error('올바르지 않은 프리셋 형식입니다.');
+      }
+    } catch (e: any) {
+      console.error(e);
+      alert(e.message || '가져오기에 실패했습니다. 만료된 코드인지 확인해 보세요.');
+    } finally {
+      setIsSharingLoading(false);
+    }
+  };
+
+  const handleCopyShareCodeText = () => {
+    if (!exportCode) return;
+    navigator.clipboard.writeText(exportCode);
+    setIsCodeCopied(true);
+    setTimeout(() => setIsCodeCopied(false), 2000);
+  };
+
   const handleFontSelect = (fontVal: 'sans-thin' | 'sans-thick' | 'serif' | 'neon' | 'pixel' | 'plump', isEdit: boolean) => {
     if (isEdit) {
       setEditingPreset(prev => ({ ...prev!, font_family: fontVal }));
@@ -378,36 +489,10 @@ export default function StandaloneSignboard() {
     }
   };
 
-  // Analyze presets and open Pre-flight wizard
-  const handleTriggerPreflight = () => {
-    let premiumCount = 0;
-    
-    localPresets.forEach(p => {
-      const isPremiumFont = p.font_family === 'neon' || p.font_family === 'pixel' || p.font_family === 'plump';
-      const isPremiumEffect = p.special_effect === 'hearts' || p.special_effect === 'confetti' || p.special_effect === 'stars';
-      if (isPremiumFont || isPremiumEffect) {
-        premiumCount++;
-      }
-    });
-
-    const totalCount = localPresets.length;
-    const overflowCount = Math.max(0, totalCount - 6);
-
-    setPreflightMetrics({
-      totalCount,
-      premiumCount,
-      overflowCount
-    });
-
-    setIsPreflightOpen(true);
-  };
-
-  // Finish pre-flight setup and redirect
+  // Free/Premium Sync Room redirects
   const handleStartImportRoom = (tierType: 'free' | 'premium') => {
     if (typeof window !== 'undefined') {
-      // Stage current presets to temp storage for the importing wizard on dashboard page
-      localStorage.setItem('glowwave_temp_import_presets', JSON.stringify(localPresets));
-      
+      localStorage.setItem('glowwave_temp_import_presets', JSON.stringify(presets));
       if (tierType === 'premium') {
         router.push('/host/setup?import=premium');
       } else {
@@ -416,135 +501,66 @@ export default function StandaloneSignboard() {
     }
   };
 
-  // Particles generator
-  const particles = useMemo(() => {
-    const effect = currentPreset.special_effect;
-    if (!effect || effect === 'none') return [];
-    
-    const count = effect === 'stars' ? 35 : effect === 'confetti' ? 45 : 30;
-    const list = [];
-    
-    for (let i = 0; i < count; i++) {
-      if (effect === 'hearts') {
-        list.push({
-          id: i,
-          left: `${Math.random() * 100}%`,
-          fontSize: `${18 + Math.random() * 26}px`,
-          delay: `${Math.random() * 6}s`,
-          duration: `${4 + Math.random() * 5}s`,
-          sway: `${2 + Math.random() * 3}s`,
-          color: ['#EF4444', '#EC4899', '#F472B6', '#F43F5E', '#D946EF'][Math.floor(Math.random() * 5)]
-        });
-      } else if (effect === 'confetti') {
-        list.push({
-          id: i,
-          left: `${Math.random() * 100}%`,
-          fontSize: `${12 + Math.random() * 20}px`,
-          delay: `${Math.random() * 5}s`,
-          duration: `${3 + Math.random() * 4}s`,
-          sway: `${1.5 + Math.random() * 2}s`,
-          color: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#14B8A6'][Math.floor(Math.random() * 7)]
-        });
-      } else if (effect === 'stars') {
-        list.push({
-          id: i,
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          fontSize: `${4 + Math.random() * 8}px`,
-          delay: `${Math.random() * 4}s`,
-          duration: `${2 + Math.random() * 4}s`,
-          color: ['#FFF', '#FEF08A', '#A5F3FC', '#F472B6', '#C084FC'][Math.floor(Math.random() * 5)]
-        });
-      }
-    }
-    return list;
-  }, [currentPreset.special_effect, currentPreset.text]);
-
-  const isBlink = currentPreset.effect === 'blink';
-  const isDuoSiren = isBlink && !!currentPreset.bg_color_secondary;
-
-  const { containerRef, fontSize } = useFitText(
-    currentPreset.text,
-    currentPreset.effect,
-    currentPreset.font_size || 100
-  );
-
   return (
     <div className="min-h-screen bg-[#030305] text-foreground flex flex-col justify-between bg-grid-pattern relative overflow-hidden font-sans">
       
       {/* Background Neon Aura Spheres */}
-      <div className="absolute top-[10%] left-[-10%] neon-glow-circle-1 opacity-40" />
-      <div className="absolute bottom-[10%] right-[-10%] neon-glow-circle-2 opacity-30" />
+      <div className="absolute top-[10%] left-[-10%] neon-glow-circle-1 opacity-30" />
+      <div className="absolute bottom-[20%] right-[-10%] neon-glow-circle-2 opacity-25" />
 
       {/* Header */}
       <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 font-black text-xl tracking-tight text-white font-outfit">
-              <span>GlowWave</span>
-            </Link>
-            <span className="text-[10px] px-2 py-0.5 rounded bg-pink-500/10 text-pink-400 border border-pink-500/20 font-black tracking-wider uppercase font-mono">
-              1인 단독 전광판
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="font-black text-white tracking-tight font-outfit text-sm uppercase">GlowWave Local</span>
+            <span className="text-[10px] px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20 font-black tracking-wider uppercase">
+              1인 모드
             </span>
           </div>
 
-          <div className="flex items-center gap-3.5">
-            {/* 설정 초기화 */}
-            <button
-              type="button"
-              onClick={handleResetDashboard}
-              className="flex items-center gap-1.5 bg-white/[0.02] border border-white/5 px-3 py-2 rounded-xl text-[10px] font-bold text-zinc-400 hover:text-white cursor-pointer select-none transition-all"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>설정 초기화</span>
-            </button>
-
-            {/* 멀티 싱크 연동 */}
-            <button
-              type="button"
-              onClick={handleTriggerPreflight}
-              className="flex items-center gap-1.5 bg-gradient-to-r from-pink-500 to-indigo-500 px-4 py-2 rounded-xl text-xs font-black text-white cursor-pointer shadow-lg select-none hover:opacity-95 transition-all"
-            >
-              <span>멀티 싱크 방으로 연동하기 ⚡</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setVaultTab('slots');
+              setIsVaultOpen(true);
+            }}
+            className="flex items-center bg-[#12121a] hover:bg-white/[0.08] border border-white/10 px-4.5 py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
+          >
+            보관 & 공유 📦
+          </button>
         </div>
       </header>
 
-      {/* Sub-header Metadata Row (Mirrors Host Dashboard) */}
-      <section className="bg-black/20 border-b border-white/5 py-4 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+      {/* Unified HUD Status Bar */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 w-full relative z-10">
+        <div className="glass-effect rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 bg-[#12121a] border border-white/5">
+          <div className="flex flex-wrap items-center gap-6">
             <div>
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">단독 방장 모드</span>
-              <div className="flex items-center gap-2 mt-0.5">
-                <h1 className="text-sm font-mono font-black text-white tracking-wider">
-                  LOCAL_MODE
-                </h1>
-                <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize bg-pink-500/10 text-pink-400 border border-pink-500/20">
-                  오프라인 무제한
-                </span>
-              </div>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">방 모드</span>
+              <span className="text-sm font-mono font-black text-white">1인 전용 (오프라인)</span>
             </div>
-
+            
             <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
+            
             <div>
               <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">데이터 보존</span>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-[#ffffff]/[0.03] border border-white/5 font-mono">
-                  로컬 스토리지
-                </span>
-              </div>
+              <span className="text-sm font-black text-white">브라우저 저장소 (무제한)</span>
             </div>
 
             <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
-            <div className="flex items-center gap-3">
-              <div>
-                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">남은 시간</span>
-                <span className="text-xs sm:text-sm font-black font-mono tracking-tight block mt-1 text-emerald-400">
-                  무제한 (만료 없음)
-                </span>
-              </div>
+
+            <div>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">사용 요금제</span>
+              <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-white/5 uppercase border border-white/5">
+                평생 무료 (모든 기능 해제)
+              </span>
+            </div>
+
+            <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
+
+            <div>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">남은 시간</span>
+              <span className="text-sm font-black text-zinc-300">무제한 (만료 없음)</span>
             </div>
           </div>
 
@@ -558,44 +574,14 @@ export default function StandaloneSignboard() {
         </div>
       </section>
 
-      {/* Main Grid Layout (Dashboard UI) */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 flex flex-col lg:grid lg:grid-cols-12 lg:items-start gap-8 w-full relative z-10">
+      {/* Main Grid */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col lg:grid lg:grid-cols-12 lg:items-start gap-8 w-full relative z-10">
         
         {/* Item 1: Templates (원터치 연출 보드) */}
         <div className="order-1 lg:col-span-8 flex flex-col w-full min-w-0">
-          <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a]">
-            
+          <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a] border border-white/5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/5">
-              <div className="flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-pink-400" />
-                <h2 className="text-sm font-bold text-white font-outfit">원터치 연출 보드 (Quick Preset Board)</h2>
-              </div>
-              
-              <div className="flex flex-wrap items-center gap-2">
-                {/* 6 Preset Miniature Previews Toggle */}
-                <button
-                  type="button"
-                  onClick={() => setShowMiniPreviews(prev => !prev)}
-                  className="flex items-center gap-1.5 bg-white/[0.02] border border-white/5 px-3 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
-                >
-                  <span>카드 미리보기</span>
-                  <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${showMiniPreviews ? 'bg-pink-500' : 'bg-zinc-700'}`}>
-                    <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${showMiniPreviews ? 'translate-x-3.5' : 'translate-x-0'}`} />
-                  </div>
-                </button>
-
-                {/* Safety Transmission Lock Toggle */}
-                <button
-                  type="button"
-                  onClick={() => setIsTransmitterLocked(prev => !prev)}
-                  className="flex items-center gap-1.5 bg-white/[0.02] border border-white/5 px-3 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
-                >
-                  <span>실시간 송출</span>
-                  <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${!isTransmitterLocked ? 'bg-emerald-500' : 'bg-zinc-700'}`}>
-                    <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${!isTransmitterLocked ? 'translate-x-3.5' : 'translate-x-0'}`} />
-                  </div>
-                </button>
-              </div>
+              <h2 className="text-sm font-bold text-white font-outfit">원터치 연출 보드 (Quick Preset Board)</h2>
             </div>
 
             {/* Category tabs scroll bar */}
@@ -609,7 +595,7 @@ export default function StandaloneSignboard() {
                     : 'bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white hover:bg-white/[0.05]'
                 }`}
               >
-                <span>내 프리셋</span>
+                내 프리셋
               </button>
               {TEMPLATE_CATEGORIES.map((cat) => (
                 <button
@@ -622,87 +608,76 @@ export default function StandaloneSignboard() {
                       : 'bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white hover:bg-white/[0.05]'
                   }`}
                 >
-                  <span>{cat.label}</span>
+                  {cat.label}
                 </button>
               ))}
             </div>
 
+            {/* Preset Cards Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {(activeCategory === 'custom' ? localPresets : (TEMPLATE_CATEGORIES.find(c => c.id === activeCategory)?.presets || [])).map((preset, index) => {
-                const isActive = currentPreset.text === preset.text &&
-                                 currentPreset.bg_color === preset.bg_color &&
-                                 currentPreset.font_family === preset.font_family &&
-                                 currentPreset.special_effect === preset.special_effect &&
-                                 currentPreset.effect === preset.effect;
+              {(activeCategory === 'custom' ? presets : (TEMPLATE_CATEGORIES.find(c => c.id === activeCategory)?.presets || [])).map((preset, index) => {
+                const isActive = currentBroadcastPreset.text === preset.text &&
+                                 currentBroadcastPreset.bg_color === preset.bg_color &&
+                                 currentBroadcastPreset.font_family === preset.font_family &&
+                                 currentBroadcastPreset.special_effect === preset.special_effect &&
+                                 currentBroadcastPreset.effect === preset.effect;
                 return (
                   <div
                     key={index}
-                    onClick={() => {
-                      if (isTransmitterLocked) {
-                        if (activeCategory === 'custom') {
-                          setEditingPresetIndex(index);
-                          setEditingPreset({ ...preset });
-                        } else {
-                          // Import template as editing preset
-                          setEditingPresetIndex(localPresets.length);
-                          setEditingPreset({ ...preset });
-                        }
-                      } else {
-                        triggerPreset(preset, activeCategory === 'custom' ? index : -1);
-                      }
-                    }}
-                    className={`h-24 rounded-2xl border flex items-center justify-center p-6 relative overflow-hidden transition-all duration-300 cursor-pointer active-spring-pad group`}
+                    onClick={() => triggerPreset(preset, activeCategory === 'custom' ? index : -1)}
+                    className="h-24 rounded-2xl border flex items-center justify-center p-6 relative overflow-hidden transition-all duration-300 cursor-pointer active-spring-pad group"
                     style={{
-                      backgroundColor: showMiniPreviews ? preset.bg_color : '#0B0B0F',
-                      color: showMiniPreviews ? preset.text_color : 'rgba(255, 255, 255, 0.75)',
+                      backgroundColor: preset.bg_color,
+                      color: preset.text_color,
                       borderColor: isActive 
-                        ? (preset.bg_color === '#0B0B0F' || !showMiniPreviews ? '#FFFFFF' : preset.bg_color) 
+                        ? (preset.bg_color === '#0B0B0F' ? '#FFFFFF' : preset.bg_color) 
                         : 'rgba(255, 255, 255, 0.08)',
                       boxShadow: isActive 
-                        ? (preset.bg_color === '#0B0B0F' || !showMiniPreviews 
+                        ? (preset.bg_color === '#0B0B0F' 
                             ? '0 0 20px rgba(255, 255, 255, 0.15)' 
                             : `0 0 28px ${preset.bg_color}88`) 
                         : undefined
                     }}
                   >
-                    {/* Miniature interactive preview graphics inside card */}
-                    {showMiniPreviews && (
-                      <div 
-                        className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-2xl"
-                        style={{ opacity: preset.effect === 'blink' ? 1.0 : (preset.bg_color === '#FFFFFF' ? 0.35 : 0.45) }}
-                      >
-                        {preset.effect === 'blink' && (
-                          <div 
-                            className="w-full h-full absolute inset-0 animate-siren" 
-                            style={{
-                              '--siren-color-1': preset.bg_color,
-                              '--siren-color-2': preset.bg_color_secondary || '#0B0B0F',
-                              '--blink-duration': `${preset.speed || 200}ms`
-                            } as React.CSSProperties}
-                          />
-                        )}
-                        {preset.effect === 'marquee' && (
-                          <div className="w-full h-full flex items-center select-none text-[11px] font-black tracking-widest overflow-hidden" style={{ color: preset.text_color }}>
-                            <div className="animate-marquee-seamless flex whitespace-nowrap" style={{ '--marquee-duration': `${(preset.speed || 6000) * 1.5}ms` } as any}>
-                              {[...Array(8)].map((_, i) => (
-                                <span key={i} style={{ paddingRight: '2rem' }}>{preset.text}</span>
-                              ))}
-                            </div>
+                    <div 
+                      className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-2xl"
+                      style={{ opacity: preset.effect === 'blink' ? 1.0 : (preset.bg_color === '#FFFFFF' ? 0.35 : 0.45) }}
+                    >
+                      {preset.effect === 'blink' && (
+                        <div 
+                          className="w-full h-full absolute inset-0 animate-siren" 
+                          style={{
+                            '--siren-color-1': preset.bg_color,
+                            '--siren-color-2': preset.bg_color_secondary || '#0B0B0F',
+                            '--blink-duration': `${preset.speed || 200}ms`
+                          } as React.CSSProperties}
+                        />
+                      )}
+                      {preset.effect === 'marquee' && (
+                        <div className="w-full h-full flex items-center select-none text-[11px] font-black tracking-widest overflow-hidden" style={{ color: preset.text_color }}>
+                          <div className="animate-marquee-seamless flex whitespace-nowrap" style={{ '--marquee-duration': `${(preset.speed || 6000) * 1.5}ms` } as any}>
+                            {[...Array(8)].map((_, i) => (
+                              <span key={i} style={{ paddingRight: '2rem' }}>{preset.text}</span>
+                            ))}
                           </div>
-                        )}
-                        {preset.effect === 'countdown' && (
-                          <MiniCountdownPreview preset={preset} />
-                        )}
-                      </div>
-                    )}
+                        </div>
+                      )}
+                      {(preset.effect === 'luckydraw_wait' || preset.effect === 'luckydraw') && (
+                        <div className="absolute inset-0 z-0 flex items-center justify-center bg-black/45 border border-amber-500/30 rounded-2xl animate-pulse">
+                          <span className="text-[10px] text-amber-400 font-black tracking-widest font-mono">RAFFLE BOARD</span>
+                        </div>
+                      )}
+                      {preset.effect === 'countdown' && (
+                        <MiniCountdownPreview preset={preset} />
+                      )}
+                    </div>
 
-                    {/* Left top indicator led light */}
                     <div 
                       className={`absolute top-3 left-3.5 w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                         isActive ? 'scale-110 shadow-lg animate-pulse' : 'opacity-40'
                       }`}
                       style={{ 
-                        backgroundColor: showMiniPreviews ? preset.text_color : '#FFFFFF',
+                        backgroundColor: preset.text_color,
                         boxShadow: isActive ? '0 0 8px currentColor' : undefined 
                       }} 
                     />
@@ -713,7 +688,6 @@ export default function StandaloneSignboard() {
                       </div>
                     </div>
  
-                    {/* Pencil Edit Icon */}
                     <button
                       type="button"
                       onClick={(e) => {
@@ -722,8 +696,7 @@ export default function StandaloneSignboard() {
                           setEditingPresetIndex(index);
                           setEditingPreset({ ...preset });
                         } else {
-                          // Import as new custom preset
-                          setEditingPresetIndex(localPresets.length);
+                          setEditingPresetIndex(presets.length);
                           setEditingPreset({ ...preset });
                         }
                       }}
@@ -736,7 +709,6 @@ export default function StandaloneSignboard() {
                 );
               })}
 
-              {/* + Custom Preset Card Slot */}
               {activeCategory === 'custom' && (
                 <div
                   onClick={() => {
@@ -747,34 +719,71 @@ export default function StandaloneSignboard() {
                       effect: 'none',
                       speed: 1000
                     };
-                    setEditingPresetIndex(localPresets.length);
+                    setEditingPresetIndex(presets.length);
                     setEditingPreset(newPreset);
                   }}
                   className="h-24 rounded-2xl border border-dashed border-white/10 hover:border-white/30 bg-transparent flex items-center justify-center p-6 transition-all hover:bg-white/[0.01] active:scale-[0.97] cursor-pointer text-zinc-500 hover:text-white"
                 >
-                  <div className="flex items-center gap-1.5">
-                    <Plus className="w-4 h-4" />
-                    <span className="text-sm font-bold">새 연출 추가</span>
-                  </div>
+                  <span className="text-sm font-bold">새 연출 추가</span>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Item 2: Custom Broadcast (즉석 라이브 메시지 전송) */}
-        <div className="order-3 lg:col-span-8 flex flex-col w-full min-w-0">
-          <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a]">
-            <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
-              <div className="flex items-center gap-2">
-                <Volume2 className="w-4 h-4 text-zinc-400" />
-                <h2 className="text-sm font-bold text-white">즉석 라이브 메시지 전송 (Custom Broadcast)</h2>
+        {/* Item 2: LIVE ON AIR Preview Card */}
+        <div className="order-2 lg:col-span-4 flex flex-col w-full min-w-0">
+          <div className="glass-effect rounded-2xl p-4 sm:p-6 flex flex-col items-center bg-[#12121a] border border-white/5">
+            <div className="flex items-center gap-2 mb-2 self-start">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider">LIVE ON AIR</h2>
+            </div>
+            <p className="text-[11px] text-zinc-500 mb-4 self-start">현재 전광판으로 내보내고 있는 실시간 화면 미리보기입니다.</p>
+            
+            <div className="w-full max-w-[420px] flex flex-col items-center">
+              <div className="w-full flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl relative group overflow-hidden">
+                <LandscapePhoneMockup preset={currentBroadcastPreset} />
+                
+                <button
+                  type="button"
+                  onClick={() => setIsStandaloneFullscreen(true)}
+                  className="hidden lg:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center text-white font-bold text-xs cursor-pointer"
+                >
+                  내 화면에 전체화면으로 띄우기
+                </button>
               </div>
-              <span className="text-[9px] font-bold font-mono text-zinc-500">LIVE CONTROLLER</span>
+
+              <button
+                type="button"
+                onClick={() => setIsStandaloneFullscreen(true)}
+                className="mt-3 w-full py-2 px-4 rounded-xl bg-white/5 hover:bg-white/10 active:scale-[0.99] text-white font-bold text-xs tracking-wider flex items-center justify-center transition-all cursor-pointer border border-white/10 hover:border-white/20 shadow-md"
+              >
+                내 기기를 전광판으로 사용 (전체화면)
+              </button>
+            </div>
+
+            {currentBroadcastPreset.effect === 'luckydraw_wait' && (
+              <div className="w-full mt-4 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleDrawWinner}
+                  className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black text-xs tracking-wider flex items-center justify-center transition-all shadow-xl shadow-amber-500/20 cursor-pointer border border-amber-300"
+                >
+                  결과 발표 (추첨 완료)
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Item 3: 즉석 라이브 메시지 전송 */}
+        <div className="order-3 lg:col-span-8 flex flex-col w-full min-w-0">
+          <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a] border border-white/5">
+            <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
+              <h2 className="text-sm font-bold text-white">즉석 라이브 메시지 전송 (Custom Broadcast)</h2>
             </div>
             
             <div className="flex flex-col gap-5">
-              {/* Text Input & Apply Button */}
               <div className="flex gap-3 items-center">
                 <div className="flex-1 relative">
                   <input
@@ -806,9 +815,6 @@ export default function StandaloneSignboard() {
                       font_family: customFontFamily,
                       special_effect: customSpecialEffect
                     };
-                    if (customBgColorSecondary) {
-                      customPreset.bg_color_secondary = customBgColorSecondary;
-                    }
                     triggerPreset(customPreset, -1);
                   }}
                   className="btn-primary h-[48px] px-6 rounded-xl text-xs font-black flex items-center justify-center cursor-pointer shrink-0"
@@ -817,9 +823,8 @@ export default function StandaloneSignboard() {
                 </button>
               </div>
 
-              {/* Segmented Controls Layout */}
+              {/* Controls Grid */}
               <div className="flex flex-col gap-6 pt-3.5 border-t border-white/5">
-                {/* Row 1: Theme, Size, Font Style */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                   
                   {/* 배경 테마 */}
@@ -842,7 +847,6 @@ export default function StandaloneSignboard() {
                         />
                       ))}
                       
-                      {/* Fully unlocked color picker */}
                       <div 
                         className="w-5 h-5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0" 
                         style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
@@ -862,7 +866,7 @@ export default function StandaloneSignboard() {
                   <div className="lg:col-span-3 flex flex-col gap-1.5">
                     <div className="flex justify-between text-[10px] font-black text-zinc-500 uppercase tracking-widest">
                       <span>글자 크기</span>
-                      <span className="text-pink-400 font-extrabold">{customFontSize}%</span>
+                      <span className="text-indigo-400 font-extrabold">{customFontSize}%</span>
                     </div>
                     <div className="flex items-center bg-black/45 px-3 rounded-xl border border-white/5 h-10">
                       <input
@@ -876,12 +880,12 @@ export default function StandaloneSignboard() {
                     </div>
                   </div>
 
-                  {/* 글꼴 스타일 - ALL UNLOCKED */}
+                  {/* 글꼴 스타일 */}
                   <div className="lg:col-span-6 flex flex-col gap-1.5">
                     <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">글꼴 스타일</span>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 items-center">
                       {[
-                        { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', -apple-system, sans-serif", fontWeight: 700 } },
+                        { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', sans-serif", fontWeight: 700 } },
                         { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
                         { val: 'serif', label: '나눔명조', style: { fontFamily: "'Nanum Myeongjo', serif", fontWeight: 700 } },
                         { val: 'neon', label: '스포티', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } },
@@ -908,20 +912,24 @@ export default function StandaloneSignboard() {
 
                 {/* Row 2: Motion Effect, Special Effect */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-4 border-t border-white/5">
-                  
                   {/* 모션 효과 */}
                   <div className="lg:col-span-4 flex flex-col gap-1.5">
                     <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">모션 효과</span>
-                    <div className="grid grid-cols-3 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 h-10 items-center">
+                    <div className="grid grid-cols-5 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 h-10 items-center">
                       {[
                         { val: 'none', label: '정적' },
                         { val: 'blink', label: '깜빡' },
-                        { val: 'marquee', label: '흐름' }
+                        { val: 'marquee', label: '흐름' },
+                        { val: 'countdown', label: '타이머' },
+                        { val: 'luckydraw_wait', label: '추첨' }
                       ].map((item) => (
                         <button
                           key={item.val}
                           type="button"
-                          onClick={() => setCustomEffect(item.val as any)}
+                          onClick={() => {
+                            setCustomEffect(item.val as any);
+                            setCustomSpeed(getSpeedFactor(item.val as any, 1000));
+                          }}
                           className={`h-full rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
                             customEffect === item.val
                               ? 'bg-white text-black font-extrabold shadow-sm'
@@ -934,7 +942,7 @@ export default function StandaloneSignboard() {
                     </div>
                   </div>
 
-                  {/* 특수 효과 - ALL UNLOCKED */}
+                  {/* 특수 효과 */}
                   <div className="lg:col-span-8 flex flex-col gap-1.5">
                     <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">특수 효과</span>
                     <div className="grid grid-cols-4 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 items-center min-h-10">
@@ -959,16 +967,15 @@ export default function StandaloneSignboard() {
                       ))}
                     </div>
                   </div>
-
                 </div>
               </div>
 
-              {/* Speed range slider */}
-              {(customEffect === 'blink' || customEffect === 'marquee') && (
+              {/* Speed Controller */}
+              {(customEffect === 'blink' || customEffect === 'marquee' || customEffect === 'luckydraw_wait') && (
                 <div className="pt-4 border-t border-white/5 animate-in fade-in duration-200">
                   <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
                     <span>전송 애니메이션 속도 조절</span>
-                    <span className="text-pink-400 font-extrabold">
+                    <span className="text-indigo-400 font-extrabold">
                       속도: {customSpeed}%
                     </span>
                   </div>
@@ -983,88 +990,43 @@ export default function StandaloneSignboard() {
                 </div>
               )}
 
-              {/* Save preset from controller to list button */}
+              {/* Save current state */}
               <div className="pt-3 border-t border-white/5 flex justify-end">
                 <button
                   type="button"
                   onClick={handleSaveLocalPreset}
-                  className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 active:scale-[0.98] font-bold text-xs tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 font-bold text-xs tracking-wider transition-all cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>현재 설정을 내 프리셋에 추가</span>
+                  현재 설정을 내 프리셋에 추가
                 </button>
               </div>
-
             </div>
           </div>
         </div>
 
-        {/* Item 3: LIVE ON AIR Preview Card */}
-        <div className="order-2 lg:col-span-4 flex flex-col w-full min-w-0">
-          <div className="glass-effect rounded-2xl p-4 sm:p-6 flex flex-col items-center bg-[#12121a]">
-            
-            <div className="flex items-center gap-2 mb-2 self-start">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider">LIVE ON AIR</h2>
-            </div>
-            
-            <p className="text-[11px] text-zinc-500 mb-4 self-start">현재 전광판으로 내보낼 실시간 연출 미리보기 화면입니다.</p>
-            
-            <div className="w-full max-w-[420px] flex flex-col items-center">
-              <div className="w-full flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl relative group overflow-hidden">
-                <LandscapePhoneMockup preset={currentPreset} />
-                
-                {/* Desktop Hover Overlay */}
-                <button
-                  type="button"
-                  onClick={() => setIsFullscreenActive(true)}
-                  className="hidden lg:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-2 text-white font-bold text-xs cursor-pointer"
-                >
-                  <Maximize2 className="w-5 h-5 text-pink-400" />
-                  내 화면에 전체화면으로 띄우기
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsFullscreenActive(true)}
-                className="mt-3 w-full py-2 px-4 rounded-xl bg-white/5 hover:bg-white/10 active:scale-[0.99] text-white font-bold text-xs tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer border border-white/10 hover:border-white/20 shadow-md"
-              >
-                <Maximize2 className="w-3.5 h-3.5" />
-                <span>내 기기를 전광판으로 사용 (전체화면)</span>
-              </button>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Item 4: standalone guide & warning cards */}
+        {/* Item 4: 1인 모드 이용 가이드 & 보관 안내 (Short impact text card) */}
         <div className="order-4 lg:col-span-4 flex flex-col gap-6 w-full min-w-0">
-          
-          {/* 로컬 저장소 유실 주의 경고창 */}
-          <div className="glass-effect rounded-2xl p-4 sm:p-5 flex flex-col gap-2.5 bg-amber-500/[0.03] border border-amber-500/20 text-xs">
-            <div className="font-bold text-amber-400 flex items-center gap-1.5">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>로컬 데이터 유실 주의 안내</span>
+          <div className="glass-effect rounded-2xl p-6 text-xs text-zinc-400 leading-relaxed flex flex-col gap-4 bg-[#12121a] border border-white/5">
+            <h3 className="font-bold text-white text-sm">1인 모드 이용 가이드 & 보관 안내</h3>
+            
+            <div className="flex flex-col gap-3.5">
+              <div>
+                <strong className="text-zinc-200 block text-[11px] mb-1">더블 탭으로 나가기</strong>
+                <p className="text-[10.5px]">전광판 화면을 **더블 클릭** (또는 ESC 키)하면 대시보드로 돌아옵니다.</p>
+              </div>
+              
+              <div>
+                <strong className="text-zinc-200 block text-[11px] mb-1">화면 자동 켜짐 유지</strong>
+                <p className="text-[10.5px]">전광판이 켜진 동안에는 폰이 **절전 모드로 들어가지 않고** 화면이 유지됩니다.</p>
+              </div>
+              
+              <div className="border-t border-white/5 pt-3">
+                <strong className="text-zinc-200 block text-[11px] mb-1">기기에 안전하게 자동 보존</strong>
+                <p className="text-[10.5px]">
+                  수정한 프리셋들은 **브라우저에 자동 저장**됩니다. 방문 기록(캐시/쿠키)을 청소하면 데이터가 소멸할 수 있으니, 소중한 디자인 세트는 상단의 **[보관 & 공유 📦]** 메뉴에서 모바일로 백업해 두세요!
+                </p>
+              </div>
             </div>
-            <p className="text-zinc-400 leading-relaxed font-medium">
-              본 1인 모드의 연출 정보와 편집 데이터는 로그인 없이 브라우저 로컬 저장소(LocalStorage)에 기기 전용으로 안전하게 보존됩니다.<br />
-              따라서 **웹브라우저 캐시, 사이트 데이터, 또는 쿠키를 삭제할 경우 작성하신 프리셋이 소멸될 수 있으니 각별히 주의해 주세요.**
-            </p>
-            <p className="text-indigo-300 font-bold border-t border-white/5 pt-2 mt-1">
-              💡 중요한 프리셋들은 상단의 **[멀티 싱크 방으로 연동하기]** 기능을 통해 소실 걱정 없는 온라인 영구 서버 방으로 즉시 안전하게 백업 및 승계하실 수 있습니다.
-            </p>
-          </div>
-
-          <div className="glass-effect rounded-2xl p-6 text-xs text-zinc-500 leading-normal flex flex-col gap-2 bg-[#12121a]">
-            <div className="font-bold text-zinc-400 mb-1 flex items-center gap-1.5">
-              <Tv className="w-3.5 h-3.5" />
-              1인 모드 이용 가이드 (Standalone Guide)
-            </div>
-            <div>1. [내 기기를 전광판으로 사용] 버튼을 누르면 스마트폰 전체화면 전광판 송출 모드가 구동됩니다.</div>
-            <div>2. 전체화면 모드에서 **화면을 더블클릭** 하거나 키보드의 **ESC 키**를 누르면 대시보드 관리창으로 돌아옵니다.</div>
-            <div>3. 전체화면이 켜진 동안에는 화면이 자동으로 꺼지거나 절전모드로 들어가지 않도록 제어(W3C Wake Lock)됩니다.</div>
-            <div>4. 원터치 템플릿의 문구나 설정을 수정하고 싶다면 우측 상단의 **[실시간 송출]** 토글을 끈 뒤 템플릿을 선택하거나, 각 카드 오른쪽 위의 연필 아이콘을 누르시면 됩니다.</div>
           </div>
         </div>
 
@@ -1072,263 +1034,541 @@ export default function StandaloneSignboard() {
 
       {/* Footer */}
       <footer className="border-t border-white/5 bg-zinc-950 py-4 text-center text-[10px] text-zinc-600 font-mono">
-        Solo Standalone Mode · Data saved locally under device sandbox storage.
+        Solo Standalone Mode · All features unlocked free.
       </footer>
 
-      {/* Edit Preset Drawer Overlay */}
+      {/* 11. Standalone Fullscreen Signboard Overlay */}
+      {isStandaloneFullscreen && (
+        <div className="fixed inset-0 z-50 bg-black flex items-center justify-center animate-in fade-in duration-200">
+          <LocalFullscreenSignboard 
+            preset={currentBroadcastPreset} 
+            onClose={() => setIsStandaloneFullscreen(false)} 
+          />
+        </div>
+      )}
+
+      {/* 12. Edit Preset Drawer */}
       {editingPresetIndex !== null && editingPreset !== null && (
         <div className="fixed inset-0 z-50 overflow-hidden">
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
-            onClick={() => {
-              setEditingPresetIndex(null);
-              setEditingPreset(null);
-            }}
+            onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }} 
           />
-
-          <div className="absolute inset-y-0 right-0 max-w-md w-full bg-[#0D0D12]/95 border-l border-white/5 shadow-2xl flex flex-col justify-between z-10 animate-in slide-in-from-right duration-200">
+          
+          {/* Drawer Panel */}
+          <div className="absolute inset-y-0 right-0 max-w-md w-full bg-[#12121a] border-l border-white/5 shadow-2xl flex flex-col justify-between z-10 animate-in slide-in-from-right duration-200">
             
-            {/* Header */}
-            <div className="p-4.5 border-b border-white/5 flex justify-between items-center bg-black/20">
-              <h3 className="text-sm font-bold text-white">
-                {editingPresetIndex < localPresets.length ? 'P' + (editingPresetIndex + 1) + ' 연출 편집' : '새 프리셋 연출 설계'}
-              </h3>
-              <button 
-                onClick={() => {
-                  setEditingPresetIndex(null);
-                  setEditingPreset(null);
-                }}
-                className="text-zinc-500 hover:text-white p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+            {/* Floating Preview Card on Left for Desktop/Tablet Screens */}
+            <div className="hidden lg:block absolute right-[calc(100%+24px)] top-6 z-20 w-[420px]">
+              <div className="glass-effect rounded-2xl p-5 bg-[#12121a]/95 border border-white/10 shadow-2xl flex flex-col items-center">
+                <span className="text-[10px] font-black font-mono text-indigo-400 uppercase mb-3 tracking-widest">실시간 연출 미리보기</span>
+                <LandscapePhoneMockup preset={editingPreset} />
+                <div className="mt-3.5 text-[9.5px] text-zinc-400 text-center font-semibold leading-normal">
+                  수정창 좌측에 연출 화면이 고정됩니다.<br/>
+                  설정을 변경하면 화면에 즉시 적용되어 변경 사항을 실시간으로 확인합니다.
+                </div>
+              </div>
             </div>
 
-            {/* Scrollable Form body */}
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 text-left">
-              
-              {/* Text Output Input */}
-              <div className="space-y-2">
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">출력할 문구</label>
-                <input
-                  type="text"
-                  value={editingPreset.text}
-                  onChange={(e) => setEditingPreset({ ...editingPreset, text: e.target.value.slice(0, 15) })}
-                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-pink-500 text-xs font-semibold"
-                  maxLength={15}
-                />
+            <div className="flex flex-col flex-1 overflow-y-auto">
+              {/* Header */}
+              <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
+                <h3 className="text-sm font-bold text-white">
+                  {editingPresetIndex >= presets.length ? '새 커스텀 프리셋 추가' : `프리셋 P${editingPresetIndex + 1} 편집`}
+                </h3>
+                <button 
+                  onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }}
+                  className="text-zinc-500 hover:text-white p-2 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              {/* Theme Settings Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Background color */}
-                <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">배경 테마</label>
-                  <div className="flex gap-2 items-center bg-black/40 border border-white/5 rounded-xl p-2 h-11.5">
-                    <input
-                      type="color"
-                      value={editingPreset.bg_color}
-                      onChange={(e) => setEditingPreset({ ...editingPreset, bg_color: e.target.value })}
-                      className="w-7 h-7 rounded-lg overflow-hidden border border-white/10 cursor-pointer shrink-0"
-                    />
-                    <span className="text-[10px] font-mono text-zinc-400 select-all uppercase">{editingPreset.bg_color}</span>
+              {/* Landscape Live Preview Mockup Inside Drawer (Mobile only) */}
+              <div className="p-6 border-b border-white/5 bg-black/40 flex flex-col items-center lg:hidden">
+                <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-3 tracking-wider">실시간 연출 미리보기</span>
+                <LandscapePhoneMockup preset={editingPreset} />
+              </div>
+
+              {/* Form Controls */}
+              <div className="p-6 flex flex-col gap-5">
+                {/* Output Text */}
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">출력 문구</label>
+                  <input
+                    type="text"
+                    value={editingPreset.text || ''}
+                    onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, 15) }))}
+                    className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-sm font-semibold"
+                    maxLength={15}
+                  />
+                </div>
+
+                {/* Background Color Grid */}
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">배경 색상</label>
+                  <div className="grid grid-cols-6 gap-2">
+                    {[
+                      '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
+                      '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'
+                    ].map((hex) => {
+                      const isSelected = editingPreset.bg_color === hex;
+                      const dotColor = hex === '#FFFFFF' ? '#000000' : '#FFFFFF';
+                      return (
+                        <button
+                          key={hex}
+                          type="button"
+                          onClick={() => setEditingPreset(prev => ({ ...prev!, bg_color: hex }))}
+                          className={`h-9 rounded-lg border cursor-pointer transition-all relative flex items-center justify-center ${
+                            isSelected 
+                              ? 'border-white scale-105 shadow-md' 
+                              : 'border-white/10 hover:border-white/30'
+                          }`}
+                          style={{ backgroundColor: hex }}
+                        >
+                          {isSelected && (
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dotColor }} />
+                          )}
+                        </button>
+                      );
+                    })}
+
+                    <div 
+                      className="h-9 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center" 
+                      style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                      title="커스텀 색상 선택"
+                    >
+                      <input
+                        type="color"
+                        value={editingPreset.bg_color}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, bg_color: e.target.value }))}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+                      />
+                      {!['#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
+                        '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'].includes(editingPreset.bg_color) && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Secondary flash color */}
-                <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">사이키 교대색</label>
-                  <div className="flex gap-2 items-center bg-black/40 border border-white/5 rounded-xl p-2 h-11.5">
-                    <input
-                      type="color"
-                      value={editingPreset.bg_color_secondary || '#000000'}
-                      onChange={(e) => setEditingPreset({ ...editingPreset, bg_color_secondary: e.target.value })}
-                      className="w-7 h-7 rounded-lg overflow-hidden border border-white/10 cursor-pointer shrink-0"
-                      disabled={editingPreset.effect !== 'blink'}
-                    />
-                    {editingPreset.effect === 'blink' ? (
+                {/* 모션 효과 */}
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">모션 효과</label>
+                  <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 h-11 items-center font-medium">
+                    {[
+                      { val: 'none', label: '정적' },
+                      { val: 'blink', label: '깜빡' },
+                      { val: 'marquee', label: '흐름' },
+                      { val: 'countdown', label: '타이머' },
+                      { val: 'luckydraw_wait', label: '추첨' }
+                    ].map((item) => (
                       <button
                         type="button"
-                        onClick={() => setEditingPreset({ ...editingPreset, bg_color_secondary: undefined })}
-                        className="text-[9px] text-zinc-500 hover:text-white transition-colors"
+                        key={item.val}
+                        onClick={() => {
+                          const effectDefaults: Record<EffectType, Preset> = {
+                            none: defaults[0],
+                            blink: defaults[1],
+                            marquee: defaults[4],
+                            countdown: defaults[5],
+                            luckydraw_wait: defaults[3],
+                            luckydraw: defaults[3]
+                          };
+                          const defaultVal = effectDefaults[item.val as EffectType];
+                          setEditingPreset(prev => ({
+                            ...prev!,
+                            effect: item.val as EffectType,
+                            text: defaultVal.text,
+                            text_color: defaultVal.text_color,
+                            bg_color: defaultVal.bg_color,
+                            bg_color_secondary: defaultVal.bg_color_secondary,
+                            speed: defaultVal.speed,
+                            countdown_seconds: defaultVal.countdown_seconds,
+                            result_text: defaultVal.result_text,
+                            font_family: defaultVal.font_family || 'sans-thin',
+                            font_size: defaultVal.font_size || 100
+                          }));
+                        }}
+                        className={`h-full rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                          (editingPreset.effect === 'luckydraw' || editingPreset.effect === 'luckydraw_wait' ? 'luckydraw_wait' : editingPreset.effect) === item.val
+                            ? 'bg-white text-black shadow-sm font-extrabold'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                        }`}
                       >
-                        사용 안함
+                        {item.label}
                       </button>
-                    ) : (
-                      <span className="text-[9px] text-zinc-600 font-bold select-none">깜빡일 때 활성</span>
-                    )}
+                    ))}
                   </div>
                 </div>
-              </div>
 
-              {/* Text color */}
-              <div className="space-y-2">
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">글자 색상</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { hex: '#FFFFFF', label: '흰색' },
-                    { hex: '#FFD700', label: '노란색' },
-                    { hex: '#EF4444', label: '빨간색' },
-                    { hex: '#00FFCC', label: '민트색' }
-                  ].map((tc) => (
-                    <button
-                      key={tc.hex}
-                      type="button"
-                      onClick={() => setEditingPreset({ ...editingPreset, text_color: tc.hex })}
-                      className={`py-2 px-1 rounded-xl border text-[10px] font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                        editingPreset.text_color === tc.hex
-                          ? 'border-white bg-white/15 text-white shadow-sm'
-                          : 'border-white/5 bg-black/20 text-zinc-400 hover:text-white'
-                      }`}
-                    >
-                      <span className="w-2.5 h-2.5 rounded-full border border-white/10 shrink-0" style={{ backgroundColor: tc.hex }} />
-                      <span>{tc.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+                {/* Secondary Color Grid */}
+                {(editingPreset.effect === 'blink' || editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw') && (
+                  <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
+                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">보조 배경 색상 (듀오 교대 번쩍임/경계선 색상용)</label>
+                    <div className="flex gap-2 mb-3">
+                      <button
+                        type="button"
+                        onClick={() => setEditingPreset(prev => {
+                          const copy = { ...prev! };
+                          delete copy.bg_color_secondary;
+                          return copy;
+                        })}
+                        className={`h-9 px-3 rounded-lg border border-dashed text-[10px] font-black cursor-pointer transition-all flex items-center justify-center gap-1.5 ${
+                          !editingPreset.bg_color_secondary 
+                            ? 'border-white bg-white/10 text-white shadow-md font-extrabold' 
+                            : 'border-white/10 text-zinc-500 hover:border-white/30 hover:text-zinc-400'
+                        }`}
+                      >
+                        <Slash className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                        <span>단색 (부드러운 깜빡이)</span>
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-6 gap-2">
+                      {[
+                        '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
+                        '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'
+                      ].map((hex) => {
+                        const isSelected = editingPreset.bg_color_secondary === hex;
+                        const dotColor = hex === '#FFFFFF' ? '#000000' : '#FFFFFF';
+                        return (
+                          <button
+                            key={hex}
+                            type="button"
+                            onClick={() => setEditingPreset(prev => ({ ...prev!, bg_color_secondary: hex }))}
+                            className={`h-9 rounded-lg border cursor-pointer transition-all relative flex items-center justify-center ${
+                              isSelected 
+                                ? 'border-white scale-105 shadow-md' 
+                                : 'border-white/10 hover:border-white/30'
+                            }`}
+                            style={{ backgroundColor: hex }}
+                          >
+                            {isSelected && (
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dotColor }} />
+                            )}
+                          </button>
+                        );
+                      })}
 
-              {/* Font Family selection - ALL UNLOCKED */}
-              <div className="space-y-2">
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">글꼴 디자인</label>
-                <div className="grid grid-cols-3 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5">
-                  {[
-                    { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', sans-serif" } },
-                    { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif" } },
-                    { val: 'serif', label: '나눔명조', style: { fontFamily: "'Nanum Myeongjo', serif" } },
-                    { val: 'neon', label: '스포티', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif" } },
-                    { val: 'pixel', label: '레트로도트', style: { fontFamily: "'NeoDunggeunmo', sans-serif" } },
-                    { val: 'plump', label: '둥글몽글', style: { fontFamily: "'TmonMonsori', sans-serif" } }
-                  ].map((font) => (
-                    <button
-                      key={font.val}
-                      type="button"
-                      onClick={() => handleFontSelect(font.val as any, true)}
-                      style={font.style}
-                      className={`py-2 px-1 rounded-lg text-[10px] transition-all cursor-pointer ${
-                        editingPreset.font_family === font.val
-                          ? 'bg-white text-black font-extrabold shadow-sm'
-                          : 'text-zinc-500 hover:text-white hover:bg-white/[0.02]'
-                      }`}
-                    >
-                      {font.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Motion effects */}
-              <div className="space-y-2">
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">모션 효과</label>
-                <div className="grid grid-cols-3 gap-1 bg-black/45 p-1 rounded-xl border border-white/5">
-                  {[
-                    { val: 'none', label: '정적 (Static)' },
-                    { val: 'blink', label: '깜빡이 (Blink)' },
-                    { val: 'marquee', label: '흐르기 (Scroll)' }
-                  ].map((eff) => (
-                    <button
-                      key={eff.val}
-                      type="button"
-                      onClick={() => setEditingPreset({ ...editingPreset, effect: eff.val as any, speed: getSpeedMs(eff.val as any, 25) })}
-                      className={`py-2 px-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                        editingPreset.effect === eff.val
-                          ? 'bg-white text-black font-extrabold shadow-sm'
-                          : 'text-zinc-500 hover:text-white hover:bg-white/[0.02]'
-                      }`}
-                    >
-                      {eff.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Speed scale */}
-              {editingPreset.effect !== 'none' && (
-                <div className="space-y-2 animate-in fade-in duration-200">
-                  <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                    <span>속도 조절</span>
-                    <span className="text-pink-400 font-extrabold">
-                      {getSpeedFactor(editingPreset.effect || 'none', editingPreset.speed || 1000)}%
-                    </span>
+                      <div 
+                        className="h-9 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center" 
+                        style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                        title="커스텀 보조 색상 선택"
+                      >
+                        <input
+                          type="color"
+                          value={editingPreset.bg_color_secondary || '#000000'}
+                          onChange={(e) => setEditingPreset(prev => ({ ...prev!, bg_color_secondary: e.target.value }))}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+                        />
+                        {editingPreset.bg_color_secondary && !['#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
+                          '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'].includes(editingPreset.bg_color_secondary) && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center bg-black/40 border border-white/5 px-3 py-2 rounded-xl">
+                )}
+
+                {/* Speed Slider */}
+                {(editingPreset.effect === 'blink' || editingPreset.effect === 'marquee' || editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw') && (
+                  <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
+                    <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
+                      <span>애니메이션 속도 조절</span>
+                      <span className="text-indigo-400 font-extrabold">
+                        속도: {getSpeedFactor(editingPreset.effect, editingPreset.speed)}%
+                      </span>
+                    </div>
                     <input
                       type="range"
                       min="1"
                       max="100"
-                      value={getSpeedFactor(editingPreset.effect || 'none', editingPreset.speed || 1000)}
+                      value={getSpeedFactor(editingPreset.effect, editingPreset.speed)}
                       onChange={(e) => {
                         const factor = parseInt(e.target.value);
-                        const ms = getSpeedMs(editingPreset.effect || 'none', factor);
-                        setEditingPreset({ ...editingPreset, speed: ms });
+                        const newSpeed = getSpeedMs(editingPreset.effect, factor);
+                        setEditingPreset(prev => ({ ...prev!, speed: newSpeed }));
+                      }}
+                      className="premium-slider"
+                    />
+                  </div>
+                )}
+
+                {/* Countdown Options */}
+                {editingPreset.effect === 'countdown' && (
+                  <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200 flex flex-col gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">카운트다운 지속 초 (Seconds)</label>
+                      <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-full border border-white/5">
+                        {[3, 5, 10, 30, 60].map((sec) => (
+                          <button
+                            type="button"
+                            key={sec}
+                            onClick={() => setEditingPreset(prev => ({ ...prev!, countdown_seconds: sec }))}
+                            className={`py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                              (editingPreset.countdown_seconds || 10) === sec
+                                ? 'bg-white text-black shadow-sm font-extrabold'
+                                : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                            }`}
+                          >
+                            {sec}초
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">종료 시 출력 문구</label>
+                      <input
+                        type="text"
+                        value={editingPreset.result_text || ''}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, 15) }))}
+                        className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
+                        maxLength={15}
+                        placeholder="START"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Lucky Draw Options */}
+                {(editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw') && (
+                  <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200 flex flex-col gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">당첨 시 출력 문구</label>
+                      <input
+                        type="text"
+                        value={editingPreset.text || ''}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, 15) }))}
+                        className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
+                        maxLength={15}
+                        placeholder="당첨!"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">낙첨 시 출력 문구</label>
+                      <input
+                        type="text"
+                        value={editingPreset.result_text || ''}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, 15) }))}
+                        className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
+                        maxLength={15}
+                        placeholder="아쉽네요! 다음 기회에.."
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 글자 색상 */}
+                <div className="pt-3 border-t border-white/5">
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 색상</label>
+                  <div className="grid grid-cols-3 gap-2 h-10 items-center font-medium">
+                    {[
+                      { hex: '#FFFFFF', label: '흰색', bg: 'bg-white' },
+                      { hex: '#000000', label: '검은색', bg: 'bg-black' },
+                      { hex: '#FFD700', label: '노란색', bg: 'bg-[#FFD700]' }
+                    ].map((tc) => (
+                      <button
+                        key={tc.hex}
+                        type="button"
+                        onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: tc.hex }))}
+                        className={`h-full rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                          editingPreset.text_color === tc.hex
+                            ? 'border-white bg-white/10 text-white font-extrabold shadow-sm'
+                            : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
+                        }`}
+                      >
+                        <span className={`w-3 h-3 rounded-full ${tc.bg} border border-white/10`} />
+                        <span>{tc.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 글꼴 스타일 */}
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
+                  <div className="grid grid-cols-3 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 items-center font-medium">
+                    {[
+                      { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', sans-serif" } },
+                      { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif" } },
+                      { val: 'serif', label: '나눔명조', style: { fontFamily: "'Nanum Myeongjo', serif" } },
+                      { val: 'neon', label: '스포티', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif" } },
+                      { val: 'pixel', label: '레트로도트', style: { fontFamily: "'NeoDunggeunmo', sans-serif" } },
+                      { val: 'plump', label: '둥글몽글', style: { fontFamily: "'TmonMonsori', sans-serif" } }
+                    ].map((item) => (
+                      <button
+                        type="button"
+                        key={item.val}
+                        onClick={() => handleFontSelect(item.val as any, true)}
+                        style={item.style}
+                        className={`py-2 px-1 rounded-lg text-xs transition-all cursor-pointer ${
+                          (editingPreset.font_family || 'sans-thin') === item.val
+                            ? 'bg-white text-black shadow-sm font-extrabold'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 특수 효과 */}
+                <div>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">특수 효과</label>
+                  <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 h-11 items-center font-medium">
+                    {[
+                      { val: 'none', label: '없음' },
+                      { val: 'hearts', label: '하트' },
+                      { val: 'confetti', label: '꽃가루' },
+                      { val: 'stars', label: '별빛' }
+                    ].map((item) => (
+                      <button
+                        type="button"
+                        key={item.val}
+                        onClick={() => setEditingPreset(prev => ({ ...prev!, special_effect: item.val as any }))}
+                        className={`h-full rounded-lg text-[10px] transition-all cursor-pointer ${
+                          (editingPreset.special_effect || 'none') === item.val
+                            ? 'bg-white text-black shadow-sm font-extrabold'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                        }`}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 글자 크기 */}
+                <div>
+                  <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                    <span>글자 크기</span>
+                    <span className="text-indigo-400 font-extrabold">{editingPreset.font_size || 100}%</span>
+                  </div>
+                  <div className="flex items-center h-10">
+                    <input
+                      type="range"
+                      min="30"
+                      max="100"
+                      value={editingPreset.font_size || 100}
+                      onChange={(e) => {
+                        const size = parseInt(e.target.value);
+                        setEditingPreset(prev => ({ ...prev!, font_size: size }));
                       }}
                       className="premium-slider w-full"
                     />
                   </div>
                 </div>
-              )}
-
-              {/* Particle special effects */}
-              <div className="space-y-2">
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">특수 효과</label>
-                <div className="grid grid-cols-4 gap-1 bg-black/45 p-1 rounded-xl border border-white/5">
-                  {[
-                    { val: 'none', label: '없음' },
-                    { val: 'hearts', label: '하트' },
-                    { val: 'confetti', label: '꽃가루' },
-                    { val: 'stars', label: '별빛' }
-                  ].map((se) => (
-                    <button
-                      key={se.val}
-                      type="button"
-                      onClick={() => setEditingPreset({ ...editingPreset, special_effect: se.val as any })}
-                      className={`py-2 px-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                        editingPreset.special_effect === se.val
-                          ? 'bg-white text-black font-extrabold shadow-sm'
-                          : 'text-zinc-500 hover:text-white hover:bg-white/[0.02]'
-                      }`}
-                    >
-                      {se.label}
-                    </button>
-                  ))}
-                </div>
               </div>
-
             </div>
 
             {/* Footer Buttons */}
-            <div className="p-4 border-t border-white/5 bg-[#0D0D12]/95 flex items-center justify-between gap-3">
-              {editingPresetIndex < localPresets.length ? (
-                <button
-                  type="button"
-                  onClick={() => handleDeleteLocalPreset(editingPresetIndex)}
-                  className="py-3 px-4.5 rounded-xl border border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/15 cursor-pointer text-xs font-bold transition-colors"
-                >
-                  연출 삭제
-                </button>
-              ) : (
-                <div />
-              )}
-              
-              <div className="flex gap-2">
+            <div className="p-6 border-t border-white/5 bg-black/20 flex flex-col gap-4">
+              <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => {
-                    // Apply temporarily without saving to list
-                    setCurrentPreset(editingPreset);
-                    localStorage.setItem('glowwave_local_active_preset', JSON.stringify(editingPreset));
+                    if (editingPresetIndex === null || !editingPreset) return;
+                    const normalized: Preset = {
+                      ...editingPreset,
+                      text: editingPreset.text.trim(),
+                      result_text: editingPreset.result_text?.trim()
+                    };
+                    const updated = [...presets];
+                    if (editingPresetIndex === presets.length) {
+                      updated.push(normalized);
+                    } else {
+                      updated[editingPresetIndex] = normalized;
+                    }
+                    setPresets(updated);
+                    localStorage.setItem('glowwave_local_presets', JSON.stringify(updated));
+                    setActiveCategory('custom');
+                    setEditingPresetIndex(null);
+                    setEditingPreset(null);
                   }}
-                  className="py-3 px-4 rounded-xl border border-white/10 bg-white/5 text-white text-xs font-bold hover:bg-white/10 cursor-pointer"
+                  className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-bold hover:bg-white/10 transition-all text-xs cursor-pointer"
                 >
-                  임시 송출
+                  저장만 하기
                 </button>
+                
                 <button
                   type="button"
-                  onClick={handleSaveEditDrawerPreset}
-                  className="py-3 px-5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-xs font-black cursor-pointer shadow-lg shadow-pink-500/10"
+                  onClick={() => {
+                    if (editingPresetIndex === null || !editingPreset) return;
+                    const normalized: Preset = {
+                      ...editingPreset,
+                      text: editingPreset.text.trim(),
+                      result_text: editingPreset.result_text?.trim()
+                    };
+                    const updated = [...presets];
+                    if (editingPresetIndex === presets.length) {
+                      updated.push(normalized);
+                    } else {
+                      updated[editingPresetIndex] = normalized;
+                    }
+                    setPresets(updated);
+                    localStorage.setItem('glowwave_local_presets', JSON.stringify(updated));
+                    triggerPreset(normalized, editingPresetIndex);
+                    setActiveCategory('custom');
+                    setEditingPresetIndex(null);
+                    setEditingPreset(null);
+                  }}
+                  className="btn-primary flex-1 py-3 rounded-xl text-xs font-bold cursor-pointer"
                 >
-                  저장 및 적용
+                  저장 후 바로 송출
+                </button>
+              </div>
+
+              {editingPresetIndex === presets.length && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (editingPresetIndex === null || !editingPreset) return;
+                    const normalized: Preset = {
+                      ...editingPreset,
+                      text: editingPreset.text.trim(),
+                      result_text: editingPreset.result_text?.trim()
+                    };
+                    triggerPreset(normalized, -1);
+                    setEditingPresetIndex(null);
+                    setEditingPreset(null);
+                  }}
+                  className="w-full py-2.5 rounded-xl border border-dashed border-zinc-700 bg-transparent text-zinc-400 hover:text-white hover:border-zinc-500 hover:bg-white/5 font-bold transition-all text-[11px] cursor-pointer"
+                >
+                  저장 없이 바로 송출 (1회성 송출)
+                </button>
+              )}
+
+              <div className="flex flex-col gap-2 items-center text-xs pt-1">
+                {editingPresetIndex < 6 && (
+                  <button
+                    type="button"
+                    onClick={() => setEditingPreset({ ...defaults[editingPresetIndex] })}
+                    className="text-zinc-500 hover:text-white transition-colors cursor-pointer underline underline-offset-4"
+                  >
+                    기본값으로 초기화
+                  </button>
+                )}
+
+                {editingPresetIndex >= 6 && editingPresetIndex < presets.length && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteLocalPreset(editingPresetIndex)}
+                    className="text-red-500/80 hover:text-red-400 transition-colors cursor-pointer underline underline-offset-4"
+                  >
+                    이 커스텀 프리셋 삭제
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }}
+                  className="text-zinc-500 hover:text-white transition-colors cursor-pointer underline underline-offset-4"
+                >
+                  취소
                 </button>
               </div>
             </div>
@@ -1337,134 +1577,627 @@ export default function StandaloneSignboard() {
         </div>
       )}
 
-      {/* Pre-flight Sync wizard Modal */}
-      {isPreflightOpen && (
+      {/* 13. Centralized Vault and Share Modal */}
+      {isVaultOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4">
-          {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/85 backdrop-blur-md transition-opacity"
-            onClick={() => setIsPreflightOpen(false)}
+            onClick={() => setIsVaultOpen(false)}
           />
 
-          {/* Dialog Panel */}
-          <div className="bg-[#12121a] border border-white/10 rounded-3xl max-w-xl w-full p-6 sm:p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#12121a] border border-white/10 rounded-3xl max-w-2xl w-full p-6 sm:p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto font-sans text-left">
             <button 
-              onClick={() => setIsPreflightOpen(false)}
+              onClick={() => setIsVaultOpen(false)}
               className="absolute top-4 right-4 text-zinc-500 hover:text-white p-1 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="text-center mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-ping inline-block mb-2" />
-              <h2 className="text-xl font-black text-white leading-tight font-outfit">멀티 싱크 방 개설 & 프리셋 연동</h2>
-              <p className="text-xs text-zinc-400 mt-1.5 font-medium leading-relaxed">
-                1인 전광판에서 저장한 소중한 디자인 프리셋들을 관객과 동기화할 수 있도록 방에 올릴 수 있습니다.
+              <h2 className="text-xl font-black text-white leading-tight font-outfit">보관함 및 연출 공유 (Vault & Share)</h2>
+              <p className="text-xs text-zinc-500 mt-1.5 font-medium">
+                작성하신 커스텀 프리셋 패키지를 기기에 백업 저장하거나 다른 폰으로 즉시 무선 전송할 수 있습니다.
               </p>
             </div>
 
-            {/* Analysis Stats Box */}
-            <div className="bg-black/60 border border-white/5 rounded-2xl p-5 mb-6 text-left flex flex-col gap-3 font-semibold text-xs text-zinc-300">
-              <div className="flex justify-between items-center pb-2.5 border-b border-white/5">
-                <span className="text-[10px] font-black text-zinc-500 uppercase">연동 전 검사 결과</span>
-                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-pink-500/10 text-pink-400 border border-pink-500/20">PRE-FLIGHT SYNC</span>
-              </div>
-              <div className="flex justify-between">
-                <span>작성된 커스텀 프리셋 수:</span>
-                <span className="text-white font-black">{preflightMetrics.totalCount}개</span>
-              </div>
-              <div className="flex justify-between">
-                <span>프리미엄 효과(폰트/파티클) 사용 프리셋:</span>
-                <span className="text-white font-black">{preflightMetrics.premiumCount}개</span>
-              </div>
-              {preflightMetrics.overflowCount > 0 && (
-                <div className="flex justify-between text-amber-400">
-                  <span>무료 싱크 한도 초과 프리셋:</span>
-                  <span className="font-black">+{preflightMetrics.overflowCount}개</span>
-                </div>
-              )}
+            {/* Modal Internal Tabs */}
+            <div className="flex border-b border-white/5 gap-1 mb-6 overflow-x-auto pb-1 scrollbar-none">
+              {[
+                { tab: 'slots', label: '테마 보관함' },
+                { tab: 'share', label: '기기 간 무선 전송 (QR)' },
+                { tab: 'sync', label: '멀티 싱크 방 만들기' },
+                { tab: 'guide', label: '가이드 & 설정 리셋' }
+              ].map((t) => (
+                <button
+                  key={t.tab}
+                  type="button"
+                  onClick={() => setVaultTab(t.tab as any)}
+                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-colors shrink-0 ${
+                    vaultTab === t.tab 
+                      ? 'bg-white/5 border border-white/15 text-white' 
+                      : 'text-zinc-500 hover:text-white hover:bg-white/[0.02]'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
 
-            {/* Side-by-Side Choices */}
-            <div className="grid md:grid-cols-2 gap-4">
-              
-              {/* Option A: Free Sync Room */}
-              <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left relative overflow-hidden group">
-                <div>
-                  <span className="text-[9px] font-mono text-zinc-500 font-extrabold uppercase block tracking-wider mb-2">FREE PLAN IMPORT</span>
-                  <h3 className="text-sm font-black text-white mb-2">일부 제한 연동 (무료 방)</h3>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed mb-4">
-                    상위 6개 프리셋만 동기화하여 무료 방을 개설합니다. (유료 전용 폰트 및 파티클은 고딕/효과 없음으로 자동 변환됩니다.)
+            {/* Tab 1: Slots Vault */}
+            {vaultTab === 'slots' && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div className="bg-black/30 border border-white/5 rounded-2xl p-4.5">
+                  <h4 className="text-xs font-bold text-white mb-1.5">테마 보관함 슬롯</h4>
+                  <p className="text-[10.5px] text-zinc-400 leading-normal">
+                    현재 대시보드의 모든 프리셋을 슬롯에 통째로 백업 저장해두어, 상황(예: 블랙핑크 콘서트용, 축구 응원용)에 맞게 원클릭으로 교체해 불러올 수 있습니다.
                   </p>
-                  
-                  <ul className="text-[9.5px] text-red-400/90 space-y-1.5 mb-6 leading-relaxed">
-                    <li className="flex items-center gap-1.5">
-                      <AlertCircle className="w-3 h-3 shrink-0" />
-                      <span>6개 초과 프리셋은 연동에서 제외</span>
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <AlertCircle className="w-3 h-3 shrink-0" />
-                      <span>프리미엄 폰트/효과 강제 다운그레이드</span>
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <AlertCircle className="w-3 h-3 shrink-0" />
-                      <span>방 유효 시간 6시간 제한 (연장 불가)</span>
-                    </li>
-                  </ul>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleStartImportRoom('free')}
-                  className="w-full py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 font-bold text-xs transition-all cursor-pointer text-center"
-                >
-                  무료 방 개설 및 필터 연동
-                </button>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newSlotName}
+                    onChange={(e) => setNewSlotName(e.target.value.slice(0, 15))}
+                    placeholder="저장할 테마 이름 (예: 한화이글스)"
+                    className="flex-1 bg-black/45 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-xs font-semibold"
+                    maxLength={15}
+                  />
+                  <button
+                    onClick={handleSaveSlotPackage}
+                    className="px-4 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-650 text-white text-xs font-bold transition-colors cursor-pointer shrink-0 shadow"
+                  >
+                    슬롯 저장
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {savedSlots.length > 0 ? (
+                    savedSlots.map((slot, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => handleLoadSlotPackage(idx)}
+                        className="group flex items-center justify-between p-3.5 bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-white/10 rounded-xl cursor-pointer transition-all"
+                      >
+                        <div className="min-w-0 pr-4">
+                          <span className="text-xs font-bold text-white block truncate">{slot.name}</span>
+                          <span className="text-[9px] text-zinc-500 font-mono mt-0.5 block">프리셋 {slot.presets?.length || 0}개 수록</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-indigo-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity">불러오기 &rarr;</span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteSlotPackage(idx, e)}
+                            className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-white/5 rounded transition-all cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-white/5 bg-white/[0.01] p-8 text-center text-zinc-500 font-semibold text-[10px]">
+                      저장된 보관 테마가 없습니다. 위 입력창에 이름을 적고 저장해 보세요!
+                    </div>
+                  )}
+                </div>
               </div>
+            )}
 
-              {/* Option B: Premium Synced Room */}
-              <div className="rounded-2xl p-5 border border-pink-500/30 bg-pink-500/[0.03] hover:bg-pink-500/[0.06] transition-all flex flex-col justify-between text-left relative overflow-hidden group shadow-lg shadow-pink-500/5">
-                <div className="absolute top-0 right-0 bg-pink-500 text-white font-black text-[7px] px-2 py-0.5 rounded-bl uppercase tracking-widest shadow">
-                  RECOMMEND
-                </div>
-                <div>
-                  <span className="text-[9px] font-mono text-pink-400 font-extrabold block tracking-wider mb-2">PREMIUM PLAN IMPORT</span>
-                  <h3 className="text-sm font-black text-white mb-2">무손실 100% 연동 (유료 방)</h3>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed mb-4">
-                    내가 집에서 정성껏 디자인한 모든 프리셋과 유료 폰트, 파티클 특수효과를 단 1%의 손실도 없이 완벽하게 승계하여 개설합니다.
+            {/* Tab 2: Wireless Sharing */}
+            {vaultTab === 'share' && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div className="bg-black/30 border border-white/5 rounded-2xl p-4.5">
+                  <h4 className="text-xs font-bold text-white mb-1.5">기기 간 전송 및 백업 (QR/코드)</h4>
+                  <p className="text-[10.5px] text-zinc-400 leading-normal">
+                    PC 대시보드에서 만든 세팅을 스마트폰 카메라로 비추면, 폰에 즉시 프리셋들이 자동 적용되고 전광판이 시작됩니다. 복잡한 파일 탐색 없이 무선으로 간편하게 전송할 수 있습니다.
                   </p>
-                  
-                  <ul className="text-[9.5px] text-emerald-400 space-y-1.5 mb-6 leading-relaxed">
-                    <li className="flex items-center gap-1.5">
-                      <Check className="w-3 h-3 text-emerald-400 shrink-0" />
-                      <span>만든 {preflightMetrics.totalCount}개 프리셋 전체 연동</span>
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <Check className="w-3 h-3 text-emerald-400 shrink-0" />
-                      <span>스포티/둥글몽글 폰트 및 파티클 완벽 송출</span>
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <Check className="w-3 h-3 text-emerald-400 shrink-0" />
-                      <span>방 유효 시간 24시간 제공 (언제든 연장 가능)</span>
-                    </li>
-                  </ul>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleStartImportRoom('premium')}
-                  className="w-full py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-black text-xs transition-all cursor-pointer flex items-center justify-center gap-0.5"
-                >
-                  프리미엄 무손실 연동 ⚡
-                </button>
-              </div>
+                <div className="bg-black/50 border border-white/5 p-4 rounded-2xl flex flex-col items-center gap-3.5 text-center min-h-[160px] justify-center relative">
+                  {isSharingLoading ? (
+                    <span className="text-xs text-zinc-500 animate-pulse">임시 무선 연동 토큰 생성 중...</span>
+                  ) : shareQrUrl ? (
+                    <div className="flex flex-col items-center gap-2.5 animate-in fade-in duration-200">
+                      <div className="bg-white p-2.5 rounded-2xl shadow-xl">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={shareQrUrl} alt="Preset Share QR" className="w-40 h-40 rounded-lg" />
+                      </div>
+                      <span className="text-[9.5px] text-zinc-400 leading-relaxed font-bold">
+                        📱 스마트폰 기본 카메라로 찍으면 즉시 내 대시보드에 복사 적용됩니다!
+                      </span>
+                      
+                      <div className="flex items-center gap-1.5 mt-1 bg-[#12121a] px-3 py-1.5 rounded-xl border border-white/5">
+                        <span className="text-[11px] font-mono text-zinc-400 font-bold uppercase tracking-widest">{exportCode}</span>
+                        <button
+                          onClick={handleCopyShareCodeText}
+                          className="text-[9px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors"
+                        >
+                          {isCodeCopied ? '복사 완료' : '코드 복사'}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleGenerateShareCode}
+                      className="w-full py-4.5 rounded-xl bg-white text-black font-extrabold text-xs shadow-lg hover:bg-zinc-200 transition-all cursor-pointer flex items-center justify-center"
+                    >
+                      무선 전송용 QR 코드 생성
+                    </button>
+                  )}
+                </div>
 
-            </div>
+                <div className="flex flex-col gap-2 pt-2">
+                  <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">수동 받기: 공유 코드 입력</span>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={shareCodeInput}
+                      onChange={(e) => setShareCodeInput(e.target.value.toUpperCase())}
+                      placeholder="6자리 공유 코드 입력 (예: X8Y3ZA)"
+                      className="flex-1 bg-black/45 border border-white/10 rounded-xl px-3.5 py-2.5 text-white tracking-widest text-center text-xs font-black focus:outline-none focus:border-indigo-500 uppercase font-mono"
+                      maxLength={6}
+                    />
+                    <button
+                      onClick={handleImportShareCode}
+                      className="px-4.5 rounded-xl bg-white text-black text-xs font-black hover:bg-zinc-200 transition-colors cursor-pointer shrink-0"
+                    >
+                      불러오기
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 3: Create Sync Room */}
+            {vaultTab === 'sync' && (
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div className="bg-black/30 border border-white/5 rounded-2xl p-4.5">
+                  <h4 className="text-xs font-bold text-white mb-1.5">멀티 싱크 방 개설 & 프리셋 연동</h4>
+                  <p className="text-[10.5px] text-zinc-400 leading-normal">
+                    1인 모드에서 다듬은 내 개인 프리셋들을 그대로 이관하여 무료 또는 프리미엄 멀티 싱크 방을 개설할 수 있습니다. 개설 후 생성되는 QR코드를 여러 관객의 스마트폰 카메라로 스캔하면 방장이 제어하는 신호대로 모든 관객의 화면이 동시에 일치하여 번쩍이게 됩니다.
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  {/* Option A */}
+                  <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left">
+                    <div>
+                      <span className="text-[9px] font-mono text-zinc-500 font-extrabold uppercase block tracking-wider mb-2">FREE PLAN IMPORT</span>
+                      <h3 className="text-sm font-black text-white mb-2">일부 제한 연동 (무료 방)</h3>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed mb-4">
+                        상위 6개 프리셋만 동기화하여 무료 방을 개설합니다. (유료 전용 폰트 및 파티클은 기본 서체/효과 없음으로 자동 다운그레이드 변환됩니다.)
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleStartImportRoom('free')}
+                      className="w-full py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 font-bold text-xs transition-all cursor-pointer text-center"
+                    >
+                      무료 방 개설 및 필터 연동
+                    </button>
+                  </div>
+
+                  {/* Option B */}
+                  <div className="rounded-2xl p-5 border border-indigo-500/30 bg-indigo-500/[0.03] hover:bg-indigo-500/[0.06] transition-all flex flex-col justify-between text-left relative overflow-hidden group shadow-lg shadow-indigo-500/5">
+                    <div>
+                      <span className="text-[9px] font-mono text-indigo-400 font-extrabold block tracking-wider mb-2">PREMIUM PLAN IMPORT</span>
+                      <h3 className="text-sm font-black text-white mb-2">무손실 100% 연동 (유료 방)</h3>
+                      <p className="text-[11px] text-zinc-400 leading-relaxed mb-4">
+                        내가 단독 모드에서 공들여 디자인한 모든 프리셋과 스포티/도트/둥글몽글 폰트, 하트/꽃가루/별빛 특수효과를 누수 없이 완벽하게 이관하여 대형 방을 개설합니다.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleStartImportRoom('premium')}
+                      className="w-full py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-650 text-white font-black text-xs transition-all cursor-pointer text-center"
+                    >
+                      프리미엄 무손실 연동
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 4: Guide & Reset */}
+            {vaultTab === 'guide' && (
+              <div className="space-y-6 animate-in fade-in duration-200">
+                <div className="space-y-4 text-xs text-zinc-400 leading-relaxed">
+                  <div className="bg-amber-500/[0.03] border border-amber-500/20 p-4.5 rounded-2xl">
+                    <h4 className="text-xs font-bold text-amber-400 mb-1.5">⚠️ 데이터 관리 주의사항</h4>
+                    <p className="text-[10.5px]">
+                      본 사이트는 가입과 로그인이 없는 독립형으로 구성되어 있어, 작성한 디자인 정보는 현재 사용 중인 인터넷 웹브라우저의 <b>로컬 저장공간</b>에 기기 전 전용으로 안전하게 격리되어 보존됩니다.<br />
+                      이에 따라 사용자가 <b>인터넷 브라우저 청소(쿠키, 사이트 캐시 데이터 삭제)</b>를 실행할 경우 저장된 모든 프리셋과 테마 슬롯도 함께 영구 삭제됩니다. 안전한 보관을 위해 연출 팩을 <b>[기기 간 무선 전송 (QR)]</b> 기능을 사용해 스마트폰 등으로 수시 백업/복사해 주시기 바랍니다.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-white/5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+                  <span className="text-[10px] text-zinc-500 font-semibold">
+                    초기 기본 상태로 복구하려면 리셋을 실행하세요.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleResetDashboard}
+                    className="py-2.5 px-4 rounded-xl border border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/15 cursor-pointer text-xs font-bold transition-all text-center self-end sm:self-auto flex items-center justify-center gap-1.5"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>대시보드 전체 리셋</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
           </div>
         </div>
       )}
 
+      {/* Automatic URL Import Progress Overlay */}
+      {isImportLoading && (
+        <div className="fixed inset-0 z-50 bg-[#030305]/95 flex flex-col items-center justify-center p-6 text-center select-none font-sans">
+          <div className="w-12 h-12 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin mb-6" />
+          
+          {importError ? (
+            <div className="max-w-md animate-in fade-in duration-300">
+              <h3 className="text-lg font-black text-white mb-2">프리셋 연동에 실패했습니다</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed mb-6 font-semibold">{importError}</p>
+              <button
+                onClick={() => setIsImportLoading(false)}
+                className="py-3 px-6 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-xs hover:bg-white/10 transition-all cursor-pointer"
+              >
+                닫고 대시보드로 가기
+              </button>
+            </div>
+          ) : (
+            <div className="animate-in fade-in duration-300">
+              <h3 className="text-base font-black text-white mb-2">GlowWave 기기 간 프리셋 연동</h3>
+              <p className="text-xs text-zinc-400 font-medium">{importMessage}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+// Local Fullscreen Signboard Component (Matches HostFullscreenSignboard exactly)
+interface LocalFullscreenSignboardProps {
+  preset: Preset;
+  onClose: () => void;
+}
+
+function LocalFullscreenSignboard({ preset, onClose }: LocalFullscreenSignboardProps) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const wakeLockRef = useRef<any>(null);
+
+  // Countdown timer logic
+  const [countdownVal, setCountdownVal] = useState<number | string>(preset.countdown_seconds || 10);
+  useEffect(() => {
+    if (preset.effect === 'countdown') {
+      const startSec = preset.countdown_seconds || 10;
+      setCountdownVal(startSec);
+      const timer = setInterval(() => {
+        setCountdownVal((prev) => {
+          if (typeof prev === 'number') {
+            if (prev <= 1) {
+              return preset.result_text || 'START';
+            }
+            return prev - 1;
+          }
+          return prev;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [preset.text, preset.effect, preset.countdown_seconds, preset.result_text]);
+
+  const isLuckyDrawWait = preset.effect === 'luckydraw_wait';
+  const displayText = preset.effect === 'countdown'
+    ? String(countdownVal)
+    : isLuckyDrawWait
+      ? '추첨 대기 중'
+      : (preset.text || '');
+
+  // FitText Hook
+  const { containerRef, fontSize } = useFitText(
+    displayText,
+    preset.effect || 'none',
+    preset.font_size || 100
+  );
+
+  // ESC key listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
+  const requestWakeLock = async () => {
+    if ('wakeLock' in navigator) {
+      try {
+        if (wakeLockRef.current) return;
+        const lock = await (navigator as any).wakeLock.request('screen');
+        lock.addEventListener('release', () => {
+          wakeLockRef.current = null;
+        });
+        wakeLockRef.current = lock;
+      } catch (err: any) {
+        console.warn(`[LocalWakeLock] Screen lock failed: ${err.message}`);
+      }
+    }
+  };
+
+  const releaseWakeLock = async () => {
+    if (wakeLockRef.current) {
+      try {
+        await wakeLockRef.current.release();
+        wakeLockRef.current = null;
+      } catch (e) {}
+    }
+  };
+
+  // Video play & Wake Lock request
+  useEffect(() => {
+    requestWakeLock();
+    if (videoRef.current) {
+      videoRef.current.play().catch((err) => {
+        console.warn('[LocalWakeLock] silent video loop playback blocked:', err);
+      });
+    }
+    return () => {
+      releaseWakeLock();
+    };
+  }, []);
+
+  // Monitor visibility
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        await requestWakeLock();
+        if (videoRef.current) {
+          videoRef.current.play().catch(() => {});
+        }
+      } else {
+        releaseWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // Particles
+  const particles = useMemo(() => {
+    const effect = preset.special_effect;
+    if (!effect || effect === 'none') return [];
+    const count = effect === 'stars' ? 35 : effect === 'confetti' ? 45 : 30;
+    const arr = [];
+    for (let i = 0; i < count; i++) {
+      if (effect === 'hearts') {
+        arr.push({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          fontSize: `${18 + Math.random() * 26}px`,
+          delay: `${Math.random() * 6}s`,
+          duration: `${4 + Math.random() * 5}s`,
+          sway: `${2 + Math.random() * 3}s`,
+          color: ['#EF4444', '#EC4899', '#F472B6', '#F43F5E', '#D946EF'][Math.floor(Math.random() * 5)]
+        });
+      } else if (effect === 'confetti') {
+        arr.push({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          fontSize: `${12 + Math.random() * 20}px`,
+          delay: `${Math.random() * 5}s`,
+          duration: `${3 + Math.random() * 4}s`,
+          sway: `${1.5 + Math.random() * 2}s`,
+          color: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#EC4899', '#8B5CF6', '#14B8A6'][Math.floor(Math.random() * 7)]
+        });
+      } else if (effect === 'stars') {
+        arr.push({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          fontSize: `${4 + Math.random() * 8}px`,
+          delay: `${Math.random() * 4}s`,
+          duration: `${2 + Math.random() * 4}s`,
+          color: ['#FFF', '#FEF08A', '#A5F3FC', '#F472B6', '#C084FC'][Math.floor(Math.random() * 5)]
+        });
+      }
+    }
+    return arr;
+  }, [preset.special_effect]);
+
+  const isDuoSiren = preset.effect === 'blink' && !!preset.bg_color_secondary;
+  const isBlink = preset.effect === 'blink';
+  const isMarquee = preset.effect === 'marquee';
+
+  const getFontFamilyClass = (fontFamily?: string) => {
+    switch (fontFamily) {
+      case 'sans-thin': return 'font-sign-sans-thin font-bold';
+      case 'sans-thick': return 'font-sign-sans-thick font-black';
+      case 'serif': return 'font-sign-serif font-bold';
+      case 'neon': return 'font-sign-neon font-black';
+      case 'pixel': return 'font-sign-pixel';
+      case 'plump': return 'font-sign-plump font-black';
+      default: return 'font-sign-sans-thin font-bold';
+    }
+  };
+
+  const [showExitBtn, setShowExitBtn] = useState(true);
+  useEffect(() => {
+    const timer = setTimeout(() => setShowExitBtn(false), 3000);
+    return () => clearTimeout(timer);
+  }, [showExitBtn]);
+
+  const triggerResetControls = () => {
+    setShowExitBtn(true);
+    requestWakeLock();
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {});
+    }
+  };
+
+  return (
+    <div 
+      ref={containerRef}
+      onClick={triggerResetControls}
+      onDoubleClick={onClose}
+      className={`w-full h-full flex items-center justify-center relative select-none ${
+        (isDuoSiren || isBlink) ? '' : 'transition-colors duration-300'
+      } ${
+        isDuoSiren ? 'animate-siren' : isBlink ? 'animate-blink' : ''
+      }`}
+      style={{ 
+        backgroundColor: isDuoSiren ? undefined : preset.bg_color,
+        '--blink-duration': `${preset.speed || 1000}ms`,
+        '--siren-color-1': preset.bg_color,
+        '--siren-color-2': preset.bg_color_secondary || '#FFD700'
+      } as React.CSSProperties}
+    >
+      {/* Special Effects Particle Layer */}
+      {preset.special_effect && preset.special_effect !== 'none' && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          {particles.map((p: any) => {
+            if (preset.special_effect === 'hearts') {
+              return (
+                <div
+                  key={p.id}
+                  className="animate-heart text-shadow-lg"
+                  style={{
+                    left: p.left,
+                    fontSize: p.fontSize,
+                    color: p.color,
+                    animationName: 'float-heart, sway-heart',
+                    animationDuration: `${p.duration}, ${p.sway}`,
+                    animationTimingFunction: 'linear, ease-in-out',
+                    animationIterationCount: 'infinite, infinite',
+                    animationDelay: `${p.delay}, 0s`
+                  } as React.CSSProperties}
+                >
+                  ❤️
+                </div>
+              );
+            } else if (preset.special_effect === 'confetti') {
+              const shapes = ['🎉', '✨', '■', '●', '▲', '✦'];
+              const shape = shapes[p.id % shapes.length];
+              return (
+                <div
+                  key={p.id}
+                  className="animate-confetti"
+                  style={{
+                    left: p.left,
+                    fontSize: p.fontSize,
+                    color: p.color,
+                    animationName: 'float-confetti, sway-confetti',
+                    animationDuration: `${p.duration}, ${p.sway}`,
+                    animationTimingFunction: 'linear, ease-in-out',
+                    animationIterationCount: 'infinite, infinite',
+                    animationDelay: `${p.delay}, 0s`
+                  } as React.CSSProperties}
+                >
+                  {shape}
+                </div>
+              );
+            } else if (preset.special_effect === 'stars') {
+              const starGlyphs = ['✦', '★', '🌟', '✧', '•'];
+              const glyph = starGlyphs[p.id % starGlyphs.length];
+              return (
+                <div
+                  key={p.id}
+                  className="animate-star"
+                  style={{
+                    left: p.left,
+                    top: p.top,
+                    fontSize: p.fontSize,
+                    color: p.color,
+                    animationName: 'twinkle-star',
+                    animationDuration: p.duration,
+                    animationTimingFunction: 'ease-in-out',
+                    animationIterationCount: 'infinite',
+                    animationDelay: p.delay
+                  } as React.CSSProperties}
+                >
+                  {glyph}
+                </div>
+              );
+            }
+            return null;
+          })}
+        </div>
+      )}
+
+      {isMarquee ? (
+        <div className="w-full overflow-hidden flex items-center whitespace-nowrap relative z-10 py-[2vh]">
+          <div 
+            className={`animate-marquee-seamless select-none leading-[1.2] flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(preset.font_family)}`}
+            style={{ 
+              color: preset.text_color,
+              fontSize,
+              '--marquee-duration': `${preset.speed || 6000}ms`
+            } as React.CSSProperties}
+          >
+            <span>{displayText}</span>
+            <span>{displayText}</span>
+            <span>{displayText}</span>
+            <span>{displayText}</span>
+          </div>
+          <div 
+            className={`animate-marquee-seamless select-none leading-[1.2] flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(preset.font_family)}`}
+            style={{ 
+              color: preset.text_color,
+              fontSize,
+              '--marquee-duration': `${preset.speed || 6000}ms`
+            } as React.CSSProperties}
+            aria-hidden="true"
+          >
+            <span>{displayText}</span>
+            <span>{displayText}</span>
+            <span>{displayText}</span>
+            <span>{displayText}</span>
+          </div>
+        </div>
+      ) : (
+        <div 
+          className={`text-center whitespace-nowrap px-8 select-none max-w-full leading-[1.2] tracking-tighter relative z-10 ${getFontFamilyClass(preset.font_family)}`}
+          style={{ 
+            color: preset.text_color,
+            fontSize,
+            zIndex: 10
+          }}
+        >
+          {displayText}
+        </div>
+      )}
+
+      {/* Floating Exit overlay */}
+      <div className={`absolute top-6 left-6 z-40 transition-opacity duration-300 ${showExitBtn ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        <button
+          onClick={onClose}
+          className="py-2.5 px-5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/10 text-white font-bold text-xs tracking-wider flex items-center gap-2 cursor-pointer shadow-lg active:scale-95 transition-all"
+        >
+          닫기 (Exit)
+        </button>
+      </div>
+
+      <div className={`absolute bottom-6 left-6 z-40 text-[10px] text-zinc-500 transition-opacity duration-300 ${showExitBtn ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        화면을 더블클릭하거나 ESC 키를 누르면 종료됩니다.
+      </div>
+
+      {/* Sleep prevention silent video loop */}
+      <video
+        ref={videoRef}
+        playsInline
+        muted
+        loop
+        style={{ position: 'fixed', opacity: 0.001, pointerEvents: 'none', width: '4px', height: '4px', left: '0px', bottom: '0px', zIndex: -100 }}
+        src="data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAr9tZGF0AAACoAYF//+///AAAAMmF2Y0MBZAAK/+EAGWdkAAqs2V+WXAWyAAADAAIAAAMAYB4kSywBAAZo6+PLIsAAAAAYc3R0cwAAAAAAAAABAAAAAQAAAgAAAAAcc3RzYwAAAAAAAAABAAAAAQAAAAEAAAABAAAAFHN0c3oAAAAAAAACtwAAAAEAAAAUc3RjbwAAAAAAAAABAAAAMAAAAGJ1ZHRhAAAAWm1ldGEAAAAAAAAAIWhkbHIAAAAAAAAAAG1kaXJhcHBsAAAAAAAAAAAAAAAALWlsc3QAAAAlqXRvbwAAAB1kYXRhAAAAAQAAAABMYXZmNTQuNjMuMTA0"
+      />
     </div>
   );
 }
