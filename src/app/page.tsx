@@ -54,10 +54,19 @@ export default function Home() {
     loaded: boolean;
   }
   const [roomDetails, setRoomDetails] = useState<Record<string, RoomDetail>>({});
+  const [isStatusChecked, setIsStatusChecked] = useState<boolean>(false);
 
   const sortedRecentRooms = [...recentRooms].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   
   const activeRecentRooms = sortedRecentRooms.filter(room => {
+    // 1. Client-side static time check (instant filter on mount)
+    const createdTime = room.createdAt ? new Date(room.createdAt).getTime() : Date.now();
+    const tier = room.tier || 'free';
+    const limitMs = tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+    const diff = (createdTime + limitMs) - Date.now();
+    if (diff <= 0) return false; // Definitely expired!
+
+    // 2. Server status check response (once fetched)
     const detail = roomDetails[room.roomId];
     if (detail && detail.loaded && detail.isExpired) {
       return false;
@@ -149,6 +158,9 @@ export default function Home() {
           localStorage.setItem('glowwave_recent_rooms', JSON.stringify(loaded));
         }
       }
+      if (loaded.length === 0) {
+        setIsStatusChecked(true);
+      }
       setRecentRooms(loaded);
     }
   }, [activeRoomId]);
@@ -160,6 +172,8 @@ export default function Home() {
 
     const fetchStatuses = async () => {
       const results: Record<string, RoomDetail> = {};
+      let updatedRecentRooms = [...recentRooms];
+      let hasChanges = false;
       
       await Promise.all(
         uniqueRoomIds.map(async (id) => {
@@ -178,6 +192,9 @@ export default function Home() {
               if (diff <= 0 || data.status !== 'active') {
                 isExpired = true;
                 timeLeftText = '만료됨';
+                // Remove from recentRooms if expired
+                updatedRecentRooms = updatedRecentRooms.filter(r => r.roomId !== id);
+                hasChanges = true;
               } else {
                 const hours = Math.floor(diff / (1000 * 60 * 60));
                 const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -185,6 +202,13 @@ export default function Home() {
                   timeLeftText = `${hours}시간 ${minutes}분 남음`;
                 } else {
                   timeLeftText = `${minutes}분 남음`;
+                }
+                // Update active room details in loaded list if missing/mismatched
+                const matched = updatedRecentRooms.find(r => r.roomId === id);
+                if (matched && (!matched.tier || matched.createdAt !== data.created_at)) {
+                  matched.tier = data.tier;
+                  matched.createdAt = data.created_at;
+                  hasChanges = true;
                 }
               }
 
@@ -203,6 +227,8 @@ export default function Home() {
                 timeLeftText: '만료됨',
                 loaded: true
               };
+              updatedRecentRooms = updatedRecentRooms.filter(r => r.roomId !== id);
+              hasChanges = true;
             }
           } catch (e) {
             results[id] = {
@@ -212,11 +238,19 @@ export default function Home() {
               timeLeftText: '만료됨',
               loaded: true
             };
+            updatedRecentRooms = updatedRecentRooms.filter(r => r.roomId !== id);
+            hasChanges = true;
           }
         })
       );
 
       setRoomDetails(prev => ({ ...prev, ...results }));
+
+      if (hasChanges && typeof window !== 'undefined') {
+        localStorage.setItem('glowwave_recent_rooms', JSON.stringify(updatedRecentRooms));
+        setRecentRooms(updatedRecentRooms);
+      }
+      setIsStatusChecked(true);
     };
 
     fetchStatuses();
@@ -373,7 +407,15 @@ export default function Home() {
                     <span>내가 만든 전광판 (Hosted Signboards)</span>
                   </h3>
                   <div className="flex flex-col gap-3">
-                    {hostRooms.length > 0 ? (
+                    {!isStatusChecked ? (
+                      <div className="glass-effect rounded-2xl p-4 border border-white/5 bg-white/[0.01] animate-pulse flex items-center justify-between">
+                        <div className="flex flex-col gap-2 w-2/3">
+                          <div className="h-4 bg-white/10 rounded w-1/3" />
+                          <div className="h-3 bg-white/5 rounded w-1/2" />
+                        </div>
+                        <div className="h-8 bg-white/10 rounded w-20" />
+                      </div>
+                    ) : hostRooms.length > 0 ? (
                       hostRooms.map((item) => {
                         const details = roomDetails[item.roomId];
                         return (
@@ -382,61 +424,61 @@ export default function Home() {
                             className="glass-effect rounded-2xl p-4 border border-indigo-500/10 hover:border-indigo-500/20 bg-indigo-500/[0.01] flex items-center justify-between transition-all duration-300"
                           >
                             <div className="flex flex-col gap-0.5 text-left min-w-0 pr-3">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <h4 className="text-base font-mono font-black text-white tracking-wider truncate">
-                                  {item.roomId}
-                                </h4>
-                                {details ? (
-                                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize ${
-                                    details.tier === 'free' 
-                                      ? 'bg-zinc-800 text-zinc-400' 
-                                      : details.tier === 'lite'
-                                        ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                        : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                                  }`}>
-                                    {details.tier === 'free' ? '무료' : details.tier === 'lite' ? '라이트' : '프로'}
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <h4 className="text-base font-mono font-black text-white tracking-wider truncate">
+                                    {item.roomId}
+                                  </h4>
+                                  {details ? (
+                                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize ${
+                                      details.tier === 'free' 
+                                        ? 'bg-zinc-800 text-zinc-400' 
+                                        : details.tier === 'lite'
+                                          ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                          : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                                    }`}>
+                                      {details.tier === 'free' ? '무료' : details.tier === 'lite' ? '라이트' : '프로'}
+                                    </span>
+                                  ) : item.tier ? (
+                                    <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize bg-zinc-800 text-zinc-400">
+                                      {item.tier === 'free' ? '무료' : item.tier === 'lite' ? '라이트' : '프로'}
+                                    </span>
+                                  ) : null}
+                                </div>
+                                
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-[9px] text-zinc-500 font-mono">
+                                    {new Date(item.createdAt).toLocaleDateString('ko-KR', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
                                   </span>
-                                ) : item.tier ? (
-                                  <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize bg-zinc-800 text-zinc-400">
-                                    {item.tier === 'free' ? '무료' : item.tier === 'lite' ? '라이트' : '프로'}
-                                  </span>
-                                ) : null}
+                                  <span className="text-[9px] text-zinc-500">·</span>
+                                  {details ? (
+                                    <span className={`text-[9px] font-bold font-mono ${details.isExpired ? 'text-red-500' : 'text-emerald-400'}`}>
+                                      {details.timeLeftText}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[9px] text-zinc-500 font-mono">조회 중...</span>
+                                  )}
+                                </div>
                               </div>
-                              
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[9px] text-zinc-500 font-mono">
-                                  {new Date(item.createdAt).toLocaleDateString('ko-KR', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </span>
-                                <span className="text-[9px] text-zinc-500">·</span>
-                                {details ? (
-                                  <span className={`text-[9px] font-bold font-mono ${details.isExpired ? 'text-red-500' : 'text-emerald-400'}`}>
-                                    {details.timeLeftText}
-                                  </span>
-                                ) : (
-                                  <span className="text-[9px] text-zinc-500 font-mono">조회 중...</span>
-                                )}
-                              </div>
+                              <Link
+                                href={`/host/dashboard/${item.roomId}`}
+                                className="px-3.5 py-2 rounded-xl text-[10px] font-black bg-indigo-600 hover:bg-indigo-500 text-white transition-all flex items-center gap-1 shrink-0"
+                              >
+                                대시보드 &rarr;
+                              </Link>
                             </div>
-                            <Link
-                              href={`/host/dashboard/${item.roomId}`}
-                              className="px-3.5 py-2 rounded-xl text-[10px] font-black bg-indigo-600 hover:bg-indigo-500 text-white transition-all flex items-center gap-1 shrink-0"
-                            >
-                              대시보드 &rarr;
-                            </Link>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 text-center text-zinc-500 font-semibold text-[10px] leading-relaxed">
-                        개설한 전광판 내역이 없습니다.
-                      </div>
-                    )}
-                  </div>
+                          );
+                        })
+                      ) : (
+                        <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 text-center text-zinc-500 font-semibold text-[10px] leading-relaxed">
+                          개설한 전광판 내역이 없습니다.
+                        </div>
+                      )}
+                    </div>
                 </div>
 
                 {/* Attended Rooms Column */}
@@ -446,7 +488,15 @@ export default function Home() {
                     <span>내가 참여한 전광판 (Attended Signboards)</span>
                   </h3>
                   <div className="flex flex-col gap-3">
-                    {audienceRooms.length > 0 ? (
+                    {!isStatusChecked ? (
+                      <div className="glass-effect rounded-2xl p-4 border border-white/5 bg-white/[0.01] animate-pulse flex items-center justify-between">
+                        <div className="flex flex-col gap-2 w-2/3">
+                          <div className="h-4 bg-white/10 rounded w-1/3" />
+                          <div className="h-3 bg-white/5 rounded w-1/2" />
+                        </div>
+                        <div className="h-8 bg-white/10 rounded w-20" />
+                      </div>
+                    ) : audienceRooms.length > 0 ? (
                       audienceRooms.map((item) => {
                         const details = roomDetails[item.roomId];
                         return (
