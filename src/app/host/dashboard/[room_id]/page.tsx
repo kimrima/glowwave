@@ -34,7 +34,7 @@ import useFitText from '@/hooks/useFitText';
 const defaults: Preset[] = [
   { bg_color: '#0B0B0F', text: '단색', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#3B82F6', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1527, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#FF0000', text: '경찰 사이렌', text_color: '#FFFFFF', effect: 'blink', speed: 1527, bg_color_secondary: '#0000FF', font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#FFFFFF', text: '사이키', text_color: '#EF4444', effect: 'blink', speed: 1527, bg_color_secondary: '#0B0B0F', font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1527, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100, lucky_draw_count: 1 },
   { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 11606, font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
@@ -472,14 +472,14 @@ export default function HostDashboard() {
           }
         }
 
-        // Migrate index 2: from gradient to police siren duo-flash
-        if (idx === 2 && ((p.effect as string) === 'gradient' || p.text.includes('그라데이션') || p.text.includes('경찰'))) {
-          p.bg_color = '#FF0000';
-          p.text = '경찰 사이렌';
-          p.text_color = '#FFFFFF';
+        // Migrate index 2: to '사이키' white/black flash
+        if (idx === 2 && ((p.effect as string) === 'gradient' || p.text.includes('그라데이션') || p.text.includes('경찰') || p.text === '사이키')) {
+          p.bg_color = '#FFFFFF';
+          p.text = '사이키';
+          p.text_color = '#EF4444';
           p.effect = 'blink';
-          p.speed = 150;
-          p.bg_color_secondary = '#0000FF';
+          p.speed = 1527;
+          p.bg_color_secondary = '#0B0B0F';
           p.font_size = 100;
           changed = true;
         }
