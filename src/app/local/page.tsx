@@ -113,9 +113,10 @@ function LocalSignboardContent() {
 
   // Control & Share Modal
   const [isVaultOpen, setIsVaultOpen] = useState(false);
-  const [vaultTab, setVaultTab] = useState<'slots' | 'share' | 'sync' | 'guide'>('slots');
+  const [vaultTab, setVaultTab] = useState<'slots' | 'share' | 'sync'>('slots');
   const [savedSlots, setSavedSlots] = useState<{ name: string; presets: Preset[] }[]>([]);
   const [newSlotName, setNewSlotName] = useState('');
+  const [shareMode, setShareMode] = useState<'send' | 'receive'>('send');
 
   // QR and Code Sharing states
   const [isSharingLoading, setIsSharingLoading] = useState(false);
@@ -1704,17 +1705,16 @@ function LocalSignboardContent() {
             <div className="text-center mb-6">
               <h2 className="text-xl font-black text-white leading-tight font-outfit font-sans">보관함 및 연출 공유</h2>
               <p className="text-xs text-zinc-500 mt-1.5 font-medium font-sans">
-                프리셋 패키지를 기기에 백업하고 무선으로 즉시 공유합니다.
+                전광판 프리셋을 기기에 안전하게 저장하거나 다른 기기로 전송합니다.
               </p>
             </div>
 
             {/* Modal Internal Tabs */}
             <div className="flex border-b border-white/5 gap-1 mb-6 overflow-x-auto pb-1 scrollbar-none">
               {[
-                { tab: 'slots', label: '테마 보관함' },
-                { tab: 'share', label: '기기 간 무선 전송 (QR)' },
-                { tab: 'sync', label: '멀티 싱크 방 만들기' },
-                { tab: 'guide', label: '데이터 백업 안내' }
+                { tab: 'slots', label: '내 기기에 보관' },
+                { tab: 'share', label: '무선 전송 (보내기/받기)' },
+                { tab: 'sync', label: '여러 기기 연결 (싱크)' }
               ].map((t) => (
                 <button
                   key={t.tab}
@@ -1735,9 +1735,9 @@ function LocalSignboardContent() {
             {vaultTab === 'slots' && (
               <div className="space-y-5 animate-in fade-in duration-200">
                 <div className="bg-black/30 border border-white/5 rounded-2xl p-4.5">
-                  <h4 className="text-xs font-bold text-white mb-1 font-sans">테마 보관함 슬롯</h4>
+                  <h4 className="text-xs font-bold text-white mb-1 font-sans">내 기기 브라우저 보관함</h4>
                   <p className="text-[10.5px] text-zinc-400 leading-normal font-sans">
-                    현재 프리셋 구성을 슬롯에 저장해 두고 원클릭으로 즉시 교체합니다.
+                    현재 프리셋 구성을 슬롯에 보관해 두고 필요할 때 클릭 한 번으로 빠르게 다시 불러옵니다.
                   </p>
                 </div>
 
@@ -1771,7 +1771,7 @@ function LocalSignboardContent() {
                           <span className="text-[9px] text-zinc-500 font-mono mt-0.5 block">프리셋 {slot.presets?.length || 0}개 수록</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-indigo-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity font-sans">불러오기 &rarr;</span>
+                          <span className="text-[10px] text-indigo-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity font-sans font-sans">불러오기 &rarr;</span>
                           <button
                             type="button"
                             onClick={(e) => handleDeleteSlotPackage(idx, e)}
@@ -1784,115 +1784,181 @@ function LocalSignboardContent() {
                     ))
                   ) : (
                     <div className="rounded-xl border border-dashed border-white/5 bg-white/[0.01] p-8 text-center text-zinc-500 font-semibold text-[10px] font-sans">
-                      저장된 테마가 없습니다. 이름을 적고 슬롯을 추가해보세요.
+                      보관된 테마가 없습니다. 이름을 입력하고 슬롯을 추가해 보세요.
                     </div>
                   )}
+                </div>
+
+                {/* Integration of Backup warnings & Reset */}
+                <div className="pt-4 border-t border-white/5 space-y-4">
+                  <div className="bg-amber-500/[0.03] border border-amber-500/10 p-3.5 rounded-xl text-left">
+                    <span className="text-[10px] text-amber-400 font-bold block mb-1 font-sans">💡 브라우저 캐시 주의</span>
+                    <span className="text-[9.5px] text-zinc-500 leading-normal block font-sans">
+                      가입이 없는 로컬 전용 모드로, 인터넷 캐시/쿠키 청소 시 저장된 보관함 슬롯도 함께 지워집니다. 안전한 보관을 위해 가끔 <b>[무선 전송 (보내기/받기)]</b> 탭에서 다른 기기로 백업하여 안전하게 복사해 두시길 권장합니다.
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-left">
+                    <div className="min-w-0 pr-4">
+                      <span className="text-[10px] text-zinc-500 font-semibold block font-sans">대시보드 리셋</span>
+                      <span className="text-[9px] text-zinc-650 block font-sans">모든 프리셋과 보관함을 초기 기본값으로 리셋합니다.</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleResetDashboard}
+                      className="py-2 px-3.5 rounded-xl border border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/15 cursor-pointer text-[10px] font-bold transition-all text-center active:scale-95 font-sans shrink-0"
+                    >
+                      전체 초기 리셋
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Tab 2: Wireless Sharing */}
             {vaultTab === 'share' && (
-              <div className="space-y-5 animate-in fade-in duration-200">
+              <div className="space-y-4 animate-in fade-in duration-200">
                 <div className="bg-black/30 border border-white/5 rounded-2xl p-4.5">
-                  <h4 className="text-xs font-bold text-white mb-1 font-sans">기기 간 전송 (QR/코드)</h4>
+                  <h4 className="text-xs font-bold text-white mb-1 font-sans">기기 간 무선 전송</h4>
                   <p className="text-[10.5px] text-zinc-400 leading-normal font-sans">
-                    현재 세팅을 다른 스마트폰이나 기기로 간편하게 무선 전송 또는 백업할 수 있습니다.
+                    스마트폰 카메라 스캔이나 6자리 공유 코드로 프리셋을 간편하게 보내고 받을 수 있습니다.
                   </p>
                 </div>
 
-                {/* Section A: Send (공유하기) */}
-                <div className="border border-white/5 rounded-2xl p-4 space-y-3 bg-[#0d0d15]/40">
-                  <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block font-sans">연출 팩 보내기 (QR 생성)</span>
-                  
-                  <div className="bg-black/30 border border-white/5 p-3 rounded-xl flex flex-col items-center gap-3 text-center min-h-[120px] justify-center relative">
-                    {isSharingLoading ? (
-                      <span className="text-xs text-zinc-500 animate-pulse font-sans">임시 무선 연동 토큰 생성 중...</span>
-                    ) : shareQrUrl ? (
-                      <div className="flex flex-col items-center gap-2 animate-in fade-in duration-200">
-                        <div className="bg-white p-2 rounded-xl shadow-xl">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={shareQrUrl} alt="Preset Share QR" className="w-36 h-36 rounded-lg" />
+                {/* Sub-toggle for Send vs Receive */}
+                <div className="flex bg-black/40 border border-white/5 p-1 rounded-xl gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShareMode('send');
+                      stopScanning();
+                    }}
+                    className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg transition-all active:scale-95 font-sans ${
+                      shareMode === 'send' 
+                        ? 'bg-white/10 text-white shadow-sm border border-white/10' 
+                        : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    내 프리셋 보내기 (QR 생성)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShareMode('receive')}
+                    className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg transition-all active:scale-95 font-sans ${
+                      shareMode === 'receive' 
+                        ? 'bg-white/10 text-white shadow-sm border border-white/10' 
+                        : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    다른 프리셋 가져오기 (스캔/입력)
+                  </button>
+                </div>
+
+                {/* Sub-tab A: Send (공유하기) */}
+                {shareMode === 'send' && (
+                  <div className="space-y-3 animate-in fade-in duration-150">
+                    <div className="bg-black/50 border border-white/5 p-4 rounded-xl flex flex-col items-center gap-3.5 text-center min-h-[160px] justify-center relative">
+                      {isSharingLoading ? (
+                        <span className="text-xs text-zinc-500 animate-pulse font-sans">임시 무선 연동 토큰 생성 중...</span>
+                      ) : shareQrUrl ? (
+                        <div className="flex flex-col items-center gap-2.5 animate-in fade-in duration-200">
+                          <div className="bg-white p-2.5 rounded-xl shadow-xl">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={shareQrUrl} alt="Preset Share QR" className="w-36 h-36 rounded-lg" />
+                          </div>
+                          <span className="text-[9.5px] text-zinc-400 font-bold font-sans">
+                            📱 상대방 스마트폰 카메라로 비추면 즉시 내 프리셋이 복사 적용됩니다!
+                          </span>
+                          
+                          <div className="flex items-center gap-1.5 mt-1 bg-[#12121a] px-3 py-1.5 rounded-xl border border-white/5">
+                            <span className="text-[11px] font-mono text-zinc-400 font-bold uppercase tracking-widest">{exportCode}</span>
+                            <button
+                              onClick={handleCopyShareCodeText}
+                              className="text-[9px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors active:scale-95 font-sans"
+                            >
+                              {isCodeCopied ? '복사 완료' : '코드 복사'}
+                            </button>
+                          </div>
                         </div>
-                        <span className="text-[9.5px] text-zinc-400 font-bold font-sans">
-                          📱 상대방 기기의 기본 카메라이나 스캐너로 비추면 바로 적용됩니다.
-                        </span>
-                        
-                        <div className="flex items-center gap-1.5 mt-1 bg-[#12121a] px-3 py-1.5 rounded-xl border border-white/5">
-                          <span className="text-[11px] font-mono text-zinc-400 font-bold uppercase tracking-widest">{exportCode}</span>
+                      ) : (
+                        <div className="py-6 px-4 text-center space-y-4">
+                          <p className="text-[11px] text-zinc-400 leading-normal font-sans">
+                            현재 기기에 세팅된 원터치 프리셋 패키지를 다른 폰으로 바로 전송할 수 있는 QR 코드를 만듭니다.
+                          </p>
                           <button
-                            onClick={handleCopyShareCodeText}
-                            className="text-[9px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors active:scale-95 font-sans"
+                            onClick={handleGenerateShareCode}
+                            className="w-full py-3.5 rounded-xl bg-white text-black font-extrabold text-xs shadow-lg hover:bg-zinc-200 transition-all cursor-pointer flex items-center justify-center active:scale-95 font-sans"
                           >
-                            {isCodeCopied ? '복사 완료' : '코드 복사'}
+                            전송용 QR 코드 및 번호 생성
                           </button>
                         </div>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={handleGenerateShareCode}
-                        className="w-full py-3.5 rounded-xl bg-white text-black font-extrabold text-xs shadow-lg hover:bg-zinc-200 transition-all cursor-pointer flex items-center justify-center active:scale-95 font-sans"
-                      >
-                        무선 전송용 QR 코드 생성
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Section B: Receive (불러오기) */}
-                <div className="border border-white/5 rounded-2xl p-4 space-y-3 bg-[#0d0d15]/40">
-                  <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block font-sans">연출 팩 받기 (스캔 / 입력)</span>
-
-                  {isScanning ? (
-                    <div className="flex flex-col items-center gap-3 animate-in fade-in duration-200">
-                      <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-white/10 flex items-center justify-center">
-                        <video
-                          ref={scannerVideoRef}
-                          className="w-full h-full object-cover"
-                          playsInline
-                          muted
-                        />
-                        {/* Custom Neon laser scanning line overlay */}
-                        <div className="absolute inset-x-0 h-0.5 bg-indigo-500/80 animate-bounce top-1/2 shadow-[0_0_8px_#6366f1]" />
-                        <canvas ref={scannerCanvasRef} className="hidden" />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={stopScanning}
-                        className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all cursor-pointer active:scale-95 font-sans"
-                      >
-                        스캔 취소
-                      </button>
+                      )}
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <button
-                        type="button"
-                        onClick={startScanning}
-                        className="w-full py-3.5 rounded-xl border border-dashed border-white/15 hover:border-indigo-500 hover:bg-white/[0.02] text-zinc-300 hover:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 font-sans"
-                      >
-                        카메라로 QR 스캔하기
-                      </button>
+                  </div>
+                )}
 
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={shareCodeInput}
-                          onChange={(e) => setShareCodeInput(e.target.value.toUpperCase())}
-                          placeholder="6자리 공유 코드 입력 (예: X8Y3ZA)"
-                          className="flex-1 bg-black/45 border border-white/10 rounded-xl px-3.5 py-2.5 text-white tracking-widest text-center text-xs font-black focus:outline-none focus:border-indigo-500 uppercase font-mono"
-                          maxLength={6}
-                        />
+                {/* Sub-tab B: Receive (불러오기) */}
+                {shareMode === 'receive' && (
+                  <div className="space-y-3 animate-in fade-in duration-150">
+                    {isScanning ? (
+                      <div className="flex flex-col items-center gap-3 bg-[#0d0d15]/40 border border-white/5 p-4 rounded-xl">
+                        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-white/10 flex items-center justify-center">
+                          <video
+                            ref={scannerVideoRef}
+                            className="w-full h-full object-cover"
+                            playsInline
+                            muted
+                          />
+                          {/* Custom Neon laser scanning line overlay */}
+                          <div className="absolute inset-x-0 h-0.5 bg-indigo-500/80 animate-bounce top-1/2 shadow-[0_0_8px_#6366f1]" />
+                          <canvas ref={scannerCanvasRef} className="hidden" />
+                        </div>
                         <button
-                          onClick={handleImportShareCode}
-                          className="px-4.5 rounded-xl bg-white text-black text-xs font-black hover:bg-zinc-200 transition-colors cursor-pointer shrink-0 active:scale-95 font-sans"
+                          type="button"
+                          onClick={stopScanning}
+                          className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all cursor-pointer active:scale-95 font-sans"
                         >
-                          불러오기
+                          스캔 취소
                         </button>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    ) : (
+                      <div className="bg-[#0d0d15]/40 border border-white/5 p-4 rounded-xl space-y-4">
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block font-sans">방법 A: 카메라로 즉시 스캔</span>
+                          <button
+                            type="button"
+                            onClick={startScanning}
+                            className="w-full py-3 rounded-xl border border-dashed border-white/15 hover:border-indigo-500 hover:bg-white/[0.02] text-zinc-300 hover:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 font-sans"
+                          >
+                            카메라 QR 스캔 켜기
+                          </button>
+                        </div>
+
+                        <div className="h-[1px] bg-white/5" />
+
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block font-sans">방법 B: 6자리 코드 입력</span>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={shareCodeInput}
+                              onChange={(e) => setShareCodeInput(e.target.value.toUpperCase())}
+                              placeholder="6자리 코드 입력 (예: X8Y3ZA)"
+                              className="flex-1 bg-black/45 border border-white/10 rounded-xl px-3.5 py-2.5 text-white tracking-widest text-center text-xs font-black focus:outline-none focus:border-indigo-500 uppercase font-mono"
+                              maxLength={6}
+                            />
+                            <button
+                              onClick={handleImportShareCode}
+                              className="px-4.5 rounded-xl bg-white text-black text-xs font-black hover:bg-zinc-200 transition-colors cursor-pointer shrink-0 active:scale-95 font-sans"
+                            >
+                              가져오기
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1900,9 +1966,9 @@ function LocalSignboardContent() {
             {vaultTab === 'sync' && (
               <div className="space-y-5 animate-in fade-in duration-200">
                 <div className="bg-black/30 border border-white/5 rounded-2xl p-4.5">
-                  <h4 className="text-xs font-bold text-white mb-1 font-sans">멀티 싱크 방 만들기</h4>
+                  <h4 className="text-xs font-bold text-white mb-1 font-sans">여러 기기 연결 (싱크)</h4>
                   <p className="text-[10.5px] text-zinc-400 leading-normal font-sans">
-                    현재 프리셋을 연동하여 여러 관객의 화면을 동시에 일치시켜 제어할 수 있는 멀티 싱크 방을 개설합니다.
+                    현재 프리셋 세팅을 가져와 다수의 관객 스마트폰 화면들을 실시간 조종하는 멀티 싱크 방을 개설합니다.
                   </p>
                 </div>
 
@@ -1944,34 +2010,6 @@ function LocalSignboardContent() {
                       프리미엄 방 개설
                     </button>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 4: Guide & Reset */}
-            {vaultTab === 'guide' && (
-              <div className="space-y-6 animate-in fade-in duration-200">
-                <div className="space-y-4 text-xs text-zinc-400 leading-relaxed">
-                  <div className="bg-amber-500/[0.03] border border-amber-500/20 p-4.5 rounded-2xl">
-                    <h4 className="text-xs font-bold text-amber-400 mb-1.5 font-sans">⚠️ 데이터 백업 및 보관</h4>
-                    <p className="text-[10.5px] font-sans">
-                      본 사이트는 가입이 없는 독립형으로 구성되어 디자인 정보는 브라우저의 <b>로컬 저장공간(LocalStorage)</b>에 안전하게 격리되어 보관됩니다.<br />
-                      브라우저 쿠키/캐시를 청소할 경우 모든 데이터가 삭제되므로, 안전한 보관을 위해 연출 팩을 <b>[기기 간 무선 전송]</b> 기능을 사용하여 타 기기에 수시로 백업 및 복제해 두시길 권장합니다.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-white/5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-                  <span className="text-[10px] text-zinc-500 font-semibold font-sans">
-                    초기 기본 프리셋 상태로 되돌립니다.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleResetDashboard}
-                    className="py-2.5 px-4 rounded-xl border border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/15 cursor-pointer text-xs font-bold transition-all text-center self-end sm:self-auto flex items-center justify-center gap-1.5 active:scale-95 font-sans"
-                  >
-                    <span>대시보드 전체 리셋</span>
-                  </button>
                 </div>
               </div>
             )}
