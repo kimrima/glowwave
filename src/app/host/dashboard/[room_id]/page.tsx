@@ -1538,8 +1538,8 @@ export default function HostDashboard() {
       {/* Main Grid */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col lg:grid lg:grid-cols-12 lg:items-start gap-8 w-full">
         
-        {/* Item 1: Templates (원터치 연출 보드) */}
-        <div className="order-1 lg:col-span-8 flex flex-col w-full min-w-0">
+        {/* Left Column: Quick Preset Board & Custom Broadcast (Combined to avoid grid row misalignment) */}
+        <div className="order-1 lg:col-span-8 flex flex-col gap-8 w-full min-w-0">
           
           {/* Quick Triggers Dashboard */}
           <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a]">
@@ -1791,10 +1791,7 @@ export default function HostDashboard() {
               )}
             </div>
           </div>
-        </div>
 
-        {/* Item 3: 즉석 라이브 메시지 전송 */}
-        <div className="order-3 lg:col-span-8 flex flex-col w-full min-w-0">
           {/* Custom Customizer Input for On-the-fly Triggering */}
           <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a]">
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
