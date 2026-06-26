@@ -816,13 +816,17 @@ export default function AudienceRoom() {
           isDuoSiren ? 'animate-siren' : currentPreset.effect === 'blink' ? 'animate-blink' : ''
         }`}
         style={{ 
-          backgroundColor: (isLuckyDraw && !isWinner) ? '#0B0B0F' : (isDuoSiren ? undefined : currentPreset.bg_color),
-          border: isLuckyDrawWait ? `8px solid ${currentPreset.bg_color_secondary || '#FFD700'}` : 'none',
+          backgroundColor: currentPreset.blackout ? '#000000' : ((isLuckyDraw && !isWinner) ? '#0B0B0F' : (isDuoSiren ? undefined : currentPreset.bg_color)),
+          border: (isLuckyDrawWait && !currentPreset.blackout) ? `8px solid ${currentPreset.bg_color_secondary || '#FFD700'}` : 'none',
           '--blink-duration': `${currentPreset.speed || 1000}ms`,
           '--siren-color-1': currentPreset.bg_color,
           '--siren-color-2': currentPreset.bg_color_secondary || '#FFD700'
         } as React.CSSProperties}
       >
+        {/* Blackout Overlay to cover all texts, effects, and marquee */}
+        {currentPreset.blackout && (
+          <div className="absolute inset-0 bg-black z-50 pointer-events-none" />
+        )}
         {/* Special Effects Particle Layer */}
         {currentPreset.special_effect && currentPreset.special_effect !== 'none' && (
           <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">

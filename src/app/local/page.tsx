@@ -23,7 +23,7 @@ const defaults: Preset[] = [
   { bg_color: '#3B82F6', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#FFFFFF', text: '사이키', text_color: '#EF4444', effect: 'blink', speed: 1921, bg_color_secondary: '#0B0B0F', font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1921, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100, lucky_draw_count: 1 },
-  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 14434, font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
 ];
 
@@ -392,6 +392,24 @@ function LocalSignboardContent() {
     setCustomEffect(preset.effect || 'none');
     setCustomSpeed(getSpeedFactor(preset.effect || 'none', preset.speed || 1000));
     setCustomSpecialEffect(preset.special_effect || 'none');
+    
+    if (preset.countdown_seconds) {
+      setCustomCountdownSeconds(preset.countdown_seconds);
+    } else {
+      setCustomCountdownSeconds(5);
+    }
+
+    if (preset.result_text) {
+      setCustomResultText(preset.result_text);
+    } else {
+      if (preset.effect === 'countdown') {
+        setCustomResultText('START');
+      } else if (preset.effect === 'luckydraw_wait' || preset.effect === 'luckydraw') {
+        setCustomResultText('아쉽네요! 다음 기회에..');
+      } else {
+        setCustomResultText('START');
+      }
+    }
   };
 
   const triggerPreset = (preset: Preset, index: number) => {
@@ -686,10 +704,10 @@ function LocalSignboardContent() {
 
           <div className="flex items-center gap-3">
             <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">시스템 연결 상태</span>
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/[0.04] border border-emerald-500/25 text-emerald-400 text-xs font-semibold tracking-wider backdrop-blur-md shadow-sm">
-              <span className="relative flex h-1.5 w-1.5">
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/30 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+              <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <span>로컬 독립 실행</span>
             </div>
@@ -1891,7 +1909,7 @@ function LocalSignboardContent() {
                     type="text"
                     value={newSlotName}
                     onChange={(e) => setNewSlotName(e.target.value.slice(0, 15))}
-                    placeholder="저장할 테마 이름 (예: 블랙핑크)"
+                    placeholder="저장할 테마 이름 입력"
                     className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:bg-black/60 text-sm font-semibold transition-colors"
                     maxLength={15}
                   />

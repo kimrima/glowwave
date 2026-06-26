@@ -1,5 +1,5 @@
 {
-  "V27ZRN": {
+  "5WKL3T": {
     "presets": [
       {
         "bg_color": "#0B0B0F",
@@ -46,7 +46,7 @@
         "text": "스크롤",
         "text_color": "#FFFFFF",
         "effect": "marquee",
-        "speed": 11606,
+        "speed": 30061,
         "font_family": "sans-thin",
         "font_size": 100
       },
@@ -62,6 +62,6 @@
         "font_size": 100
       }
     ],
-    "expiresAt": 1782324512065
+    "expiresAt": 1782489656190
   }
 }

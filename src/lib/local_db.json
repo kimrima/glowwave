@@ -1,49 +1,31 @@
 {
   "rooms": {
-    "W4QIIN": {
-      "id": "W4QIIN",
-      "host_session_token": "4f89ecf6-502e-4609-b709-281ebcaf3528",
-      "email": "test@example.com",
-      "tier": "lite",
-      "status": "active",
-      "max_participants": 100,
-      "created_at": "2026-06-11T20:06:34.749Z"
-    },
-    "Q2PEA6": {
-      "id": "Q2PEA6",
-      "host_session_token": "520ad688-838e-4579-9053-17de84862f87",
-      "email": "verify@example.com",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 20,
-      "created_at": "2026-06-11T20:07:46.150Z"
-    },
-    "OYUR8S": {
-      "id": "OYUR8S",
-      "host_session_token": "9f0401d0-02d9-46b9-b7ee-1e9057c35b4d",
-      "email": "test@paid.com",
-      "tier": "lite",
-      "status": "active",
-      "max_participants": 100,
-      "created_at": "2026-06-12T10:53:47.050Z"
-    },
-    "6OPH5M": {
-      "id": "6OPH5M",
-      "host_session_token": "684a93c0-05bb-4db2-b8f3-d42bf30bae88",
-      "email": "test@verify.com",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 20,
-      "created_at": "2026-06-12T10:59:26.216Z"
-    },
-    "CEGQPY": {
-      "id": "CEGQPY",
-      "host_session_token": "2f7d94dd-0630-4441-9b82-008e99f89a41",
+    "2OQKIK": {
+      "id": "2OQKIK",
+      "host_session_token": "16ce8fb6-755b-4545-827a-abbb06aa8285",
       "email": "test@example.com",
       "tier": "free",
       "status": "active",
-      "max_participants": 20,
-      "created_at": "2026-06-12T16:45:04.900Z"
+      "max_participants": 15,
+      "created_at": "2026-06-26T15:34:55.426Z"
+    },
+    "0M9ECW": {
+      "id": "0M9ECW",
+      "host_session_token": "93e96f68-854f-41bf-bd16-ea96b5f52837",
+      "email": "test@example.com",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "created_at": "2026-06-26T15:46:14.817Z"
+    },
+    "TRRB8I": {
+      "id": "TRRB8I",
+      "host_session_token": "55b5819e-74c3-4677-93c3-31aa6ecb3075",
+      "email": "test@glowwave.com",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "created_at": "2026-06-26T15:49:46.930Z"
     }
   },
   "payments": [
@@ -69,40 +51,34 @@
     }
   ],
   "currentStates": {
-    "W4QIIN": {
-      "bg_color": "#0B0B0F",
-      "text": "앰비언트 🕯️",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
-    },
-    "Q2PEA6": {
-      "bg_color": "#EF4444",
-      "text": "사이키 ⚡",
-      "text_color": "#FFFFFF",
-      "effect": "blink",
-      "speed": 200
-    },
-    "OYUR8S": {
-      "bg_color": "#EF4444",
+    "2OQKIK": {
+      "bg_color": "#FFFFFF",
       "text": "사이키",
-      "text_color": "#FFFFFF",
+      "text_color": "#EF4444",
       "effect": "blink",
-      "speed": 200
+      "speed": 1527,
+      "bg_color_secondary": "#0B0B0F",
+      "font_family": "sans-thin",
+      "font_size": 100,
+      "trigger_id": "1782488137949"
     },
-    "6OPH5M": {
-      "bg_color": "#10B981",
-      "text": "사운드 싱크",
+    "0M9ECW": {
+      "bg_color": "#F97316",
+      "text": "스크롤",
       "text_color": "#FFFFFF",
-      "effect": "equalizer",
-      "speed": 1000
+      "effect": "marquee",
+      "speed": 30061,
+      "font_family": "sans-thin",
+      "font_size": 100,
+      "trigger_id": "1782488878571"
     },
-    "CEGQPY": {
+    "TRRB8I": {
       "bg_color": "#0B0B0F",
       "text": "GlowWave",
       "text_color": "#FFFFFF",
       "effect": "none",
-      "speed": 1000
+      "speed": 1000,
+      "trigger_id": "1782489017235"
     }
   }
 }

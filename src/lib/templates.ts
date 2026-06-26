@@ -138,7 +138,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '친구야 결혼 너무 축하해 💐',
         text_color: '#FFFFFF',
         effect: 'marquee',
-        speed: 14434,
+        speed: 30061,
         font_family: 'sans-thick',
         font_size: 100,
         special_effect: 'confetti'
@@ -168,7 +168,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '민간인 봉인 해제 🕊',
         text_color: '#FFFFFF',
         effect: 'marquee',
-        speed: 14434,
+        speed: 30061,
         font_family: 'sans-thick',
         font_size: 100,
         special_effect: 'stars'
@@ -198,7 +198,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '취뽀 성공! 출근 화이팅 🚀',
         text_color: '#38BDF8',
         effect: 'marquee',
-        speed: 14434,
+        speed: 30061,
         font_family: 'plump',
         font_size: 100,
         special_effect: 'stars'
@@ -295,7 +295,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '나의 가수라서 자랑스러워 🎤',
         text_color: '#FDE047',
         effect: 'marquee',
-        speed: 14434,
+        speed: 30061,
         font_family: 'serif',
         font_size: 100,
         special_effect: 'stars'
@@ -325,7 +325,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '인스타: @glowwave 📱',
         text_color: '#FFFFFF',
         effect: 'marquee',
-        speed: 14434,
+        speed: 30061,
         font_family: 'sans-thick',
         font_size: 100,
         special_effect: 'none'
@@ -345,7 +345,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '음악이 좋았다면 팁박스로 💰',
         text_color: '#22C55E',
         effect: 'marquee',
-        speed: 14434,
+        speed: 30061,
         font_family: 'sans-thick',
         font_size: 100,
         special_effect: 'none'
@@ -382,7 +382,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '날려라~ 홈런! ⚾',
         text_color: '#FDE047',
         effect: 'marquee',
-        speed: 14434,
+        speed: 30061,
         font_family: 'plump',
         font_size: 100,
         special_effect: 'stars'
@@ -509,7 +509,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: 'PARTY TONIGHT 🎉',
         text_color: '#FFFFFF',
         effect: 'marquee',
-        speed: 14434,
+        speed: 30061,
         font_family: 'plump',
         font_size: 100,
         special_effect: 'stars'
@@ -539,7 +539,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '오늘 집 안 간다 🏠❌',
         text_color: '#EF4444',
         effect: 'marquee',
-        speed: 14434,
+        speed: 30061,
         font_family: 'sans-thick',
         font_size: 100,
         special_effect: 'none'
@@ -636,7 +636,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: 'WIFI: GLOW_WAVE 📶',
         text_color: '#FFFFFF',
         effect: 'marquee',
-        speed: 14434,
+        speed: 30061,
         font_family: 'sans-thin',
         font_size: 100,
         special_effect: 'none'
@@ -666,7 +666,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         text: '테이크아웃 10% 할인 🥤',
         text_color: '#FDE047',
         effect: 'marquee',
-        speed: 14434,
+        speed: 30061,
         font_family: 'sans-thick',
         font_size: 100,
         special_effect: 'none'

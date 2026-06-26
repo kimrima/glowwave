@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import jsQR from 'jsqr';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import { TEMPLATE_CATEGORIES } from '@/lib/templates';
 import useFitText from '@/hooks/useFitText';
@@ -36,7 +37,7 @@ const defaults: Preset[] = [
   { bg_color: '#3B82F6', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1527, font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#FFFFFF', text: '사이키', text_color: '#EF4444', effect: 'blink', speed: 1527, bg_color_secondary: '#0B0B0F', font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1527, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100, lucky_draw_count: 1 },
-  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 11606, font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
 ];
 
@@ -141,6 +142,30 @@ export default function HostDashboard() {
   // Safety transmitter lock & miniature preview toggles
   const [isTransmitterLocked, setIsTransmitterLocked] = useState(false);
   const [showMiniPreviews, setShowMiniPreviews] = useState(true);
+
+  // Control & Share Modal states (Vault)
+  const [isVaultOpen, setIsVaultOpen] = useState(false);
+  const [vaultTab, setVaultTab] = useState<'slots' | 'share'>('slots');
+  const [savedSlots, setSavedSlots] = useState<{ name: string; presets: Preset[] }[]>([]);
+  const [newSlotName, setNewSlotName] = useState('');
+  const [shareMode, setShareMode] = useState<'send' | 'receive'>('send');
+
+  // QR and Code Sharing states
+  const [isSharingLoading, setIsSharingLoading] = useState(false);
+  const [exportCode, setExportCode] = useState('');
+  const [shareQrUrl, setShareQrUrl] = useState('');
+  const [shareCodeInput, setShareCodeInput] = useState('');
+  const [isCodeCopied, setIsCodeCopied] = useState(false);
+
+  // Camera QR scan states
+  const [isScanning, setIsScanning] = useState(false);
+  const scannerVideoRef = useRef<HTMLVideoElement | null>(null);
+  const scannerCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const scannerStreamRef = useRef<MediaStream | null>(null);
+
+  // Blackout Mode states
+  const [isBlackout, setIsBlackout] = useState(false);
+  const [lastActivePresetBeforeBlackout, setLastActivePresetBeforeBlackout] = useState<Preset | null>(null);
 
   const [activeCategory, setActiveCategory] = useState<'custom' | 'busking' | 'sports' | 'party' | 'anniversary' | 'store'>('custom');
 
@@ -603,6 +628,16 @@ export default function HostDashboard() {
         setCurrentBroadcastPreset(loadedPresets[0]);
       }
 
+      // Hydrate saved theme slots from localStorage for host vault
+      if (typeof window !== 'undefined') {
+        const savedPackages = localStorage.getItem('glowwave_host_slots');
+        if (savedPackages) {
+          try {
+            setSavedSlots(JSON.parse(savedPackages));
+          } catch (e) {}
+        }
+      }
+
       setIsAuthorized(true);
       setLoading(false);
 
@@ -820,9 +855,304 @@ export default function HostDashboard() {
     }
   };
 
+  // Helper to sync selected preset to live control panel inputs
+  const applyPresetToController = (preset: Preset) => {
+    setCustomText(preset.text);
+    setCustomBgColor(preset.bg_color);
+    setCustomTextColor(preset.text_color || '#FFFFFF');
+    setCustomFontSize(preset.font_size || 100);
+    setCustomFontFamily((preset.font_family as any) || 'sans-thin');
+    setCustomEffect(preset.effect || 'none');
+    setCustomSpeed(getSpeedFactor(preset.effect || 'none', preset.speed || 1000));
+    setCustomSpecialEffect(preset.special_effect || 'none');
+
+    if (preset.countdown_seconds) {
+      setCustomCountdownSeconds(preset.countdown_seconds);
+    } else {
+      setCustomCountdownSeconds(5);
+    }
+
+    if (preset.result_text) {
+      setCustomResultText(preset.result_text);
+    } else {
+      if (preset.effect === 'countdown') {
+        setCustomResultText('START');
+      } else if (preset.effect === 'luckydraw_wait' || preset.effect === 'luckydraw') {
+        setCustomResultText('아쉽네요! 다음 기회에..');
+      } else {
+        setCustomResultText('START');
+      }
+    }
+  };
+
+  // Slots Vault Handlers for Host
+  const handleSaveSlotPackage = () => {
+    const name = newSlotName.trim() || `저장된 테마 #${savedSlots.length + 1}`;
+    const newSlot = { name, presets: [...presets] };
+    const updated = [...savedSlots, newSlot];
+    setSavedSlots(updated);
+    localStorage.setItem('glowwave_host_slots', JSON.stringify(updated));
+    setNewSlotName('');
+  };
+
+  const handleLoadSlotPackage = (index: number) => {
+    const slot = savedSlots[index];
+    if (slot && slot.presets && slot.presets.length > 0) {
+      let presetsToLoad = slot.presets;
+      // Truncate to 6 presets on FREE tier
+      if (room?.tier === 'free' && presetsToLoad.length > 6) {
+        alert('무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 슬롯에서 상위 6개 프리셋만 불러왔습니다.');
+        presetsToLoad = presetsToLoad.slice(0, 6);
+      }
+      setPresets(presetsToLoad);
+      localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(presetsToLoad));
+      
+      // Update room state in Supabase so listeners get updated
+      if (isSupabaseConfigured() && supabase) {
+        supabase.from('rooms').update({ current_state: presetsToLoad[0] }).eq('id', roomId);
+      }
+
+      setCurrentBroadcastPreset(presetsToLoad[0]);
+      applyPresetToController(presetsToLoad[0]);
+      setActivePresetIndex(0);
+      setIsVaultOpen(false);
+    }
+  };
+
+  const handleDeleteSlotPackage = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('이 테마 보관 슬롯을 삭제하시겠습니까?')) {
+      const updated = savedSlots.filter((_, idx) => idx !== index);
+      setSavedSlots(updated);
+      localStorage.setItem('glowwave_host_slots', JSON.stringify(updated));
+    }
+  };
+
+  // Wireless Sharing Handlers for Host
+  const handleGenerateShareCode = async () => {
+    setIsSharingLoading(true);
+    setExportCode('');
+    setShareQrUrl('');
+    setIsCodeCopied(false);
+    try {
+      const res = await fetch('/api/preset-share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ presets: presets })
+      });
+      if (!res.ok) throw new Error('API failed');
+      const data = await res.json();
+      
+      setExportCode(data.shareKey);
+      const url = `${window.location.origin}/host/setup?import=${data.shareKey}`;
+      setShareQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`);
+    } catch (e) {
+      console.error(e);
+      alert('공유 코드 생성에 실패했습니다.');
+    } finally {
+      setIsSharingLoading(false);
+    }
+  };
+
+  const handleImportShareCode = async () => {
+    const code = shareCodeInput.trim().toUpperCase();
+    if (!code || code.length !== 6) {
+      alert('올바른 6자리 공유 코드를 입력하세요.');
+      return;
+    }
+
+    setIsSharingLoading(true);
+    try {
+      const res = await fetch(`/api/preset-share?key=${code}`);
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || '가져오기 실패');
+      }
+      const data = await res.json();
+      
+      if (Array.isArray(data.presets) && data.presets.length > 0) {
+        let presetsToImport = data.presets;
+        if (room?.tier === 'free' && presetsToImport.length > 6) {
+          alert('무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 공유받은 팩에서 상위 6개 프리셋만 가져왔습니다.');
+          presetsToImport = presetsToImport.slice(0, 6);
+        }
+        
+        setPresets(presetsToImport);
+        localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(presetsToImport));
+        setCurrentBroadcastPreset(presetsToImport[0]);
+        applyPresetToController(presetsToImport[0]);
+        setActivePresetIndex(0);
+        
+        setIsVaultOpen(false);
+        setShareCodeInput('');
+        alert('공유받은 프리셋을 정상적으로 동기화했습니다! 🎉');
+      } else {
+        throw new Error('올바르지 않은 프리셋 형식입니다.');
+      }
+    } catch (e: any) {
+      console.error(e);
+      alert(e.message || '가져오기에 실패했습니다. 만료된 코드인지 확인해 보세요.');
+    } finally {
+      setIsSharingLoading(false);
+    }
+  };
+
+  const handleCopyShareCodeText = () => {
+    if (!exportCode) return;
+    navigator.clipboard.writeText(exportCode);
+    setIsCodeCopied(true);
+    setTimeout(() => setIsCodeCopied(false), 2000);
+  };
+
+  // QR Code Scanner Mechanics for Host
+  const startScanning = async () => {
+    setIsScanning(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+      scannerStreamRef.current = stream;
+      if (scannerVideoRef.current) {
+        scannerVideoRef.current.srcObject = stream;
+        scannerVideoRef.current.setAttribute('playsinline', 'true');
+        scannerVideoRef.current.play();
+        requestAnimationFrame(tickScanner);
+      }
+    } catch (err) {
+      console.error('Camera access error:', err);
+      alert('카메라 접근 권한이 필요합니다. 브라우저 설정에서 카메라 권한을 허용해 주세요.');
+      setIsScanning(false);
+    }
+  };
+
+  const stopScanning = () => {
+    setIsScanning(false);
+    if (scannerStreamRef.current) {
+      scannerStreamRef.current.getTracks().forEach(track => track.stop());
+      scannerStreamRef.current = null;
+    }
+    if (scannerVideoRef.current) {
+      scannerVideoRef.current.srcObject = null;
+    }
+  };
+
+  const tickScanner = () => {
+    if (!scannerStreamRef.current) return;
+
+    const video = scannerVideoRef.current;
+    if (!video || video.readyState !== video.HAVE_ENOUGH_DATA) {
+      requestAnimationFrame(tickScanner);
+      return;
+    }
+
+    const canvas = scannerCanvasRef.current || document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) {
+      requestAnimationFrame(tickScanner);
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: 'dontInvert'
+    });
+
+    if (code) {
+      console.log('Scanned QR Code:', code.data);
+      let importKey = '';
+      try {
+        const url = new URL(code.data);
+        importKey = url.searchParams.get('import') || '';
+      } catch (e) {
+        const trimmed = code.data.trim().toUpperCase();
+        if (trimmed.length === 6 && /^[A-Z2-9]+$/.test(trimmed)) {
+          importKey = trimmed;
+        }
+      }
+
+      if (importKey) {
+        setShareCodeInput(importKey);
+        stopScanning();
+        setIsSharingLoading(true);
+        fetch(`/api/preset-share?key=${importKey.toUpperCase()}`)
+          .then(res => {
+            if (!res.ok) throw new Error('API failed');
+            return res.json();
+          })
+          .then(data => {
+            if (Array.isArray(data.presets) && data.presets.length > 0) {
+              let presetsToImport = data.presets;
+              if (room?.tier === 'free' && presetsToImport.length > 6) {
+                alert('무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 공유받은 팩에서 상위 6개 프리셋만 가져왔습니다.');
+                presetsToImport = presetsToImport.slice(0, 6);
+              }
+              setPresets(presetsToImport);
+              localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(presetsToImport));
+              setCurrentBroadcastPreset(presetsToImport[0]);
+              applyPresetToController(presetsToImport[0]);
+              setActivePresetIndex(0);
+              setIsVaultOpen(false);
+              setShareCodeInput('');
+              alert('공유받은 프리셋을 정상적으로 동기화했습니다! 🎉');
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            alert('가져오기에 실패했습니다. 만료된 코드이거나 네트워크 오류입니다.');
+          })
+          .finally(() => {
+            setIsSharingLoading(false);
+          });
+      } else {
+        requestAnimationFrame(tickScanner);
+      }
+    } else {
+      requestAnimationFrame(tickScanner);
+    }
+  };
+
+  // Blackout Mode Trigger for Host Dashboard
+  const handleBlackoutToggle = (value: boolean) => {
+    if (value) {
+      // Turn ON blackout
+      setLastActivePresetBeforeBlackout(currentBroadcastPreset);
+      const blackoutPreset: Preset = {
+        bg_color: '#000000',
+        text: '',
+        text_color: '#000000',
+        effect: 'none',
+        speed: 1000,
+        font_size: 100,
+        font_family: 'sans-thin',
+        special_effect: 'none',
+        trigger_id: 'blackout-' + Date.now().toString(),
+        blackout: true
+      };
+      setIsBlackout(true);
+      triggerPreset(blackoutPreset, -1);
+    } else {
+      // Turn OFF blackout
+      setIsBlackout(false);
+      if (lastActivePresetBeforeBlackout) {
+        triggerPreset(lastActivePresetBeforeBlackout, activePresetIndex !== null ? activePresetIndex : -1);
+      } else {
+        triggerPreset(presets[0] || defaults[0], 0);
+      }
+    }
+  };
+
   // 4. Trigger Preset Broadcast Signal
   const triggerPreset = async (preset: Preset, index: number) => {
     if (!roomId || !token) return;
+
+    // Turn off blackout automatically if sending a non-blackout preset
+    if (isBlackout && !preset.blackout) {
+      setIsBlackout(false);
+    }
 
     // Inject unique trigger_id for animation & countdown reset
     const presetWithTrigger: Preset = {
@@ -832,6 +1162,9 @@ export default function HostDashboard() {
 
     setActivePresetIndex(index);
     setCurrentBroadcastPreset(presetWithTrigger);
+    
+    // Synchronize to custom live controller inputs
+    applyPresetToController(presetWithTrigger);
 
     if (isSupabaseConfigured() && supabaseChannelRef.current && supabase) {
       // Send directly over WebSockets in-memory broadcast
@@ -1049,17 +1382,26 @@ export default function HostDashboard() {
             <span className="font-black text-white tracking-tight font-outfit text-sm uppercase">GlowWave Host Remote</span>
           </div>
           
-          <button 
-            onClick={() => {
-              if (confirm("정말 대시보드(리모컨)에서 나가시겠습니까?\n현재 실시간으로 연출 중인 전광판 송출이 중단되지는 않지만, 대시보드 제어 세션이 닫히니다.")) {
-                router.push('/');
-              }
-            }}
-            className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-            title="나가기"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIsVaultOpen(true)}
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-[0_0_15px_rgba(99,102,241,0.3)] cursor-pointer"
+            >
+              <span>보관 & 공유 📦</span>
+            </button>
+            
+            <button 
+              onClick={() => {
+                if (confirm("정말 대시보드(리모컨)에서 나가시겠습니까?\n현재 실시간으로 연출 중인 전광판 송출이 중단되지는 않지만, 대시보드 제어 세션이 닫힙니다.")) {
+                  router.push('/');
+                }
+              }}
+              className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all"
+              title="나가기"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -1173,18 +1515,18 @@ export default function HostDashboard() {
           <div className="flex items-center gap-3">
             <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">시스템 연결 상태</span>
             {channelStatus === 'connected' ? (
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/[0.04] border border-emerald-500/25 text-emerald-400 text-xs font-semibold tracking-wider backdrop-blur-md shadow-sm">
-                <span className="relative flex h-1.5 w-1.5">
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/30 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
                 <span>연결됨</span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/[0.04] border border-amber-500/25 text-amber-400 text-xs font-semibold tracking-wider backdrop-blur-md shadow-sm">
-                <span className="relative flex h-1.5 w-1.5">
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-950/30 border border-amber-500/30 text-amber-400 text-xs font-bold tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                 </span>
                 <span>연결 중</span>
               </div>
@@ -1207,12 +1549,13 @@ export default function HostDashboard() {
                 <h2 className="text-sm font-bold text-white font-outfit">원터치 연출 보드 (Quick Preset Board)</h2>
               </div>
               
+              {/* 3 Toggle Controls next to 원터치 연출 보드 */}
               <div className="flex flex-wrap items-center gap-2">
-                {/* 6 Preset Miniature Previews Toggle */}
+                {/* 1. 카드 미리보기 */}
                 <button
                   type="button"
                   onClick={() => setShowMiniPreviews(prev => !prev)}
-                  className="flex items-center gap-1.5 bg-white/[0.02] border border-white/5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
+                  className="flex items-center gap-1.5 bg-white/[0.02] border border-white/5 px-2.5 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
                 >
                   <span>카드 미리보기</span>
                   <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${showMiniPreviews ? 'bg-indigo-500' : 'bg-zinc-700'}`}>
@@ -1220,15 +1563,35 @@ export default function HostDashboard() {
                   </div>
                 </button>
 
-                {/* Safety Transmission Lock Toggle */}
+                {/* 2. 송출/수정 모드 토글 */}
                 <button
                   type="button"
                   onClick={() => setIsTransmitterLocked(prev => !prev)}
-                  className="flex items-center gap-1.5 bg-white/[0.02] border border-white/5 px-2 py-1 sm:px-3 sm:py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
+                  className={`flex items-center gap-1.5 border px-2.5 py-1.5 rounded-xl text-[10px] font-bold cursor-pointer select-none transition-all ${
+                    !isTransmitterLocked 
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]' 
+                      : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                  }`}
                 >
-                  <span>실시간 송출</span>
-                  <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${!isTransmitterLocked ? 'bg-emerald-500' : 'bg-zinc-700'}`}>
+                  <span>{!isTransmitterLocked ? '원터치 바로송출 ⚡' : '클릭 시 수정모드 ✏️'}</span>
+                  <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${!isTransmitterLocked ? 'bg-emerald-500' : 'bg-amber-500'}`}>
                     <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${!isTransmitterLocked ? 'translate-x-3.5' : 'translate-x-0'}`} />
+                  </div>
+                </button>
+
+                {/* 3. 화면 암전 🌑 토글 */}
+                <button
+                  type="button"
+                  onClick={() => handleBlackoutToggle(!isBlackout)}
+                  className={`flex items-center gap-1.5 border px-2.5 py-1.5 rounded-xl text-[10px] font-bold cursor-pointer select-none transition-all ${
+                    isBlackout 
+                      ? 'bg-red-950/40 border-red-500/40 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.25)]' 
+                      : 'bg-white/[0.02] border border-white/5 text-zinc-300 hover:text-white'
+                  }`}
+                >
+                  <span>화면 암전 🌑</span>
+                  <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${isBlackout ? 'bg-red-500' : 'bg-zinc-700'}`}>
+                    <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${isBlackout ? 'translate-x-3.5' : 'translate-x-0'}`} />
                   </div>
                 </button>
               </div>
@@ -3049,6 +3412,251 @@ export default function HostDashboard() {
                   {isPasscodeUpdating ? '저장 중...' : '저장 완료'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vault (보관 & 공유) Modal */}
+      {isVaultOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-[#12121a] border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl relative flex flex-col max-h-[85vh]">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <span>보관 & 공유 📦</span>
+              </h3>
+              <button 
+                onClick={() => {
+                  stopScanning();
+                  setIsVaultOpen(false);
+                }}
+                className="p-1 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Tabs */}
+            <div className="flex border-b border-white/5 bg-black/20">
+              <button
+                type="button"
+                onClick={() => {
+                  stopScanning();
+                  setVaultTab('slots');
+                }}
+                className={`flex-1 py-3 text-xs font-bold transition-all cursor-pointer ${
+                  vaultTab === 'slots' 
+                    ? 'text-white border-b-2 border-indigo-500 bg-white/[0.02]' 
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                내 기기에 보관
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setVaultTab('share');
+                }}
+                className={`flex-1 py-3 text-xs font-bold transition-all cursor-pointer ${
+                  vaultTab === 'share' 
+                    ? 'text-white border-b-2 border-indigo-500 bg-white/[0.02]' 
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                무선 전송
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto flex-1">
+              {vaultTab === 'slots' ? (
+                <div className="space-y-6">
+                  <div>
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">현재 연출팩 저장</span>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newSlotName}
+                        onChange={(e) => setNewSlotName(e.target.value.slice(0, 15))}
+                        placeholder="저장할 테마 이름 입력"
+                        className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:bg-black/50 text-sm font-semibold transition-colors"
+                        maxLength={15}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveSlotPackage}
+                        className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer select-none"
+                      >
+                        저장
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-zinc-500 mt-1.5 leading-relaxed">
+                      💡 현재 원터치 연출 보드에 있는 프리셋들이 이 브라우저의 보관함에 슬롯으로 안전하게 저장됩니다.
+                    </p>
+                  </div>
+
+                  <div className="border-t border-white/5 pt-4">
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-3">저장된 테마 슬롯 목록</span>
+                    {savedSlots.length === 0 ? (
+                      <div className="text-center py-8 border border-dashed border-white/5 rounded-2xl bg-black/10">
+                        <p className="text-xs text-zinc-500 font-bold">보관된 슬롯이 없습니다.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
+                        {savedSlots.map((slot, index) => (
+                          <div 
+                            key={index}
+                            onClick={() => handleLoadSlotPackage(index)}
+                            className="group flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all cursor-pointer"
+                          >
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-xs font-bold text-white truncate">{slot.name}</span>
+                              <span className="text-[9px] text-indigo-400 font-bold mt-0.5">{slot.presets.length}개의 프리셋</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteSlotPackage(index, e)}
+                              className="p-1.5 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Share mode selector (Send or Receive) */}
+                  <div className="grid grid-cols-2 gap-2 bg-black/20 p-1.5 rounded-xl border border-white/5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        stopScanning();
+                        setShareMode('send');
+                      }}
+                      className={`py-2 text-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        shareMode === 'send' 
+                          ? 'bg-indigo-600 text-white shadow-md' 
+                          : 'text-zinc-500 hover:text-zinc-300'
+                      }`}
+                    >
+                      전송하기 (내보내기)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShareMode('receive');
+                      }}
+                      className={`py-2 text-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        shareMode === 'receive' 
+                          ? 'bg-indigo-600 text-white shadow-md' 
+                          : 'text-zinc-500 hover:text-zinc-300'
+                      }`}
+                    >
+                      가져오기
+                    </button>
+                  </div>
+
+                  {shareMode === 'send' ? (
+                    <div className="space-y-5 flex flex-col items-center">
+                      <div className="text-center">
+                        <p className="text-xs font-bold text-zinc-300">현재 원터치 연출 보드의 프리셋을 다른 기기로 무선 공유합니다.</p>
+                        <p className="text-[10px] text-zinc-500 mt-1 font-bold">공유 코드는 생성 시점으로부터 24시간 동안 유효합니다.</p>
+                      </div>
+
+                      {exportCode ? (
+                        <div className="space-y-5 w-full flex flex-col items-center">
+                          {/* 6 Digit Code Display */}
+                          <div className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-center relative group">
+                            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">무선 공유 코드</span>
+                            <span className="text-3xl font-mono font-black text-indigo-400 select-all tracking-wider">{exportCode}</span>
+                            <button
+                              type="button"
+                              onClick={handleCopyShareCodeText}
+                              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-all cursor-pointer"
+                              title="코드 복사"
+                            >
+                              {isCodeCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                            </button>
+                          </div>
+
+                          {/* QR Code */}
+                          {shareQrUrl && (
+                            <div className="bg-white p-4 rounded-2xl flex items-center justify-center shadow-lg">
+                              <img src={shareQrUrl} alt="Preset Share QR Code" className="w-40 h-40" />
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleGenerateShareCode}
+                          disabled={isSharingLoading}
+                          className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/20 active:scale-98 transition-all disabled:opacity-50 cursor-pointer"
+                        >
+                          {isSharingLoading ? '코드 생성 중...' : '무선 공유 코드 생성 ⚡'}
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-5">
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">공유 코드로 가져오기</span>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={shareCodeInput}
+                            onChange={(e) => setShareCodeInput(e.target.value.slice(0, 6))}
+                            placeholder="6자리 공유 코드 입력 (예: AB3D9E)"
+                            className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white uppercase focus:outline-none focus:border-indigo-500 focus:bg-black/50 text-sm font-semibold tracking-wider font-mono transition-colors"
+                            maxLength={6}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleImportShareCode}
+                            disabled={isSharingLoading}
+                            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                          >
+                            불러오기
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* QR Scan Area */}
+                      <div className="border-t border-white/5 pt-4 space-y-4">
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">QR 코드로 가져오기</span>
+                        {isScanning ? (
+                          <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-white/10 bg-black flex items-center justify-center">
+                            <video ref={scannerVideoRef} className="absolute inset-0 w-full h-full object-cover" />
+                            <canvas ref={scannerCanvasRef} className="hidden" />
+                            <div className="absolute inset-0 border-2 border-indigo-500/50 m-8 rounded-xl pointer-events-none animate-pulse flex items-center justify-center">
+                              <div className="w-full h-0.5 bg-indigo-500 shadow-[0_0_10px_#6366f1]" style={{ animation: 'scanner-sweep 2s linear infinite' }} />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={stopScanning}
+                              className="absolute bottom-4 px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer"
+                            >
+                              스캔 중단
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={startScanning}
+                            className="w-full py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                          >
+                            <span>카메라로 QR 코드 스캔 📷</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
