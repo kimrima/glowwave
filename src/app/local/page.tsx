@@ -941,13 +941,14 @@ function LocalSignboardContent() {
               </div>
 
               {/* Controls Grid */}
-              <div className="flex flex-col gap-6 pt-3.5 border-t border-white/5">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              <div className="flex flex-col gap-6 pt-5 border-t border-white/5">
+                {/* Row 1: Theme, Text Color, Text Size */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 items-start">
                   
                   {/* 배경 테마 */}
-                  <div className="lg:col-span-3 flex flex-col gap-1.5">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">배경 테마</span>
-                    <div className="flex flex-wrap items-center gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 min-h-10">
+                  <div className="lg:col-span-4 flex flex-col gap-2">
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">배경 테마</span>
+                    <div className="flex flex-wrap items-center gap-2 bg-black/45 p-2 rounded-xl border border-white/5 min-h-12">
                       {[
                         '#EF4444', '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#EC4899', '#FFFFFF', '#0B0B0F'
                       ].map((hex) => (
@@ -958,7 +959,7 @@ function LocalSignboardContent() {
                             setCustomBgColor(hex);
                             setCustomTextColor(hex === '#FFFFFF' ? '#000000' : '#FFFFFF');
                           }}
-                          className={`w-5 h-5 rounded-full border cursor-pointer transition-all ${
+                          className={`w-6.5 h-6.5 rounded-full border cursor-pointer transition-all ${
                             customBgColor === hex
                               ? 'border-white scale-110 shadow-md'
                               : hex === '#0B0B0F'
@@ -970,7 +971,7 @@ function LocalSignboardContent() {
                       ))}
                       
                       <div 
-                        className="w-5 h-5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0" 
+                        className="w-6.5 h-6.5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0" 
                         style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
                         title="커스텀 색상 선택"
                       >
@@ -985,9 +986,9 @@ function LocalSignboardContent() {
                   </div>
 
                   {/* 글자 색상 */}
-                  <div className="lg:col-span-3 flex flex-col gap-1.5">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">글자 색상</span>
-                    <div className="flex flex-wrap items-center gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 min-h-10">
+                  <div className="lg:col-span-4 flex flex-col gap-2">
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">글자 색상</span>
+                    <div className="flex flex-wrap items-center gap-2 bg-black/45 p-2 rounded-xl border border-white/5 min-h-12">
                       {[
                         '#FFFFFF', '#000000', '#FFD700', '#EF4444', '#10B981', '#3B82F6'
                       ].map((hex) => (
@@ -995,7 +996,7 @@ function LocalSignboardContent() {
                           key={hex}
                           type="button"
                           onClick={() => setCustomTextColor(hex)}
-                          className={`w-5 h-5 rounded-full border cursor-pointer transition-all ${
+                          className={`w-6.5 h-6.5 rounded-full border cursor-pointer transition-all ${
                             customTextColor === hex
                               ? 'border-white scale-110 shadow-md'
                               : hex === '#000000'
@@ -1006,31 +1007,29 @@ function LocalSignboardContent() {
                         />
                       ))}
                       
-                      {/* Custom Color Palette (PRO Gate) */}
+                      {/* Custom Color Palette */}
                       <div 
-                        className="w-5 h-5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0 flex items-center justify-center" 
+                        className="w-6.5 h-6.5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0" 
                         style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
-                        title="커스텀 글자 색상 선택 (PRO)"
-                        onClick={() => {
-                          if (confirm('커스텀 글자 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?')) {
-                            router.push('/host/setup?import=premium');
-                          }
-                        }}
+                        title="커스텀 글자 색상 선택"
                       >
-                        <span className="text-[5px] font-black text-white bg-violet-600 border border-violet-400 rounded-[2px] px-0.5 scale-90">
-                          PRO
-                        </span>
+                        <input
+                          type="color"
+                          value={customTextColor}
+                          onChange={(e) => setCustomTextColor(e.target.value)}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+                        />
                       </div>
                     </div>
                   </div>
 
                   {/* 글자 크기 */}
-                  <div className="lg:col-span-2 flex flex-col gap-1.5">
-                    <div className="flex justify-between text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                  <div className="lg:col-span-4 flex flex-col gap-2">
+                    <div className="flex justify-between text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">
                       <span>글자 크기</span>
                       <span className="text-indigo-400 font-extrabold">{customFontSize}%</span>
                     </div>
-                    <div className="flex items-center bg-black/45 px-3 rounded-xl border border-white/5 h-10">
+                    <div className="flex items-center bg-black/45 px-3 rounded-xl border border-white/5 h-12">
                       <input
                         type="range"
                         min="30"
@@ -1041,11 +1040,14 @@ function LocalSignboardContent() {
                       />
                     </div>
                   </div>
+                </div>
 
+                {/* Row 2: Font Style, Motion Effect */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-5 border-t border-white/5">
                   {/* 글꼴 스타일 */}
-                  <div className="lg:col-span-4 flex flex-col gap-1.5">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">글꼴 스타일</span>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 items-center">
+                  <div className="lg:col-span-6 flex flex-col gap-2">
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">글꼴 스타일</span>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 items-center">
                       {[
                         { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', sans-serif", fontWeight: 700 } },
                         { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
@@ -1059,7 +1061,7 @@ function LocalSignboardContent() {
                           type="button"
                           onClick={() => handleFontSelect(item.val as any, false)}
                           style={item.style}
-                          className={`py-2.5 px-0.5 rounded-lg text-[10px] transition-all cursor-pointer ${
+                          className={`py-2 px-0.5 rounded-lg text-xs md:text-sm transition-all cursor-pointer whitespace-nowrap ${
                             customFontFamily === item.val
                               ? 'bg-white text-black font-extrabold shadow-sm'
                               : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
@@ -1070,14 +1072,11 @@ function LocalSignboardContent() {
                       ))}
                     </div>
                   </div>
-                </div>
 
-                {/* Row 2: Motion Effect, Special Effect */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-4 border-t border-white/5">
                   {/* 모션 효과 */}
-                  <div className="lg:col-span-4 flex flex-col gap-1.5">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">모션 효과</span>
-                    <div className="grid grid-cols-5 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 h-10 items-center">
+                  <div className="lg:col-span-6 flex flex-col gap-2">
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">모션 효과</span>
+                    <div className="grid grid-cols-5 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 h-12 items-center">
                       {[
                         { val: 'none', label: '정적' },
                         { val: 'blink', label: '깜빡' },
@@ -1092,7 +1091,7 @@ function LocalSignboardContent() {
                             setCustomEffect(item.val as any);
                             setCustomSpeed(getSpeedFactor(item.val as any, 1000));
                           }}
-                          className={`h-full rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          className={`h-full rounded-lg text-xs md:text-sm font-bold transition-all cursor-pointer ${
                             customEffect === item.val
                               ? 'bg-white text-black font-extrabold shadow-sm'
                               : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
@@ -1103,11 +1102,14 @@ function LocalSignboardContent() {
                       ))}
                     </div>
                   </div>
+                </div>
 
+                {/* Row 3: Special Effect */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-5 border-t border-white/5">
                   {/* 특수 효과 */}
-                  <div className="lg:col-span-8 flex flex-col gap-1.5">
-                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">특수 효과</span>
-                    <div className="grid grid-cols-4 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 items-center min-h-10">
+                  <div className="lg:col-span-12 flex flex-col gap-2">
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">특수 효과</span>
+                    <div className="grid grid-cols-4 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 items-center min-h-12">
                       {[
                         { val: 'none', label: '없음' },
                         { val: 'hearts', label: '하트' },
@@ -1118,7 +1120,7 @@ function LocalSignboardContent() {
                           key={item.val}
                           type="button"
                           onClick={() => setCustomSpecialEffect(item.val as any)}
-                          className={`py-2 px-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          className={`py-2 px-0.5 rounded-lg text-xs md:text-sm font-bold transition-all cursor-pointer ${
                             customSpecialEffect === item.val
                               ? 'bg-white text-black font-extrabold shadow-sm'
                               : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
@@ -1554,20 +1556,21 @@ function LocalSignboardContent() {
                       );
                     })}
 
-                    {/* Custom Color Palette (PRO Gate) */}
+                    {/* Custom Color Palette */}
                     <div 
                       className="h-9 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center" 
                       style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
-                      title="커스텀 글자 색상 선택 (PRO)"
-                      onClick={() => {
-                        if (confirm('커스텀 글자 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?')) {
-                          router.push('/host/setup?import=premium');
-                        }
-                      }}
+                      title="커스텀 글자 색상 선택"
                     >
-                      <span className="text-[5px] font-black text-white bg-violet-600 border border-violet-400 rounded-[2px] px-0.5 scale-90">
-                        PRO
-                      </span>
+                      <input
+                        type="color"
+                        value={editingPreset.text_color}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, text_color: e.target.value }))}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+                      />
+                      {!['#FFFFFF', '#000000', '#FFD700', '#EF4444', '#10B981', '#3B82F6'].includes(editingPreset.text_color) && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                      )}
                     </div>
                   </div>
                 </div>
