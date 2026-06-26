@@ -128,6 +128,7 @@ export default function HostDashboard() {
   // Custom instant message state values
   const [customText, setCustomText] = useState('GLOW WAVE');
   const [customBgColor, setCustomBgColor] = useState('#EF4444');
+  const [customTextColor, setCustomTextColor] = useState('#FFFFFF');
   const [customFontSize, setCustomFontSize] = useState<number>(100);
   const [customFontFamily, setCustomFontFamily] = useState<'sans-thin' | 'sans-thick' | 'serif' | 'neon' | 'pixel' | 'plump'>('sans-thin');
   const [customEffect, setCustomEffect] = useState<EffectType>('none');
@@ -1454,13 +1455,12 @@ export default function HostDashboard() {
                 <button
                   type="button"
                   onClick={() => {
-                    const isWhite = customBgColor === '#FFFFFF';
                     const calculatedSpeed = getSpeedMs(customEffect, customSpeed);
                     
                     const customPreset: Preset = {
                       bg_color: customBgColor,
                       text: customText.trim() || 'GLOW WAVE',
-                      text_color: isWhite ? '#000000' : '#FFFFFF',
+                      text_color: customTextColor,
                       effect: customEffect,
                       speed: calculatedSpeed,
                       font_size: customFontSize,
@@ -1489,18 +1489,23 @@ export default function HostDashboard() {
                         <button
                           key={hex}
                           type="button"
-                          onClick={() => setCustomBgColor(hex)}
+                          onClick={() => {
+                            setCustomBgColor(hex);
+                            setCustomTextColor(hex === '#FFFFFF' ? '#000000' : '#FFFFFF');
+                          }}
                           className={`w-5 h-5 rounded-full border cursor-pointer transition-all ${
                             customBgColor === hex
                               ? 'border-white scale-110 shadow-md'
-                              : 'border-transparent hover:scale-105'
+                              : hex === '#0B0B0F'
+                                ? 'border-white/25 hover:scale-105'
+                                : 'border-transparent hover:scale-105'
                           }`}
                           style={{ backgroundColor: hex }}
                         />
                       ))}
                       
-                      {/* Custom Color Picker for Paid Tiers */}
-                      {room?.tier !== 'free' && (
+                      {/* Custom Color Picker for Paid Tiers / PRO Warning for Free Tiers */}
+                      {room?.tier !== 'free' ? (
                         <div 
                           className="w-5 h-5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0" 
                           style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
@@ -1513,12 +1518,86 @@ export default function HostDashboard() {
                             className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
                           />
                         </div>
+                      ) : (
+                        <div 
+                          className="w-5 h-5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0 flex items-center justify-center" 
+                          style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                          title="커스텀 배경 색상 선택 (PRO)"
+                          onClick={() => {
+                            if (confirm('커스텀 배경 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?')) {
+                              setSelectedUpgradeTier(null);
+                              setUpgradeStep('select');
+                              setIsUpgradeModalOpen(true);
+                            }
+                          }}
+                        >
+                          <span className="text-[5px] font-black text-white bg-violet-600 border border-violet-400 rounded-[2px] px-0.5 scale-90">
+                            PRO
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 글자 색상 */}
+                  <div className="lg:col-span-3 flex flex-col gap-1.5">
+                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">글자 색상</span>
+                    <div className="flex flex-wrap items-center gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 min-h-10">
+                      {[
+                        '#FFFFFF', '#000000', '#FFD700', '#EF4444', '#10B981', '#3B82F6'
+                      ].map((hex) => (
+                        <button
+                          key={hex}
+                          type="button"
+                          onClick={() => setCustomTextColor(hex)}
+                          className={`w-5 h-5 rounded-full border cursor-pointer transition-all ${
+                            customTextColor === hex
+                              ? 'border-white scale-110 shadow-md'
+                              : hex === '#000000'
+                                ? 'border-white/25 hover:scale-105'
+                                : 'border-transparent hover:scale-105'
+                          }`}
+                          style={{ backgroundColor: hex }}
+                        />
+                      ))}
+                      
+                      {/* Custom Color Palette (PRO Gate) */}
+                      {room?.tier !== 'free' ? (
+                        <div 
+                          className="w-5 h-5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0" 
+                          style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                          title="커스텀 글자 색상 선택"
+                        >
+                          <input
+                            type="color"
+                            value={customTextColor}
+                            onChange={(e) => setCustomTextColor(e.target.value)}
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+                          />
+                        </div>
+                      ) : (
+                        <div 
+                          className="w-5 h-5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0 flex items-center justify-center" 
+                          style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                          title="커스텀 글자 색상 선택 (PRO)"
+                          onClick={() => {
+                            if (confirm('커스텀 글자 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?')) {
+                              setSelectedUpgradeTier(null);
+                              setUpgradeStep('select');
+                              setIsUpgradeModalOpen(true);
+                            }
+                          }}
+                        >
+                          <span className="text-[5px] font-black text-white bg-violet-600 border border-violet-400 rounded-[2px] px-0.5 scale-90">
+                            PRO
+                          </span>
+                        </div>
                       )}
                     </div>
                   </div>
 
                   {/* 글자 크기 (30% ~ 100% Range Slider) */}
-                  <div className="lg:col-span-3 flex flex-col gap-1.5">
+                  <div className="lg:col-span-2 flex flex-col gap-1.5">
                     <div className="flex justify-between text-[10px] font-black text-zinc-500 uppercase tracking-widest">
                       <span>글자 크기</span>
                       <span className="text-indigo-400 font-extrabold">{customFontSize}%</span>
@@ -1536,7 +1615,7 @@ export default function HostDashboard() {
                   </div>
 
                   {/* 글꼴 스타일 */}
-                  <div className="lg:col-span-6 flex flex-col gap-1.5">
+                  <div className="lg:col-span-4 flex flex-col gap-1.5">
                     <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">글꼴 스타일</span>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 items-center">
                       {[

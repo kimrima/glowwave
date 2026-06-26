@@ -20,10 +20,10 @@ import useFitText from '@/hooks/useFitText';
 // Host-aligned default presets for standalone local mode
 const defaults: Preset[] = [
   { bg_color: '#0B0B0F', text: '단색', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#3B82F6', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1000, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#FFFFFF', text: '사이키', text_color: '#EF4444', effect: 'blink', speed: 1527, bg_color_secondary: '#0B0B0F', font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1527, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100, lucky_draw_count: 1 },
-  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 11606, font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#3B82F6', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#FFFFFF', text: '사이키', text_color: '#EF4444', effect: 'blink', speed: 1921, bg_color_secondary: '#0B0B0F', font_family: 'sans-thin', font_size: 100 },
+  { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1921, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100, lucky_draw_count: 1 },
+  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 14434, font_family: 'sans-thin', font_size: 100 },
   { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
 ];
 
@@ -105,10 +105,11 @@ function LocalSignboardContent() {
   // Custom live editor states
   const [customText, setCustomText] = useState('GLOW WAVE');
   const [customBgColor, setCustomBgColor] = useState('#EF4444');
+  const [customTextColor, setCustomTextColor] = useState('#FFFFFF');
   const [customFontSize, setCustomFontSize] = useState<number>(100);
   const [customFontFamily, setCustomFontFamily] = useState<'sans-thin' | 'sans-thick' | 'serif' | 'neon' | 'pixel' | 'plump'>('sans-thin');
   const [customEffect, setCustomEffect] = useState<EffectType>('none');
-  const [customSpeed, setCustomSpeed] = useState(25); // Range 1 to 100
+  const [customSpeed, setCustomSpeed] = useState(5); // Range 1 to 100
   const [customSpecialEffect, setCustomSpecialEffect] = useState<'none' | 'hearts' | 'confetti' | 'stars'>('none');
 
   // Control & Share Modal
@@ -383,6 +384,7 @@ function LocalSignboardContent() {
   const applyPresetToController = (preset: Preset) => {
     setCustomText(preset.text);
     setCustomBgColor(preset.bg_color);
+    setCustomTextColor(preset.text_color || '#FFFFFF');
     setCustomFontSize(preset.font_size || 100);
     setCustomFontFamily((preset.font_family as any) || 'sans-thin');
     setCustomEffect(preset.effect || 'none');
@@ -431,11 +433,10 @@ function LocalSignboardContent() {
   };
 
   const handleSaveLocalPreset = () => {
-    const isWhite = customBgColor === '#FFFFFF';
     const newPreset: Preset = {
       bg_color: customBgColor,
       text: customText.trim() || 'GLOW WAVE',
-      text_color: isWhite ? '#000000' : '#FFFFFF',
+      text_color: customTextColor,
       effect: customEffect,
       speed: getSpeedMs(customEffect, customSpeed),
       font_size: customFontSize,
@@ -620,11 +621,19 @@ function LocalSignboardContent() {
       {/* Header */}
       <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="font-black text-white tracking-tight font-outfit text-sm uppercase">GlowWave Local</span>
-            <span className="text-[10px] px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20 font-black tracking-wider uppercase">
-              1인 모드
-            </span>
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/"
+              className="text-zinc-400 hover:text-white transition-all text-xs font-extrabold flex items-center gap-1.5 cursor-pointer select-none bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 shadow-sm"
+            >
+              ← 뒤로가기
+            </Link>
+            <div className="flex items-center gap-2.5">
+              <span className="font-black text-white tracking-tight font-outfit text-sm uppercase">GlowWave Local</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20 font-black tracking-wider uppercase">
+                1인 모드
+              </span>
+            </div>
           </div>
 
           <button
@@ -911,13 +920,12 @@ function LocalSignboardContent() {
                 <button
                   type="button"
                   onClick={() => {
-                    const isWhite = customBgColor === '#FFFFFF';
                     const calculatedSpeed = getSpeedMs(customEffect, customSpeed);
                     
                     const customPreset: Preset = {
                       bg_color: customBgColor,
                       text: customText.trim() || 'GLOW WAVE',
-                      text_color: isWhite ? '#000000' : '#FFFFFF',
+                      text_color: customTextColor,
                       effect: customEffect,
                       speed: calculatedSpeed,
                       font_size: customFontSize,
@@ -946,11 +954,16 @@ function LocalSignboardContent() {
                         <button
                           key={hex}
                           type="button"
-                          onClick={() => setCustomBgColor(hex)}
+                          onClick={() => {
+                            setCustomBgColor(hex);
+                            setCustomTextColor(hex === '#FFFFFF' ? '#000000' : '#FFFFFF');
+                          }}
                           className={`w-5 h-5 rounded-full border cursor-pointer transition-all ${
                             customBgColor === hex
                               ? 'border-white scale-110 shadow-md'
-                              : 'border-transparent hover:scale-105'
+                              : hex === '#0B0B0F'
+                                ? 'border-white/25 hover:scale-105'
+                                : 'border-transparent hover:scale-105'
                           }`}
                           style={{ backgroundColor: hex }}
                         />
@@ -971,8 +984,48 @@ function LocalSignboardContent() {
                     </div>
                   </div>
 
-                  {/* 글자 크기 */}
+                  {/* 글자 색상 */}
                   <div className="lg:col-span-3 flex flex-col gap-1.5">
+                    <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">글자 색상</span>
+                    <div className="flex flex-wrap items-center gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 min-h-10">
+                      {[
+                        '#FFFFFF', '#000000', '#FFD700', '#EF4444', '#10B981', '#3B82F6'
+                      ].map((hex) => (
+                        <button
+                          key={hex}
+                          type="button"
+                          onClick={() => setCustomTextColor(hex)}
+                          className={`w-5 h-5 rounded-full border cursor-pointer transition-all ${
+                            customTextColor === hex
+                              ? 'border-white scale-110 shadow-md'
+                              : hex === '#000000'
+                                ? 'border-white/25 hover:scale-105'
+                                : 'border-transparent hover:scale-105'
+                          }`}
+                          style={{ backgroundColor: hex }}
+                        />
+                      ))}
+                      
+                      {/* Custom Color Palette (PRO Gate) */}
+                      <div 
+                        className="w-5 h-5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0 flex items-center justify-center" 
+                        style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                        title="커스텀 글자 색상 선택 (PRO)"
+                        onClick={() => {
+                          if (confirm('커스텀 글자 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?')) {
+                            router.push('/host/setup?import=premium');
+                          }
+                        }}
+                      >
+                        <span className="text-[5px] font-black text-white bg-violet-600 border border-violet-400 rounded-[2px] px-0.5 scale-90">
+                          PRO
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 글자 크기 */}
+                  <div className="lg:col-span-2 flex flex-col gap-1.5">
                     <div className="flex justify-between text-[10px] font-black text-zinc-500 uppercase tracking-widest">
                       <span>글자 크기</span>
                       <span className="text-indigo-400 font-extrabold">{customFontSize}%</span>
@@ -990,7 +1043,7 @@ function LocalSignboardContent() {
                   </div>
 
                   {/* 글꼴 스타일 */}
-                  <div className="lg:col-span-6 flex flex-col gap-1.5">
+                  <div className="lg:col-span-4 flex flex-col gap-1.5">
                     <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">글꼴 스타일</span>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 bg-black/45 p-1 rounded-xl border border-white/5 items-center">
                       {[
@@ -1224,6 +1277,7 @@ function LocalSignboardContent() {
                     ].map((hex) => {
                       const isSelected = editingPreset.bg_color === hex;
                       const dotColor = hex === '#FFFFFF' ? '#000000' : '#FFFFFF';
+                      const isDark = hex === '#0B0B0F';
                       return (
                         <button
                           key={hex}
@@ -1232,7 +1286,7 @@ function LocalSignboardContent() {
                           className={`h-9 rounded-lg border cursor-pointer transition-all relative flex items-center justify-center ${
                             isSelected 
                               ? 'border-white scale-105 shadow-md' 
-                              : 'border-white/10 hover:border-white/30'
+                              : `border-white/10 hover:border-white/30 ${isDark ? 'border-white/25 bg-black' : ''}`
                           }`}
                           style={{ backgroundColor: hex }}
                         >
@@ -1341,6 +1395,7 @@ function LocalSignboardContent() {
                       ].map((hex) => {
                         const isSelected = editingPreset.bg_color_secondary === hex;
                         const dotColor = hex === '#FFFFFF' ? '#000000' : '#FFFFFF';
+                        const isDark = hex === '#0B0B0F';
                         return (
                           <button
                             key={hex}
@@ -1349,7 +1404,7 @@ function LocalSignboardContent() {
                             className={`h-9 rounded-lg border cursor-pointer transition-all relative flex items-center justify-center ${
                               isSelected 
                                 ? 'border-white scale-105 shadow-md' 
-                                : 'border-white/10 hover:border-white/30'
+                                : `border-white/10 hover:border-white/30 ${isDark ? 'border-white/25 bg-black' : ''}`
                             }`}
                             style={{ backgroundColor: hex }}
                           >
@@ -1473,26 +1528,47 @@ function LocalSignboardContent() {
                 {/* 글자 색상 */}
                 <div className="pt-3 border-t border-white/5">
                   <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 색상</label>
-                  <div className="grid grid-cols-3 gap-2 h-10 items-center font-medium">
+                  <div className="grid grid-cols-6 gap-2">
                     {[
-                      { hex: '#FFFFFF', label: '흰색', bg: 'bg-white' },
-                      { hex: '#000000', label: '검은색', bg: 'bg-black' },
-                      { hex: '#FFD700', label: '노란색', bg: 'bg-[#FFD700]' }
-                    ].map((tc) => (
-                      <button
-                        key={tc.hex}
-                        type="button"
-                        onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: tc.hex }))}
-                        className={`h-full rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                          editingPreset.text_color === tc.hex
-                            ? 'border-white bg-white/10 text-white font-extrabold shadow-sm'
-                            : 'border-white/5 bg-transparent text-zinc-400 hover:text-white'
-                        }`}
-                      >
-                        <span className={`w-3 h-3 rounded-full ${tc.bg} border border-white/10`} />
-                        <span>{tc.label}</span>
-                      </button>
-                    ))}
+                      '#FFFFFF', '#000000', '#FFD700', '#EF4444', '#10B981', '#3B82F6'
+                    ].map((hex) => {
+                      const isSelected = editingPreset.text_color === hex;
+                      const dotColor = hex === '#FFFFFF' ? '#000000' : '#FFFFFF';
+                      const isDark = hex === '#000000';
+                      return (
+                        <button
+                          key={hex}
+                          type="button"
+                          onClick={() => setEditingPreset(prev => ({ ...prev!, text_color: hex }))}
+                          className={`h-9 rounded-lg border cursor-pointer transition-all relative flex items-center justify-center ${
+                            isSelected 
+                              ? 'border-white scale-105 shadow-md' 
+                              : `border-white/10 hover:border-white/30 ${isDark ? 'border-white/25 bg-black' : ''}`
+                          }`}
+                          style={{ backgroundColor: hex }}
+                        >
+                          {isSelected && (
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: dotColor }} />
+                          )}
+                        </button>
+                      );
+                    })}
+
+                    {/* Custom Color Palette (PRO Gate) */}
+                    <div 
+                      className="h-9 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center" 
+                      style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                      title="커스텀 글자 색상 선택 (PRO)"
+                      onClick={() => {
+                        if (confirm('커스텀 글자 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?')) {
+                          router.push('/host/setup?import=premium');
+                        }
+                      }}
+                    >
+                      <span className="text-[5px] font-black text-white bg-violet-600 border border-violet-400 rounded-[2px] px-0.5 scale-90">
+                        PRO
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -1690,27 +1766,27 @@ function LocalSignboardContent() {
       {isVaultOpen && (
         <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4">
           <div 
-            className="absolute inset-0 bg-black/85 backdrop-blur-md transition-opacity"
+            className="absolute inset-0 bg-black/90 backdrop-blur-lg transition-opacity animate-in fade-in duration-200"
             onClick={() => setIsVaultOpen(false)}
           />
 
-          <div className="bg-[#12121a] border border-white/10 rounded-3xl max-w-2xl w-full p-6 sm:p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto font-sans text-left">
+          <div className="bg-[#0d0d15]/95 border border-white/10 rounded-[2rem] max-w-2xl w-full p-6 sm:p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto font-sans text-left">
             <button 
               onClick={() => setIsVaultOpen(false)}
-              className="absolute top-4 right-4 text-zinc-500 hover:text-white p-1 hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
+              className="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 hover:bg-white/5 rounded-xl transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-black text-white leading-tight font-outfit font-sans">보관함 및 연출 공유</h2>
-              <p className="text-xs text-zinc-500 mt-1.5 font-medium font-sans">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-black text-white leading-tight tracking-tight font-outfit">보관함 및 연출 공유</h2>
+              <p className="text-sm text-zinc-400 mt-2 font-medium">
                 전광판 프리셋을 기기에 안전하게 저장하거나 다른 기기로 전송합니다.
               </p>
             </div>
 
             {/* Modal Internal Tabs */}
-            <div className="flex border-b border-white/5 gap-1 mb-6 overflow-x-auto pb-1 scrollbar-none">
+            <div className="flex border-b border-white/10 gap-1.5 mb-8 overflow-x-auto pb-1.5 scrollbar-none">
               {[
                 { tab: 'slots', label: '내 기기에 보관' },
                 { tab: 'share', label: '무선 전송 (보내기/받기)' },
@@ -1720,10 +1796,10 @@ function LocalSignboardContent() {
                   key={t.tab}
                   type="button"
                   onClick={() => setVaultTab(t.tab as any)}
-                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-all active:scale-95 shrink-0 font-sans ${
+                  className={`px-5 py-2.5 text-xs sm:text-sm font-extrabold rounded-xl transition-all active:scale-95 shrink-0 whitespace-nowrap ${
                     vaultTab === t.tab 
-                      ? 'bg-white/5 border border-white/15 text-white' 
-                      : 'text-zinc-500 hover:text-white hover:bg-white/[0.02]'
+                      ? 'bg-white/10 border border-white/15 text-white shadow-md' 
+                      : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02]'
                   }`}
                 >
                   {t.label}
@@ -1733,10 +1809,10 @@ function LocalSignboardContent() {
 
             {/* Tab 1: Slots Vault */}
             {vaultTab === 'slots' && (
-              <div className="space-y-5 animate-in fade-in duration-200">
-                <div className="bg-black/30 border border-white/5 rounded-2xl p-4.5">
-                  <h4 className="text-xs font-bold text-white mb-1 font-sans">내 기기 브라우저 보관함</h4>
-                  <p className="text-[10.5px] text-zinc-400 leading-normal font-sans">
+              <div className="space-y-6 animate-in fade-in duration-200">
+                <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
+                  <h4 className="text-sm font-bold text-white mb-1.5">내 기기 브라우저 보관함</h4>
+                  <p className="text-xs text-zinc-400 leading-relaxed">
                     현재 프리셋 구성을 슬롯에 보관해 두고 필요할 때 클릭 한 번으로 빠르게 다시 불러옵니다.
                   </p>
                 </div>
@@ -1747,66 +1823,66 @@ function LocalSignboardContent() {
                     value={newSlotName}
                     onChange={(e) => setNewSlotName(e.target.value.slice(0, 15))}
                     placeholder="저장할 테마 이름 (예: 블랙핑크)"
-                    className="flex-1 bg-black/45 border border-white/10 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-xs font-semibold font-sans"
+                    className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:bg-black/60 text-sm font-semibold transition-colors"
                     maxLength={15}
                   />
                   <button
                     onClick={handleSaveSlotPackage}
-                    className="px-4 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-bold transition-all cursor-pointer shrink-0 shadow active:scale-95 font-sans"
+                    className="px-5 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold transition-all cursor-pointer shrink-0 shadow-md active:scale-95"
                   >
                     슬롯 저장
                   </button>
                 </div>
 
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
                   {savedSlots.length > 0 ? (
                     savedSlots.map((slot, idx) => (
                       <div
                         key={idx}
                         onClick={() => handleLoadSlotPackage(idx)}
-                        className="group flex items-center justify-between p-3.5 bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 hover:border-white/10 rounded-xl cursor-pointer transition-all active:scale-[0.99]"
+                        className="group flex items-center justify-between p-4 bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 rounded-2xl cursor-pointer transition-all active:scale-[0.99]"
                       >
-                        <div className="min-w-0 pr-4 font-sans">
-                          <span className="text-xs font-bold text-white block truncate">{slot.name}</span>
-                          <span className="text-[9px] text-zinc-500 font-mono mt-0.5 block">프리셋 {slot.presets?.length || 0}개 수록</span>
+                        <div className="min-w-0 pr-4">
+                          <span className="text-sm font-semibold text-white block truncate">{slot.name}</span>
+                          <span className="text-xs text-indigo-400 font-medium font-mono mt-1 block">프리셋 {slot.presets?.length || 0}개 수록</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-indigo-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity font-sans font-sans">불러오기 &rarr;</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-indigo-400 font-extrabold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">불러오기 &rarr;</span>
                           <button
                             type="button"
                             onClick={(e) => handleDeleteSlotPackage(idx, e)}
-                            className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-white/5 rounded transition-all cursor-pointer active:scale-90"
+                            className="p-2 text-zinc-500 hover:text-red-400 hover:bg-white/5 rounded-lg transition-all cursor-pointer active:scale-90"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-xl border border-dashed border-white/5 bg-white/[0.01] p-8 text-center text-zinc-500 font-semibold text-[10px] font-sans">
+                    <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.01] p-10 text-center text-zinc-500 font-bold text-xs">
                       보관된 테마가 없습니다. 이름을 입력하고 슬롯을 추가해 보세요.
                     </div>
                   )}
                 </div>
 
                 {/* Integration of Backup warnings & Reset */}
-                <div className="pt-4 border-t border-white/5 space-y-4">
-                  <div className="bg-amber-500/[0.03] border border-amber-500/10 p-3.5 rounded-xl text-left">
-                    <span className="text-[10px] text-amber-400 font-bold block mb-1 font-sans">💡 브라우저 캐시 주의</span>
-                    <span className="text-[9.5px] text-zinc-500 leading-normal block font-sans">
+                <div className="pt-6 border-t border-white/5 space-y-6">
+                  <div className="bg-amber-500/[0.04] border border-amber-500/15 p-4 rounded-2xl text-left">
+                    <span className="text-xs text-amber-400 font-bold block mb-1.5">💡 브라우저 캐시 주의</span>
+                    <span className="text-xs text-zinc-400 leading-relaxed block">
                       가입이 없는 로컬 전용 모드로, 인터넷 캐시/쿠키 청소 시 저장된 보관함 슬롯도 함께 지워집니다. 안전한 보관을 위해 가끔 <b>[무선 전송 (보내기/받기)]</b> 탭에서 다른 기기로 백업하여 안전하게 복사해 두시길 권장합니다.
                     </span>
                   </div>
 
-                  <div className="flex justify-between items-center text-left">
+                  <div className="flex justify-between items-center text-left gap-4">
                     <div className="min-w-0 pr-4">
-                      <span className="text-[10px] text-zinc-500 font-semibold block font-sans">대시보드 리셋</span>
-                      <span className="text-[9px] text-zinc-650 block font-sans">모든 프리셋과 보관함을 초기 기본값으로 리셋합니다.</span>
+                      <span className="text-xs text-zinc-400 font-bold block">대시보드 리셋</span>
+                      <span className="text-xs text-zinc-500 mt-1 block">모든 프리셋과 보관함을 초기 기본값으로 리셋합니다.</span>
                     </div>
                     <button
                       type="button"
                       onClick={handleResetDashboard}
-                      className="py-2 px-3.5 rounded-xl border border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/15 cursor-pointer text-[10px] font-bold transition-all text-center active:scale-95 font-sans shrink-0"
+                      className="py-2.5 px-4 rounded-xl border border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/15 cursor-pointer text-xs font-bold transition-all text-center active:scale-95 shrink-0"
                     >
                       전체 초기 리셋
                     </button>
@@ -1817,10 +1893,10 @@ function LocalSignboardContent() {
 
             {/* Tab 2: Wireless Sharing */}
             {vaultTab === 'share' && (
-              <div className="space-y-4 animate-in fade-in duration-200">
-                <div className="bg-black/30 border border-white/5 rounded-2xl p-4.5">
-                  <h4 className="text-xs font-bold text-white mb-1 font-sans">기기 간 무선 전송</h4>
-                  <p className="text-[10.5px] text-zinc-400 leading-normal font-sans">
+              <div className="space-y-5 animate-in fade-in duration-200">
+                <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
+                  <h4 className="text-sm font-bold text-white mb-1.5">기기 간 무선 전송</h4>
+                  <p className="text-xs text-zinc-400 leading-relaxed">
                     스마트폰 카메라 스캔이나 6자리 공유 코드로 프리셋을 간편하게 보내고 받을 수 있습니다.
                   </p>
                 </div>
@@ -1833,9 +1909,9 @@ function LocalSignboardContent() {
                       setShareMode('send');
                       stopScanning();
                     }}
-                    className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg transition-all active:scale-95 font-sans ${
+                    className={`flex-1 py-2.5 text-xs font-extrabold rounded-lg transition-all active:scale-95 ${
                       shareMode === 'send' 
-                        ? 'bg-white/10 text-white shadow-sm border border-white/10' 
+                        ? 'bg-white/10 text-white shadow border border-white/10' 
                         : 'text-zinc-500 hover:text-zinc-300'
                     }`}
                   >
@@ -1844,9 +1920,9 @@ function LocalSignboardContent() {
                   <button
                     type="button"
                     onClick={() => setShareMode('receive')}
-                    className={`flex-1 py-2 text-[10.5px] font-bold rounded-lg transition-all active:scale-95 font-sans ${
+                    className={`flex-1 py-2.5 text-xs font-extrabold rounded-lg transition-all active:scale-95 ${
                       shareMode === 'receive' 
-                        ? 'bg-white/10 text-white shadow-sm border border-white/10' 
+                        ? 'bg-white/10 text-white shadow border border-white/10' 
                         : 'text-zinc-500 hover:text-zinc-300'
                     }`}
                   >
@@ -1856,25 +1932,25 @@ function LocalSignboardContent() {
 
                 {/* Sub-tab A: Send (공유하기) */}
                 {shareMode === 'send' && (
-                  <div className="space-y-3 animate-in fade-in duration-150">
-                    <div className="bg-black/50 border border-white/5 p-4 rounded-xl flex flex-col items-center gap-3.5 text-center min-h-[160px] justify-center relative">
+                  <div className="space-y-4 animate-in fade-in duration-150">
+                    <div className="bg-black/50 border border-white/5 p-6 rounded-2xl flex flex-col items-center gap-4 text-center min-h-[180px] justify-center relative">
                       {isSharingLoading ? (
-                        <span className="text-xs text-zinc-500 animate-pulse font-sans">임시 무선 연동 토큰 생성 중...</span>
+                        <span className="text-sm text-zinc-400 animate-pulse">임시 무선 연동 토큰 생성 중...</span>
                       ) : shareQrUrl ? (
-                        <div className="flex flex-col items-center gap-2.5 animate-in fade-in duration-200">
-                          <div className="bg-white p-2.5 rounded-xl shadow-xl">
+                        <div className="flex flex-col items-center gap-4 animate-in fade-in duration-200">
+                          <div className="bg-white p-3 rounded-2xl shadow-2xl">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={shareQrUrl} alt="Preset Share QR" className="w-36 h-36 rounded-lg" />
+                            <img src={shareQrUrl} alt="Preset Share QR" className="w-40 h-40 rounded-xl" />
                           </div>
-                          <span className="text-[9.5px] text-zinc-400 font-bold font-sans">
+                          <span className="text-xs text-zinc-300 font-bold">
                             📱 상대방 스마트폰 카메라로 비추면 즉시 내 프리셋이 복사 적용됩니다!
                           </span>
                           
-                          <div className="flex items-center gap-1.5 mt-1 bg-[#12121a] px-3 py-1.5 rounded-xl border border-white/5">
-                            <span className="text-[11px] font-mono text-zinc-400 font-bold uppercase tracking-widest">{exportCode}</span>
+                          <div className="flex items-center gap-2 mt-1 bg-[#0d0d15] px-4 py-2.5 rounded-xl border border-white/10">
+                            <span className="text-sm font-mono text-white font-extrabold uppercase tracking-widest">{exportCode}</span>
                             <button
                               onClick={handleCopyShareCodeText}
-                              className="text-[9px] text-indigo-400 hover:text-indigo-300 font-bold transition-colors active:scale-95 font-sans"
+                              className="text-xs text-indigo-400 hover:text-indigo-300 font-extrabold transition-colors active:scale-95 pl-2 border-l border-white/15"
                             >
                               {isCodeCopied ? '복사 완료' : '코드 복사'}
                             </button>
@@ -1882,12 +1958,12 @@ function LocalSignboardContent() {
                         </div>
                       ) : (
                         <div className="py-6 px-4 text-center space-y-4">
-                          <p className="text-[11px] text-zinc-400 leading-normal font-sans">
+                          <p className="text-xs text-zinc-400 leading-relaxed">
                             현재 기기에 세팅된 원터치 프리셋 패키지를 다른 폰으로 바로 전송할 수 있는 QR 코드를 만듭니다.
                           </p>
                           <button
                             onClick={handleGenerateShareCode}
-                            className="w-full py-3.5 rounded-xl bg-white text-black font-extrabold text-xs shadow-lg hover:bg-zinc-200 transition-all cursor-pointer flex items-center justify-center active:scale-95 font-sans"
+                            className="w-full py-4 rounded-xl bg-white text-black font-extrabold text-xs shadow-lg hover:bg-zinc-200 transition-all cursor-pointer flex items-center justify-center active:scale-95"
                           >
                             전송용 QR 코드 및 번호 생성
                           </button>
@@ -1899,10 +1975,10 @@ function LocalSignboardContent() {
 
                 {/* Sub-tab B: Receive (불러오기) */}
                 {shareMode === 'receive' && (
-                  <div className="space-y-3 animate-in fade-in duration-150">
+                  <div className="space-y-4 animate-in fade-in duration-150">
                     {isScanning ? (
-                      <div className="flex flex-col items-center gap-3 bg-[#0d0d15]/40 border border-white/5 p-4 rounded-xl">
-                        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-white/10 flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-4 bg-[#0d0d15]/40 border border-white/5 p-5 rounded-2xl">
+                        <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black border border-white/10 flex items-center justify-center">
                           <video
                             ref={scannerVideoRef}
                             className="w-full h-full object-cover"
@@ -1916,19 +1992,19 @@ function LocalSignboardContent() {
                         <button
                           type="button"
                           onClick={stopScanning}
-                          className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all cursor-pointer active:scale-95 font-sans"
+                          className="w-full py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all cursor-pointer active:scale-95"
                         >
                           스캔 취소
                         </button>
                       </div>
                     ) : (
-                      <div className="bg-[#0d0d15]/40 border border-white/5 p-4 rounded-xl space-y-4">
+                      <div className="bg-[#0d0d15]/40 border border-white/5 p-5 rounded-2xl space-y-5">
                         <div className="space-y-2">
-                          <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block font-sans">방법 A: 카메라로 즉시 스캔</span>
+                          <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">방법 A: 카메라로 즉시 스캔</span>
                           <button
                             type="button"
                             onClick={startScanning}
-                            className="w-full py-3 rounded-xl border border-dashed border-white/15 hover:border-indigo-500 hover:bg-white/[0.02] text-zinc-300 hover:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95 font-sans"
+                            className="w-full py-3.5 rounded-xl border border-dashed border-white/15 hover:border-indigo-500 hover:bg-white/[0.02] text-zinc-300 hover:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
                           >
                             카메라 QR 스캔 켜기
                           </button>
@@ -1937,19 +2013,19 @@ function LocalSignboardContent() {
                         <div className="h-[1px] bg-white/5" />
 
                         <div className="space-y-2">
-                          <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block font-sans">방법 B: 6자리 코드 입력</span>
+                          <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">방법 B: 6자리 코드 입력</span>
                           <div className="flex gap-2">
                             <input
                               type="text"
                               value={shareCodeInput}
                               onChange={(e) => setShareCodeInput(e.target.value.toUpperCase())}
                               placeholder="6자리 코드 입력 (예: X8Y3ZA)"
-                              className="flex-1 bg-black/45 border border-white/10 rounded-xl px-3.5 py-2.5 text-white tracking-widest text-center text-xs font-black focus:outline-none focus:border-indigo-500 uppercase font-mono"
+                              className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white tracking-widest text-center text-sm font-black focus:outline-none focus:border-indigo-500 focus:bg-black/65 uppercase font-mono"
                               maxLength={6}
                             />
                             <button
                               onClick={handleImportShareCode}
-                              className="px-4.5 rounded-xl bg-white text-black text-xs font-black hover:bg-zinc-200 transition-colors cursor-pointer shrink-0 active:scale-95 font-sans"
+                              className="px-5 rounded-xl bg-white text-black text-xs font-black hover:bg-zinc-200 transition-colors cursor-pointer shrink-0 active:scale-95"
                             >
                               가져오기
                             </button>
@@ -1965,20 +2041,20 @@ function LocalSignboardContent() {
             {/* Tab 3: Create Sync Room */}
             {vaultTab === 'sync' && (
               <div className="space-y-5 animate-in fade-in duration-200">
-                <div className="bg-black/30 border border-white/5 rounded-2xl p-4.5">
-                  <h4 className="text-xs font-bold text-white mb-1 font-sans">여러 기기 연결 (싱크)</h4>
-                  <p className="text-[10.5px] text-zinc-400 leading-normal font-sans">
+                <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
+                  <h4 className="text-sm font-bold text-white mb-1.5">여러 기기 연결 (싱크)</h4>
+                  <p className="text-xs text-zinc-400 leading-relaxed">
                     현재 프리셋 세팅을 가져와 다수의 관객 스마트폰 화면들을 실시간 조종하는 멀티 싱크 방을 개설합니다.
                   </p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   {/* Option A */}
-                  <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left active:scale-[0.99]">
+                  <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left active:scale-[0.99] min-h-[220px]">
                     <div>
-                      <span className="text-[9px] font-mono text-zinc-500 font-extrabold uppercase block tracking-wider mb-2">FREE PLAN</span>
-                      <h3 className="text-sm font-black text-white mb-2 font-sans">일부 제한 연동 (무료 방)</h3>
-                      <p className="text-[11px] text-zinc-400 leading-relaxed mb-4 font-sans">
+                      <span className="text-[10px] font-mono text-zinc-400 font-extrabold uppercase block tracking-wider mb-2">FREE PLAN</span>
+                      <h3 className="text-base font-black text-white mb-2">일부 제한 연동 (무료 방)</h3>
+                      <p className="text-xs text-zinc-400 leading-relaxed mb-4">
                         상위 6개 프리셋만 동기화하여 무료 방을 개설합니다. (유료 폰트 및 파티클은 자동 제외)
                       </p>
                     </div>
@@ -1986,18 +2062,18 @@ function LocalSignboardContent() {
                     <button
                       type="button"
                       onClick={() => handleStartImportRoom('free')}
-                      className="w-full py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 font-bold text-xs transition-all cursor-pointer text-center active:scale-95 font-sans"
+                      className="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 font-bold text-xs transition-all cursor-pointer text-center active:scale-95"
                     >
                       무료 방 개설
                     </button>
                   </div>
 
                   {/* Option B */}
-                  <div className="rounded-2xl p-5 border border-indigo-500/30 bg-indigo-500/[0.03] hover:bg-indigo-500/[0.06] transition-all flex flex-col justify-between text-left relative overflow-hidden group shadow-lg shadow-indigo-500/5 active:scale-[0.99]">
+                  <div className="rounded-2xl p-5 border border-indigo-500/30 bg-indigo-500/[0.03] hover:bg-indigo-500/[0.06] transition-all flex flex-col justify-between text-left relative overflow-hidden group shadow-lg shadow-indigo-500/5 active:scale-[0.99] min-h-[220px]">
                     <div>
-                      <span className="text-[9px] font-mono text-indigo-400 font-extrabold block tracking-wider mb-2">PREMIUM PLAN</span>
-                      <h3 className="text-sm font-black text-white mb-2 font-sans">무손실 100% 연동 (유료 방)</h3>
-                      <p className="text-[11px] text-zinc-400 leading-relaxed mb-4 font-sans">
+                      <span className="text-[10px] font-mono text-indigo-400 font-extrabold block tracking-wider mb-2">PREMIUM PLAN</span>
+                      <h3 className="text-base font-black text-white mb-2">무손실 100% 연동 (유료 방)</h3>
+                      <p className="text-xs text-zinc-400 leading-relaxed mb-4">
                         모든 연출 프리셋과 프리미엄 폰트, 별빛/하트 등 특수 효과를 완벽하게 유지하여 개설합니다.
                       </p>
                     </div>
@@ -2005,7 +2081,7 @@ function LocalSignboardContent() {
                     <button
                       type="button"
                       onClick={() => handleStartImportRoom('premium')}
-                      className="w-full py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-650 text-white font-black text-xs transition-all cursor-pointer text-center active:scale-95 font-sans"
+                      className="w-full py-3 rounded-xl bg-indigo-500 hover:bg-indigo-650 text-white font-black text-xs transition-all cursor-pointer text-center active:scale-95"
                     >
                       프리미엄 방 개설
                     </button>
