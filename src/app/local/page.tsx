@@ -662,9 +662,9 @@ function LocalSignboardContent() {
               setVaultTab('slots');
               setIsVaultOpen(true);
             }}
-            className="flex items-center bg-[#12121a] hover:bg-white/[0.08] border border-white/10 px-4.5 py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
+            className="flex items-center bg-white/5 hover:bg-white/10 border border-white/10 px-4.5 py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
           >
-            보관 & 공유 📦
+            보관 & 공유
           </button>
         </div>
       </header>
@@ -1271,7 +1271,7 @@ function LocalSignboardContent() {
               <div className="border-t border-white/5 pt-3">
                 <strong className="text-zinc-200 block text-[11px] mb-1">기기에 안전하게 자동 보존</strong>
                 <p className="text-[10.5px]">
-                  수정한 프리셋들은 **브라우저에 자동 저장**됩니다. 방문 기록(캐시/쿠키)을 청소하면 데이터가 소멸할 수 있으니, 소중한 디자인 세트는 상단의 **[보관 & 공유 📦]** 메뉴에서 모바일로 백업해 두세요!
+                  수정한 프리셋들은 **브라우저에 자동 저장**됩니다. 방문 기록(캐시/쿠키)을 청소하면 데이터가 소멸할 수 있으니, 소중한 디자인 세트는 상단의 **[보관 & 공유]** 메뉴에서 모바일로 백업해 두세요!
                 </p>
               </div>
             </div>
@@ -1857,7 +1857,7 @@ function LocalSignboardContent() {
             onClick={() => setIsVaultOpen(false)}
           />
 
-          <div className="bg-[#0d0d15]/95 border border-white/10 rounded-[2rem] max-w-2xl w-full p-6 sm:p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto font-sans text-left">
+          <div className="bg-neutral-950/95 border border-white/10 rounded-[2rem] max-w-2xl w-full p-6 sm:p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto font-sans text-left">
             <button 
               onClick={() => setIsVaultOpen(false)}
               className="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 hover:bg-white/5 rounded-xl transition-colors cursor-pointer"
@@ -1910,12 +1910,12 @@ function LocalSignboardContent() {
                     value={newSlotName}
                     onChange={(e) => setNewSlotName(e.target.value.slice(0, 15))}
                     placeholder="저장할 테마 이름 입력"
-                    className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 focus:bg-black/60 text-sm font-semibold transition-colors"
+                    className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/40 focus:bg-black/60 text-sm font-semibold transition-colors"
                     maxLength={15}
                   />
                   <button
                     onClick={handleSaveSlotPackage}
-                    className="px-5 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-bold transition-all cursor-pointer shrink-0 shadow-md active:scale-95"
+                    className="px-5 py-3 rounded-xl bg-white hover:bg-zinc-200 text-black text-sm font-extrabold transition-all cursor-pointer shrink-0 shadow-md active:scale-95"
                   >
                     슬롯 저장
                   </button>
@@ -1931,10 +1931,10 @@ function LocalSignboardContent() {
                       >
                         <div className="min-w-0 pr-4">
                           <span className="text-sm font-semibold text-white block truncate">{slot.name}</span>
-                          <span className="text-xs text-indigo-400 font-medium font-mono mt-1 block">프리셋 {slot.presets?.length || 0}개 수록</span>
+                          <span className="text-xs text-zinc-400 font-medium font-mono mt-1 block">프리셋 {slot.presets?.length || 0}개 수록</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-xs text-indigo-400 font-extrabold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">불러오기 &rarr;</span>
+                          <span className="text-xs text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">불러오기 &rarr;</span>
                           <button
                             type="button"
                             onClick={(e) => handleDeleteSlotPackage(idx, e)}
@@ -1954,11 +1954,14 @@ function LocalSignboardContent() {
 
                 {/* Integration of Backup warnings & Reset */}
                 <div className="pt-6 border-t border-white/5 space-y-6">
-                  <div className="bg-amber-500/[0.04] border border-amber-500/15 p-4 rounded-2xl text-left">
-                    <span className="text-xs text-amber-400 font-bold block mb-1.5">💡 브라우저 캐시 주의</span>
-                    <span className="text-xs text-zinc-400 leading-relaxed block">
-                      가입이 없는 로컬 전용 모드로, 인터넷 캐시/쿠키 청소 시 저장된 보관함 슬롯도 함께 지워집니다. 안전한 보관을 위해 가끔 <b>[무선 전송 (보내기/받기)]</b> 탭에서 다른 기기로 백업하여 안전하게 복사해 두시길 권장합니다.
-                    </span>
+                  <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-left flex items-start gap-3">
+                    <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_#f59e0b] mt-1.5" />
+                    <div className="flex-1">
+                      <span className="text-xs text-zinc-300 font-bold block mb-1">브라우저 캐시 주의</span>
+                      <span className="text-xs text-zinc-400 leading-relaxed block">
+                        가입이 없는 로컬 전용 모드로, 인터넷 캐시/쿠키 청소 시 저장된 보관함 슬롯도 함께 지워집니다. 안전한 보관을 위해 가끔 <b>[무선 전송 (보내기/받기)]</b> 탭에서 다른 기기로 백업하여 안전하게 복사해 두시길 권장합니다.
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex justify-between items-center text-left gap-4">
@@ -1969,7 +1972,7 @@ function LocalSignboardContent() {
                     <button
                       type="button"
                       onClick={handleResetDashboard}
-                      className="py-2.5 px-4 rounded-xl border border-red-500/20 text-red-400 bg-red-500/5 hover:bg-red-500/15 cursor-pointer text-xs font-bold transition-all text-center active:scale-95 shrink-0"
+                      className="py-2.5 px-4 rounded-xl border border-white/10 text-zinc-400 hover:text-red-400 hover:border-red-500/30 bg-white/5 hover:bg-red-500/10 cursor-pointer text-xs font-bold transition-all text-center active:scale-95 shrink-0 hover:shadow-[0_0_12px_rgba(239,68,68,0.1)]"
                     >
                       전체 초기 리셋
                     </button>
@@ -2033,11 +2036,11 @@ function LocalSignboardContent() {
                             📱 상대방 스마트폰 카메라로 비추면 즉시 내 프리셋이 복사 적용됩니다!
                           </span>
                           
-                          <div className="flex items-center gap-2 mt-1 bg-[#0d0d15] px-4 py-2.5 rounded-xl border border-white/10">
+                          <div className="flex items-center gap-2 mt-1 bg-black/45 px-4 py-2.5 rounded-xl border border-white/10">
                             <span className="text-sm font-mono text-white font-extrabold uppercase tracking-widest">{exportCode}</span>
                             <button
                               onClick={handleCopyShareCodeText}
-                              className="text-xs text-indigo-400 hover:text-indigo-300 font-extrabold transition-colors active:scale-95 pl-2 border-l border-white/15"
+                              className="text-xs text-zinc-300 hover:text-white font-extrabold transition-colors active:scale-95 pl-2 border-l border-white/15"
                             >
                               {isCodeCopied ? '복사 완료' : '코드 복사'}
                             </button>
@@ -2064,7 +2067,7 @@ function LocalSignboardContent() {
                 {shareMode === 'receive' && (
                   <div className="space-y-4 animate-in fade-in duration-150">
                     {isScanning ? (
-                      <div className="flex flex-col items-center gap-4 bg-[#0d0d15]/40 border border-white/5 p-5 rounded-2xl">
+                      <div className="flex flex-col items-center gap-4 bg-black/40 border border-white/5 p-5 rounded-2xl">
                         <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black border border-white/10 flex items-center justify-center">
                           <video
                             ref={scannerVideoRef}
@@ -2073,7 +2076,7 @@ function LocalSignboardContent() {
                             muted
                           />
                           {/* Custom Neon laser scanning line overlay */}
-                          <div className="absolute inset-x-0 h-0.5 bg-indigo-500/80 animate-bounce top-1/2 shadow-[0_0_8px_#6366f1]" />
+                          <div className="absolute inset-x-0 h-0.5 bg-white/80 animate-bounce top-1/2 shadow-[0_0_8px_#ffffff]" />
                           <canvas ref={scannerCanvasRef} className="hidden" />
                         </div>
                         <button
@@ -2085,13 +2088,13 @@ function LocalSignboardContent() {
                         </button>
                       </div>
                     ) : (
-                      <div className="bg-[#0d0d15]/40 border border-white/5 p-5 rounded-2xl space-y-5">
+                      <div className="bg-black/40 border border-white/5 p-5 rounded-2xl space-y-5">
                         <div className="space-y-2">
                           <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">방법 A: 카메라로 즉시 스캔</span>
                           <button
                             type="button"
                             onClick={startScanning}
-                            className="w-full py-3.5 rounded-xl border border-dashed border-white/15 hover:border-indigo-500 hover:bg-white/[0.02] text-zinc-300 hover:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
+                            className="w-full py-3.5 rounded-xl border border-dashed border-white/15 hover:border-white/30 hover:bg-white/[0.02] text-zinc-300 hover:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
                           >
                             카메라 QR 스캔 켜기
                           </button>
@@ -2107,7 +2110,7 @@ function LocalSignboardContent() {
                               value={shareCodeInput}
                               onChange={(e) => setShareCodeInput(e.target.value.toUpperCase())}
                               placeholder="6자리 코드 입력 (예: X8Y3ZA)"
-                              className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white tracking-widest text-center text-sm font-black focus:outline-none focus:border-indigo-500 focus:bg-black/65 uppercase font-mono"
+                              className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white tracking-widest text-center text-sm font-black focus:outline-none focus:border-white/40 focus:bg-black/65 uppercase font-mono"
                               maxLength={6}
                             />
                             <button
@@ -2156,9 +2159,9 @@ function LocalSignboardContent() {
                   </div>
 
                   {/* Option B */}
-                  <div className="rounded-2xl p-5 border border-indigo-500/30 bg-indigo-500/[0.03] hover:bg-indigo-500/[0.06] transition-all flex flex-col justify-between text-left relative overflow-hidden group shadow-lg shadow-indigo-500/5 active:scale-[0.99] min-h-[220px]">
+                  <div className="rounded-2xl p-5 border border-white/15 bg-white/[0.02] hover:bg-white/[0.04] transition-all flex flex-col justify-between text-left relative overflow-hidden group shadow-lg shadow-white/5 active:scale-[0.99] min-h-[220px]">
                     <div>
-                      <span className="text-[10px] font-mono text-indigo-400 font-extrabold block tracking-wider mb-2">PREMIUM PLAN</span>
+                      <span className="text-[10px] font-mono text-white font-extrabold block tracking-wider mb-2">PREMIUM PLAN</span>
                       <h3 className="text-base font-black text-white mb-2">무손실 100% 연동 (유료 방)</h3>
                       <p className="text-xs text-zinc-400 leading-relaxed mb-4">
                         모든 연출 프리셋과 프리미엄 폰트, 별빛/하트 등 특수 효과를 완벽하게 유지하여 개설합니다.
@@ -2168,7 +2171,7 @@ function LocalSignboardContent() {
                     <button
                       type="button"
                       onClick={() => handleStartImportRoom('premium')}
-                      className="w-full py-3 rounded-xl bg-indigo-500 hover:bg-indigo-650 text-white font-black text-xs transition-all cursor-pointer text-center active:scale-95"
+                      className="w-full py-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-extrabold text-xs transition-all cursor-pointer text-center active:scale-95"
                     >
                       프리미엄 방 개설
                     </button>

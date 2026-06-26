@@ -2187,8 +2187,8 @@ export default function HostDashboard() {
           </div>
         </div>
 
-        {/* Item 2: LIVE ON AIR Preview Card */}
-        <div className="order-2 lg:col-span-4 flex flex-col w-full min-w-0">
+        {/* Item 2 & 4: LIVE ON AIR Preview Card & Admission QR (Combined to eliminate grid vertical gaps) */}
+        <div className="order-2 lg:col-span-4 flex flex-col gap-6 w-full min-w-0">
           {/* LIVE ON AIR Preview Card */}
           <div className="glass-effect rounded-2xl p-4 sm:p-6 flex flex-col items-center bg-[#12121a]">
             <div className="flex items-center gap-2 mb-2 self-start">
@@ -2236,10 +2236,8 @@ export default function HostDashboard() {
               </div>
             )}
           </div>
-        </div>
 
-        {/* Item 4: 관객 입장안내 & 현장 운영 팁 */}
-        <div className="order-4 lg:col-span-4 flex flex-col gap-6 w-full min-w-0">
+          {/* Admission QR Card */}
           <div className="glass-effect rounded-2xl p-4 sm:p-6 flex flex-col items-center text-center bg-[#12121a]">
             <Share2 className="w-6 h-6 text-indigo-400 mb-3" />
             <h2 className="text-lg font-bold text-white mb-1">관객 입장안내 (Admission QR)</h2>
@@ -2293,6 +2291,7 @@ export default function HostDashboard() {
             </div>
           </div>
 
+          {/* Host Guide Card */}
           <div className="glass-effect rounded-2xl p-6 text-xs text-zinc-500 leading-normal flex flex-col gap-2 bg-[#12121a]">
             <div className="font-bold text-zinc-400 mb-1 flex items-center gap-1.5">
               <Smartphone className="w-3.5 h-3.5" />
