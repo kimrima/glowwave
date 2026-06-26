@@ -134,6 +134,8 @@ export default function HostDashboard() {
   const [customEffect, setCustomEffect] = useState<EffectType>('none');
   const [customSpeed, setCustomSpeed] = useState(25); // range 1-100
   const [customSpecialEffect, setCustomSpecialEffect] = useState<'none' | 'hearts' | 'confetti' | 'stars'>('none');
+  const [customCountdownSeconds, setCustomCountdownSeconds] = useState<number>(5);
+  const [customResultText, setCustomResultText] = useState<string>('START');
   const [isStandaloneFullscreen, setIsStandaloneFullscreen] = useState(false);
 
   // Safety transmitter lock & miniature preview toggles
@@ -234,20 +236,20 @@ export default function HostDashboard() {
 
   const getSpeedFactor = (effect: EffectType, ms: number) => {
     if (effect === 'blink' || effect === 'luckydraw' || effect === 'luckydraw_wait') {
-      return Math.max(1, Math.min(100, Math.round(((2000 - ms) * 99) / 1950 + 1)));
+      return Math.max(1, Math.min(100, Math.round(((6000 - ms) * 99) / 5900 + 1)));
     }
     if (effect === 'marquee') {
-      return Math.max(1, Math.min(100, Math.round(((15000 - ms) * 99) / 14000 + 1)));
+      return Math.max(1, Math.min(100, Math.round(((45000 - ms) * 99) / 43500 + 1)));
     }
     return 50;
   };
 
   const getSpeedMs = (effect: EffectType, factor: number) => {
     if (effect === 'blink' || effect === 'luckydraw' || effect === 'luckydraw_wait') {
-      return Math.round(2000 - (factor - 1) * (1950 / 99));
+      return Math.round(6000 - (factor - 1) * (5900 / 99));
     }
     if (effect === 'marquee') {
-      return Math.round(15000 - (factor - 1) * (14000 / 99));
+      return Math.round(45000 - (factor - 1) * (43500 / 99));
     }
     return 1000;
   };
@@ -1170,10 +1172,23 @@ export default function HostDashboard() {
 
           <div className="flex items-center gap-3">
             <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">시스템 연결 상태</span>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-              <span>{channelStatus === 'connected' ? '연결됨' : '연결 중'}</span>
-            </div>
+            {channelStatus === 'connected' ? (
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/[0.04] border border-emerald-500/25 text-emerald-400 text-xs font-semibold tracking-wider backdrop-blur-md shadow-sm">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                </span>
+                <span>연결됨</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/[0.04] border border-amber-500/25 text-amber-400 text-xs font-semibold tracking-wider backdrop-blur-md shadow-sm">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
+                </span>
+                <span>연결 중</span>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -1459,13 +1474,15 @@ export default function HostDashboard() {
                     
                     const customPreset: Preset = {
                       bg_color: customBgColor,
-                      text: customText.trim() || 'GLOW WAVE',
+                      text: customText.trim() || (customEffect === 'luckydraw_wait' ? '당첨!' : 'GLOW WAVE'),
                       text_color: customTextColor,
                       effect: customEffect,
                       speed: calculatedSpeed,
                       font_size: customFontSize,
                       font_family: customFontFamily,
-                      special_effect: customSpecialEffect
+                      special_effect: customSpecialEffect,
+                      countdown_seconds: customEffect === 'countdown' ? customCountdownSeconds : undefined,
+                      result_text: (customEffect === 'countdown' || customEffect === 'luckydraw_wait') ? customResultText : undefined
                     };
                     triggerPreset(customPreset, -1);
                   }}
@@ -1657,16 +1674,21 @@ export default function HostDashboard() {
                   {/* 모션 효과 */}
                   <div className="lg:col-span-6 flex flex-col gap-2">
                     <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">모션 효과</span>
-                    <div className="grid grid-cols-3 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 h-12 items-center">
+                    <div className="grid grid-cols-5 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 h-12 items-center">
                       {[
                         { val: 'none', label: '정적' },
                         { val: 'blink', label: '깜빡' },
-                        { val: 'marquee', label: '흐름' }
+                        { val: 'marquee', label: '흐름' },
+                        { val: 'countdown', label: '타이머' },
+                        { val: 'luckydraw_wait', label: '추첨' }
                       ].map((item) => (
                         <button
                           type="button"
                           key={item.val}
-                          onClick={() => setCustomEffect(item.val as any)}
+                          onClick={() => {
+                            setCustomEffect(item.val as any);
+                            setCustomSpeed(getSpeedFactor(item.val as any, 1000));
+                          }}
                           className={`h-full rounded-lg text-xs md:text-sm font-bold transition-all cursor-pointer ${
                             customEffect === item.val
                               ? 'bg-white text-black font-extrabold shadow-sm'
@@ -1728,9 +1750,67 @@ export default function HostDashboard() {
                 </div>
               </div>
 
+              {/* Countdown Settings */}
+              {customEffect === 'countdown' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-5 border-t border-white/5 animate-in fade-in duration-200">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">카운트다운 시간</span>
+                    <div className="grid grid-cols-5 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 h-12 items-center">
+                      {[3, 5, 10, 30, 60].map((sec) => (
+                        <button
+                          type="button"
+                          key={sec}
+                          onClick={() => setCustomCountdownSeconds(sec)}
+                          className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            customCountdownSeconds === sec
+                              ? 'bg-white text-black shadow-sm font-extrabold'
+                              : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          {sec}초
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">종료 시 출력 문구</span>
+                    <input
+                      type="text"
+                      value={customResultText}
+                      onChange={(e) => setCustomResultText(e.target.value.slice(0, 15))}
+                      placeholder="START"
+                      className="w-full bg-black/45 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white text-xs md:text-sm font-semibold h-12"
+                      maxLength={15}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Lucky Draw Settings */}
+              {customEffect === 'luckydraw_wait' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-5 border-t border-white/5 animate-in fade-in duration-200">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">당첨 시 문구 (즉석 구호 입력란에서 수정)</span>
+                    <div className="flex items-center bg-black/30 px-4 rounded-xl border border-white/5 h-12 text-xs md:text-sm text-zinc-400 font-semibold select-none">
+                      {customText || '당첨!'} (당첨)
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">낙첨 시 출력 문구</span>
+                    <input
+                      type="text"
+                      value={customResultText}
+                      onChange={(e) => setCustomResultText(e.target.value.slice(0, 15))}
+                      placeholder="아쉽네요! 다음 기회에.."
+                      className="w-full bg-black/45 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white text-xs md:text-sm font-semibold h-12"
+                      maxLength={15}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Speed range slider for custom controller */}
-              {(customEffect === 'blink' || customEffect === 'marquee') && (
+              {(customEffect === 'blink' || customEffect === 'marquee' || customEffect === 'luckydraw_wait') && (
                 <div className="pt-4 border-t border-white/5 animate-in fade-in duration-200">
                   <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
                     <span>전송 애니메이션 속도 조절</span>

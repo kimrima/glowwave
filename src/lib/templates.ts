@@ -24,6 +24,16 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
         special_effect: 'confetti'
       },
       {
+        bg_color: '#DB2777',
+        text: 'Happy Birthday',
+        text_color: '#FFFFFF',
+        effect: 'blink',
+        speed: 1921,
+        font_family: 'plump',
+        font_size: 100,
+        special_effect: 'confetti'
+      },
+      {
         bg_color: '#4C1D95',
         text: '오늘의 주인공은 너야 👑',
         text_color: '#FDE047',
@@ -45,7 +55,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#2E1065',
-        text: '인생은 60부터! 청춘 화이팅 🌸',
+        text: '청춘은 60부터! 화이팅 🌸',
         text_color: '#FDE047',
         effect: 'none',
         speed: 1000,
@@ -55,7 +65,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#FFE4E6',
-        text: '꽃보다 고운 울엄마 환갑 축하해요 💐',
+        text: '울엄마 환갑을 축하해요 💐',
         text_color: '#E11D48',
         effect: 'none',
         speed: 1000,
@@ -65,7 +75,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#1E3A8A',
-        text: '세상에서 가장 멋진 아빠 칠순 🎉',
+        text: '세상 최고 멋진 아빠 칠순 🎉',
         text_color: '#FFFFFF',
         effect: 'blink',
         speed: 1921,
@@ -95,7 +105,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#1E1B4B',
-        text: 'Will You Marry Me? 👰❤️🤵',
+        text: 'Marry Me? 👰❤️🤵',
         text_color: '#FFFFFF',
         effect: 'none',
         speed: 1000,
@@ -125,7 +135,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#0B0B0F',
-        text: '친구야 결혼 축하해 잘 살아라! 💐',
+        text: '친구야 결혼 너무 축하해 💐',
         text_color: '#FFFFFF',
         effect: 'marquee',
         speed: 14434,
@@ -145,7 +155,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#064E3B',
-        text: '전역 축하해! 고생 끝 꽃길 시작 👟🌸',
+        text: '전역 축하해! 꽃길만 걷자 🌸',
         text_color: '#FDE047',
         effect: 'blink',
         speed: 1921,
@@ -165,7 +175,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#1E3A8A',
-        text: '축 졸업! 새로운 시작을 응원해 🎓',
+        text: '졸업 축하해! 새로운 시작 🎓',
         text_color: '#FFFFFF',
         effect: 'blink',
         speed: 1921,
@@ -175,7 +185,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#B91C1C',
-        text: '수능 대박! 찍는 것도 정답 💯',
+        text: '수능 대박! 다 잘될거야 💯',
         text_color: '#FFFFFF',
         effect: 'blink',
         speed: 1921,
@@ -185,7 +195,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#0F172A',
-        text: '취뽀 성공! 첫 출근 화이팅! 🚀',
+        text: '취뽀 성공! 출근 화이팅 🚀',
         text_color: '#38BDF8',
         effect: 'marquee',
         speed: 14434,
@@ -195,7 +205,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#1E1B4B',
-        text: '축 승진! 탄탄대로 걸으세요 🎉',
+        text: '축 승진! 탄탄대로 걸어요 🎉',
         text_color: '#F59E0B',
         effect: 'none',
         speed: 1000,
@@ -205,7 +215,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#FFE4E6',
-        text: '그동안 고생하셨습니다 👏 제2의 인생 응원해요!',
+        text: '고생하셨습니다! 응원해요 👏',
         text_color: '#BE185D',
         effect: 'none',
         speed: 1000,
@@ -282,7 +292,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#000000',
-        text: '네가 내 가수라서 자랑스러워 🎤',
+        text: '나의 가수라서 자랑스러워 🎤',
         text_color: '#FDE047',
         effect: 'marquee',
         speed: 14434,
@@ -302,7 +312,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#1E2937',
-        text: '지금 부르는 노래 제목이 뭔가요? ❓',
+        text: '노래 제목이 궁금해요 🎤❓',
         text_color: '#FFFFFF',
         effect: 'none',
         speed: 1000,
@@ -312,7 +322,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#4F46E5',
-        text: '인스타 ID: @glowwave 팔로우 📱',
+        text: '인스타: @glowwave 📱',
         text_color: '#FFFFFF',
         effect: 'marquee',
         speed: 14434,
@@ -332,7 +342,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#0B0B0F',
-        text: '음악이 좋으셨다면 팁박스로 💰',
+        text: '음악이 좋았다면 팁박스로 💰',
         text_color: '#22C55E',
         effect: 'marquee',
         speed: 14434,
@@ -536,7 +546,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#F97316',
-        text: 'Happy Halloween 🎃',
+        text: 'HALLOWEEN 🎉🎃',
         text_color: '#000000',
         effect: 'blink',
         speed: 1921,
@@ -546,7 +556,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#0F5132',
-        text: 'Merry Christmas 🎄',
+        text: 'MERRY X-MAS 🎄',
         text_color: '#FFFFFF',
         effect: 'blink',
         speed: 1921,
@@ -623,7 +633,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#1E2937',
-        text: 'WIFI: GLOW_WAVE / PW: 1234 📶',
+        text: 'WIFI: GLOW_WAVE 📶',
         text_color: '#FFFFFF',
         effect: 'marquee',
         speed: 14434,
@@ -673,7 +683,7 @@ export const TEMPLATE_CATEGORIES: TemplateCategory[] = [
       },
       {
         bg_color: '#1E2937',
-        text: '잠시 준비 중입니다 (브레이크타임) ⏳',
+        text: '잠시 준비 중입니다 ⏳',
         text_color: '#F59E0B',
         effect: 'none',
         speed: 1000,

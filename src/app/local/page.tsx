@@ -111,6 +111,8 @@ function LocalSignboardContent() {
   const [customEffect, setCustomEffect] = useState<EffectType>('none');
   const [customSpeed, setCustomSpeed] = useState(5); // Range 1 to 100
   const [customSpecialEffect, setCustomSpecialEffect] = useState<'none' | 'hearts' | 'confetti' | 'stars'>('none');
+  const [customCountdownSeconds, setCustomCountdownSeconds] = useState<number>(5);
+  const [customResultText, setCustomResultText] = useState<string>('START');
 
   // Control & Share Modal
   const [isVaultOpen, setIsVaultOpen] = useState(false);
@@ -161,20 +163,20 @@ function LocalSignboardContent() {
 
   const getSpeedFactor = (effect: EffectType, ms: number) => {
     if (effect === 'blink' || effect === 'luckydraw' || effect === 'luckydraw_wait') {
-      return Math.max(1, Math.min(100, Math.round(((2000 - ms) * 99) / 1950 + 1)));
+      return Math.max(1, Math.min(100, Math.round(((6000 - ms) * 99) / 5900 + 1)));
     }
     if (effect === 'marquee') {
-      return Math.max(1, Math.min(100, Math.round(((15000 - ms) * 99) / 14000 + 1)));
+      return Math.max(1, Math.min(100, Math.round(((45000 - ms) * 99) / 43500 + 1)));
     }
     return 50;
   };
 
   const getSpeedMs = (effect: EffectType, factor: number) => {
     if (effect === 'blink' || effect === 'luckydraw' || effect === 'luckydraw_wait') {
-      return Math.round(2000 - (factor - 1) * (1950 / 99));
+      return Math.round(6000 - (factor - 1) * (5900 / 99));
     }
     if (effect === 'marquee') {
-      return Math.round(15000 - (factor - 1) * (14000 / 99));
+      return Math.round(45000 - (factor - 1) * (43500 / 99));
     }
     return 1000;
   };
@@ -684,8 +686,11 @@ function LocalSignboardContent() {
 
           <div className="flex items-center gap-3">
             <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">시스템 연결 상태</span>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/[0.04] border border-emerald-500/25 text-emerald-400 text-xs font-semibold tracking-wider backdrop-blur-md shadow-sm">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+              </span>
               <span>로컬 독립 실행</span>
             </div>
           </div>
@@ -924,13 +929,15 @@ function LocalSignboardContent() {
                     
                     const customPreset: Preset = {
                       bg_color: customBgColor,
-                      text: customText.trim() || 'GLOW WAVE',
+                      text: customText.trim() || (customEffect === 'luckydraw_wait' ? '당첨!' : 'GLOW WAVE'),
                       text_color: customTextColor,
                       effect: customEffect,
                       speed: calculatedSpeed,
                       font_size: customFontSize,
                       font_family: customFontFamily,
-                      special_effect: customSpecialEffect
+                      special_effect: customSpecialEffect,
+                      countdown_seconds: customEffect === 'countdown' ? customCountdownSeconds : undefined,
+                      result_text: (customEffect === 'countdown' || customEffect === 'luckydraw_wait') ? customResultText : undefined
                     };
                     triggerPreset(customPreset, -1);
                   }}
@@ -1133,6 +1140,65 @@ function LocalSignboardContent() {
                   </div>
                 </div>
               </div>
+
+              {/* Countdown Settings */}
+              {customEffect === 'countdown' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-5 border-t border-white/5 animate-in fade-in duration-200">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">카운트다운 시간</span>
+                    <div className="grid grid-cols-5 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 h-12 items-center">
+                      {[3, 5, 10, 30, 60].map((sec) => (
+                        <button
+                          type="button"
+                          key={sec}
+                          onClick={() => setCustomCountdownSeconds(sec)}
+                          className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            customCountdownSeconds === sec
+                              ? 'bg-white text-black shadow-sm font-extrabold'
+                              : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          {sec}초
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">종료 시 출력 문구</span>
+                    <input
+                      type="text"
+                      value={customResultText}
+                      onChange={(e) => setCustomResultText(e.target.value.slice(0, 15))}
+                      placeholder="START"
+                      className="w-full bg-black/45 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white text-xs md:text-sm font-semibold h-12"
+                      maxLength={15}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Lucky Draw Settings */}
+              {customEffect === 'luckydraw_wait' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-5 border-t border-white/5 animate-in fade-in duration-200">
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">당첨 시 문구 (즉석 구호 입력란에서 수정)</span>
+                    <div className="flex items-center bg-black/30 px-4 rounded-xl border border-white/5 h-12 text-xs md:text-sm text-zinc-400 font-semibold select-none">
+                      {customText || '당첨!'} (당첨)
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">낙첨 시 출력 문구</span>
+                    <input
+                      type="text"
+                      value={customResultText}
+                      onChange={(e) => setCustomResultText(e.target.value.slice(0, 15))}
+                      placeholder="아쉽네요! 다음 기회에.."
+                      className="w-full bg-black/45 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white text-xs md:text-sm font-semibold h-12"
+                      maxLength={15}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Speed Controller */}
               {(customEffect === 'blink' || customEffect === 'marquee' || customEffect === 'luckydraw_wait') && (

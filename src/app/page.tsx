@@ -9,26 +9,26 @@ import QRScannerModal from '@/components/QRScannerModal';
 
 const getSpeedFactor = (ms: number, effect: string) => {
   if (effect === 'blink') {
-    return Math.max(1, Math.min(100, Math.round(((2000 - ms) * 99) / 1950 + 1)));
+    return Math.max(1, Math.min(100, Math.round(((6000 - ms) * 99) / 5900 + 1)));
   }
   if (effect === 'marquee') {
-    return Math.max(1, Math.min(100, Math.round(((15000 - ms) * 99) / 14000 + 1)));
+    return Math.max(1, Math.min(100, Math.round(((45000 - ms) * 99) / 43500 + 1)));
   }
   if (effect === 'gradient') {
-    return Math.max(1, Math.min(100, Math.round(((20000 - ms) * 99) / 19000 + 1)));
+    return Math.max(1, Math.min(100, Math.round(((45000 - ms) * 99) / 44000 + 1)));
   }
   return 50;
 };
 
 const getSpeedMs = (factor: number, effect: string) => {
   if (effect === 'blink') {
-    return Math.round(2000 - (factor - 1) * (1950 / 99));
+    return Math.round(6000 - (factor - 1) * (5900 / 99));
   }
   if (effect === 'marquee') {
-    return Math.round(15000 - (factor - 1) * (14000 / 99));
+    return Math.round(45000 - (factor - 1) * (43500 / 99));
   }
   if (effect === 'gradient') {
-    return Math.round(20000 - (factor - 1) * (19000 / 99));
+    return Math.round(45000 - (factor - 1) * (44000 / 99));
   }
   return 1000;
 };
