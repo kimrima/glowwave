@@ -26,6 +26,24 @@
       "status": "active",
       "max_participants": 15,
       "created_at": "2026-06-26T15:49:46.930Z"
+    },
+    "6QGE6W": {
+      "id": "6QGE6W",
+      "host_session_token": "b86028ab-298b-475d-b94d-4e9116a6aca3",
+      "email": "test@glowwave.com",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "created_at": "2026-06-26T15:55:03.992Z"
+    },
+    "AFUKBR": {
+      "id": "AFUKBR",
+      "host_session_token": "0ce5efe4-49ea-495c-8636-ea2346d5129c",
+      "email": "verify2@glowwave.com",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "created_at": "2026-06-26T15:59:07.548Z"
     }
   },
   "payments": [
@@ -79,6 +97,23 @@
       "effect": "none",
       "speed": 1000,
       "trigger_id": "1782489017235"
+    },
+    "6QGE6W": {
+      "bg_color": "#0B0B0F",
+      "text": "GlowWave",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000
+    },
+    "AFUKBR": {
+      "bg_color": "#10B981",
+      "text": "NEW WORK",
+      "text_color": "#FFD700",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thin",
+      "font_size": 100,
+      "trigger_id": "1782490033962"
     }
   }
 }

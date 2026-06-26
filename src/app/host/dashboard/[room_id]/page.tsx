@@ -1385,9 +1385,9 @@ export default function HostDashboard() {
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setIsVaultOpen(true)}
-              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-[0_0_15px_rgba(99,102,241,0.3)] cursor-pointer"
+              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
-              <span>보관 & 공유 📦</span>
+              <span>보관 & 공유</span>
             </button>
             
             <button 
@@ -1555,10 +1555,10 @@ export default function HostDashboard() {
                 <button
                   type="button"
                   onClick={() => setShowMiniPreviews(prev => !prev)}
-                  className="flex items-center gap-1.5 bg-white/[0.02] border border-white/5 px-2.5 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
+                  className="flex items-center gap-2 bg-white/[0.02] border border-white/5 hover:border-white/10 px-3 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
                 >
                   <span>카드 미리보기</span>
-                  <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${showMiniPreviews ? 'bg-indigo-500' : 'bg-zinc-700'}`}>
+                  <div className={`relative w-8 h-4.5 rounded-full transition-all duration-200 ${showMiniPreviews ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.4)]' : 'bg-zinc-800'}`}>
                     <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${showMiniPreviews ? 'translate-x-3.5' : 'translate-x-0'}`} />
                   </div>
                 </button>
@@ -1567,30 +1567,22 @@ export default function HostDashboard() {
                 <button
                   type="button"
                   onClick={() => setIsTransmitterLocked(prev => !prev)}
-                  className={`flex items-center gap-1.5 border px-2.5 py-1.5 rounded-xl text-[10px] font-bold cursor-pointer select-none transition-all ${
-                    !isTransmitterLocked 
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]' 
-                      : 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                  }`}
+                  className="flex items-center gap-2 bg-white/[0.02] border border-white/5 hover:border-white/10 px-3 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
                 >
-                  <span>{!isTransmitterLocked ? '원터치 바로송출 ⚡' : '클릭 시 수정모드 ✏️'}</span>
-                  <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${!isTransmitterLocked ? 'bg-emerald-500' : 'bg-amber-500'}`}>
+                  <span>{!isTransmitterLocked ? '원터치 바로송출' : '클릭 시 수정모드'}</span>
+                  <div className={`relative w-8 h-4.5 rounded-full transition-all duration-200 ${!isTransmitterLocked ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-zinc-800'}`}>
                     <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${!isTransmitterLocked ? 'translate-x-3.5' : 'translate-x-0'}`} />
                   </div>
                 </button>
 
-                {/* 3. 화면 암전 🌑 토글 */}
+                {/* 3. 화면 암전 토글 */}
                 <button
                   type="button"
                   onClick={() => handleBlackoutToggle(!isBlackout)}
-                  className={`flex items-center gap-1.5 border px-2.5 py-1.5 rounded-xl text-[10px] font-bold cursor-pointer select-none transition-all ${
-                    isBlackout 
-                      ? 'bg-red-950/40 border-red-500/40 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.25)]' 
-                      : 'bg-white/[0.02] border border-white/5 text-zinc-300 hover:text-white'
-                  }`}
+                  className="flex items-center gap-2 bg-white/[0.02] border border-white/5 hover:border-white/10 px-3 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
                 >
-                  <span>화면 암전 🌑</span>
-                  <div className={`relative w-8 h-4.5 rounded-full transition-colors duration-200 ${isBlackout ? 'bg-red-500' : 'bg-zinc-700'}`}>
+                  <span>화면 암전</span>
+                  <div className={`relative w-8 h-4.5 rounded-full transition-all duration-200 ${isBlackout ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]' : 'bg-zinc-800'}`}>
                     <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${isBlackout ? 'translate-x-3.5' : 'translate-x-0'}`} />
                   </div>
                 </button>
@@ -3424,7 +3416,7 @@ export default function HostDashboard() {
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <span>보관 & 공유 📦</span>
+                <span>보관 & 공유</span>
               </h3>
               <button 
                 onClick={() => {
@@ -3447,7 +3439,7 @@ export default function HostDashboard() {
                 }}
                 className={`flex-1 py-3 text-xs font-bold transition-all cursor-pointer ${
                   vaultTab === 'slots' 
-                    ? 'text-white border-b-2 border-indigo-500 bg-white/[0.02]' 
+                    ? 'text-white border-b-2 border-white bg-white/[0.02]' 
                     : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
@@ -3460,7 +3452,7 @@ export default function HostDashboard() {
                 }}
                 className={`flex-1 py-3 text-xs font-bold transition-all cursor-pointer ${
                   vaultTab === 'share' 
-                    ? 'text-white border-b-2 border-indigo-500 bg-white/[0.02]' 
+                    ? 'text-white border-b-2 border-white bg-white/[0.02]' 
                     : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
@@ -3480,13 +3472,13 @@ export default function HostDashboard() {
                         value={newSlotName}
                         onChange={(e) => setNewSlotName(e.target.value.slice(0, 15))}
                         placeholder="저장할 테마 이름 입력"
-                        className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:bg-black/50 text-sm font-semibold transition-colors"
+                        className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-white/40 focus:bg-black/50 text-sm font-semibold transition-colors"
                         maxLength={15}
                       />
                       <button
                         type="button"
                         onClick={handleSaveSlotPackage}
-                        className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all cursor-pointer select-none"
+                        className="px-4 py-2.5 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-bold transition-all cursor-pointer select-none"
                       >
                         저장
                       </button>
@@ -3512,7 +3504,7 @@ export default function HostDashboard() {
                           >
                             <div className="flex flex-col min-w-0">
                               <span className="text-xs font-bold text-white truncate">{slot.name}</span>
-                              <span className="text-[9px] text-indigo-400 font-bold mt-0.5">{slot.presets.length}개의 프리셋</span>
+                              <span className="text-[9px] text-zinc-400 font-bold mt-0.5">{slot.presets.length}개의 프리셋</span>
                             </div>
                             <button
                               type="button"
@@ -3539,8 +3531,8 @@ export default function HostDashboard() {
                       }}
                       className={`py-2 text-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
                         shareMode === 'send' 
-                          ? 'bg-indigo-600 text-white shadow-md' 
-                          : 'text-zinc-500 hover:text-zinc-300'
+                          ? 'bg-white text-black shadow-md' 
+                          : 'text-zinc-400 hover:text-zinc-200'
                       }`}
                     >
                       전송하기 (내보내기)
@@ -3552,8 +3544,8 @@ export default function HostDashboard() {
                       }}
                       className={`py-2 text-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
                         shareMode === 'receive' 
-                          ? 'bg-indigo-600 text-white shadow-md' 
-                          : 'text-zinc-500 hover:text-zinc-300'
+                          ? 'bg-white text-black shadow-md' 
+                          : 'text-zinc-400 hover:text-zinc-200'
                       }`}
                     >
                       가져오기
@@ -3572,7 +3564,7 @@ export default function HostDashboard() {
                           {/* 6 Digit Code Display */}
                           <div className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-center relative group">
                             <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">무선 공유 코드</span>
-                            <span className="text-3xl font-mono font-black text-indigo-400 select-all tracking-wider">{exportCode}</span>
+                            <span className="text-3xl font-mono font-black text-white bg-white/[0.03] rounded-xl px-4 py-2 border border-white/5 inline-block select-all tracking-wider">{exportCode}</span>
                             <button
                               type="button"
                               onClick={handleCopyShareCodeText}
@@ -3595,9 +3587,9 @@ export default function HostDashboard() {
                           type="button"
                           onClick={handleGenerateShareCode}
                           disabled={isSharingLoading}
-                          className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/20 active:scale-98 transition-all disabled:opacity-50 cursor-pointer"
+                          className="w-full py-3.5 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-bold shadow-md transition-all disabled:opacity-50 cursor-pointer animate-pulse"
                         >
-                          {isSharingLoading ? '코드 생성 중...' : '무선 공유 코드 생성 ⚡'}
+                          {isSharingLoading ? '코드 생성 중...' : '무선 공유 코드 생성'}
                         </button>
                       )}
                     </div>
@@ -3611,14 +3603,14 @@ export default function HostDashboard() {
                             value={shareCodeInput}
                             onChange={(e) => setShareCodeInput(e.target.value.slice(0, 6))}
                             placeholder="6자리 공유 코드 입력 (예: AB3D9E)"
-                            className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white uppercase focus:outline-none focus:border-indigo-500 focus:bg-black/50 text-sm font-semibold tracking-wider font-mono transition-colors"
+                            className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white uppercase focus:outline-none focus:border-white/40 focus:bg-black/50 text-sm font-semibold tracking-wider font-mono transition-colors"
                             maxLength={6}
                           />
                           <button
                             type="button"
                             onClick={handleImportShareCode}
                             disabled={isSharingLoading}
-                            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                            className="px-4 py-2.5 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
                           >
                             불러오기
                           </button>
@@ -3632,8 +3624,8 @@ export default function HostDashboard() {
                           <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-white/10 bg-black flex items-center justify-center">
                             <video ref={scannerVideoRef} className="absolute inset-0 w-full h-full object-cover" />
                             <canvas ref={scannerCanvasRef} className="hidden" />
-                            <div className="absolute inset-0 border-2 border-indigo-500/50 m-8 rounded-xl pointer-events-none animate-pulse flex items-center justify-center">
-                              <div className="w-full h-0.5 bg-indigo-500 shadow-[0_0_10px_#6366f1]" style={{ animation: 'scanner-sweep 2s linear infinite' }} />
+                            <div className="absolute inset-0 border-2 border-white/50 m-8 rounded-xl pointer-events-none animate-pulse flex items-center justify-center">
+                              <div className="w-full h-0.5 bg-white shadow-[0_0_10px_#ffffff]" style={{ animation: 'scanner-sweep 2s linear infinite' }} />
                             </div>
                             <button
                               type="button"
