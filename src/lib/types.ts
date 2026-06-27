@@ -17,6 +17,7 @@ export interface Preset {
   lucky_draw_count?: number; // Desired number of winners
   special_effect?: 'none' | 'hearts' | 'confetti' | 'stars';
   blackout?: boolean;
+  locale?: string;
 }
 
 export type TierType = 'free' | 'lite' | 'pro' | 'max';

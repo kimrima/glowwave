@@ -9,23 +9,18 @@ import {
   Slash, 
   Check, 
   RefreshCw, 
-  Edit3 
+  Edit3,
+  Globe
 } from 'lucide-react';
 import jsQR from 'jsqr';
 import { Preset, EffectType } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
-import { TEMPLATE_CATEGORIES } from '@/lib/templates';
+import { LOCALIZED_TEMPLATES, getDefaultsByLocale } from '@/lib/templates';
+import { t, Locale, getLocalizedFonts } from '@/lib/translations';
 import useFitText from '@/hooks/useFitText';
 
-// Host-aligned default presets for standalone local mode
-const defaults: Preset[] = [
-  { bg_color: '#0B0B0F', text: '단색', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#3B82F6', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#FFFFFF', text: '사이키', text_color: '#EF4444', effect: 'blink', speed: 1921, bg_color_secondary: '#0B0B0F', font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1921, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100, lucky_draw_count: 1 },
-  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
-];
+// Fallback host-aligned defaults
+const defaults: Preset[] = getDefaultsByLocale('ko');
 
 interface MiniCountdownPreviewProps {
   preset: Preset;
@@ -86,6 +81,9 @@ export default function StandaloneSignboard() {
 function LocalSignboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Active Locale State
+  const [activeLocale, setActiveLocale] = useState<Locale>('ko');
 
   // Active signboard design state
   const [currentBroadcastPreset, setCurrentBroadcastPreset] = useState<Preset>({
@@ -149,15 +147,16 @@ function LocalSignboardContent() {
   const scannerCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const scannerStreamRef = useRef<MediaStream | null>(null);
 
-  const getFontFamilyClass = (fontFamily?: string) => {
+  const getFontFamilyClass = (fontFamily?: string, localeOverride?: string) => {
+    const loc = localeOverride || activeLocale;
     switch (fontFamily) {
-      case 'sans-thin': return 'font-sign-sans-thin font-bold';
-      case 'sans-thick': return 'font-sign-sans-thick font-black';
-      case 'serif': return 'font-sign-serif font-bold';
-      case 'neon': return 'font-sign-neon font-black';
-      case 'pixel': return 'font-sign-pixel';
-      case 'plump': return 'font-sign-plump font-black';
-      default: return 'font-sign-sans-thin font-bold';
+      case 'sans-thin': return `font-sign-sans-thin-${loc} font-bold`;
+      case 'sans-thick': return `font-sign-sans-thick-${loc} font-black`;
+      case 'serif': return `font-sign-serif-${loc} font-bold`;
+      case 'neon': return `font-sign-neon-${loc} font-black`;
+      case 'pixel': return `font-sign-pixel-${loc}`;
+      case 'plump': return `font-sign-plump-${loc} font-black`;
+      default: return `font-sign-sans-thin-${loc} font-bold`;
     }
   };
 
@@ -330,16 +329,34 @@ function LocalSignboardContent() {
   // 1. Initial State Hydration
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      let currentLocale: Locale = 'ko';
+      const savedLocale = localStorage.getItem('glowwave_local_locale') as Locale;
+      if (savedLocale && ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(savedLocale)) {
+        currentLocale = savedLocale;
+        setActiveLocale(savedLocale);
+      } else {
+        const navLang = navigator.language.toLowerCase();
+        if (navLang.startsWith('ko')) currentLocale = 'ko';
+        else if (navLang.startsWith('ja')) currentLocale = 'ja';
+        else if (navLang.startsWith('es')) currentLocale = 'es';
+        else if (navLang.startsWith('zh-tw') || navLang.startsWith('zh-cn')) currentLocale = 'zh-TW';
+        else if (navLang.startsWith('zh-hk')) currentLocale = 'zh-HK';
+        else currentLocale = 'en';
+        setActiveLocale(currentLocale);
+        localStorage.setItem('glowwave_local_locale', currentLocale);
+      }
+
+      const localDefaults = getDefaultsByLocale(currentLocale);
       const saved = localStorage.getItem('glowwave_local_presets');
       let presetsList: Preset[] = [];
       if (saved) {
         try {
           presetsList = JSON.parse(saved);
         } catch (e) {
-          presetsList = [...defaults];
+          presetsList = [...localDefaults];
         }
       } else {
-        presetsList = [...defaults];
+        presetsList = [...localDefaults];
         localStorage.setItem('glowwave_local_presets', JSON.stringify(presetsList));
       }
 
@@ -357,7 +374,7 @@ function LocalSignboardContent() {
       setPresets(presetsList);
 
       const savedActive = localStorage.getItem('glowwave_local_active_preset');
-      let activePreset: Preset = presetsList[0] || defaults[0];
+      let activePreset: Preset = presetsList[0] || localDefaults[0];
       if (savedActive) {
         try {
           activePreset = JSON.parse(savedActive);
@@ -436,19 +453,44 @@ function LocalSignboardContent() {
   };
 
   const handleResetDashboard = () => {
-    if (confirm('모든 커스텀 프리셋과 슬롯을 대시보드 초기 상태로 초기화하시겠습니까?')) {
+    if (confirm(t('confirm_reset_all', activeLocale))) {
       localStorage.removeItem('glowwave_local_presets');
       localStorage.removeItem('glowwave_local_active_preset');
+      localStorage.removeItem('glowwave_local_slots');
       
-      const defaultList = [...defaults];
+      const defaultList = getDefaultsByLocale(activeLocale);
       setPresets(defaultList);
       setCurrentBroadcastPreset(defaultList[0]);
       applyPresetToController(defaultList[0]);
       setActivePresetIndex(0);
+      setSavedSlots([]);
       
       localStorage.setItem('glowwave_local_presets', JSON.stringify(defaultList));
       localStorage.setItem('glowwave_local_active_preset', JSON.stringify(defaultList[0]));
+      localStorage.setItem('glowwave_local_slots', JSON.stringify([]));
+      alert(t('reset_success', activeLocale));
       setIsVaultOpen(false);
+    }
+  };
+
+  const handleLocaleChange = (newLocale: Locale) => {
+    setActiveLocale(newLocale);
+    localStorage.setItem('glowwave_local_locale', newLocale);
+
+    // If presets list is empty or matches defaults of any language, translate them
+    const isOnlyDefaults = presets.length <= 6 && presets.every(p => 
+      ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].some(loc => 
+        getDefaultsByLocale(loc as Locale).some(d => d.text === p.text)
+      )
+    );
+
+    if (isOnlyDefaults || presets.length === 0) {
+      const newDefaults = getDefaultsByLocale(newLocale);
+      setPresets(newDefaults);
+      localStorage.setItem('glowwave_local_presets', JSON.stringify(newDefaults));
+      setCurrentBroadcastPreset(newDefaults[0]);
+      applyPresetToController(newDefaults[0]);
+      setActivePresetIndex(0);
     }
   };
 
@@ -656,16 +698,52 @@ function LocalSignboardContent() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setVaultTab('slots');
-              setIsVaultOpen(true);
-            }}
-            className="flex items-center bg-white/5 hover:bg-white/10 border border-white/10 px-4.5 py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
-          >
-            보관 & 공유
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setVaultTab('slots');
+                setIsVaultOpen(true);
+              }}
+              className="flex items-center bg-white/5 hover:bg-white/10 border border-white/10 px-4.5 py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
+            >
+              {t('vault_share', activeLocale)}
+            </button>
+
+            {/* Language Selector Dropdown */}
+            <div className="relative group">
+              <button
+                type="button"
+                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3.5 py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
+              >
+                <Globe className="w-3.5 h-3.5 text-zinc-400" />
+                <span className="uppercase">{activeLocale}</span>
+              </button>
+              <div className="absolute right-0 mt-2 w-40 rounded-2xl border border-white/10 bg-[#0c0c14]/95 backdrop-blur-lg p-1.5 shadow-2xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
+                {[
+                  { code: 'ko', label: '한국어 (KR)' },
+                  { code: 'en', label: 'English (US)' },
+                  { code: 'ja', label: '日本語 (JP)' },
+                  { code: 'es', label: 'Español (ES)' },
+                  { code: 'zh-TW', label: '繁體中文 (TW)' },
+                  { code: 'zh-HK', label: '繁體中文 (HK)' }
+                ].map((lang) => (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    onClick={() => handleLocaleChange(lang.code as Locale)}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      activeLocale === lang.code
+                        ? 'bg-white text-black font-extrabold'
+                        : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -722,7 +800,7 @@ function LocalSignboardContent() {
         <div className="order-1 lg:col-span-8 flex flex-col w-full min-w-0">
           <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a] border border-white/5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/5">
-              <h2 className="text-sm font-bold text-white font-outfit">원터치 연출 보드 (Quick Preset Board)</h2>
+              <h2 className="text-sm font-bold text-white font-outfit">{t('quick_preset_board', activeLocale)}</h2>
             </div>
 
             {/* Category tabs scroll bar */}
@@ -736,9 +814,9 @@ function LocalSignboardContent() {
                     : 'bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white hover:bg-white/[0.05]'
                 }`}
               >
-                내 프리셋
+                {t('my_presets', activeLocale)}
               </button>
-              {TEMPLATE_CATEGORIES.map((cat) => (
+              {(LOCALIZED_TEMPLATES[activeLocale] || LOCALIZED_TEMPLATES['ko']).map((cat) => (
                 <button
                   type="button"
                   key={cat.id}
@@ -756,7 +834,7 @@ function LocalSignboardContent() {
 
             {/* Preset Cards Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {(activeCategory === 'custom' ? presets : (TEMPLATE_CATEGORIES.find(c => c.id === activeCategory)?.presets || [])).map((preset, index) => {
+              {(activeCategory === 'custom' ? presets : ((LOCALIZED_TEMPLATES[activeLocale] || LOCALIZED_TEMPLATES['ko']).find(c => c.id === activeCategory)?.presets || [])).map((preset, index) => {
                 const isActive = currentBroadcastPreset.text === preset.text &&
                                  currentBroadcastPreset.bg_color === preset.bg_color &&
                                  currentBroadcastPreset.font_family === preset.font_family &&
@@ -1073,19 +1151,12 @@ function LocalSignboardContent() {
                   <div className="lg:col-span-6 flex flex-col gap-2">
                     <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">글꼴 스타일</span>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 items-center">
-                      {[
-                        { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', sans-serif", fontWeight: 700 } },
-                        { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
-                        { val: 'serif', label: '나눔명조', style: { fontFamily: "'Nanum Myeongjo', serif", fontWeight: 700 } },
-                        { val: 'neon', label: '스포티', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } },
-                        { val: 'pixel', label: '레트로도트', style: { fontFamily: "'NeoDunggeunmo', sans-serif", fontWeight: 400 } },
-                        { val: 'plump', label: '둥글몽글', style: { fontFamily: "'TmonMonsori', sans-serif", fontWeight: 900 } }
-                      ].map((item) => (
+                      {getLocalizedFonts(activeLocale).map((item) => (
                         <button
                           key={item.val}
                           type="button"
                           onClick={() => handleFontSelect(item.val as any, false)}
-                          style={item.style}
+                          style={{ fontFamily: item.fontFamily, fontWeight: item.fontWeight as any }}
                           className={`py-2 px-0.5 rounded-lg text-xs md:text-sm transition-all cursor-pointer whitespace-nowrap ${
                             customFontFamily === item.val
                               ? 'bg-white text-black font-extrabold shadow-sm'
@@ -1663,19 +1734,12 @@ function LocalSignboardContent() {
                 <div>
                   <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
                   <div className="grid grid-cols-3 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 items-center font-medium">
-                    {[
-                      { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', sans-serif" } },
-                      { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif" } },
-                      { val: 'serif', label: '나눔명조', style: { fontFamily: "'Nanum Myeongjo', serif" } },
-                      { val: 'neon', label: '스포티', style: { fontFamily: "'LeeSaManRu-Bold', sans-serif" } },
-                      { val: 'pixel', label: '레트로도트', style: { fontFamily: "'NeoDunggeunmo', sans-serif" } },
-                      { val: 'plump', label: '둥글몽글', style: { fontFamily: "'TmonMonsori', sans-serif" } }
-                    ].map((item) => (
+                    {getLocalizedFonts(activeLocale).map((item) => (
                       <button
                         type="button"
                         key={item.val}
                         onClick={() => handleFontSelect(item.val as any, true)}
-                        style={item.style}
+                        style={{ fontFamily: item.fontFamily, fontWeight: item.fontWeight as any }}
                         className={`py-2 px-1 rounded-lg text-xs transition-all cursor-pointer ${
                           (editingPreset.font_family || 'sans-thin') === item.val
                             ? 'bg-white text-black shadow-sm font-extrabold'
@@ -2369,14 +2433,15 @@ function LocalFullscreenSignboard({ preset, onClose }: LocalFullscreenSignboardP
   const isMarquee = preset.effect === 'marquee';
 
   const getFontFamilyClass = (fontFamily?: string) => {
+    const loc = preset.locale || 'ko';
     switch (fontFamily) {
-      case 'sans-thin': return 'font-sign-sans-thin font-bold';
-      case 'sans-thick': return 'font-sign-sans-thick font-black';
-      case 'serif': return 'font-sign-serif font-bold';
-      case 'neon': return 'font-sign-neon font-black';
-      case 'pixel': return 'font-sign-pixel';
-      case 'plump': return 'font-sign-plump font-black';
-      default: return 'font-sign-sans-thin font-bold';
+      case 'sans-thin': return `font-sign-sans-thin-${loc} font-bold`;
+      case 'sans-thick': return `font-sign-sans-thick-${loc} font-black`;
+      case 'serif': return `font-sign-serif-${loc} font-bold`;
+      case 'neon': return `font-sign-neon-${loc} font-black`;
+      case 'pixel': return `font-sign-pixel-${loc}`;
+      case 'plump': return `font-sign-plump-${loc} font-black`;
+      default: return `font-sign-sans-thin-${loc} font-bold`;
     }
   };
 

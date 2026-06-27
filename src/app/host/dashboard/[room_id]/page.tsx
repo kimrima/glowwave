@@ -23,23 +23,19 @@ import {
   Trash2,
   Slash,
   Lock,
-  Maximize2
+  Maximize2,
+  Globe
 } from 'lucide-react';
 import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import jsQR from 'jsqr';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
-import { TEMPLATE_CATEGORIES } from '@/lib/templates';
+import { LOCALIZED_TEMPLATES, getDefaultsByLocale } from '@/lib/templates';
+import { t, Locale, getLocalizedFonts } from '@/lib/translations';
 import useFitText from '@/hooks/useFitText';
 
-const defaults: Preset[] = [
-  { bg_color: '#0B0B0F', text: '단색', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#3B82F6', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1527, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#FFFFFF', text: '사이키', text_color: '#EF4444', effect: 'blink', speed: 1527, bg_color_secondary: '#0B0B0F', font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1527, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100, lucky_draw_count: 1 },
-  { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100 },
-  { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
-];
+// Fallback host-aligned defaults
+const defaults: Preset[] = getDefaultsByLocale('ko');
 
 interface MiniCountdownPreviewProps {
   preset: Preset;
@@ -92,6 +88,9 @@ export default function HostDashboard() {
   const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
   const [isNetworkError, setIsNetworkError] = useState(false);
   
+  // Active Locale State
+  const [activeLocale, setActiveLocale] = useState<Locale>('ko');
+
   // Upgrade Plan Modal States
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [upgradeStep, setUpgradeStep] = useState<'select' | 'payment' | 'success'>('select');
@@ -173,22 +172,23 @@ export default function HostDashboard() {
   const [editingPresetIndex, setEditingPresetIndex] = useState<number | null>(null);
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
 
-  const getFontFamilyClass = (fontFamily?: string) => {
+  const getFontFamilyClass = (fontFamily?: string, localeOverride?: string) => {
+    const loc = localeOverride || activeLocale;
     switch (fontFamily) {
       case 'sans-thin':
-        return 'font-sign-sans-thin font-bold';
+        return `font-sign-sans-thin-${loc} font-bold`;
       case 'sans-thick':
-        return 'font-sign-sans-thick font-black';
+        return `font-sign-sans-thick-${loc} font-black`;
       case 'serif':
-        return 'font-sign-serif font-bold';
+        return `font-sign-serif-${loc} font-bold`;
       case 'neon':
-        return 'font-sign-neon font-black';
+        return `font-sign-neon-${loc} font-black`;
       case 'pixel':
-        return 'font-sign-pixel';
+        return `font-sign-pixel-${loc}`;
       case 'plump':
-        return 'font-sign-plump font-black';
+        return `font-sign-plump-${loc} font-black`;
       default:
-        return 'font-sign-sans-thin font-bold';
+        return `font-sign-sans-thin-${loc} font-bold`;
     }
   };
 
@@ -425,6 +425,26 @@ export default function HostDashboard() {
         passcode: roomData.passcode,
       });
 
+      // Determine active locale
+      let currentLocale: Locale = 'ko';
+      const savedLocale = localStorage.getItem(`glowwave_host_locale_${roomId}`) as Locale || localStorage.getItem('glowwave_host_locale') as Locale;
+      if (savedLocale && ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(savedLocale)) {
+        currentLocale = savedLocale;
+        setActiveLocale(savedLocale);
+      } else {
+        const navLang = navigator.language.toLowerCase();
+        if (navLang.startsWith('ko')) currentLocale = 'ko';
+        else if (navLang.startsWith('ja')) currentLocale = 'ja';
+        else if (navLang.startsWith('es')) currentLocale = 'es';
+        else if (navLang.startsWith('zh-tw') || navLang.startsWith('zh-cn')) currentLocale = 'zh-TW';
+        else if (navLang.startsWith('zh-hk')) currentLocale = 'zh-HK';
+        else currentLocale = 'en';
+        setActiveLocale(currentLocale);
+        localStorage.setItem(`glowwave_host_locale_${roomId}`, currentLocale);
+      }
+
+      const hostDefaults = getDefaultsByLocale(currentLocale);
+
       let initialPreset: Preset | null = null;
       if (roomData.current_state) {
         initialPreset = roomData.current_state;
@@ -470,10 +490,10 @@ export default function HostDashboard() {
           try {
             loadedPresets = JSON.parse(savedPresets);
           } catch (e) {
-            loadedPresets = [...defaults];
+            loadedPresets = [...hostDefaults];
           }
         } else {
-          loadedPresets = [...defaults];
+          loadedPresets = [...hostDefaults];
         }
       }
 
@@ -929,11 +949,11 @@ export default function HostDashboard() {
   };
 
   const handleResetDashboard = () => {
-    if (confirm('모든 프리셋과 보관함 슬롯을 초기 기본값으로 리셋하시겠습니까?')) {
+    if (confirm(t('confirm_reset_all', activeLocale))) {
       localStorage.removeItem(`glowwave_presets_${roomId}`);
       localStorage.removeItem('glowwave_host_slots');
       
-      const loadedPresets = [...defaults];
+      const loadedPresets = getDefaultsByLocale(activeLocale);
       setPresets(loadedPresets);
       setSavedSlots([]);
       setActivePresetIndex(0);
@@ -944,8 +964,34 @@ export default function HostDashboard() {
         supabase.from('rooms').update({ current_state: loadedPresets[0] }).eq('id', roomId);
       }
       
-      alert('대시보드가 성공적으로 초기화되었습니다.');
+      alert(t('reset_success', activeLocale));
       setIsVaultOpen(false);
+    }
+  };
+
+  const handleLocaleChange = (newLocale: Locale) => {
+    setActiveLocale(newLocale);
+    localStorage.setItem(`glowwave_host_locale_${roomId}`, newLocale);
+    localStorage.setItem('glowwave_host_locale', newLocale);
+
+    // If presets list is empty or matches defaults of any language, translate them
+    const isOnlyDefaults = presets.length <= 6 && presets.every(p => 
+      ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].some(loc => 
+        getDefaultsByLocale(loc as Locale).some(d => d.text === p.text)
+      )
+    );
+
+    if (isOnlyDefaults || presets.length === 0) {
+      const newDefaults = getDefaultsByLocale(newLocale);
+      setPresets(newDefaults);
+      localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(newDefaults));
+      setCurrentBroadcastPreset(newDefaults[0]);
+      applyPresetToController(newDefaults[0]);
+      setActivePresetIndex(0);
+      
+      if (isSupabaseConfigured() && supabase) {
+        supabase.from('rooms').update({ current_state: newDefaults[0] }).eq('id', roomId);
+      }
     }
   };
 
@@ -1408,8 +1454,42 @@ export default function HostDashboard() {
               onClick={() => setIsVaultOpen(true)}
               className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
             >
-              <span>보관 & 공유</span>
+              <span>{t('vault_share', activeLocale)}</span>
             </button>
+
+            {/* Language Selector Dropdown */}
+            <div className="relative group">
+              <button
+                type="button"
+                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold text-white cursor-pointer shadow-sm select-none transition-all"
+              >
+                <Globe className="w-3.5 h-3.5 text-zinc-400" />
+                <span className="uppercase">{activeLocale}</span>
+              </button>
+              <div className="absolute right-0 mt-2 w-40 rounded-2xl border border-white/10 bg-[#0c0c14]/95 backdrop-blur-lg p-1.5 shadow-2xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
+                {[
+                  { code: 'ko', label: '한국어 (KR)' },
+                  { code: 'en', label: 'English (US)' },
+                  { code: 'ja', label: '日本語 (JP)' },
+                  { code: 'es', label: 'Español (ES)' },
+                  { code: 'zh-TW', label: '繁體中文 (TW)' },
+                  { code: 'zh-HK', label: '繁體中文 (HK)' }
+                ].map((lang) => (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    onClick={() => handleLocaleChange(lang.code as Locale)}
+                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      activeLocale === lang.code
+                        ? 'bg-white text-black font-extrabold'
+                        : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             
             <button 
               onClick={() => {
@@ -1567,7 +1647,7 @@ export default function HostDashboard() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-indigo-400" />
-                <h2 className="text-sm font-bold text-white font-outfit">원터치 연출 보드 (Quick Preset Board)</h2>
+                <h2 className="text-sm font-bold text-white font-outfit">{t('quick_preset_board', activeLocale)}</h2>
               </div>
               
               {/* 3 Toggle Controls next to 원터치 연출 보드 */}
@@ -1578,7 +1658,7 @@ export default function HostDashboard() {
                   onClick={() => setShowMiniPreviews(prev => !prev)}
                   className="flex items-center gap-2 bg-white/[0.02] border border-white/5 hover:border-white/10 px-3 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
                 >
-                  <span>카드 미리보기</span>
+                  <span>{t('show_card_preview', activeLocale)}</span>
                   <div className={`relative w-8 h-4.5 rounded-full transition-all duration-200 ${showMiniPreviews ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.4)]' : 'bg-zinc-800'}`}>
                     <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${showMiniPreviews ? 'translate-x-3.5' : 'translate-x-0'}`} />
                   </div>
@@ -1590,7 +1670,7 @@ export default function HostDashboard() {
                   onClick={() => setIsTransmitterLocked(prev => !prev)}
                   className="flex items-center gap-2 bg-white/[0.02] border border-white/5 hover:border-white/10 px-3 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
                 >
-                  <span>{!isTransmitterLocked ? '원터치 바로송출' : '클릭 시 수정모드'}</span>
+                  <span>{!isTransmitterLocked ? t('one_touch_instant_send', activeLocale) : t('edit_preset', activeLocale)}</span>
                   <div className={`relative w-8 h-4.5 rounded-full transition-all duration-200 ${!isTransmitterLocked ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-zinc-800'}`}>
                     <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${!isTransmitterLocked ? 'translate-x-3.5' : 'translate-x-0'}`} />
                   </div>
@@ -1602,7 +1682,7 @@ export default function HostDashboard() {
                   onClick={() => handleBlackoutToggle(!isBlackout)}
                   className="flex items-center gap-2 bg-white/[0.02] border border-white/5 hover:border-white/10 px-3 py-1.5 rounded-xl text-[10px] font-bold text-zinc-300 hover:text-white cursor-pointer select-none transition-all"
                 >
-                  <span>화면 암전</span>
+                  <span>{t('blackout', activeLocale)}</span>
                   <div className={`relative w-8 h-4.5 rounded-full transition-all duration-200 ${isBlackout ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]' : 'bg-zinc-800'}`}>
                     <div className={`absolute top-0.5 left-0.5 w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${isBlackout ? 'translate-x-3.5' : 'translate-x-0'}`} />
                   </div>
@@ -1621,9 +1701,9 @@ export default function HostDashboard() {
                     : 'bg-white/[0.02] border-white/5 text-zinc-400 hover:text-white hover:bg-white/[0.05]'
                 }`}
               >
-                <span>내 프리셋</span>
+                <span>{t('my_presets', activeLocale)}</span>
               </button>
-              {TEMPLATE_CATEGORIES.map((cat) => (
+              {(LOCALIZED_TEMPLATES[activeLocale] || LOCALIZED_TEMPLATES['ko']).map((cat) => (
                 <button
                   type="button"
                   key={cat.id}
@@ -1640,7 +1720,7 @@ export default function HostDashboard() {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {(activeCategory === 'custom' ? presets : (TEMPLATE_CATEGORIES.find(c => c.id === activeCategory)?.presets || [])).map((preset, index) => {
+              {(activeCategory === 'custom' ? presets : ((LOCALIZED_TEMPLATES[activeLocale] || LOCALIZED_TEMPLATES['ko']).find(c => c.id === activeCategory)?.presets || [])).map((preset, index) => {
                 const isActive = currentBroadcastPreset.text === preset.text &&
                                  currentBroadcastPreset.bg_color === preset.bg_color &&
                                  currentBroadcastPreset.font_family === preset.font_family &&
@@ -2012,35 +2092,31 @@ export default function HostDashboard() {
                   <div className="lg:col-span-6 flex flex-col gap-2">
                     <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">글꼴 스타일</span>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 items-center">
-                      {[
-                        { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', -apple-system, sans-serif", fontWeight: 700 } },
-                        { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
-                        { val: 'serif', label: '나눔명조', style: { fontFamily: "'Nanum Myeongjo', serif", fontWeight: 700 } },
-                        { val: 'neon', label: '스포티', isPremium: true, style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } },
-                        { val: 'pixel', label: '레트로도트', isPremium: true, style: { fontFamily: "'NeoDunggeunmo', sans-serif", fontWeight: 400 } },
-                        { val: 'plump', label: '둥글몽글', isPremium: true, style: { fontFamily: "'TmonMonsori', sans-serif", fontWeight: 900 } }
-                      ].map((item) => (
-                        <button
-                          type="button"
-                          key={item.val}
-                          onClick={() => handleFontSelect(item.val as any, false)}
-                          style={item.style}
-                          className={`py-2 px-0.5 rounded-lg text-xs md:text-sm transition-all cursor-pointer whitespace-nowrap ${
-                            customFontFamily === item.val
-                              ? 'bg-white text-black font-extrabold shadow-sm'
-                              : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
-                          }`}
-                        >
-                          <span className="flex flex-col items-center justify-center gap-0.5">
-                            <span>{item.label}</span>
-                            {item.isPremium && (
-                              <span className="px-1 py-[0.5px] rounded-[3px] text-[7px] font-black tracking-wide uppercase bg-violet-500/20 border border-violet-500/30 text-violet-400">
-                                PRO
-                              </span>
-                            )}
-                          </span>
-                        </button>
-                      ))}
+                      {getLocalizedFonts(activeLocale).map((item) => {
+                        const isPremium = item.val === 'neon' || item.val === 'pixel' || item.val === 'plump';
+                        return (
+                          <button
+                            type="button"
+                            key={item.val}
+                            onClick={() => handleFontSelect(item.val as any, false)}
+                            style={{ fontFamily: item.fontFamily, fontWeight: item.fontWeight as any }}
+                            className={`py-2 px-0.5 rounded-lg text-xs md:text-sm transition-all cursor-pointer whitespace-nowrap ${
+                              customFontFamily === item.val
+                                ? 'bg-white text-black font-extrabold shadow-sm'
+                                : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                            }`}
+                          >
+                            <span className="flex flex-col items-center justify-center gap-0.5">
+                              <span>{item.label}</span>
+                              {isPremium && (
+                                <span className="px-1 py-[0.5px] rounded-[3px] text-[7px] font-black tracking-wide uppercase bg-violet-500/20 border border-violet-500/30 text-violet-400">
+                                  PRO
+                                </span>
+                              )}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -2731,35 +2807,31 @@ export default function HostDashboard() {
                 <div>
                   <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
                   <div className="grid grid-cols-3 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 items-center font-medium">
-                    {[
-                      { val: 'sans-thin', label: '기본고딕', style: { fontFamily: "'Pretendard', -apple-system, sans-serif", fontWeight: 700 } },
-                      { val: 'sans-thick', label: '꽉찬고딕', style: { fontFamily: "'GmarketSansBold', sans-serif", fontWeight: 900 } },
-                      { val: 'serif', label: '나눔명조', style: { fontFamily: "'Nanum Myeongjo', serif", fontWeight: 700 } },
-                      { val: 'neon', label: '스포티', isPremium: true, style: { fontFamily: "'LeeSaManRu-Bold', sans-serif", fontWeight: 900 } },
-                      { val: 'pixel', label: '레트로도트', isPremium: true, style: { fontFamily: "'NeoDunggeunmo', sans-serif", fontWeight: 400 } },
-                      { val: 'plump', label: '둥글몽글', isPremium: true, style: { fontFamily: "'TmonMonsori', sans-serif", fontWeight: 900 } }
-                    ].map((item) => (
-                      <button
-                        type="button"
-                        key={item.val}
-                        onClick={() => handleFontSelect(item.val as any, true)}
-                        style={item.style}
-                        className={`py-2 px-1 rounded-lg text-xs transition-all cursor-pointer ${
-                          (editingPreset.font_family || 'sans-thin') === item.val
-                            ? 'bg-white text-black shadow-sm font-extrabold'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
-                        }`}
-                      >
-                        <span className="flex flex-col items-center justify-center gap-0.5">
-                          <span>{item.label}</span>
-                          {item.isPremium && (
-                            <span className="px-1 py-[0.5px] rounded-[3px] text-[7px] font-black tracking-wide uppercase bg-violet-500/20 border border-violet-500/30 text-violet-400">
-                              PRO
-                            </span>
-                          )}
-                        </span>
-                      </button>
-                    ))}
+                    {getLocalizedFonts(activeLocale).map((item) => {
+                      const isPremium = item.val === 'neon' || item.val === 'pixel' || item.val === 'plump';
+                      return (
+                        <button
+                          type="button"
+                          key={item.val}
+                          onClick={() => handleFontSelect(item.val as any, true)}
+                          style={{ fontFamily: item.fontFamily, fontWeight: item.fontWeight as any }}
+                          className={`py-2 px-1 rounded-lg text-xs transition-all cursor-pointer ${
+                            (editingPreset.font_family || 'sans-thin') === item.val
+                              ? 'bg-white text-black shadow-sm font-extrabold'
+                              : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          <span className="flex flex-col items-center justify-center gap-0.5">
+                            <span>{item.label}</span>
+                            {isPremium && (
+                              <span className="px-1 py-[0.5px] rounded-[3px] text-[7px] font-black tracking-wide uppercase bg-violet-500/20 border border-violet-500/30 text-violet-400">
+                                PRO
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

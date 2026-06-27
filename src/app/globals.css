@@ -1,5 +1,6 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 @import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Space+Grotesk:wght@700;900&family=Playfair+Display:ital,wght@0,700;1,700&family=Orbitron:wght@700;900&family=Press+Start+2P&family=Fredoka:wght@700&family=Noto+Sans+JP:wght@400;700;900&family=Dela+Gothic+One&family=Shippori+Mincho:wght@700;800&family=Monoton&family=DotGothic16&family=Kosugi+Maru&family=Outfit:wght@400;700;900&family=Montserrat:wght@800;900&family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&family=Noto+Serif+TC:wght@700&family=Noto+Sans+HK:wght@400;700;900&family=M+PLUS+1p:wght@700&display=swap');
 @import "tailwindcss";
 
 @font-face {
@@ -238,44 +239,63 @@ body {
   transform: translateY(1px) scale(0.97);
 }
 
-.font-sign-sans-thin {
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  font-weight: 700;
-}
+/* Locale-specific font utility classes */
 
-.font-sign-sans-thick {
-  font-family: 'GmarketSansBold', 'GMarketSans', sans-serif;
-  font-weight: 900;
-  display: inline-block;
-  transform: translateY(0.02em);
-}
+/* Korean (ko) */
+.font-sign-sans-thin-ko { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; font-weight: 700; }
+.font-sign-sans-thick-ko { font-family: 'GmarketSansBold', 'GMarketSans', sans-serif; font-weight: 900; display: inline-block; transform: translateY(0.02em); }
+.font-sign-serif-ko { font-family: 'Nanum Myeongjo', serif; font-weight: 700; }
+.font-sign-neon-ko { font-family: 'LeeSaManRu-Bold', 'Isamanru', sans-serif; font-weight: 900; text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
+.font-sign-pixel-ko { font-family: 'NeoDunggeunmo', 'NeoDonggeunmo', 'neodgm', sans-serif; font-weight: normal; }
+.font-sign-plump-ko { font-family: 'TmonMonsori', sans-serif; font-weight: normal; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
 
-.font-sign-serif {
-  font-family: 'Nanum Myeongjo', serif;
-  font-weight: 700;
-}
+/* English (en) */
+.font-sign-sans-thin-en { font-family: 'Inter', sans-serif; font-weight: 700; }
+.font-sign-sans-thick-en { font-family: 'Space Grotesk', sans-serif; font-weight: 900; display: inline-block; transform: translateY(0.02em); }
+.font-sign-serif-en { font-family: 'Playfair Display', serif; font-weight: 700; }
+.font-sign-neon-en { font-family: 'Orbitron', sans-serif; font-weight: 900; text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
+.font-sign-pixel-en { font-family: 'Press Start 2P', monospace; font-weight: normal; font-size: 0.85em; }
+.font-sign-plump-en { font-family: 'Fredoka', sans-serif; font-weight: 700; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
 
-.font-sign-neon {
-  font-family: 'LeeSaManRu-Bold', 'Isamanru', sans-serif;
-  font-weight: 900;
-  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor;
-  display: inline-block;
-  padding-top: 0.15em;
-  padding-bottom: 0.05em;
-}
+/* Japanese (ja) */
+.font-sign-sans-thin-ja { font-family: 'Noto Sans JP', sans-serif; font-weight: 700; }
+.font-sign-sans-thick-ja { font-family: 'Dela Gothic One', sans-serif; font-weight: 900; display: inline-block; transform: translateY(0.02em); }
+.font-sign-serif-ja { font-family: 'Shippori Mincho', serif; font-weight: 700; }
+.font-sign-neon-ja { font-family: 'Monoton', sans-serif; font-weight: 900; text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
+.font-sign-pixel-ja { font-family: 'DotGothic16', monospace; font-weight: normal; }
+.font-sign-plump-ja { font-family: 'Kosugi Maru', sans-serif; font-weight: 700; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
 
-.font-sign-pixel {
-  font-family: 'NeoDunggeunmo', 'NeoDonggeunmo', 'neodgm', sans-serif;
-  font-weight: normal;
-}
+/* Spanish (es) */
+.font-sign-sans-thin-es { font-family: 'Outfit', sans-serif; font-weight: 700; }
+.font-sign-sans-thick-es { font-family: 'Montserrat', sans-serif; font-weight: 900; display: inline-block; transform: translateY(0.02em); }
+.font-sign-serif-es { font-family: 'Cinzel', serif; font-weight: 700; }
+.font-sign-neon-es { font-family: 'Orbitron', sans-serif; font-weight: 900; text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
+.font-sign-pixel-es { font-family: 'Press Start 2P', monospace; font-weight: normal; font-size: 0.85em; }
+.font-sign-plump-es { font-family: 'Fredoka', sans-serif; font-weight: 700; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
 
-.font-sign-plump {
-  font-family: 'TmonMonsori', sans-serif;
-  font-weight: normal;
-  display: inline-block;
-  padding-top: 0.15em;
-  padding-bottom: 0.05em;
-}
+/* Traditional Chinese - Taiwan (zh-TW) */
+.font-sign-sans-thin-zh-TW { font-family: 'Noto Sans TC', sans-serif; font-weight: 700; }
+.font-sign-sans-thick-zh-TW { font-family: 'Noto Sans TC', sans-serif; font-weight: 900; display: inline-block; transform: translateY(0.02em); }
+.font-sign-serif-zh-TW { font-family: 'BiauKai', 'Noto Serif TC', serif; font-weight: 700; }
+.font-sign-neon-zh-TW { font-family: 'Orbitron', sans-serif; font-weight: 900; text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
+.font-sign-pixel-zh-TW { font-family: 'M PLUS 1p', sans-serif; font-weight: 700; }
+.font-sign-plump-zh-TW { font-family: 'M PLUS 1p', 'Kosugi Maru', sans-serif; font-weight: 900; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
+
+/* Traditional Chinese - Hong Kong (zh-HK) */
+.font-sign-sans-thin-zh-HK { font-family: 'Noto Sans HK', sans-serif; font-weight: 700; }
+.font-sign-sans-thick-zh-HK { font-family: 'Noto Sans HK', sans-serif; font-weight: 900; display: inline-block; transform: translateY(0.02em); }
+.font-sign-serif-zh-HK { font-family: 'BiauKai', 'Noto Serif TC', serif; font-weight: 700; }
+.font-sign-neon-zh-HK { font-family: 'Orbitron', sans-serif; font-weight: 900; text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
+.font-sign-pixel-zh-HK { font-family: 'M PLUS 1p', sans-serif; font-weight: 700; }
+.font-sign-plump-zh-HK { font-family: 'M PLUS 1p', 'Kosugi Maru', sans-serif; font-weight: 900; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
+
+/* Backward Compatibility Fallbacks (Mapped to Korean fonts) */
+.font-sign-sans-thin { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; font-weight: 700; }
+.font-sign-sans-thick { font-family: 'GmarketSansBold', 'GMarketSans', sans-serif; font-weight: 900; display: inline-block; transform: translateY(0.02em); }
+.font-sign-serif { font-family: 'Nanum Myeongjo', serif; font-weight: 700; }
+.font-sign-neon { font-family: 'LeeSaManRu-Bold', 'Isamanru', sans-serif; font-weight: 900; text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 40px currentColor; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
+.font-sign-pixel { font-family: 'NeoDunggeunmo', 'NeoDonggeunmo', 'neodgm', sans-serif; font-weight: normal; }
+.font-sign-plump { font-family: 'TmonMonsori', sans-serif; font-weight: normal; display: inline-block; padding-top: 0.15em; padding-bottom: 0.05em; }
 
 /* iOS Style Thick Premium Slider Range input */
 .premium-slider {
