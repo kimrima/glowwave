@@ -928,6 +928,27 @@ export default function HostDashboard() {
     }
   };
 
+  const handleResetDashboard = () => {
+    if (confirm('모든 프리셋과 보관함 슬롯을 초기 기본값으로 리셋하시겠습니까?')) {
+      localStorage.removeItem(`glowwave_presets_${roomId}`);
+      localStorage.removeItem('glowwave_host_slots');
+      
+      const loadedPresets = [...defaults];
+      setPresets(loadedPresets);
+      setSavedSlots([]);
+      setActivePresetIndex(0);
+      setCurrentBroadcastPreset(loadedPresets[0]);
+      applyPresetToController(loadedPresets[0]);
+      
+      if (isSupabaseConfigured() && supabase) {
+        supabase.from('rooms').update({ current_state: loadedPresets[0] }).eq('id', roomId);
+      }
+      
+      alert('대시보드가 성공적으로 초기화되었습니다.');
+      setIsVaultOpen(false);
+    }
+  };
+
   // Wireless Sharing Handlers for Host
   const handleGenerateShareCode = async () => {
     setIsSharingLoading(true);
@@ -3513,6 +3534,33 @@ export default function HostDashboard() {
                         ))}
                       </div>
                     )}
+                  </div>
+
+                  {/* Integration of Backup warnings & Reset */}
+                  <div className="pt-6 border-t border-white/5 space-y-6">
+                    <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-left flex items-start gap-3">
+                      <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_#f59e0b] mt-1.5" />
+                      <div className="flex-1">
+                        <span className="text-xs text-zinc-300 font-bold block mb-1">브라우저 캐시 주의 (삭제 금지)</span>
+                        <span className="text-xs text-zinc-400 leading-relaxed block">
+                          방문 기록(인터넷 캐시/쿠키)을 청소하거나 브라우저 저장소를 초기화하면 저장해 둔 보관함 슬롯 데이터가 **함께 삭제되어 절대로 복구할 수 없습니다**. 소중한 디자인 팩은 수시로 <b>[무선 전송]</b> 탭을 통해 백업 또는 다른 기기로 전송해 두시길 강력히 권장합니다.
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center text-left gap-4">
+                      <div className="min-w-0 pr-4">
+                        <span className="text-xs text-zinc-400 font-bold block">대시보드 초기화</span>
+                        <span className="text-xs text-zinc-500 mt-1 block">이 방의 모든 프리셋과 보관함 슬롯을 초기 기본값으로 리셋합니다.</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleResetDashboard}
+                        className="py-2.5 px-4 rounded-xl border border-white/10 text-zinc-400 hover:text-red-400 hover:border-red-500/30 bg-white/5 hover:bg-red-500/10 cursor-pointer text-xs font-bold transition-all text-center active:scale-95 shrink-0 hover:shadow-[0_0_12px_rgba(239,68,68,0.1)]"
+                      >
+                        전체 초기 리셋
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
