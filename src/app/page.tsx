@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { Preset, EffectType } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import QRScannerModal from '@/components/QRScannerModal';
+import { t, Locale } from '@/lib/translations';
+import { Globe } from 'lucide-react';
 
 const getSpeedFactor = (ms: number, effect: string) => {
   if (effect === 'blink') {
@@ -36,6 +38,47 @@ const getSpeedMs = (factor: number, effect: string) => {
 export default function Home() {
   const router = useRouter();
 
+  // Active Locale State
+  const [activeLocale, setActiveLocale] = useState<Locale>('ko');
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedLocale = localStorage.getItem('glowwave_home_locale') as Locale;
+      if (savedLocale && ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(savedLocale)) {
+        setActiveLocale(savedLocale);
+      } else {
+        const navLang = navigator.language.toLowerCase();
+        let detectedLocale: Locale = 'en';
+        if (navLang.startsWith('ko')) detectedLocale = 'ko';
+        else if (navLang.startsWith('ja')) detectedLocale = 'ja';
+        else if (navLang.startsWith('es')) detectedLocale = 'es';
+        else if (navLang.startsWith('zh-tw') || navLang.startsWith('zh-cn')) detectedLocale = 'zh-TW';
+        else if (navLang.startsWith('zh-hk')) detectedLocale = 'zh-HK';
+        
+        setActiveLocale(detectedLocale);
+        localStorage.setItem('glowwave_home_locale', detectedLocale);
+      }
+    }
+  }, []);
+
+  const handleLocaleChange = (newLocale: Locale) => {
+    setActiveLocale(newLocale);
+    localStorage.setItem('glowwave_home_locale', newLocale);
+    localStorage.setItem('glowwave_host_locale', newLocale);
+  };
+
+  const formatTimeLeft = (detail: RoomDetail) => {
+    if (detail.isExpired) return t('exp_expired', activeLocale);
+    const diff = detail.diff;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (hours > 0) {
+      return `${hours}${t('exp_hours_left', activeLocale)} ${minutes}${t('exp_mins_left', activeLocale)}`;
+    }
+    return `${minutes}${t('exp_mins_left', activeLocale)}`;
+  };
+
   // Active host room states for resume/cleanup
   const [activeRoomId, setActiveRoomId] = useState<string | null>(null);
   const [activeRoomToken, setActiveRoomToken] = useState<string | null>(null);
@@ -50,7 +93,7 @@ export default function Home() {
     tier: string;
     createdAt: string;
     isExpired: boolean;
-    timeLeftText: string;
+    diff: number;
     loaded: boolean;
   }
   const [roomDetails, setRoomDetails] = useState<Record<string, RoomDetail>>({});
@@ -187,22 +230,13 @@ export default function Home() {
               const expireTime = createdTime + limitMs;
               const diff = expireTime - Date.now();
               
-              let timeLeftText = '';
               let isExpired = false;
               if (diff <= 0 || data.status !== 'active') {
                 isExpired = true;
-                timeLeftText = '만료됨';
                 // Remove from recentRooms if expired
                 updatedRecentRooms = updatedRecentRooms.filter(r => r.roomId !== id);
                 hasChanges = true;
               } else {
-                const hours = Math.floor(diff / (1000 * 60 * 60));
-                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                if (hours > 0) {
-                  timeLeftText = `${hours}시간 ${minutes}분 남음`;
-                } else {
-                  timeLeftText = `${minutes}분 남음`;
-                }
                 // Update active room details in loaded list if missing/mismatched
                 const matched = updatedRecentRooms.find(r => r.roomId === id);
                 if (matched && (!matched.tier || matched.createdAt !== data.created_at)) {
@@ -216,7 +250,7 @@ export default function Home() {
                 tier: data.tier,
                 createdAt: data.created_at,
                 isExpired,
-                timeLeftText,
+                diff,
                 loaded: true
               };
             } else {
@@ -224,7 +258,7 @@ export default function Home() {
                 tier: 'free',
                 createdAt: new Date().toISOString(),
                 isExpired: true,
-                timeLeftText: '만료됨',
+                diff: 0,
                 loaded: true
               };
               updatedRecentRooms = updatedRecentRooms.filter(r => r.roomId !== id);
@@ -235,7 +269,7 @@ export default function Home() {
               tier: 'free',
               createdAt: new Date().toISOString(),
               isExpired: true,
-              timeLeftText: '만료됨',
+              diff: 0,
               loaded: true
             };
             updatedRecentRooms = updatedRecentRooms.filter(r => r.roomId !== id);
@@ -288,7 +322,7 @@ export default function Home() {
   const handleJoinRoomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!joinRoomCode || joinRoomCode.trim().length !== 6) {
-      setJoinError('6자리 올바른 방 코드를 입력하세요.');
+      setJoinError(t('err_join_code', activeLocale));
       return;
     }
     router.push(`/room/${joinRoomCode.trim().toUpperCase()}`);
@@ -351,23 +385,69 @@ export default function Home() {
           </Link>
           
           <nav className="hidden md:flex items-center gap-8 text-xs text-zinc-400 font-bold uppercase tracking-wider font-outfit">
-            <a href="#features" className="hover:text-white transition-colors">주요 기능</a>
-            <a href="#trial" className="hover:text-white transition-colors">실시간 무료 체험</a>
-            <Link href="/recovery" className="hover:text-white transition-colors">구매 복구</Link>
+            <a href="#features" className="hover:text-white transition-colors">{t('nav_features', activeLocale)}</a>
+            <a href="#trial" className="hover:text-white transition-colors">{t('nav_trial', activeLocale)}</a>
+            <Link href="/recovery" className="hover:text-white transition-colors">{t('nav_recovery', activeLocale)}</Link>
           </nav>
 
           <div className="flex items-center gap-3">
+            {/* Language Selector Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
+              >
+                <Globe className="w-3.5 h-3.5 text-zinc-400" />
+                <span className="uppercase">{activeLocale}</span>
+              </button>
+              {isLangDropdownOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40 cursor-default" 
+                    onClick={() => setIsLangDropdownOpen(false)} 
+                  />
+                  <div className="absolute right-0 mt-2 w-40 rounded-2xl border border-white/10 bg-[#0c0c14]/95 backdrop-blur-lg p-1.5 shadow-2xl transition-all duration-200 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    {[
+                      { code: 'ko', label: '한국어 (KR)' },
+                      { code: 'en', label: 'English (US)' },
+                      { code: 'ja', label: '日本語 (JP)' },
+                      { code: 'es', label: 'Español (ES)' },
+                      { code: 'zh-TW', label: '繁體中文 (TW)' },
+                      { code: 'zh-HK', label: '繁體中文 (HK)' }
+                    ].map((lang) => (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => {
+                          handleLocaleChange(lang.code as Locale);
+                          setIsLangDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          activeLocale === lang.code
+                            ? 'bg-white text-black font-extrabold'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {lang.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
             <button 
               onClick={() => setIsQRScannerOpen(true)}
-              className="btn-secondary text-xs px-4 py-2.5 rounded-xl text-zinc-300 hover:text-white transition-all cursor-pointer font-outfit"
+              className="btn-secondary text-xs px-4 py-2 rounded-xl text-zinc-300 hover:text-white transition-all cursor-pointer font-outfit"
             >
-              QR 스캔 참여
+              {t('btn_qr_join', activeLocale)}
             </button>
             <Link 
               href="/host/setup" 
-              className="btn-primary text-xs px-4 py-2.5 rounded-xl text-black hover:bg-zinc-200 transition-all cursor-pointer font-outfit"
+              className="btn-primary text-xs px-4 py-2 rounded-xl text-black hover:bg-zinc-200 transition-all cursor-pointer font-outfit"
             >
-              방 만들기
+              {t('btn_create_room', activeLocale)}
             </Link>
           </div>
         </div>
@@ -387,12 +467,12 @@ export default function Home() {
             </div>
             
             <h1 className="text-4xl sm:text-6xl font-black tracking-tighter leading-[1.15] mb-6 text-white font-outfit text-gradient">
-              앱 설치 없이 스마트폰을<br />
-              <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">하나의 무대 조명</span>으로
+              {t('hero_title_1', activeLocale)}<br />
+              <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">{t('hero_title_2', activeLocale)}</span>
             </h1>
             
             <p className="text-xs sm:text-sm text-zinc-400 max-w-lg mx-auto leading-relaxed font-semibold">
-              현장 QR 코드 스캔 또는 참여 코드를 통해 수백 명의 관객 스마트폰 화면 색상과 구호를 실시간 동기화하여 압도적인 시각 효과를 연출하세요.
+              {t('hero_desc', activeLocale)}
             </p>
           </div>
 
@@ -404,7 +484,7 @@ export default function Home() {
                 <div className="flex flex-col gap-3">
                   <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest flex items-center gap-1.5 font-mono text-left">
                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                    <span>내가 만든 전광판 (Hosted Signboards)</span>
+                    <span>{t('bento_hosted_title', activeLocale)}</span>
                   </h3>
                   <div className="flex flex-col gap-3">
                     {!isStatusChecked ? (
@@ -429,25 +509,19 @@ export default function Home() {
                                     {item.roomId}
                                   </h4>
                                   {details ? (
-                                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize ${
-                                      details.tier === 'free' 
-                                        ? 'bg-zinc-800 text-zinc-400' 
-                                        : details.tier === 'lite'
-                                          ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                          : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                                    }`}>
-                                      {details.tier === 'free' ? '무료' : details.tier === 'lite' ? '라이트' : '프로'}
+                                    <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize bg-zinc-800 text-zinc-400">
+                                      {item.tier === 'free' ? t('free', activeLocale) : item.tier === 'lite' ? 'Lite' : 'Pro'}
                                     </span>
                                   ) : item.tier ? (
                                     <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize bg-zinc-800 text-zinc-400">
-                                      {item.tier === 'free' ? '무료' : item.tier === 'lite' ? '라이트' : '프로'}
+                                      {item.tier === 'free' ? t('free', activeLocale) : item.tier === 'lite' ? 'Lite' : 'Pro'}
                                     </span>
                                   ) : null}
                                 </div>
                                 
                                 <div className="flex items-center gap-2 mt-1">
                                   <span className="text-[9px] text-zinc-500 font-mono">
-                                    {new Date(item.createdAt).toLocaleDateString('ko-KR', {
+                                    {new Date(item.createdAt).toLocaleDateString(activeLocale === 'ko' ? 'ko-KR' : 'en-US', {
                                       month: 'short',
                                       day: 'numeric',
                                       hour: '2-digit',
@@ -457,10 +531,10 @@ export default function Home() {
                                   <span className="text-[9px] text-zinc-500">·</span>
                                   {details ? (
                                     <span className={`text-[9px] font-bold font-mono ${details.isExpired ? 'text-red-500' : 'text-emerald-400'}`}>
-                                      {details.timeLeftText}
+                                      {formatTimeLeft(details)}
                                     </span>
                                   ) : (
-                                    <span className="text-[9px] text-zinc-500 font-mono">조회 중...</span>
+                                    <span className="text-[9px] text-zinc-500 font-mono">{t('exp_checking', activeLocale)}</span>
                                   )}
                                 </div>
                               </div>
@@ -468,14 +542,14 @@ export default function Home() {
                                 href={`/host/dashboard/${item.roomId}`}
                                 className="px-3.5 py-2 rounded-xl text-[10px] font-black bg-indigo-600 hover:bg-indigo-500 text-white transition-all flex items-center gap-1 shrink-0"
                               >
-                                대시보드 &rarr;
+                                {t('bento_btn_dashboard', activeLocale)} &rarr;
                               </Link>
                             </div>
                           );
                         })
                       ) : (
                         <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 text-center text-zinc-500 font-semibold text-[10px] leading-relaxed">
-                          개설한 전광판 내역이 없습니다.
+                          {t('bento_empty_hosted', activeLocale)}
                         </div>
                       )}
                     </div>
@@ -485,7 +559,7 @@ export default function Home() {
                 <div className="flex flex-col gap-3">
                   <h3 className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 font-mono text-left">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>내가 참여한 전광판 (Attended Signboards)</span>
+                    <span>{t('bento_attended_title', activeLocale)}</span>
                   </h3>
                   <div className="flex flex-col gap-3">
                     {!isStatusChecked ? (
@@ -517,14 +591,14 @@ export default function Home() {
                                         ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                                         : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
                                   }`}>
-                                    {details.tier === 'free' ? '무료' : details.tier === 'lite' ? '라이트' : '프로'}
+                                    {details.tier === 'free' ? t('free', activeLocale) : details.tier === 'lite' ? 'Lite' : 'Pro'}
                                   </span>
                                 )}
                               </div>
                               
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-[9px] text-zinc-500 font-mono">
-                                  {new Date(item.createdAt).toLocaleDateString('ko-KR', {
+                                  {new Date(item.createdAt).toLocaleDateString(activeLocale === 'ko' ? 'ko-KR' : 'en-US', {
                                     month: 'short',
                                     day: 'numeric',
                                     hour: '2-digit',
@@ -534,10 +608,10 @@ export default function Home() {
                                 <span className="text-[9px] text-zinc-500">·</span>
                                 {details ? (
                                   <span className={`text-[9px] font-bold font-mono ${details.isExpired ? 'text-red-500' : 'text-emerald-400'}`}>
-                                    {details.timeLeftText}
+                                    {formatTimeLeft(details)}
                                   </span>
                                 ) : (
-                                  <span className="text-[9px] text-zinc-500 font-mono">조회 중...</span>
+                                  <span className="text-[9px] text-zinc-500 font-mono">{t('exp_checking', activeLocale)}</span>
                                 )}
                               </div>
                             </div>
@@ -545,14 +619,14 @@ export default function Home() {
                               href={`/room/${item.roomId}`}
                               className="px-3.5 py-2 rounded-xl text-[10px] font-black bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1 shrink-0"
                             >
-                              관객뷰 입장 &rarr;
+                              {t('bento_btn_spectate', activeLocale)} &rarr;
                             </Link>
                           </div>
                         );
                       })
                     ) : (
                       <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 text-center text-zinc-500 font-semibold text-[10px] leading-relaxed">
-                        참여한 전광판 내역이 없습니다.
+                        {t('bento_empty_attended', activeLocale)}
                       </div>
                     )}
                   </div>
@@ -568,16 +642,16 @@ export default function Home() {
               <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-300" />
               <div className="mb-6 relative z-10">
                 <span className="text-[9px] font-mono text-pink-400 font-extrabold uppercase tracking-widest">Standalone Signboard</span>
-                <h2 className="text-xl font-black text-white mt-3 mb-3 font-outfit">1인 단독 전광판 실행</h2>
+                <h2 className="text-xl font-black text-white mt-3 mb-3 font-outfit">{t('card_standalone_title', activeLocale)}</h2>
                 <p className="text-xs text-zinc-400 leading-relaxed font-semibold">
-                  로그인이나 방 개설 없이 시간 제한도 없는 무제한 전광판 모드입니다. 나만의 커스텀 디자인 프리셋들을 자유롭게 보관하고 내 스마트폰 화면에 즉시 띄워 보세요!
+                  {t('card_standalone_desc', activeLocale)}
                 </p>
               </div>
               <Link 
                 href="/local" 
                 className="w-full py-3.5 rounded-xl text-center text-xs tracking-wider flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-indigo-500 text-white font-extrabold shadow-lg hover:opacity-95 transition-all z-10"
               >
-                단독 전광판 바로 실행하기
+                {t('card_standalone_btn', activeLocale)}
               </Link>
             </div>
 
@@ -586,16 +660,16 @@ export default function Home() {
               <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-300" />
               <div className="mb-6 relative z-10">
                 <span className="text-[9px] font-mono text-indigo-400 font-extrabold uppercase tracking-widest">For Event Host</span>
-                <h2 className="text-xl font-black text-white mt-3 mb-3 font-outfit">새 전광판 개설하기</h2>
+                <h2 className="text-xl font-black text-white mt-3 mb-3 font-outfit">{t('card_host_title', activeLocale)}</h2>
                 <p className="text-xs text-zinc-400 leading-relaxed font-semibold">
-                  응원단장, 버스커, 단체 행사를 위해 주변 사람들의 스마트폰 화면 색상과 구호를 실시간으로 동기화 제어합니다. 1인 모드의 커스텀 프리셋들을 무손실로 연동할 수 있습니다.
+                  {t('card_host_desc', activeLocale)}
                 </p>
               </div>
               <Link 
                 href="/host/setup" 
                 className="w-full py-3.5 rounded-xl text-center text-xs tracking-wider flex items-center justify-center gap-2 bg-white text-black font-extrabold shadow-lg hover:bg-zinc-200 transition-all z-10"
               >
-                동기화 방 개설하기
+                {t('card_host_btn', activeLocale)}
               </Link>
             </div>
 
@@ -604,9 +678,9 @@ export default function Home() {
               <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all duration-300" />
               <div className="relative z-10 mb-4">
                 <span className="text-[9px] font-mono text-emerald-400 font-extrabold uppercase tracking-widest">For Audience</span>
-                <h2 className="text-xl font-black text-white mt-3 mb-3 font-outfit">관객으로 참여하기</h2>
+                <h2 className="text-xl font-black text-white mt-3 mb-3 font-outfit">{t('card_audience_title', activeLocale)}</h2>
                 <p className="text-xs text-zinc-400 leading-relaxed mb-4 font-semibold">
-                  현장 스크린에 안내된 6자리 참여 코드를 입력하거나 카메라를 켜서 QR 코드를 스캔하세요.
+                  {t('card_audience_desc', activeLocale)}
                 </p>
                 
                 {/* Direct join code input interface */}
@@ -618,7 +692,7 @@ export default function Home() {
                       setJoinRoomCode(e.target.value.toUpperCase());
                       setJoinError('');
                     }}
-                    placeholder="입장 코드 6자리"
+                    placeholder={t('card_audience_input', activeLocale)}
                     className="flex-1 bg-black/60 border border-white/10 rounded-xl px-3 py-2.5 text-center text-white tracking-widest text-xs font-black focus:outline-none focus:border-indigo-500 uppercase font-mono transition-all"
                     maxLength={6}
                   />
@@ -626,7 +700,7 @@ export default function Home() {
                     type="submit"
                     className="px-4 py-2.5 rounded-xl text-xs font-extrabold shrink-0 flex items-center justify-center gap-1.5 cursor-pointer bg-white text-black hover:bg-zinc-200 transition-all"
                   >
-                    참여
+                    {t('card_audience_btn', activeLocale)}
                   </button>
                 </form>
                 {joinError && <p className="text-[10px] text-red-500 mb-2 text-center font-bold">{joinError}</p>}
@@ -637,7 +711,7 @@ export default function Home() {
                 onClick={() => setIsQRScannerOpen(true)}
                 className="w-full py-2.5 rounded-xl border border-dashed border-white/10 bg-white/5 text-zinc-300 font-extrabold text-xs hover:bg-white/10 transition-all flex items-center justify-center gap-1.5 cursor-pointer relative z-10"
               >
-                카메라로 QR 스캔 참여
+                {t('card_audience_qr_btn', activeLocale)}
               </button>
             </div>
           </div>
@@ -653,8 +727,8 @@ export default function Home() {
         
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className="text-center mb-12">
-            <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 font-outfit text-gradient">실시간 시뮬레이터로 미리 체험해 보세요</h2>
-            <p className="text-xs text-zinc-400 font-semibold max-w-md mx-auto leading-relaxed">왼쪽 조명 컨트롤러의 테크니컬 스펙을 변경해 보세요. 오른쪽 베젤리스 스마트폰 화면에 실시간 속도와 연출이 동기화됩니다.</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 font-outfit text-gradient">{t('sim_title', activeLocale)}</h2>
+            <p className="text-xs text-zinc-400 font-semibold max-w-md mx-auto leading-relaxed">{t('sim_desc', activeLocale)}</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-center">
@@ -666,7 +740,7 @@ export default function Home() {
               </div>
 
               <div>
-                <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3">배경 색상 선택</label>
+                <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3">{t('sim_bg_select', activeLocale)}</label>
                 <div className="grid grid-cols-6 gap-3">
                   {colors.map((c) => (
                     <button
@@ -691,14 +765,14 @@ export default function Home() {
               </div>
 
               <div>
-                <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">전송할 텍스트 입력</label>
+                <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">{t('sim_text_input', activeLocale)}</label>
                 <div className="relative">
                   <input
                     type="text"
                     value={demoPreset.text}
                     onChange={(e) => handleDemoPresetChange('text', e.target.value)}
                     className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/20 text-xs font-semibold"
-                    placeholder="구호를 입력하세요 (최대 15자)"
+                    placeholder={t('sim_text_placeholder', activeLocale)}
                     maxLength={15}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-mono text-zinc-600 font-bold">
@@ -709,7 +783,7 @@ export default function Home() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">텍스트 색상</label>
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">{t('sim_text_color', activeLocale)}</label>
                   <div className="flex gap-1.5 bg-black/40 p-1 rounded-xl border border-white/5">
                     <button
                       type="button"
@@ -720,7 +794,7 @@ export default function Home() {
                           : 'text-zinc-500 hover:text-white hover:bg-white/[0.01]'
                       }`}
                     >
-                      밝은색
+                      {t('sim_text_light', activeLocale)}
                     </button>
                     <button
                       type="button"
@@ -731,13 +805,13 @@ export default function Home() {
                           : 'text-zinc-500 hover:text-white hover:bg-white/[0.01]'
                       }`}
                     >
-                      어두운색
+                      {t('sim_text_dark', activeLocale)}
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">애니메이션 효과</label>
+                  <label className="block text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2">{t('sim_effect', activeLocale)}</label>
                   <div className="flex gap-1 bg-black/40 p-1 rounded-xl border border-white/5">
                     {(['none', 'blink', 'marquee'] as EffectType[]).map((eff) => (
                       <button
@@ -759,7 +833,7 @@ export default function Home() {
                             : 'text-zinc-500 hover:text-white hover:bg-white/[0.01]'
                         }`}
                       >
-                        {eff === 'none' ? '정적' : eff === 'blink' ? '깜빡이' : '흐르기'}
+                        {eff === 'none' ? t('sim_effect_static', activeLocale) : eff === 'blink' ? t('sim_effect_blink', activeLocale) : t('sim_effect_marquee', activeLocale)}
                       </button>
                     ))}
                   </div>
@@ -770,7 +844,7 @@ export default function Home() {
               {demoPreset.effect !== 'none' && (
                 <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
                   <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2.5">
-                    <span>속도 조절</span>
+                    <span>{t('sim_speed', activeLocale)}</span>
                     <span className="text-white font-extrabold">
                       {getSpeedFactor(demoPreset.speed, demoPreset.effect)}%
                     </span>
@@ -803,8 +877,8 @@ export default function Home() {
       <section id="features" className="py-16 md:py-24 border-t border-white/5">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-2xl sm:text-3xl font-black text-white mb-4">CS 제로를 지향하는 디테일한 기술 사양</h2>
-            <p className="text-xs text-zinc-400 max-w-xl mx-auto font-medium">1인 기획자, 개발사도 안심하고 대형 이벤트를 단독 운영할 수 있도록 설계했습니다.</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 font-outfit text-gradient">{t('features_title', activeLocale)}</h2>
+            <p className="text-xs text-zinc-400 max-w-xl mx-auto font-medium">{t('features_desc', activeLocale)}</p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -812,9 +886,9 @@ export default function Home() {
               <div className="text-[10px] font-mono text-zinc-500 font-bold mb-4">
                 01
               </div>
-              <h3 className="text-base font-bold text-white mb-2">화면 꺼짐 강제 방지</h3>
+              <h3 className="text-base font-bold text-white mb-2">{t('f1_title', activeLocale)}</h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-medium">
-                W3C Wake Lock API를 지원하여, 화면을 터치하지 않아도 스마트폰 화면이 절전 모드로 어두워지거나 꺼지지 않습니다.
+                {t('f1_desc', activeLocale)}
               </p>
             </div>
 
@@ -822,9 +896,9 @@ export default function Home() {
               <div className="text-[10px] font-mono text-zinc-500 font-bold mb-4">
                 02
               </div>
-              <h3 className="text-base font-bold text-white mb-2">백그라운드 자동 복귀</h3>
+              <h3 className="text-base font-bold text-white mb-2">{t('f2_title', activeLocale)}</h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-medium">
-                전화 수신 등으로 홈 화면에 나갔다가 복귀할 때도, 브라우저 가시성 감지 센서가 즉시 작동하여 실시간 싱크를 0.2초 내 복원합니다.
+                {t('f2_desc', activeLocale)}
               </p>
             </div>
 
@@ -832,9 +906,9 @@ export default function Home() {
               <div className="text-[10px] font-mono text-zinc-500 font-bold mb-4">
                 03
               </div>
-              <h3 className="text-base font-bold text-white mb-2">초과 유저 하드캡 차단</h3>
+              <h3 className="text-base font-bold text-white mb-2">{t('f3_title', activeLocale)}</h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-medium">
-                요금제별 접속 한도에 도달하면 신규 접속자를 대기 오버레이로 친절하게 안내하여 트래픽 오버 및 서비스 마비를 자동 방어합니다.
+                {t('f3_desc', activeLocale)}
               </p>
             </div>
 
@@ -842,9 +916,9 @@ export default function Home() {
               <div className="text-[10px] font-mono text-zinc-500 font-bold mb-4">
                 04
               </div>
-              <h3 className="text-base font-bold text-white mb-2">자동 가로 고정 유도</h3>
+              <h3 className="text-base font-bold text-white mb-2">{t('f4_title', activeLocale)}</h3>
               <p className="text-xs text-zinc-400 leading-relaxed font-medium">
-                스마트폰을 세로로 들면 가로 회전 가이드 팝업을 노출하여 전광판 문구 잘림을 방지하고 최대의 발광 면적을 확보하게 돕습니다.
+                {t('f4_desc', activeLocale)}
               </p>
             </div>
           </div>

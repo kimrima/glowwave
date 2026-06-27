@@ -35,7 +35,7 @@ import { t, Locale, getLocalizedFonts } from '@/lib/translations';
 import useFitText from '@/hooks/useFitText';
 
 // Fallback host-aligned defaults
-const defaults: Preset[] = getDefaultsByLocale('ko');
+const fallbackDefaults: Preset[] = getDefaultsByLocale('ko');
 
 interface MiniCountdownPreviewProps {
   preset: Preset;
@@ -90,6 +90,7 @@ export default function HostDashboard() {
   
   // Active Locale State
   const [activeLocale, setActiveLocale] = useState<Locale>('ko');
+  const defaults = getDefaultsByLocale(activeLocale);
 
   // Upgrade Plan Modal States
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);

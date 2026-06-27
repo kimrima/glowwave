@@ -84,6 +84,7 @@ function LocalSignboardContent() {
 
   // Active Locale State
   const [activeLocale, setActiveLocale] = useState<Locale>('ko');
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
 
   // Active signboard design state
   const [currentBroadcastPreset, setCurrentBroadcastPreset] = useState<Preset>({
@@ -711,37 +712,50 @@ function LocalSignboardContent() {
             </button>
 
             {/* Language Selector Dropdown */}
-            <div className="relative group">
+            <div className="relative">
               <button
                 type="button"
+                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
                 className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3.5 py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
               >
                 <Globe className="w-3.5 h-3.5 text-zinc-400" />
                 <span className="uppercase">{activeLocale}</span>
               </button>
-              <div className="absolute right-0 mt-2 w-40 rounded-2xl border border-white/10 bg-[#0c0c14]/95 backdrop-blur-lg p-1.5 shadow-2xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
-                {[
-                  { code: 'ko', label: '한국어 (KR)' },
-                  { code: 'en', label: 'English (US)' },
-                  { code: 'ja', label: '日本語 (JP)' },
-                  { code: 'es', label: 'Español (ES)' },
-                  { code: 'zh-TW', label: '繁體中文 (TW)' },
-                  { code: 'zh-HK', label: '繁體中文 (HK)' }
-                ].map((lang) => (
-                  <button
-                    key={lang.code}
-                    type="button"
-                    onClick={() => handleLocaleChange(lang.code as Locale)}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      activeLocale === lang.code
-                        ? 'bg-white text-black font-extrabold'
-                        : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    {lang.label}
-                  </button>
-                ))}
-              </div>
+              {isLangDropdownOpen && (
+                <>
+                  {/* Invisible backdrop to close the dropdown when clicking outside */}
+                  <div 
+                    className="fixed inset-0 z-40 cursor-default" 
+                    onClick={() => setIsLangDropdownOpen(false)} 
+                  />
+                  <div className="absolute right-0 mt-2 w-40 rounded-2xl border border-white/10 bg-[#0c0c14]/95 backdrop-blur-lg p-1.5 shadow-2xl transition-all duration-200 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    {[
+                      { code: 'ko', label: '한국어 (KR)' },
+                      { code: 'en', label: 'English (US)' },
+                      { code: 'ja', label: '日本語 (JP)' },
+                      { code: 'es', label: 'Español (ES)' },
+                      { code: 'zh-TW', label: '繁體中文 (TW)' },
+                      { code: 'zh-HK', label: '繁體中文 (HK)' }
+                    ].map((lang) => (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => {
+                          handleLocaleChange(lang.code as Locale);
+                          setIsLangDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          activeLocale === lang.code
+                            ? 'bg-white text-black font-extrabold'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {lang.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

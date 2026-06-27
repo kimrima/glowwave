@@ -179,17 +179,22 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
       icon: '',
       presets: [
         { bg_color: '#DB2777', text: 'Just Married 🥂', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'en' },
+        { bg_color: '#DB2777', text: 'Happy Birthday! 🎂', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'en' },
         { bg_color: '#DB2777', text: 'Congratulations! 🎉', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'en' },
+        { bg_color: '#4C1D95', text: 'Today is your day 👑', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
         { bg_color: '#4C1D95', text: 'Here Comes the Bride 👰', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#FCE7F3', text: 'Happily Ever After 💖', text_color: '#BE185D', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'en' },
         { bg_color: '#FCE7F3', text: 'Bride & Groom 🤵👰', text_color: '#BE185D', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'en' },
-        { bg_color: '#2E1065', text: 'Happy Ever After 💕', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'en' },
         { bg_color: '#FFE4E6', text: 'Cheers to Love 🥂', text_color: '#E11D48', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'en' },
-        { bg_color: '#1E3A8A', text: 'Best Night Ever 💫', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'en' },
         { bg_color: '#000000', text: 'Marry Me? 💍', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'en' },
         { bg_color: '#FCE7F3', text: 'Bridal Shower 🥂', text_color: '#BE185D', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'en' },
+        { bg_color: '#1E3A8A', text: 'Best Night Ever 💫', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'en' },
         { bg_color: '#1E3A8A', text: 'Happy Graduation! 🎓', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'en' },
         { bg_color: '#0F172A', text: 'Class of 2026 🎓', text_color: '#38BDF8', effect: 'none', speed: 1000, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'en' },
-        { bg_color: '#1E1B4B', text: 'You Did It! 🚀', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'en' }
+        { bg_color: '#1E1B4B', text: 'You Did It! 🚀', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'en' },
+        { bg_color: '#FFE4E6', text: 'Best Couple Ever 💑', text_color: '#BE185D', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'en' },
+        { bg_color: '#2E1065', text: 'Happy Anniversary 🥂', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#DB2777', text: 'She Said Yes! 💍', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'hearts', locale: 'en' }
       ]
     },
     {
@@ -199,11 +204,16 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
       presets: [
         { bg_color: '#DB2777', text: 'ENCORE 🎤', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'en' },
         { bg_color: '#F59E0B', text: 'MAKE SOME NOISE! 🔊', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#1E1B4B', text: 'LIVE MUSIC TONIGHT 🎶', text_color: '#00FFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#000000', text: 'GUITAR HERO 🎸', text_color: '#EC4899', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'en' },
+        { bg_color: '#312E81', text: 'Your Voice is Magic ✨', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#0B0B0F', text: 'Request a Song 📝', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
+        { bg_color: '#0B0B0F', text: 'Support the music! 💰', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
         { bg_color: '#1E1B4B', text: 'CROWD WAVE 🌊', text_color: '#00FFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'en' },
-        { bg_color: '#000000', text: 'LIVE MUSIC 🎵', text_color: '#EC4899', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'en' },
-        { bg_color: '#312E81', text: 'You are Glowing ✨', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
-        { bg_color: '#0B0B0F', text: 'Song requests? 📝', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
-        { bg_color: '#0B0B0F', text: 'Support the music! 💰', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' }
+        { bg_color: '#4F46E5', text: 'Follow: @glowwave 📱', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
+        { bg_color: '#065F46', text: 'Sing Along! 🎤', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
+        { bg_color: '#000000', text: 'Keep Rocking! 🤘', text_color: '#EF4444', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#F59E0B', text: 'Absolute Masterpiece 🏆', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' }
       ]
     },
     {
@@ -216,7 +226,13 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#1E3A8A', text: 'HOME RUN ⚾', text_color: '#FDE047', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'en' },
         { bg_color: '#22C55E', text: 'GOAL!!! 🥅', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'en' },
         { bg_color: '#B91C1C', text: 'DEFENSE 🛡️', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
-        { bg_color: '#0B0B0F', text: 'MVP 🏆', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' }
+        { bg_color: '#0B0B0F', text: 'MVP 🏆', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#B91C1C', text: 'Fight till the end! 🔥', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#1E1B4B', text: 'Underdogs Win! 🐕', text_color: '#00FFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#F59E0B', text: 'Number One! 🥇', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#000000', text: 'Ref is Blind! 🦓', text_color: '#EF4444', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
+        { bg_color: '#1E3A8A', text: 'Let\'s Go Bulldogs! 🐶', text_color: '#FDE047', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#7C3AED', text: 'Unstoppable! ⚡', text_color: '#00FFCC', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'en' }
       ]
     },
     {
@@ -231,7 +247,11 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#B45309', text: 'CHEERS! 🍻', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'none', locale: 'en' },
         { bg_color: '#0B0B0F', text: 'WILD NIGHTS 💫', text_color: '#EF4444', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
         { bg_color: '#F97316', text: 'HALLOWEEN 🎉🎃', text_color: '#000000', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
-        { bg_color: '#0F5132', text: 'MERRY X-MAS 🎄', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'serif', font_size: 100, special_effect: 'confetti', locale: 'en' }
+        { bg_color: '#0F5132', text: 'MERRY X-MAS 🎄', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'serif', font_size: 100, special_effect: 'confetti', locale: 'en' },
+        { bg_color: '#EF4444', text: 'Shots! Shots! Shots! 🥃', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
+        { bg_color: '#7C3AED', text: 'Club Session ON 🎛️', text_color: '#00FFCC', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#0B0B0F', text: 'DJ Drop the Beat 🎧', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#3B82F6', text: 'Summer Rave 🏖️', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thin', font_size: 100, special_effect: 'stars', locale: 'en' }
       ]
     },
     {
@@ -244,7 +264,13 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#7F1D1D', text: 'CLOSED 🌑', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
         { bg_color: '#EF4444', text: 'HAPPY HOUR 🍺', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
         { bg_color: '#1E2937', text: 'WIFI: GlowWave123 📶', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'en' },
-        { bg_color: '#0B0B0F', text: 'TIPS APPRECIATED 💵', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' }
+        { bg_color: '#0B0B0F', text: 'TIPS APPRECIATED 💵', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
+        { bg_color: '#1E3A8A', text: 'Order Here 🛎️', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
+        { bg_color: '#451A03', text: 'Grab a Coffee ☕', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
+        { bg_color: '#451A03', text: '10% Off Takeout 🥤', text_color: '#FDE047', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
+        { bg_color: '#000000', text: 'No Outside Food 🚫', text_color: '#EF4444', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
+        { bg_color: '#1E2937', text: 'Be Right Back ⏳', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'en' },
+        { bg_color: '#1E2937', text: 'Today\'s Special 🍽️', text_color: '#F59E0B', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'en' }
       ]
     }
   ],
@@ -254,14 +280,21 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
       label: '披露宴・二次会',
       icon: '',
       presets: [
-        { bg_color: '#DB2777', text: '新郎🤵新婦👰入場！', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'ja' },
+        { bg_color: '#DB2777', text: '新郎實新婦👰入場！', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'ja' },
         { bg_color: '#DB2777', text: '祝・結婚 🎉', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'ja' },
         { bg_color: '#4C1D95', text: 'お幸せに 💕', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' },
         { bg_color: '#FCE7F3', text: '乾杯します！ 🥂', text_color: '#BE185D', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'ja' },
         { bg_color: '#2E1065', text: '二次会スタート 🍻', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'ja' },
         { bg_color: '#FFE4E6', text: '最高のカップル 💖', text_color: '#E11D48', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'ja' },
         { bg_color: '#1E3A8A', text: '誕生日おめでとう 🎂', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'ja' },
-        { bg_color: '#000000', text: '結婚してくれますか？ 💍', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'ja' }
+        { bg_color: '#000000', text: '結婚してくれますか？ 💍', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'ja' },
+        { bg_color: '#FCE7F3', text: '世界一可愛い花嫁 👰‍♀️', text_color: '#BE185D', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'ja' },
+        { bg_color: '#DB2777', text: '卒業おめでとう 🎓', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'ja' },
+        { bg_color: '#B91C1C', text: '還暦お祝い 🌸', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' },
+        { bg_color: '#FFFBEB', text: '出産お祝い 👶', text_color: '#B45309', effect: 'none', speed: 1000, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'ja' },
+        { bg_color: '#F59E0B', text: '金婚式おめでとう 🏆', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' },
+        { bg_color: '#FCE7F3', text: 'ずっと一緒だよ 💑', text_color: '#BE185D', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'ja' },
+        { bg_color: '#2E1065', text: '生まれてくれてありがとう 🎂', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'ja' }
       ]
     },
     {
@@ -274,7 +307,13 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#1E1B4B', text: 'ファンサして 💖', text_color: '#00FFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'ja' },
         { bg_color: '#000000', text: '神セトリ 🎶', text_color: '#EC4899', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'ja' },
         { bg_color: '#312E81', text: 'コールアンドレスポンス ⚡', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' },
-        { bg_color: '#0B0B0F', text: 'GlowWave 💫', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' }
+        { bg_color: '#0B0B0F', text: 'GlowWave 💫', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' },
+        { bg_color: '#4F46E5', text: 'SNSフォローしてね 📱', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' },
+        { bg_color: '#DB2777', text: '投げキッスして 💋', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'hearts', locale: 'ja' },
+        { bg_color: '#F59E0B', text: 'こっち見て！ 👀', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' },
+        { bg_color: '#000000', text: '最高の歌声 🎵', text_color: '#EC4899', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'ja' },
+        { bg_color: '#065F46', text: 'リクエスト受付中 📝', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' },
+        { bg_color: '#0B0B0F', text: '投げ銭はチップ箱へ 💰', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' }
       ]
     },
     {
@@ -287,7 +326,13 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#1E3A8A', text: 'ホームラン ⚾', text_color: '#FDE047', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'ja' },
         { bg_color: '#22C55E', text: 'ゴーーール！ ⚽', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'ja' },
         { bg_color: '#B91C1C', text: 'ガンバレ！ 📣', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' },
-        { bg_color: '#0B0B0F', text: '絶対勝つぞ！ ⚡', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' }
+        { bg_color: '#0B0B0F', text: '絶対勝つぞ！ ⚡', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' },
+        { bg_color: '#B91C1C', text: '日本一！ 🥇', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' },
+        { bg_color: '#B91C1C', text: '闘魂注入 🔥', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' },
+        { bg_color: '#1E3A8A', text: 'サヨナラ勝ち！ ⚾', text_color: '#FDE047', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' },
+        { bg_color: '#1E3A8A', text: '全力応援 📣', text_color: '#FDE047', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' },
+        { bg_color: '#2E1065', text: '粘り勝ち！ 🔥', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'ja' },
+        { bg_color: '#0B0B0F', text: 'MVP 🏆', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' }
       ]
     },
     {
@@ -300,7 +345,13 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#EF4444', text: 'メリークリスマス 🎄', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'ja' },
         { bg_color: '#0B0B0F', text: 'あけおめ 🎍', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'ja' },
         { bg_color: '#B45309', text: 'かんぱい！ 🍻', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'none', locale: 'ja' },
-        { bg_color: '#0B0B0F', text: '思い出の一夜 💫', text_color: '#EF4444', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' }
+        { bg_color: '#0B0B0F', text: '思い出の一夜 💫', text_color: '#EF4444', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' },
+        { bg_color: '#FF6600', text: '朝まで生ビール 🍺', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' },
+        { bg_color: '#FF6600', text: 'ハロウィンパーティー 🎃', text_color: '#000000', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'ja' },
+        { bg_color: '#7C3AED', text: 'パリピ大集合 🕺', text_color: '#00FFCC', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'ja' },
+        { bg_color: '#0B0B0F', text: 'オールナイト 💫', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'ja' },
+        { bg_color: '#B45309', text: '乾杯コール！ 🍻', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'none', locale: 'ja' },
+        { bg_color: '#1E1B4B', text: '新年年会・忘年会 🥂', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'ja' }
       ]
     },
     {
@@ -313,7 +364,13 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#7F1D1D', text: '本日閉店 🌑', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' },
         { bg_color: '#EF4444', text: 'テイクアウト可 ☕', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' },
         { bg_color: '#1E2937', text: 'Wi-Fi: glowwave 📶', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'ja' },
-        { bg_color: '#0B0B0F', text: 'お手洗いはあちら 🚽', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' }
+        { bg_color: '#0B0B0F', text: 'お手洗いはあちら 🚽', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' },
+        { bg_color: '#1E3A8A', text: 'ご注文はタッチパネルで 🛎️', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' },
+        { bg_color: '#451A03', text: '本日の日替わり 🍽️', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' },
+        { bg_color: '#1E2937', text: '喫煙スペース 🚬', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'ja' },
+        { bg_color: '#000000', text: '準備中 ⏳', text_color: '#EF4444', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' },
+        { bg_color: '#1E2937', text: 'いらっしゃいませ！ 👋', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'ja' },
+        { bg_color: '#7F1D1D', text: 'ラストオーダー ⏰', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'ja' }
       ]
     }
   ],
@@ -328,7 +385,13 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#4C1D95', text: 'Amor Eterno 💕', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' },
         { bg_color: '#FCE7F3', text: '¡Felicidades! 🎉', text_color: '#BE185D', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'es' },
         { bg_color: '#2E1065', text: 'Brindis de Amor 🥂', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'es' },
-        { bg_color: '#FFE4E6', text: 'Felices Para Siempre ✨', text_color: '#E11D48', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'es' }
+        { bg_color: '#FFE4E6', text: 'Felices Para Siempre ✨', text_color: '#E11D48', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'es' },
+        { bg_color: '#000000', text: '¿Te casarías conmigo? 💍', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'es' },
+        { bg_color: '#DB2777', text: 'Feliz Cumpleaños 🎂', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'es' },
+        { bg_color: '#4C1D95', text: 'Eres mi sol ☀️', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' },
+        { bg_color: '#FCE7F3', text: 'El amor de mi vida 💖', text_color: '#BE185D', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'es' },
+        { bg_color: '#2E1065', text: 'Fiesta de Compromiso 💍', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'es' },
+        { bg_color: '#FFE4E6', text: 'Shower de Novias 👰‍♀️', text_color: '#E11D48', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'es' }
       ]
     },
     {
@@ -340,7 +403,14 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#F59E0B', text: '¡QUE SE ESCUCHE! 🔊', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' },
         { bg_color: '#1E1B4B', text: 'MÚSICA EN VIVO 🎵', text_color: '#00FFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'es' },
         { bg_color: '#312E81', text: 'TENSIÓN ALTA ⚡', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' },
-        { bg_color: '#0B0B0F', text: 'BAILA CONMIGO 🕺', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' }
+        { bg_color: '#0B0B0F', text: 'BAILA CONMIGO 🕺', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#000000', text: 'Qué bonita voz 🎤', text_color: '#EC4899', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'es' },
+        { bg_color: '#4F46E5', text: 'Sígueme en Instagram 📱', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#0B0B0F', text: 'Propina para el artista 💰', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#1E1B4B', text: 'Acústico en vivo 🎸', text_color: '#00FFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'es' },
+        { bg_color: '#065F46', text: 'Cantemos juntos 🎤', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#065F46', text: 'Canciones a pedido 📝', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#F59E0B', text: '¡Eres el mejor! 🏆', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' }
       ]
     },
     {
@@ -352,7 +422,14 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#0000FF', text: '¡VISCA EL BARÇA! 🔵🔴', text_color: '#EF4444', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'es' },
         { bg_color: '#22C55E', text: '¡GOL! ⚽', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'es' },
         { bg_color: '#B91C1C', text: 'CAMPEONES 🏆', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' },
-        { bg_color: '#0B0B0F', text: '¡A GANAR! ⚡', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' }
+        { bg_color: '#0B0B0F', text: '¡A GANAR! ⚡', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' },
+        { bg_color: '#B91C1C', text: '¡Vamos Selección! 🇨🇴🇲🇽🇪🇸', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' },
+        { bg_color: '#B91C1C', text: 'Fuerza y Corazón 🔥', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' },
+        { bg_color: '#000000', text: '¡Árbitro vendido! 🦓', text_color: '#EF4444', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#1E3A8A', text: '¡Hasta el final! ⚽', text_color: '#FDE047', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'es' },
+        { bg_color: '#0B0B0F', text: 'Jugador del Partido 🏅', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' },
+        { bg_color: '#1E3A8A', text: 'La afición te apoya 📣', text_color: '#FDE047', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' },
+        { bg_color: '#1E2937', text: '¡Defensa impenetrable! 🛡️', text_color: '#00FFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' }
       ]
     },
     {
@@ -365,7 +442,13 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#EF4444', text: 'FIESTA DE PROM ✨', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'es' },
         { bg_color: '#0B0B0F', text: 'GRADUACIÓN 2026 🎓', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'es' },
         { bg_color: '#B45309', text: '¡SALUD! 🍻', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'none', locale: 'es' },
-        { bg_color: '#0B0B0F', text: 'NOCHE LOCA 💫', text_color: '#EF4444', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' }
+        { bg_color: '#0B0B0F', text: 'NOCHE LOCA 💫', text_color: '#EF4444', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#B45309', text: 'Barra Libre 🍹', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#0B0B0F', text: 'DJ Pon la Música 🎧', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'es' },
+        { bg_color: '#EF4444', text: 'Noche de Reggaetón 💃', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'es' },
+        { bg_color: '#F97316', text: 'Viva la Vida 🌟', text_color: '#000000', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' },
+        { bg_color: '#F97316', text: 'Fiesta de Halloween 🎃', text_color: '#000000', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'es' },
+        { bg_color: '#0F5132', text: 'Feliz Navidad 🎄', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'serif', font_size: 100, special_effect: 'confetti', locale: 'es' }
       ]
     },
     {
@@ -377,8 +460,14 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#0F172A', text: 'HORA FELIZ 🍺', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
         { bg_color: '#7F1D1D', text: 'CERRADO 🌑', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
         { bg_color: '#EF4444', text: '¡Bienvenidos! 👋', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
-        { bg_color: '#1E2937', text: 'WIFI: GlowWave123 📶', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'es' },
-        { bg_color: '#0B0B0F', text: 'SE APRECIAN PROPINAS 💵', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' }
+        { bg_color: '#1E2937', text: 'WIFI gratis aquí 📶', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#0B0B0F', text: 'SE APRECIAN PROPINAS 💵', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#1E3A8A', text: 'Ordene aquí 🛎️', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#451A03', text: 'Menú del día 🍽️', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#000000', text: 'Área de no fumar 🚭', text_color: '#EF4444', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#1E2937', text: 'Regreso enseguida ⏳', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#451A03', text: 'Solo para llevar 🥤', text_color: '#FDE047', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'es' },
+        { bg_color: '#1E2937', text: 'Pago solo en efectivo 💵', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'es' }
       ]
     }
   ],
@@ -388,12 +477,20 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
       label: '婚禮與紀念日',
       icon: '',
       presets: [
-        { bg_color: '#DB2777', text: '新郎🤵新婦👰入場！', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' },
+        { bg_color: '#DB2777', text: '新郎🤵新娘👰入場！', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' },
         { bg_color: '#DB2777', text: '祝・新婚快樂 🎉', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' },
         { bg_color: '#4C1D95', text: '百年好合 💕', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
         { bg_color: '#FCE7F3', text: '乾杯！ 🥂', text_color: '#BE185D', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'zh-TW' },
         { bg_color: '#2E1065', text: '永結同心 💖', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
-        { bg_color: '#FFE4E6', text: '最美新娘 👰', text_color: '#E11D48', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'zh-TW' }
+        { bg_color: '#FFE4E6', text: '最美新娘 👰', text_color: '#E11D48', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'zh-TW' },
+        { bg_color: '#000000', text: '嫁給我好嗎？ 💍', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'zh-TW' },
+        { bg_color: '#DB2777', text: '生日快樂 🎂', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' },
+        { bg_color: '#4C1D95', text: '遇見你是我最美的緣分 💞', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
+        { bg_color: '#FCE7F3', text: '執子之手，與子偕老 👩‍❤️‍👨', text_color: '#BE185D', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'zh-TW' },
+        { bg_color: '#2E1065', text: '恭喜牽手成功 💑', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
+        { bg_color: '#1E3A8A', text: '祝爸爸生日快樂 🎂', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' },
+        { bg_color: '#FFE4E6', text: '祝媽媽永遠年輕 🌸', text_color: '#E11D48', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'zh-TW' },
+        { bg_color: '#FFFBEB', text: '滿月快樂 👶', text_color: '#B45309', effect: 'none', speed: 1000, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'zh-TW' }
       ]
     },
     {
@@ -405,7 +502,14 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#F59E0B', text: '推推！😍', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
         { bg_color: '#1E1B4B', text: '求關注 💖', text_color: '#00FFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
         { bg_color: '#312E81', text: '神曲 🎶', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
-        { bg_color: '#0B0B0F', text: '尖叫聲！ ⚡', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' }
+        { bg_color: '#0B0B0F', text: '尖叫聲！ ⚡', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#065F46', text: '點歌點起來 📝', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#4F46E5', text: '追蹤IG：@glowwave 📱', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#0B0B0F', text: '給街頭藝人一點鼓勵 💰', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#1E1B4B', text: '給我你的雙手 🙌', text_color: '#00FFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
+        { bg_color: '#0B0B0F', text: '聽歌請投箱 💵', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#000000', text: '音樂即生命 🎵', text_color: '#EC4899', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
+        { bg_color: '#DB2777', text: '超好聽！求安可 🎤', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' }
       ]
     },
     {
@@ -417,7 +521,14 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#0000FF', text: '味全龍 ❤️', text_color: '#EF4444', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' },
         { bg_color: '#22C55E', text: '全壘打！ ⚾', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' },
         { bg_color: '#B91C1C', text: '球進了！ 🥅', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
-        { bg_color: '#0B0B0F', text: '加油！ 📣', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-TW' }
+        { bg_color: '#0B0B0F', text: '加油！ 📣', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
+        { bg_color: '#F59E0B', text: '炸裂陳子豪 ⚾', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
+        { bg_color: '#B91C1C', text: '猛攻強襲 🔥', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
+        { bg_color: '#0B0B0F', text: '逆轉勝！ 🏆', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
+        { bg_color: '#1E3A8A', text: '我們是冠軍！ 🥇', text_color: '#FDE047', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
+        { bg_color: '#1E2937', text: '防守！防守！ 🛡️', text_color: '#00FFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
+        { bg_color: '#EF4444', text: '富邦悍將 💙', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' },
+        { bg_color: '#DB2777', text: '樂天桃猿 ❤️', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' }
       ]
     },
     {
@@ -429,7 +540,14 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#DB2777', text: '今天的壽星 👑', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' },
         { bg_color: '#EF4444', text: '乾杯！ 🍻', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' },
         { bg_color: '#0B0B0F', text: '聖誕快樂 🎄', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
-        { bg_color: '#B45309', text: '新年快樂 🎍', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'none', locale: 'zh-TW' }
+        { bg_color: '#B45309', text: '新年快樂 🎍', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#0B0B0F', text: '今晚不醉不歸 🍷', text_color: '#EF4444', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#F97316', text: '萬聖節變裝派對 🎃', text_color: '#000000', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
+        { bg_color: '#7C3AED', text: '嗨起來！ 🕺', text_color: '#00FFCC', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' },
+        { bg_color: '#0B0B0F', text: '通宵狂歡 💫', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'zh-TW' },
+        { bg_color: '#B45309', text: '壽星要喝幾杯？ 🍻', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#1E1B4B', text: '春酒尾牙聚餐 🥂', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'zh-TW' },
+        { bg_color: '#3B82F6', text: '夏日電音趴 🎆', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thin', font_size: 100, special_effect: 'stars', locale: 'zh-TW' }
       ]
     },
     {
@@ -439,10 +557,16 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
       presets: [
         { bg_color: '#064E3B', text: '營業中 🔔', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
         { bg_color: '#0F172A', text: '歡樂時光 🍻', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
-        { bg_color: '#7F1D1D', text: '無線網路: glowwave 📶', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#7F1D1D', text: '本日已打烊 🌑', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
         { bg_color: '#EF4444', text: '可外帶 ☕', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
-        { bg_color: '#1E2937', text: '洗手間請往這 🚽', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
-        { bg_color: '#0B0B0F', text: '本日已打烊 🌑', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' }
+        { bg_color: '#1E2937', text: '無線網路: glowwave 📶', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#0B0B0F', text: '洗手間請往這 🚽', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#1E3A8A', text: '請至櫃檯點餐 🛎️', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#451A03', text: '今日特餐 🍽️', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#000000', text: '吸菸區請往後 🚭', text_color: '#EF4444', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#1E2937', text: '稍候片刻 ⏳', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#1E2937', text: '歡迎光臨 👋', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'zh-TW' },
+        { bg_color: '#7F1D1D', text: '最後點餐時間 ⏰', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-TW' }
       ]
     }
   ],
@@ -457,7 +581,15 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#4C1D95', text: '百年好合 💕', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
         { bg_color: '#FCE7F3', text: '飲杯！ 🥂', text_color: '#BE185D', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'zh-HK' },
         { bg_color: '#2E1065', text: '白頭到老 💖', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
-        { bg_color: '#FFE4E6', text: '最靚新娘 👰', text_color: '#E11D48', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'zh-HK' }
+        { bg_color: '#FFE4E6', text: '最靚新娘 👰', text_color: '#E11D48', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'zh-HK' },
+        { bg_color: '#000000', text: '嫁給我好嗎？ 💍', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'zh-HK' },
+        { bg_color: '#DB2777', text: '生日快樂 🎂', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-HK' },
+        { bg_color: '#FCE7F3', text: '執子之手，與子偕老 💏', text_color: '#BE185D', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'zh-HK' },
+        { bg_color: '#2E1065', text: '週年紀念快樂 💍', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
+        { bg_color: '#DB2777', text: '生日大快樂 🎂', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-HK' },
+        { bg_color: '#FFFBEB', text: '百日宴快樂 👶', text_color: '#B45309', effect: 'none', speed: 1000, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
+        { bg_color: '#1E3A8A', text: '祝爸爸身體健康 🎂', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'zh-HK' },
+        { bg_color: '#FFE4E6', text: '祝媽媽青春常駐 🌸', text_color: '#E11D48', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'hearts', locale: 'zh-HK' }
       ]
     },
     {
@@ -469,7 +601,14 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#F59E0B', text: '好崇拜你 😍', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
         { bg_color: '#1E1B4B', text: '望過來！ 💖', text_color: '#00FFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
         { bg_color: '#312E81', text: '神曲 🎶', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
-        { bg_color: '#0B0B0F', text: '嗌出嚟！ ⚡', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' }
+        { bg_color: '#0B0B0F', text: '嗌出嚟！ ⚡', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#065F46', text: '歡迎點歌 📝', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#4F46E5', text: '追蹤IG：@glowwave 📱', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#0B0B0F', text: '支持街頭音樂 💰', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#1E1B4B', text: '全場一齊唱 🙌', text_color: '#00FFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
+        { bg_color: '#0B0B0F', text: '聽歌請入箱 💵', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#000000', text: '歌聲真係超動聽 🎵', text_color: '#EC4899', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
+        { bg_color: '#DB2777', text: '尖叫聲唔好停 🎤', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-HK' }
       ]
     },
     {
@@ -481,7 +620,14 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#0000FF', text: '入波啦！ 🥅', text_color: '#EF4444', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'zh-HK' },
         { bg_color: '#22C55E', text: '全壘打！ ⚾', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-HK' },
         { bg_color: '#B91C1C', text: '加油！ 📣', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
-        { bg_color: '#0B0B0F', text: '贏啊！ ⚡', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-HK' }
+        { bg_color: '#0B0B0F', text: '贏啊！ ⚡', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
+        { bg_color: '#EF4444', text: '絕殺！ 🏆', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'zh-HK' },
+        { bg_color: '#B91C1C', text: '全力以赴，永不言敗 🔥', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
+        { bg_color: '#000000', text: '裁判盲架？ 🦓', text_color: '#EF4444', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#1E3A8A', text: '撐到底！ ⚽', text_color: '#FDE047', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
+        { bg_color: '#0B0B0F', text: '全場最有價值球員 🏅', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
+        { bg_color: '#1E3A8A', text: '萬眾一心 📣', text_color: '#FDE047', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
+        { bg_color: '#1E2937', text: '銅牆鐵壁 🛡️', text_color: '#00FFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-HK' }
       ]
     },
     {
@@ -493,7 +639,14 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#DB2777', text: '今日主角 👑', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-HK' },
         { bg_color: '#EF4444', text: '飲啦！ 🍻', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'zh-HK' },
         { bg_color: '#0B0B0F', text: '聖誕快樂 🎄', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
-        { bg_color: '#B45309', text: '新年快樂 🎍', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'none', locale: 'zh-HK' }
+        { bg_color: '#B45309', text: '新年快樂 🎍', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#0B0B0F', text: '今晚不醉不歸 🍷', text_color: '#EF4444', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#F97316', text: '萬聖節狂歡派對 🎃', text_color: '#000000', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
+        { bg_color: '#7C3AED', text: '嗨起來！ 🕺', text_color: '#00FFCC', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'zh-HK' },
+        { bg_color: '#0B0B0F', text: '唱K通宵 💫', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'zh-HK' },
+        { bg_color: '#B45309', text: '壽星自罰三杯 🍻', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#1E1B4B', text: '尾牙聚餐 🥂', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'confetti', locale: 'zh-HK' },
+        { bg_color: '#3B82F6', text: '電音狂歡 🎆', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thin', font_size: 100, special_effect: 'stars', locale: 'zh-HK' }
       ]
     },
     {
@@ -503,10 +656,16 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
       presets: [
         { bg_color: '#064E3B', text: '營業中 🔔', text_color: '#FDE047', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
         { bg_color: '#0F172A', text: 'Happy Hour 🍻', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
-        { bg_color: '#7F1D1D', text: 'Wi-Fi: glowwave 📶', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#7F1D1D', text: '今日收工 🌑', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
         { bg_color: '#EF4444', text: '可以外賣 ☕', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
-        { bg_color: '#1E2937', text: '洗手間喺嗰邊 🚽', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
-        { bg_color: '#0B0B0F', text: '今日收工 🌑', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' }
+        { bg_color: '#1E2937', text: 'Wi-Fi: glowwave 📶', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#0B0B0F', text: '洗手間喺嗰邊 🚽', text_color: '#22C55E', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#1E3A8A', text: '請至櫃檯點餐 🛎️', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#451A03', text: '今日推介 🍽️', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#000000', text: '嚴禁吸煙 🚭', text_color: '#EF4444', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#1E2937', text: '請稍候 ⏳', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#1E2937', text: '歡迎光臨 👋', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'zh-HK' },
+        { bg_color: '#7F1D1D', text: '最後點餐時間 ⏰', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'zh-HK' }
       ]
     }
   ]
