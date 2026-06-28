@@ -196,7 +196,15 @@ export default function HostDashboard() {
   const handleFontSelect = (fontVal: 'sans-thin' | 'sans-thick' | 'serif' | 'neon' | 'pixel' | 'plump', isEdit: boolean) => {
     const isPremium = fontVal === 'neon' || fontVal === 'pixel' || fontVal === 'plump';
     if (isPremium && room?.tier === 'free') {
-      if (confirm('이 글꼴은 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?')) {
+      const confirmFontMsg = {
+        ko: '이 글꼴은 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?',
+        en: 'This font is exclusive to paid plans (Lite or higher). Would you like to upgrade your plan?',
+        ja: 'このフォントは有料プラン（Lite以上）専用です。プランをアップグレードしますか？',
+        es: 'Esta fuente es exclusiva de los planes de pago (Lite o superior). ¿Deseas actualizar tu plan?',
+        'zh-TW': '此字型為付費方案（Lite 以上）專用。是否要升級您的方案？',
+        'zh-HK': '此字型為付費方案（Lite 以上）專用。是否要升級您的方案？',
+      }[activeLocale] || '이 글꼴은 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?';
+      if (confirm(confirmFontMsg)) {
         setSelectedUpgradeTier(null);
         setUpgradeStep('select');
         setIsUpgradeModalOpen(true);
@@ -232,7 +240,7 @@ export default function HostDashboard() {
       const diff = expireTime - now;
 
       if (diff <= 0) {
-        setTimeRemaining('만료됨');
+        setTimeRemaining(t('exp_expired', activeLocale));
         return;
       }
 
@@ -240,7 +248,16 @@ export default function HostDashboard() {
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-      setTimeRemaining(`${hours}시간 ${minutes}분 ${seconds}초`);
+      const timeStr = {
+        ko: `${hours}시간 ${minutes}분 ${seconds}초`,
+        en: `${hours}h ${minutes}m ${seconds}s`,
+        ja: `${hours}時間 ${minutes}分 ${seconds}秒`,
+        es: `${hours}h ${minutes}m ${seconds}s`,
+        'zh-TW': `${hours}小時 ${minutes}分 ${seconds}秒`,
+        'zh-HK': `${hours}小時 ${minutes}分 ${seconds}秒`,
+      }[activeLocale] || `${hours}시간 ${minutes}분 ${seconds}초`;
+
+      setTimeRemaining(timeStr);
     };
 
     calculateTime();
@@ -250,7 +267,7 @@ export default function HostDashboard() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       clearInterval(interval);
     };
-  }, [room?.created_at]);
+  }, [room?.created_at, activeLocale]);
 
   // Supabase & SSE references
   const supabaseChannelRef = useRef<any>(null);
@@ -387,7 +404,14 @@ export default function HostDashboard() {
     try {
       const response = await fetch(`/api/room/${roomId}/status?token=${token}`);
       if (!response.ok) {
-        let errorMsg = '이 방의 생성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오.';
+        let errorMsg = {
+          ko: '이 방의 생성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오.',
+          en: 'No host session found in this browser. Please use the [Restore Purchase] feature with your payment email to gain access.',
+          ja: 'このルームの作成セッション情報がブラウザにありません。決済時のメールアドレスによる「購入履歴の復元」機能を使用して権限を取得してください。',
+          es: 'No se encontró información de la sesión de creación en el navegador. Por favor, utiliza la función [Restaurar Compra] con tu correo electrónico de pago para obtener acceso.',
+          'zh-TW': '瀏覽器中無此房間的建立階段資訊。請使用 [購買復元] 功能並輸入您結帳時使用的電子郵件以取得控制權限。',
+          'zh-HK': '瀏覽器中無此房間的建立階段資訊。請使用 [購買復元] 功能並輸入您結帳時使用的電子郵件以取得控制權限。',
+        }[activeLocale] || '이 방의 생성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오.';
         try {
           const errData = await response.json();
           if (errData.suggestion) {
@@ -790,7 +814,15 @@ export default function HostDashboard() {
       setExtendStep('success');
     } catch (err: any) {
       console.error(err);
-      alert(`오류: ${err.message}`);
+      const errPrefix = {
+        ko: '오류',
+        en: 'Error',
+        ja: 'エラー',
+        es: 'Error',
+        'zh-TW': '錯誤',
+        'zh-HK': '錯誤',
+      }[activeLocale] || '오류';
+      alert(`${errPrefix}: ${err.message}`);
     } finally {
       setIsExtending(false);
     }
@@ -834,7 +866,15 @@ export default function HostDashboard() {
       setUpgradeStep('success');
     } catch (err: any) {
       console.error(err);
-      alert(`오류: ${err.message}`);
+      const errPrefix = {
+        ko: '오류',
+        en: 'Error',
+        ja: 'エラー',
+        es: 'Error',
+        'zh-TW': '錯誤',
+        'zh-HK': '錯誤',
+      }[activeLocale] || '오류';
+      alert(`${errPrefix}: ${err.message}`);
     } finally {
       setIsUpgrading(false);
     }
@@ -899,7 +939,15 @@ export default function HostDashboard() {
       if (preset.effect === 'countdown') {
         setCustomResultText('START');
       } else if (preset.effect === 'luckydraw_wait' || preset.effect === 'luckydraw') {
-        setCustomResultText('아쉽네요! 다음 기회에..');
+        const defaultLoseText = {
+          ko: '아쉽네요! 다음 기회에..',
+          en: 'Better luck next time!',
+          ja: '残念！次の機会に..',
+          es: '¡Qué lástima! Otra vez será..',
+          'zh-TW': '真可惜！下次再接再厲..',
+          'zh-HK': '真可惜！下次再接再厲..',
+        }[activeLocale] || '아쉽네요! 다음 기회에..';
+        setCustomResultText(defaultLoseText);
       } else {
         setCustomResultText('START');
       }
@@ -908,7 +956,15 @@ export default function HostDashboard() {
 
   // Slots Vault Handlers for Host
   const handleSaveSlotPackage = () => {
-    const name = newSlotName.trim() || `저장된 테마 #${savedSlots.length + 1}`;
+    const defaultName = {
+      ko: `저장된 테마 #${savedSlots.length + 1}`,
+      en: `Saved Theme #${savedSlots.length + 1}`,
+      ja: `保存されたテーマ #${savedSlots.length + 1}`,
+      es: `Tema Guardado #${savedSlots.length + 1}`,
+      'zh-TW': `已儲存的主題 #${savedSlots.length + 1}`,
+      'zh-HK': `已儲存的主題 #${savedSlots.length + 1}`,
+    }[activeLocale] || `저장된 테마 #${savedSlots.length + 1}`;
+    const name = newSlotName.trim() || defaultName;
     const newSlot = { name, presets: [...presets] };
     const updated = [...savedSlots, newSlot];
     setSavedSlots(updated);
@@ -922,7 +978,15 @@ export default function HostDashboard() {
       let presetsToLoad = slot.presets;
       // Truncate to 6 presets on FREE tier
       if (room?.tier === 'free' && presetsToLoad.length > 6) {
-        alert('무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 슬롯에서 상위 6개 프리셋만 불러왔습니다.');
+        const freeLimitAlert = {
+          ko: '무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 슬롯에서 상위 6개 프리셋만 불러왔습니다.',
+          en: 'Free tier rooms can have a maximum of 6 presets. Only the top 6 presets have been loaded.',
+          ja: '無料プランのルームは最大6個のプリセットのみ保持できます。スロットから上位6個のプリセットのみを読み込みました。',
+          es: 'Las salas de plan gratuito solo pueden tener un máximo de 6 ajustes. Solo se han cargado los primeros 6 ajustes.',
+          'zh-TW': '免費方案房間最多只能有 6 個預設卡片。已僅載入前 6 個預設卡片。',
+          'zh-HK': '免費方案房間最多只能有 6 個預設卡片。已僅載入前 6 個預設卡片。',
+        }[activeLocale] || '무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 슬롯에서 상위 6개 프리셋만 불러왔습니다.';
+        alert(freeLimitAlert);
         presetsToLoad = presetsToLoad.slice(0, 6);
       }
       setPresets(presetsToLoad);
@@ -942,7 +1006,15 @@ export default function HostDashboard() {
 
   const handleDeleteSlotPackage = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('이 테마 보관 슬롯을 삭제하시겠습니까?')) {
+    const confirmDeleteSlot = {
+      ko: '이 테마 보관 슬롯을 삭제하시겠습니까?',
+      en: 'Are you sure you want to delete this saved theme slot?',
+      ja: 'このテーマ保存スロットを削除しますか？',
+      es: '¿Estás seguro de que deseas eliminar esta ranura de tema guardado?',
+      'zh-TW': '確定要刪除此儲存的主題格嗎？',
+      'zh-HK': '確定要刪除此儲存的主題格嗎？',
+    }[activeLocale] || '이 테마 보관 슬롯을 삭제하시겠습니까?';
+    if (confirm(confirmDeleteSlot)) {
       const updated = savedSlots.filter((_, idx) => idx !== index);
       setSavedSlots(updated);
       localStorage.setItem('glowwave_host_slots', JSON.stringify(updated));
@@ -1016,7 +1088,15 @@ export default function HostDashboard() {
       setShareQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`);
     } catch (e) {
       console.error(e);
-      alert('공유 코드 생성에 실패했습니다.');
+      const shareGenFailMsg = {
+        ko: '공유 코드 생성에 실패했습니다.',
+        en: 'Failed to generate share code.',
+        ja: '共有コードの生成に失敗しました。',
+        es: 'Error al generar el código de compartición.',
+        'zh-TW': '生成分享密碼失敗。',
+        'zh-HK': '生成分享密碼失敗。',
+      }[activeLocale] || '공유 코드 생성에 실패했습니다.';
+      alert(shareGenFailMsg);
     } finally {
       setIsSharingLoading(false);
     }
@@ -1025,7 +1105,15 @@ export default function HostDashboard() {
   const handleImportShareCode = async () => {
     const code = shareCodeInput.trim().toUpperCase();
     if (!code || code.length !== 6) {
-      alert('올바른 6자리 공유 코드를 입력하세요.');
+      const invalidCodeMsg = {
+        ko: '올바른 6자리 공유 코드를 입력하세요.',
+        en: 'Please enter a valid 6-digit share code.',
+        ja: '有効な6桁の共有コードを入力してください。',
+        es: 'Por favor, introduce un código de compartición de 6 dígitos válido.',
+        'zh-TW': '請輸入有效的 6 位數分享密碼。',
+        'zh-HK': '請輸入有效的 6 位數分享密碼。',
+      }[activeLocale] || '올바른 6자리 공유 코드를 입력하세요.';
+      alert(invalidCodeMsg);
       return;
     }
 
@@ -1041,7 +1129,15 @@ export default function HostDashboard() {
       if (Array.isArray(data.presets) && data.presets.length > 0) {
         let presetsToImport = data.presets;
         if (room?.tier === 'free' && presetsToImport.length > 6) {
-          alert('무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 공유받은 팩에서 상위 6개 프리셋만 가져왔습니다.');
+          const freeLimitShareMsg = {
+            ko: '무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 공유받은 팩에서 상위 6개 프리셋만 가져왔습니다.',
+            en: 'Free tier rooms can have a maximum of 6 presets. Only the top 6 presets from the shared pack have been imported.',
+            ja: '無料プランのルームは最大6個のプリセットのみ保持できます。共有パックから上位6個のプリセットのみを取得しました。',
+            es: 'Las salas de plan gratuito solo pueden tener un máximo de 6 ajustes. Solo se han importado los primeros 6 ajustes del paquete compartido.',
+            'zh-TW': '免費方案房間最多只能有 6 個預設卡片。已僅載入共享包中前 6 個預設卡片。',
+            'zh-HK': '免費方案房間最多只能有 6 個預設卡片。已僅載入共享包中前 6 個預設卡片。',
+          }[activeLocale] || '무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 공유받은 팩에서 상위 6개 프리셋만 가져왔습니다.';
+          alert(freeLimitShareMsg);
           presetsToImport = presetsToImport.slice(0, 6);
         }
         
@@ -1053,13 +1149,29 @@ export default function HostDashboard() {
         
         setIsVaultOpen(false);
         setShareCodeInput('');
-        alert('공유받은 프리셋을 정상적으로 동기화했습니다! 🎉');
+        const syncSuccessMsg = {
+          ko: '공유받은 프리셋을 정상적으로 동기화했습니다! 🎉',
+          en: 'Shared presets synchronized successfully! 🎉',
+          ja: '共有されたプリセットが正常に同期されました！🎉',
+          es: '¡Ajustes compartidos sincronizados con éxito! 🎉',
+          'zh-TW': '已成功同步共享的預設卡片！🎉',
+          'zh-HK': '已成功同步共享的預設卡片！🎉',
+        }[activeLocale] || '공유받은 프리셋을 정상적으로 동기화했습니다! 🎉';
+        alert(syncSuccessMsg);
       } else {
         throw new Error('올바르지 않은 프리셋 형식입니다.');
       }
     } catch (e: any) {
       console.error(e);
-      alert(e.message || '가져오기에 실패했습니다. 만료된 코드인지 확인해 보세요.');
+      const importFailFallback = {
+        ko: '가져오기에 실패했습니다. 만료된 코드인지 확인해 보세요.',
+        en: 'Failed to import. Please check if the code has expired.',
+        ja: 'インポートに失敗しました。コードの期限が切れていないか確認してください。',
+        es: 'Error al importar. Por favor, comprueba si el código ha expirado.',
+        'zh-TW': '載入失敗。請檢查密碼是否已過期。',
+        'zh-HK': '載入失敗。請檢查密碼是否已過期。',
+      }[activeLocale] || '가져오기에 실패했습니다. 만료된 코드인지 확인해 보세요.';
+      alert(e.message || importFailFallback);
     } finally {
       setIsSharingLoading(false);
     }
@@ -1088,7 +1200,15 @@ export default function HostDashboard() {
       }
     } catch (err) {
       console.error('Camera access error:', err);
-      alert('카메라 접근 권한이 필요합니다. 브라우저 설정에서 카메라 권한을 허용해 주세요.');
+      const camPermissionMsg = {
+        ko: '카메라 접근 권한이 필요합니다. 브라우저 설정에서 카메라 권한을 허용해 주세요.',
+        en: 'Camera access permission is required. Please allow camera permissions in browser settings.',
+        ja: 'カメラへのアクセス権限が必要です。ブラウザの設定でカメラの権限を許可してください。',
+        es: 'Se requiere permiso de acceso a la cámara. Por favor, permite el acceso en la configuración del navegador.',
+        'zh-TW': '需要相機存取權限。請在瀏覽器設定中允許使用相機。',
+        'zh-HK': '需要相機存取權限。請在瀏覽器設定中允許使用相機。',
+      }[activeLocale] || '카메라 접근 권한이 필요합니다. 브라우저 설정에서 카메라 권한을 허용해 주세요.';
+      alert(camPermissionMsg);
       setIsScanning(false);
     }
   };
@@ -1155,7 +1275,15 @@ export default function HostDashboard() {
             if (Array.isArray(data.presets) && data.presets.length > 0) {
               let presetsToImport = data.presets;
               if (room?.tier === 'free' && presetsToImport.length > 6) {
-                alert('무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 공유받은 팩에서 상위 6개 프리셋만 가져왔습니다.');
+                const freeLimitShareMsg = {
+                  ko: '무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 공유받은 팩에서 상위 6개 프리셋만 가져왔습니다.',
+                  en: 'Free tier rooms can have a maximum of 6 presets. Only the top 6 presets from the shared pack have been imported.',
+                  ja: '無料プラン의룸은최대6개의프리셋만가질수있습니다.공유받은팩에서상위6개프리셋만가져왔습니다.',
+                  es: 'Las salas de plan gratuito solo pueden tener un máximo de 6 ajustes. Solo se han importado los primeros 6 ajustes del paquete compartido.',
+                  'zh-TW': '免費方案房間最多只能有 6 個預設卡片。已僅載入共享包中前 6 個預設卡片。',
+                  'zh-HK': '免費方案房間最多只能有 6 個預設卡片。已僅載入共享包中前 6 個預設卡片。',
+                }[activeLocale] || '무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 공유받은 팩에서 상위 6개 프리셋만 가져왔습니다.';
+                alert(freeLimitShareMsg);
                 presetsToImport = presetsToImport.slice(0, 6);
               }
               setPresets(presetsToImport);
@@ -1165,12 +1293,28 @@ export default function HostDashboard() {
               setActivePresetIndex(0);
               setIsVaultOpen(false);
               setShareCodeInput('');
-              alert('공유받은 프리셋을 정상적으로 동기화했습니다! 🎉');
+              const syncSuccessMsg = {
+                ko: '공유받은 프리셋을 정상적으로 동기화했습니다! 🎉',
+                en: 'Shared presets synchronized successfully! 🎉',
+                ja: '共有されたプリセットが正常に同期されました！🎉',
+                es: '¡Ajustes compartidos sincronizados con éxito! 🎉',
+                'zh-TW': '已成功同步共享的預設卡片！🎉',
+                'zh-HK': '已成功同步共享的預設卡片！🎉',
+              }[activeLocale] || '공유받은 프리셋을 정상적으로 동기화했습니다! 🎉';
+              alert(syncSuccessMsg);
             }
           })
           .catch(err => {
             console.error(err);
-            alert('가져오기에 실패했습니다. 만료된 코드이거나 네트워크 오류입니다.');
+            const qrImportFailMsg = {
+              ko: '가져오기에 실패했습니다. 만료된 코드이거나 네트워크 오류입니다.',
+              en: 'Failed to import. The code may have expired or a network error occurred.',
+              ja: 'インポートに失敗しました。コードの期限切れか、ネットワークエラーの可能性があります。',
+              es: 'Error al importar. El código puede haber expirado o puede haber ocurrido un error de red.',
+              'zh-TW': '載入失敗。密碼可能已過期或發生網路錯誤。',
+              'zh-HK': '載入失敗。密碼可能已過期或發生網路錯誤。',
+            }[activeLocale] || '가져오기에 실패했습니다. 만료된 코드이거나 네트워크 오류입니다.';
+            alert(qrImportFailMsg);
           })
           .finally(() => {
             setIsSharingLoading(false);
@@ -1265,7 +1409,15 @@ export default function HostDashboard() {
         console.log(`[Dashboard] Broadcast preset: ${presetWithTrigger.text} via Local API`);
       } catch (err: any) {
         console.error('Trigger preset error:', err);
-        alert(`전송 오류: ${err.message}`);
+        const txErrorPrefix = {
+          ko: '전송 오류',
+          en: 'Transmission Error',
+          ja: '送信エラー',
+          es: 'Error de Transmisión',
+          'zh-TW': '傳送錯誤',
+          'zh-HK': '傳送錯誤',
+        }[activeLocale] || '전송 오류';
+        alert(`${txErrorPrefix}: ${err.message}`);
       }
     }
   };
@@ -1494,12 +1646,29 @@ export default function HostDashboard() {
             
             <button 
               onClick={() => {
-                if (confirm("정말 대시보드(리모컨)에서 나가시겠습니까?\n현재 실시간으로 연출 중인 전광판 송출이 중단되지는 않지만, 대시보드 제어 세션이 닫힙니다.")) {
+                const exitConfirmMsg = {
+                  ko: "정말 대시보드(리모컨)에서 나가시겠습니까?\n현재 실시간으로 연출 중인 전광판 송출이 중단되지는 않지만, 대시보드 제어 세션이 닫힙니다.",
+                  en: "Are you sure you want to exit the remote dashboard?\nThe live signboard stream will continue, but your remote control session will end.",
+                  ja: "本当にリモコンダッシュボードを終了しますか？\n現在リアルタイムで配信中の電光掲示板の配信は停止しません가、リモコン制御セッションは終了します。",
+                  es: "¿Seguro que deseas salir del panel de control?\nLa transmisión del letrero en vivo continuará, pero tu sesión de control remoto finalizará.",
+                  'zh-TW': "確定要結束控制器面板嗎？\n目前即時播放的電子看板不會中斷，但您的控制器連線階段將會結束。",
+                  'zh-HK': "確定要結束控制器面板嗎？\n目前即時播放的電子看板不會中斷，但您的控制器連線階段將會結束。",
+                }[activeLocale] || "정말 대시보드(리모컨)에서 나가시겠습니까?\n현재 실시간으로 연출 중인 전광판 송출이 중단되지는 않지만, 대시보드 제어 세션이 닫힙니다.";
+                if (confirm(exitConfirmMsg)) {
                   router.push('/');
                 }
               }}
               className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-              title="나가기"
+              title={
+                {
+                  ko: "나가기",
+                  en: "Exit",
+                  ja: "退出",
+                  es: "Salir",
+                  'zh-TW': "結束",
+                  'zh-HK': "結束",
+                }[activeLocale] || "나가기"
+              }
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -1735,7 +1904,15 @@ export default function HostDashboard() {
                       const isPremiumFont = preset.font_family === 'neon' || preset.font_family === 'pixel' || preset.font_family === 'plump';
                       const isPremiumEffect = preset.special_effect === 'hearts' || preset.special_effect === 'confetti' || preset.special_effect === 'stars';
                       if ((isPremiumFont || isPremiumEffect) && room?.tier === 'free') {
-                        if (confirm('이 템플릿은 유료 요금제(Lite 이상) 전용 폰트 또는 특수 효과를 사용하고 있습니다. 요금제를 업그레이드하시겠습니까?')) {
+                        const confirmTemplateMsg = {
+                          ko: '이 템플릿은 유료 요금제(Lite 이상) 전용 폰트 또는 특수 효과를 사용하고 있습니다. 요금제를 업그레이드하시겠습니까?',
+                          en: 'This template uses fonts or special effects exclusive to paid plans (Lite or higher). Would you like to upgrade your plan?',
+                          ja: 'このテンプレートは有料プラン（Lite以上）専用のフォントまたは特殊効果を使用しています。プランをアップグレードしますか？',
+                          es: 'Esta plantilla utiliza fuentes o efectos especiales exclusivos de los planes de pago (Lite o superior). ¿Deseas actualizar tu plan?',
+                          'zh-TW': '此範本使用付費方案（Lite 以上）專用字型或特殊效果。是否要升級您的方案？',
+                          'zh-HK': '此範本使用付費方案（Lite 以上）專用字型或特殊效果。是否要升級您的方案？',
+                        }[activeLocale] || '이 템플릿은 유료 요금제(Lite 이상) 전용 폰트 또는 특수 효과를 사용하고 있습니다. 요금제를 업그레이드하시겠습니까?';
+                        if (confirm(confirmTemplateMsg)) {
                           setSelectedUpgradeTier(null);
                           setUpgradeStep('select');
                           setIsUpgradeModalOpen(true);
@@ -1981,7 +2158,16 @@ export default function HostDashboard() {
                         <div 
                           className="w-6.5 h-6.5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0" 
                           style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
-                          title="커스텀 색상 선택"
+                          title={
+                            {
+                              ko: "커스텀 배경 색상 선택",
+                              en: "Select Custom Background Color",
+                              ja: "カスタム背景色の選択",
+                              es: "Seleccionar Color de Fondo Personalizado",
+                              'zh-TW': "選擇自訂背景顏色",
+                              'zh-HK': "選擇自訂背景顏色",
+                            }[activeLocale] || "커스텀 배경 색상 선택"
+                          }
                         >
                           <input
                             type="color"
@@ -1994,9 +2180,26 @@ export default function HostDashboard() {
                         <div 
                           className="w-6.5 h-6.5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0 flex items-center justify-center" 
                           style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
-                          title="커스텀 배경 색상 선택 (PRO)"
+                          title={
+                            {
+                              ko: "커스텀 배경 색상 선택 (PRO)",
+                              en: "Select Custom Background Color (PRO)",
+                              ja: "カスタム背景色の選択 (PRO)",
+                              es: "Seleccionar Color de Fondo Personalizado (PRO)",
+                              'zh-TW': "選擇自訂背景顏色 (PRO)",
+                              'zh-HK': "選擇自訂背景顏色 (PRO)",
+                            }[activeLocale] || "커스텀 배경 색상 선택 (PRO)"
+                          }
                           onClick={() => {
-                            if (confirm('커스텀 배경 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?')) {
+                            const confirmCustomBgMsg = {
+                              ko: '커스텀 배경 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?',
+                              en: 'Custom background color (palette) is exclusive to paid plans (Lite or higher). Would you like to upgrade your plan?',
+                              ja: 'カスタム背景色（パレット）は有料プラン（Lite以上）専用の機能です。プランをアップグレードしますか？',
+                              es: 'El color de fondo personalizado (paleta) es exclusivo de los planes de pago (Lite o superior). ¿Deseas actualizar tu plan?',
+                              'zh-TW': '自訂背景顏色（調色盤）為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
+                              'zh-HK': '自訂背景顏色（調色盤）為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
+                            }[activeLocale] || '커스텀 배경 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?';
+                            if (confirm(confirmCustomBgMsg)) {
                               setSelectedUpgradeTier(null);
                               setUpgradeStep('select');
                               setIsUpgradeModalOpen(true);
@@ -2038,7 +2241,16 @@ export default function HostDashboard() {
                         <div 
                           className="w-6.5 h-6.5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0" 
                           style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
-                          title="커스텀 글자 색상 선택"
+                          title={
+                            {
+                              ko: "커스텀 글자 색상 선택",
+                              en: "Select Custom Text Color",
+                              ja: "カスタム文字色の選択",
+                              es: "Seleccionar Color de Texto Personalizado",
+                              'zh-TW': "選擇自訂文字顏色",
+                              'zh-HK': "選擇自訂文字顏色",
+                            }[activeLocale] || "커스텀 글자 색상 선택"
+                          }
                         >
                           <input
                             type="color"
@@ -2051,9 +2263,26 @@ export default function HostDashboard() {
                         <div 
                           className="w-6.5 h-6.5 rounded-full overflow-hidden border border-white/10 hover:scale-110 transition-transform shadow-md cursor-pointer relative shrink-0 flex items-center justify-center" 
                           style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
-                          title="커스텀 글자 색상 선택 (PRO)"
+                          title={
+                            {
+                              ko: "커스텀 글자 색상 선택 (PRO)",
+                              en: "Select Custom Text Color (PRO)",
+                              ja: "カスタム文字色の選択 (PRO)",
+                              es: "Seleccionar Color de Texto Personalizado (PRO)",
+                              'zh-TW': "選擇自訂文字顏色 (PRO)",
+                              'zh-HK': "選擇自訂文字顏色 (PRO)",
+                            }[activeLocale] || "커스텀 글자 색상 선택 (PRO)"
+                          }
                           onClick={() => {
-                            if (confirm('커스텀 글자 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?')) {
+                            const confirmCustomTextMsg = {
+                              ko: '커스텀 글자 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?',
+                              en: 'Custom text color (palette) is exclusive to paid plans (Lite or higher). Would you like to upgrade your plan?',
+                              ja: 'カスタム文字色（パレット）は有料プラン（Lite以上）専用の機能です。プランをアップグレードしますか？',
+                              es: 'El color de texto personalizado (paleta) es exclusivo de los planes de pago (Lite o superior). ¿Deseas actualizar tu plan?',
+                              'zh-TW': '自訂文字顏色（調色盤）為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
+                              'zh-HK': '自訂文字顏色（調色盤）為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
+                            }[activeLocale] || '커스텀 글자 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?';
+                            if (confirm(confirmCustomTextMsg)) {
                               setSelectedUpgradeTier(null);
                               setUpgradeStep('select');
                               setIsUpgradeModalOpen(true);
@@ -2170,7 +2399,15 @@ export default function HostDashboard() {
                           onClick={() => {
                             const isPremium = item.val !== 'none';
                             if (isPremium && room?.tier === 'free') {
-                              if (confirm('특수 효과는 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?')) {
+                              const confirmSpecialEffectMsg = {
+                                ko: '특수 효과는 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?',
+                                en: 'Special effects are exclusive to paid plans (Lite or higher). Would you like to upgrade your plan?',
+                                ja: '特殊効果は有料プラン（Lite以上）専用です。プランをアップグレードしますか？',
+                                es: 'Los efectos especiales son exclusivos de los planes de pago (Lite o superior). ¿Deseas actualizar tu plan?',
+                                'zh-TW': '特殊效果為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
+                                'zh-HK': '特殊效果為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
+                              }[activeLocale] || '특수 효과는 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?';
+                              if (confirm(confirmSpecialEffectMsg)) {
                                 setSelectedUpgradeTier(null);
                                 setUpgradeStep('select');
                                 setIsUpgradeModalOpen(true);
@@ -2852,7 +3089,15 @@ export default function HostDashboard() {
                         onClick={() => {
                           const isPremium = item.val !== 'none';
                           if (isPremium && room?.tier === 'free') {
-                            if (confirm('특수 효과는 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?')) {
+                            const confirmSpecialEffectMsg = {
+                              ko: '특수 효과는 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?',
+                              en: 'Special effects are exclusive to paid plans (Lite or higher). Would you like to upgrade your plan?',
+                              ja: '特殊効果は有料プラン（Lite以上）専用です。プランをアップグレードしますか？',
+                              es: 'Los efectos especiales son exclusivos de los planes de pago (Lite o superior). ¿Deseas actualizar tu plan?',
+                              'zh-TW': '特殊效果為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
+                              'zh-HK': '特殊效果為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
+                            }[activeLocale] || '특수 효과는 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?';
+                            if (confirm(confirmSpecialEffectMsg)) {
                               setSelectedUpgradeTier(null);
                               setUpgradeStep('select');
                               setIsUpgradeModalOpen(true);
@@ -3052,452 +3297,998 @@ export default function HostDashboard() {
             {/* Header */}
             <div className="flex justify-between items-center pb-4 border-b border-white/10">
               <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
-                플랜 업그레이드
+                {t('upgrade_plan', activeLocale)}
               </h3>
               {!isUpgrading && upgradeStep !== 'success' && (
                 <button
                   onClick={() => setIsUpgradeModalOpen(false)}
                   className="text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg transition-colors cursor-pointer text-xs font-bold hover:bg-white/5"
                 >
-                  닫기
+                  {t('close', activeLocale)}
                 </button>
               )}
             </div>
 
             {/* Content Switcher */}
-            {upgradeStep === 'select' && (
-              <div className="flex flex-col gap-5 text-left">
-                {room?.tier === 'free' ? (
-                  <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent p-5 flex flex-col gap-3.5">
-                    {/* Decorative glow background */}
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
-                    
-                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                      <div className="flex items-center gap-2 text-indigo-300 text-xs font-black uppercase tracking-wider">
-                        <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
-                        무료 플랜 제한 안내
+            {upgradeStep === 'select' && (() => {
+              const freePlanLimitTitle = {
+                ko: '무료 플랜 제한 안내',
+                en: 'Free Plan Limitation Guide',
+                ja: '無料プラン制限のご案内',
+                es: 'Guía de Limitación del Plan Gratuito',
+                'zh-TW': '免費方案限制說明',
+                'zh-HK': '免費方案限制說明',
+              }[activeLocale] || '무료 플랜 제한 안내';
+
+              const sixHoursLimit = {
+                ko: '6시간 제한',
+                en: '6h limit',
+                ja: '6時間制限',
+                es: 'Límite de 6h',
+                'zh-TW': '6小時限制',
+                'zh-HK': '6小時限制',
+              }[activeLocale] || '6시간 제한';
+
+              const freePlanLimitDesc = {
+                ko: <>현재 기본(무료) 플랜을 사용 중이며, <span className="text-white font-bold underline decoration-indigo-400 decoration-2 underline-offset-4">시간 연장이 불가능</span>합니다. 지속적인 이용을 위해 요금제 업그레이드가 필요합니다.</>,
+                en: <>You are currently on the basic (free) plan, and <span className="text-white font-bold underline decoration-indigo-400 decoration-2 underline-offset-4">session extension is not allowed</span>. Upgrading your plan is required for continuous use.</>,
+                ja: <>現在ベーシック（無料）プランを使用中であり、<span className="text-white font-bold underline decoration-indigo-400 decoration-2 underline-offset-4">時間の延長ができません</span>。継続してご利用いただくには、プランのアップグレードが必要です。</>,
+                es: <>Actualmente estás en el plan básico (gratuito) y <span className="text-white font-bold underline decoration-indigo-400 decoration-2 underline-offset-4">no es posible extender el tiempo</span>. Se requiere actualizar el plan para seguir usándolo.</>,
+                'zh-TW': <>目前使用的是基本（免費）方案，<span className="text-white font-bold underline decoration-indigo-400 decoration-2 underline-offset-4">無法延長時間</span>。如需持續使用，請升級方案。</>,
+                'zh-HK': <>目前使用的是基本（免費）方案，<span className="text-white font-bold underline decoration-indigo-400 decoration-2 underline-offset-4">無法延長時間</span>。如需持續使用，請升級方案。</>,
+              }[activeLocale] || <>현재 기본(무료) 플랜을 사용 중이며, <span className="text-white font-bold underline decoration-indigo-400 decoration-2 underline-offset-4">시간 연장이 불가능</span>합니다. 지속적인 이용을 위해 요금제 업그레이드가 필요합니다.</>;
+
+              const benefits = {
+                ko: {
+                  title: '업그레이드 혜택',
+                  list: [
+                    '24시간 사용 연장',
+                    '방 비밀번호 잠금',
+                    '무제한 프리셋 저장',
+                    '다중 추첨 (최대 10명)',
+                    '프리미엄 폰트 제공',
+                    '화려한 특수효과 잠금해제',
+                  ],
+                  capacity: '참여자 정원 증설 (Lite: 60명 / Pro: 250명)',
+                },
+                en: {
+                  title: 'Upgrade Benefits',
+                  list: [
+                    '24-hour Session Extension',
+                    'Password Lock Room',
+                    'Unlimited Presets Saved',
+                    'Multi-raffle (Up to 10)',
+                    'Premium Fonts Provided',
+                    'Stunning Effects Unlocked',
+                  ],
+                  capacity: 'Increase Participants (Lite: 60 / Pro: 250)',
+                },
+                ja: {
+                  title: 'アップグレード特典',
+                  list: [
+                    '24時間使用延長',
+                    'ルームパスワードロック',
+                    'プリセット無制限保存',
+                    '複数当選（最大10名）',
+                    'プレミアムフォント提供',
+                    '華やかな特殊効果解放',
+                  ],
+                  capacity: '参加定員の増加 (Lite: 60名 / Pro: 250名)',
+                },
+                es: {
+                  title: 'Beneficios de Actualización',
+                  list: [
+                    'Extensión de Sesión de 24h',
+                    'Bloqueo de Sala por Contraseña',
+                    'Guardado Ilimitado de Ajustes',
+                    'Sorteo Múltiple (Hasta 10)',
+                    'Fuentes Premium Incluidas',
+                    'Efectos Especiales Desbloqueados',
+                  ],
+                  capacity: 'Ampliar Capacidad (Lite: 60 / Pro: 250 pers.)',
+                },
+                'zh-TW': {
+                  title: '升級權益',
+                  list: [
+                    '延長 24 小時使用時間',
+                    '房間密碼鎖定',
+                    '無限制儲存預設卡片',
+                    '多重抽獎 (最多 10 人)',
+                    '提供進階字型',
+                    '解鎖華麗特效',
+                  ],
+                  capacity: '增加參與人數上限 (Lite: 60人 / Pro: 250人)',
+                },
+                'zh-HK': {
+                  title: '升級權益',
+                  list: [
+                    '延長 24 小時使用時間',
+                    '房間密碼鎖定',
+                    '無限制儲存預設卡片',
+                    '多重抽獎 (最多 10 人)',
+                    '提供進階字型',
+                    '解鎖華麗特效',
+                  ],
+                  capacity: '增加參與人數上限 (Lite: 60人 / Pro: 250人)',
+                },
+              }[activeLocale] || {
+                title: '업그레이드 혜택',
+                list: [
+                  '24시간 사용 연장',
+                  '방 비밀번호 잠금',
+                  '무제한 프리셋 저장',
+                  '다중 추첨 (최대 10명)',
+                  '프리미엄 폰트 제공',
+                  '화려한 특수효과 잠금해제',
+                ],
+                capacity: '참여자 정원 증설 (Lite: 60명 / Pro: 250명)',
+              };
+
+              const activeLimitTitle = {
+                ko: '💡 실시간 한도 확장',
+                en: '💡 Real-time Limit Extension',
+                ja: '💡 リアルタイム定員拡張',
+                es: '💡 Ampliación en Tiempo Real',
+                'zh-TW': '💡 即時人數上限擴展',
+                'zh-HK': '💡 即時人數上限擴展',
+              }[activeLocale] || '💡 실시간 한도 확장';
+
+              const activeLimitDesc = {
+                ko: '인원 제한을 늘리기 위해 플랜을 즉시 올릴 수 있으며, 업그레이드 후에도 기존 입장 QR 코드 및 링크는 변경 없이 그대로 유지됩니다.',
+                en: 'You can instantly upgrade your plan to increase the limit. The existing QR code and entry link remain completely unchanged after the upgrade.',
+                ja: '定員枠を増やすために即座にアップグレード可能で、アップグレード後も既存の入場QRコードやリンクはそのまま維持されます。',
+                es: 'Puedes actualizar el plan al instante para ampliar el límite; el código QR y enlace de entrada existentes se mantendrán sin cambios.',
+                'zh-TW': '您可以立即升級方案以提高人數上限，升級後原有的入場 QR Code 與連結保持不變，無需重新製作。',
+                'zh-HK': '您可以立即升級方案以提高人數上限，升級後原有的入場 QR Code 與連結保持不變，無需重新製作。',
+              }[activeLocale] || '인원 제한을 늘리기 위해 플랜을 즉시 올릴 수 있으며, 업그레이드 후에도 기존 입장 QR 코드 및 링크는 변경 없이 그대로 유지됩니다.';
+
+              const qrAddressUnchanged = {
+                ko: '업그레이드 후에도 입장용 QR 코드와 링크 주소는 동일하게 유지됩니다.',
+                en: 'Even after upgrading, the entrance QR code and link address remain the same.',
+                ja: 'アップグレード後も入場用QRコードとリンクアドレスは同一に維持されます。',
+                es: 'Incluso después de la actualización, el código QR y enlace de acceso se mantendrán iguales.',
+                'zh-TW': '升級後，觀眾入場用的 QR Code 與連結網址將維持不變。',
+                'zh-HK': '升級後，觀眾入場用的 QR Code 與連結網址將維持不變。',
+              }[activeLocale] || '업그레이드 후에도 입장용 QR 코드와 링크 주소는 동일하게 유지됩니다.';
+
+              const selectPlanTitle = {
+                ko: '업그레이드할 플랜 선택',
+                en: 'Select a Plan to Upgrade',
+                ja: 'アップグレードするプランを選択',
+                es: 'Selecciona un Plan para Actualizar',
+                'zh-TW': '選擇要升級的方案',
+                'zh-HK': '選擇要升級的方案',
+              }[activeLocale] || '업그레이드할 플랜 선택';
+
+              const activeConnLimitLabel = {
+                ko: '동시 접속 한도: ',
+                en: 'Active Limit: ',
+                ja: '同時接続枠: ',
+                es: 'Límite de Conexión: ',
+                'zh-TW': '同時連線上限: ',
+                'zh-HK': '同時連線上限: ',
+              }[activeLocale] || '동시 접속 한도: ';
+
+              const vatIncludedLabel = {
+                ko: 'VAT 포함',
+                en: 'VAT Included',
+                ja: '税込',
+                es: 'IVA incluido',
+                'zh-TW': '含稅 (VAT)',
+                'zh-HK': '含稅 (VAT)',
+              }[activeLocale] || 'VAT 포함';
+
+              const proceedToPaymentLabel = {
+                ko: '결제 단계로 이동하기',
+                en: 'Proceed to Payment',
+                ja: '決済手続きへ進む',
+                es: 'Proceder al Pago',
+                'zh-TW': '前往結帳步驟',
+                'zh-HK': '前往結帳步驟',
+              }[activeLocale] || '결제 단계로 이동하기';
+
+              return (
+                <div className="flex flex-col gap-5 text-left">
+                  {room?.tier === 'free' ? (
+                    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent p-5 flex flex-col gap-3.5">
+                      {/* Decorative glow background */}
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+                      
+                      <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                        <div className="flex items-center gap-2 text-indigo-300 text-xs font-black uppercase tracking-wider">
+                          <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                          {freePlanLimitTitle}
+                        </div>
+                        <span className="text-[10px] text-zinc-400 font-bold bg-white/5 px-2 py-0.5 rounded-full">{sixHoursLimit}</span>
                       </div>
-                      <span className="text-[10px] text-zinc-400 font-bold bg-white/5 px-2 py-0.5 rounded-full">6시간 제한</span>
-                    </div>
 
-                    <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-medium">
-                      현재 기본(무료) 플랜을 사용 중이며, <span className="text-white font-bold underline decoration-indigo-400 decoration-2 underline-offset-4">시간 연장이 불가능</span>합니다. 지속적인 이용을 위해 요금제 업그레이드가 필요합니다.
-                    </p>
+                      <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-medium">
+                        {freePlanLimitDesc}
+                      </p>
 
-                    <div className="pt-2 mt-1 border-t border-white/5 flex flex-col gap-2">
-                      <span className="text-[11px] font-black text-indigo-300 tracking-wider uppercase">업그레이드 혜택</span>
-                      <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px] font-semibold text-zinc-300">
-                        <div className="flex items-center gap-1.5">
-                          <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                          <span>24시간 사용 연장</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                          <span>방 비밀번호 잠금</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                          <span>무제한 프리셋 저장</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                          <span>다중 추첨 (최대 10명)</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                          <span>프리미엄 폰트 제공</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                          <span>화려한 특수효과 잠금해제</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 col-span-2 mt-0.5 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1.5 rounded-lg">
-                          <svg className="w-3.5 h-3.5 text-indigo-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                          <span className="text-zinc-300">참여자 정원 증설 (Lite: 60명 / Pro: 250명)</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 p-4 flex flex-col gap-2">
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 rounded-full blur-xl pointer-events-none" />
-                    <div className="flex items-center gap-1.5 text-indigo-300 text-xs font-black uppercase tracking-wider">
-                      💡 실시간 한도 확장
-                    </div>
-                    <p className="text-xs text-zinc-300 leading-normal">
-                      인원 제한을 늘리기 위해 플랜을 즉시 올릴 수 있으며, 업그레이드 후에도 <strong className="text-white">기존 입장 QR 코드 및 링크는 변경 없이 그대로 유지</strong>됩니다.
-                    </p>
-                  </div>
-                )}
-
-                {room?.tier === 'free' && (
-                  <div className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.02] border border-white/5 text-[10px] text-zinc-400 leading-normal">
-                    <span>💡</span>
-                    <span>업그레이드 후에도 <strong>입장용 QR 코드와 링크 주소는 동일하게 유지</strong>됩니다.</span>
-                  </div>
-                )}
-                
-                <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">업그레이드할 플랜 선택</span>
-                <div className="flex flex-col gap-3">
-                  {getUpgradableTiers().map((tKey) => {
-                    const config = TIER_CONFIGS[tKey];
-                    const isSelected = selectedUpgradeTier === tKey;
-                    const planName = tKey === 'lite' ? 'Lite Plan' : tKey === 'pro' ? 'Pro Plan' : 'Max Plan';
-                    return (
-                      <button
-                        key={tKey}
-                        onClick={() => setSelectedUpgradeTier(tKey)}
-                        className={`w-full p-5 rounded-2xl border transition-all text-left flex justify-between items-center cursor-pointer ${
-                          isSelected
-                            ? 'bg-indigo-650 border-indigo-500 text-white shadow-lg shadow-indigo-650/20 scale-[1.02]'
-                            : 'bg-white/[0.03] border-white/5 text-zinc-300 hover:bg-white/[0.08] hover:border-white/10 hover:scale-[1.01]'
-                        }`}
-                      >
-                        <div>
-                          <div className="font-black text-sm sm:text-base capitalize">{planName}</div>
-                          <div className={`text-xs mt-1 font-medium ${isSelected ? 'text-indigo-100' : 'text-zinc-400'}`}>
-                            동시 접속 한도: <strong className={isSelected ? 'text-white' : 'text-zinc-200'}>{config.maxParticipants}명</strong>
+                      <div className="pt-2 mt-1 border-t border-white/5 flex flex-col gap-2">
+                        <span className="text-[11px] font-black text-indigo-300 tracking-wider uppercase">{benefits.title}</span>
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px] font-semibold text-zinc-300">
+                          {benefits.list.map((bText, bIdx) => (
+                            <div key={bIdx} className="flex items-center gap-1.5">
+                              <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                              <span>{bText}</span>
+                            </div>
+                          ))}
+                          <div className="flex items-center gap-1.5 col-span-2 mt-0.5 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1.5 rounded-lg">
+                            <svg className="w-3.5 h-3.5 text-indigo-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            <span className="text-zinc-300">{benefits.capacity}</span>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="font-mono text-sm sm:text-base font-black tracking-tight">{config.priceKrw.toLocaleString()}원</div>
-                          <div className={`text-[10px] mt-0.5 font-bold ${isSelected ? 'text-indigo-200' : 'text-zinc-500'}`}>VAT 포함</div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 p-4 flex flex-col gap-2">
+                      <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 rounded-full blur-xl pointer-events-none" />
+                      <div className="flex items-center gap-1.5 text-indigo-300 text-xs font-black uppercase tracking-wider">
+                        {activeLimitTitle}
+                      </div>
+                      <p className="text-xs text-zinc-300 leading-normal">
+                        {activeLimitDesc}
+                      </p>
+                    </div>
+                  )}
 
-                <button
-                  onClick={() => {
-                    if (selectedUpgradeTier) setUpgradeStep('payment');
-                  }}
-                  disabled={!selectedUpgradeTier}
-                  className="w-full py-4 mt-2 rounded-2xl bg-white text-black hover:bg-zinc-200 font-extrabold text-sm transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-lg shadow-white/5"
-                >
-                  결제 단계로 이동하기
-                </button>
-              </div>
-            )}
-
-            {upgradeStep === 'payment' && selectedUpgradeTier && (
-              <div className="flex flex-col gap-5 text-left">
-                <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                  선택하신 <strong className="text-white capitalize">{selectedUpgradeTier} Plan</strong> 요금을 결제합니다.<br />
-                  결제 승인 즉시 동시 접속 인원 제한이 <strong className="text-indigo-300">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}명</strong>으로 증가합니다.
-                </div>
-
-                {/* PG Checkout Simulator Card */}
-                <div className="bg-black/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3.5">
-                  <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">가상 결제 모듈 시뮬레이터</span>
+                  {room?.tier === 'free' && (
+                    <div className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/[0.02] border border-white/5 text-[10px] text-zinc-400 leading-normal">
+                      <span>💡</span>
+                      <span>{qrAddressUnchanged}</span>
+                    </div>
+                  )}
                   
-                  <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
-                    <span className="text-zinc-400">결제 대상 플랜</span>
-                    <span className="text-white font-extrabold capitalize">{selectedUpgradeTier} Plan</span>
+                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">{selectPlanTitle}</span>
+                  <div className="flex flex-col gap-3">
+                    {getUpgradableTiers().map((tKey) => {
+                      const config = TIER_CONFIGS[tKey];
+                      const isSelected = selectedUpgradeTier === tKey;
+                      const planName = tKey === 'lite' ? 'Lite Plan' : tKey === 'pro' ? 'Pro Plan' : 'Max Plan';
+                      const formattedPrice = activeLocale === 'ko'
+                        ? `${config.priceKrw.toLocaleString()}원`
+                        : `₩${config.priceKrw.toLocaleString()}`;
+                      return (
+                        <button
+                          key={tKey}
+                          onClick={() => setSelectedUpgradeTier(tKey)}
+                          className={`w-full p-5 rounded-2xl border transition-all text-left flex justify-between items-center cursor-pointer ${
+                            isSelected
+                              ? 'bg-indigo-650 border-indigo-500 text-white shadow-lg shadow-indigo-650/20 scale-[1.02]'
+                              : 'bg-white/[0.03] border-white/5 text-zinc-300 hover:bg-white/[0.08] hover:border-white/10 hover:scale-[1.01]'
+                          }`}
+                        >
+                          <div>
+                            <div className="font-black text-sm sm:text-base capitalize">{planName}</div>
+                            <div className={`text-xs mt-1 font-medium ${isSelected ? 'text-indigo-100' : 'text-zinc-400'}`}>
+                              {activeConnLimitLabel}<strong className={isSelected ? 'text-white' : 'text-zinc-200'}>{config.maxParticipants}{t('person_unit', activeLocale)}</strong>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-mono text-sm sm:text-base font-black tracking-tight">{formattedPrice}</div>
+                            <div className={`text-[10px] mt-0.5 font-bold ${isSelected ? 'text-indigo-200' : 'text-zinc-500'}`}>{vatIncludedLabel}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
 
-                  <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
-                    <span className="text-zinc-400">증설 인원 한도</span>
-                    <span className="text-emerald-400 font-extrabold">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}명</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center text-xs sm:text-sm">
-                    <span className="text-zinc-400">결제 금액</span>
-                    <span className="text-indigo-300 font-black font-mono">{TIER_CONFIGS[selectedUpgradeTier].priceKrw.toLocaleString()}원</span>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
                   <button
-                    onClick={() => setUpgradeStep('select')}
-                    disabled={isUpgrading}
-                    className="flex-1 py-4 rounded-2xl bg-white/5 text-zinc-400 font-bold hover:bg-white/10 hover:text-white transition-all text-sm cursor-pointer disabled:opacity-50 border border-white/5"
+                    onClick={() => {
+                      if (selectedUpgradeTier) setUpgradeStep('payment');
+                    }}
+                    disabled={!selectedUpgradeTier}
+                    className="w-full py-4 mt-2 rounded-2xl bg-white text-black hover:bg-zinc-200 font-extrabold text-sm transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:pointer-events-none shadow-lg shadow-white/5"
                   >
-                    이전으로
-                  </button>
-                  
-                  <button
-                    onClick={handleUpgrade}
-                    disabled={isUpgrading}
-                    className="flex-1 py-4 rounded-2xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg"
-                  >
-                    {isUpgrading ? (
-                      <span>승인 중...</span>
-                    ) : (
-                      <span>결제 승인 완료</span>
-                    )}
+                    {proceedToPaymentLabel}
                   </button>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
-            {upgradeStep === 'success' && selectedUpgradeTier && (
-              <div className="flex flex-col items-center text-center gap-5 py-4">
-                <span className="text-xs font-black text-emerald-400 uppercase tracking-widest px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                  Success
-                </span>
-                
-                <h4 className="text-lg sm:text-xl font-black text-white">플랜 업그레이드 성공</h4>
-                
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-sm">
-                  요금제 플랜 업그레이드가 완료되었습니다.<br />
-                  전광판 동시 접속 정원이 즉시 <strong className="text-white">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}명</strong>으로 확장되었습니다.
-                </p>
+            {upgradeStep === 'payment' && selectedUpgradeTier && (() => {
+              const paymentDesc = {
+                ko: <>선택하신 <strong className="text-white capitalize">{selectedUpgradeTier} Plan</strong> 요금을 결제합니다.<br />결제 승인 즉시 동시 접속 인원 제한이 <strong className="text-indigo-300">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}명</strong>으로 증가합니다.</>,
+                en: <>We will process the payment for your selected <strong className="text-white capitalize">{selectedUpgradeTier} Plan</strong>.<br />Upon approval, the connection limit will immediately increase to <strong className="text-indigo-300">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}</strong>.</>,
+                ja: <>選択された <strong className="text-white capitalize">{selectedUpgradeTier} プラン</strong> の決済を行います。<br />決済承認後、直ちに同時接続人数枠が <strong className="text-indigo-300">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}人</strong> に拡大されます。</>,
+                es: <>Se procesará el pago del <strong className="text-white capitalize">{selectedUpgradeTier} Plan</strong> seleccionado.<br />Tras la aprobación, el límite de conexión aumentará inmediatamente a <strong className="text-indigo-300">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}</strong>.</>,
+                'zh-TW': <>將為您選購的 <strong className="text-white capitalize">{selectedUpgradeTier} 方案</strong> 進行結帳。<br />付款成功後，同時連線人數上限將立即調升至 <strong className="text-indigo-300">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants} 人</strong>。</>,
+                'zh-HK': <>將為您選購的 <strong className="text-white capitalize">{selectedUpgradeTier} 方案</strong> 進行結帳。<br />付款成功後，同時連線人數上限將立即調升至 <strong className="text-indigo-300">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants} 人</strong>。</>,
+              }[activeLocale] || <>선택하신 <strong className="text-white capitalize">{selectedUpgradeTier} Plan</strong> 요금을 결제합니다.<br />결제 승인 즉시 동시 접속 인원 제한이 <strong className="text-indigo-300">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}명</strong>으로 증가합니다.</>;
 
-                <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-xs text-zinc-400 leading-relaxed max-w-sm text-left">
-                  <strong className="text-zinc-300 block mb-1">안내</strong>
-                  기존에 열려 있는 관람객 접속용 QR 코드와 링크 주소는 그대로 동일하게 유지되므로, 관람객들이 새로 고침을 하거나 재스캔을 하지 않아도 정상 작동합니다.
+              const simulatorTitle = {
+                ko: '가상 결제 모듈 시뮬레이터',
+                en: 'Checkout Module Simulator',
+                ja: '仮想決済モジュールシミュレータ',
+                es: 'Simulador de Módulo de Pago',
+                'zh-TW': '虛擬結帳模擬器',
+                'zh-HK': '虛擬結帳模擬器',
+              }[activeLocale] || '가상 결제 모듈 시뮬레이터';
+
+              const targetPlanLabel = {
+                ko: '결제 대상 플랜',
+                en: 'Selected Plan',
+                ja: '対象プラン',
+                es: 'Plan Seleccionado',
+                'zh-TW': '結帳方案',
+                'zh-HK': '結帳方案',
+              }[activeLocale] || '결제 대상 플랜';
+
+              const extendedCapacityLabel = {
+                ko: '증설 인원 한도',
+                en: 'Extended Capacity',
+                ja: '拡張接続枠',
+                es: 'Límite de Capacidad',
+                'zh-TW': '擴增人數上限',
+                'zh-HK': '擴增人數上限',
+              }[activeLocale] || '증설 인원 한도';
+
+              const paymentAmtLabel = {
+                ko: '결제 금액',
+                en: 'Total Amount',
+                ja: '決済金額',
+                es: 'Total a Pagar',
+                'zh-TW': '應付金額',
+                'zh-HK': '應付金額',
+              }[activeLocale] || '결제 금액';
+
+              const previousStepLabel = {
+                ko: '이전으로',
+                en: 'Back',
+                ja: '戻る',
+                es: 'Atrás',
+                'zh-TW': '上一步',
+                'zh-HK': '上一步',
+              }[activeLocale] || '이전으로';
+
+              const completePaymentLabel = {
+                ko: '결제 승인 완료',
+                en: 'Complete Payment',
+                ja: '決済を承認する',
+                es: 'Completar Pago',
+                'zh-TW': '完成付款',
+                'zh-HK': '完成付款',
+              }[activeLocale] || '결제 승인 완료';
+
+              const approvingLabel = {
+                ko: '승인 중...',
+                en: 'Processing...',
+                ja: '承認中...',
+                es: 'Procesando...',
+                'zh-TW': '授權中...',
+                'zh-HK': '授權中...',
+              }[activeLocale] || '승인 중...';
+
+              const formattedPrice = activeLocale === 'ko'
+                ? `${TIER_CONFIGS[selectedUpgradeTier].priceKrw.toLocaleString()}원`
+                : `₩${TIER_CONFIGS[selectedUpgradeTier].priceKrw.toLocaleString()}`;
+
+              return (
+                <div className="flex flex-col gap-5 text-left">
+                  <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                    {paymentDesc}
+                  </div>
+
+                  {/* PG Checkout Simulator Card */}
+                  <div className="bg-black/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3.5">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">{simulatorTitle}</span>
+                    
+                    <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
+                      <span className="text-zinc-400">{targetPlanLabel}</span>
+                      <span className="text-white font-extrabold capitalize">{selectedUpgradeTier} Plan</span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
+                      <span className="text-zinc-400">{extendedCapacityLabel}</span>
+                      <span className="text-emerald-400 font-extrabold">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}{t('person_unit', activeLocale)}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center text-xs sm:text-sm">
+                      <span className="text-zinc-400">{paymentAmtLabel}</span>
+                      <span className="text-indigo-300 font-black font-mono">{formattedPrice}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setUpgradeStep('select')}
+                      disabled={isUpgrading}
+                      className="flex-1 py-4 rounded-2xl bg-white/5 text-zinc-400 font-bold hover:bg-white/10 hover:text-white transition-all text-sm cursor-pointer disabled:opacity-50 border border-white/5"
+                    >
+                      {previousStepLabel}
+                    </button>
+                    
+                    <button
+                      onClick={handleUpgrade}
+                      disabled={isUpgrading}
+                      className="flex-1 py-4 rounded-2xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg"
+                    >
+                      {isUpgrading ? (
+                        <span>{approvingLabel}</span>
+                      ) : (
+                        <span>{completePaymentLabel}</span>
+                      )}
+                    </button>
+                  </div>
                 </div>
+              );
+            })()}
 
-                <button
-                  onClick={() => {
-                    setIsUpgradeModalOpen(false);
-                    setUpgradeStep('select');
-                    setSelectedUpgradeTier(null);
-                  }}
-                  className="w-full py-4 mt-2 rounded-2xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all cursor-pointer shadow-lg"
-                >
-                  대시보드로 돌아가기
-                </button>
-              </div>
-            )}
+            {upgradeStep === 'success' && selectedUpgradeTier && (() => {
+              const successTitle = {
+                ko: '플랜 업그레이드 성공',
+                en: 'Upgrade Successful',
+                ja: 'アップグレード成功',
+                es: 'Actualización Exitosa',
+                'zh-TW': '方案升級成功',
+                'zh-HK': '方案升級成功',
+              }[activeLocale] || '플랜 업그레이드 성공';
+
+              const successDesc = {
+                ko: <>요금제 플랜 업그레이드가 완료되었습니다.<br />전광판 동시 접속 정원이 즉시 <strong className="text-white">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}명</strong>으로 확장되었습니다.</>,
+                en: <>Your plan upgrade is complete.<br />The spectator connection limit has been expanded to <strong className="text-white">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}</strong> immediately.</>,
+                ja: <>プランのアップグレードが完了しました。<br />同時接続人数枠がただちに <strong className="text-white">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}人</strong> に拡張されました。</>,
+                es: <>La actualización del plan se ha completado.<br />El límite de conexión de espectadores se ha ampliado inmediatamente a <strong className="text-white">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}</strong>.</>,
+                'zh-TW': <>方案升級已完成！<br />連線人數上限已立即調升至 <strong className="text-white">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants} 人</strong>。</>,
+                'zh-HK': <>方案升級已完成！<br />連線人數上限已立即調升至 <strong className="text-white">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants} 人</strong>。</>,
+              }[activeLocale] || <>요금제 플랜 업그레이드가 완료되었습니다.<br />전광판 동시 접속 정원이 즉시 <strong className="text-white">{TIER_CONFIGS[selectedUpgradeTier].maxParticipants}명</strong>으로 확장되었습니다.</>;
+
+              const noticeTitle = {
+                ko: '안내',
+                en: 'Notice',
+                ja: 'ご案内',
+                es: 'Aviso',
+                'zh-TW': '說明',
+                'zh-HK': '說明',
+              }[activeLocale] || '안내';
+
+              const noticeDesc = {
+                ko: '기존에 열려 있는 관람객 접속용 QR 코드와 링크 주소는 그대로 동일하게 유지되므로, 관람객들이 새로 고침을 하거나 재스캔을 하지 않아도 정상 작동합니다.',
+                en: 'The existing QR code and entry link remain exactly the same. Spectators do not need to scan again or refresh to stay connected.',
+                ja: '既存の観客用QRコードやリンクはそのまま維持されるため、観客が再スキャンやリロードを行わなくても正常に動作し続けます。',
+                es: 'El código QR y enlace de acceso existentes se mantendrán iguales; los espectadores no necesitan recargar ni volver a escanear.',
+                'zh-TW': '原有的觀眾入場 QR Code 與連結網址維持不變，觀眾無需重新整理頁面或重新掃描即可正常連線。',
+                'zh-HK': '原有的觀眾入場 QR Code 與連結網址維持不變，觀眾無需重新整理頁面或重新掃描即可正常連線。',
+              }[activeLocale] || '기존에 열려 있는 관람객 접속용 QR 코드와 링크 주소는 그대로 동일하게 유지되므로, 관람객들이 새로 고침을 하거나 재스캔을 하지 않아도 정상 작동합니다.';
+
+              return (
+                <div className="flex flex-col items-center text-center gap-5 py-4">
+                  <span className="text-xs font-black text-emerald-400 uppercase tracking-widest px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    Success
+                  </span>
+                  
+                  <h4 className="text-lg sm:text-xl font-black text-white">{successTitle}</h4>
+                  
+                  <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-sm">
+                    {successDesc}
+                  </p>
+
+                  <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-xs text-zinc-400 leading-relaxed max-w-sm text-left">
+                    <strong className="text-zinc-300 block mb-1">{noticeTitle}</strong>
+                    {noticeDesc}
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setIsUpgradeModalOpen(false);
+                      setUpgradeStep('select');
+                      setSelectedUpgradeTier(null);
+                    }}
+                    className="w-full py-4 mt-2 rounded-2xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all cursor-pointer shadow-lg"
+                  >
+                    {t('back_to_dashboard', activeLocale)}
+                  </button>
+                </div>
+              );
+            })()}
 
           </div>
         </div>
       )}
 
       {/* 13. Room Time Extension Modal Dialog */}
-      {isExtendModalOpen && room && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-effect border border-white/10 rounded-3xl w-full max-w-md p-7 relative z-10 animate-in fade-in zoom-in-95 duration-150 text-left flex flex-col gap-6 text-white bg-[#12121a]">
-            
-            {/* Header */}
-            <div className="flex justify-between items-center pb-4 border-b border-white/10">
-              <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
-                방 시간 연장 (Extend Session)
-              </h3>
-              {!isExtending && extendStep !== 'success' && (
-                <button
-                  onClick={() => setIsExtendModalOpen(false)}
-                  className="text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg transition-colors cursor-pointer text-xs font-bold hover:bg-white/5"
-                >
-                  닫기
-                </button>
+      {isExtendModalOpen && room && (() => {
+        const modalTitle = {
+          ko: '방 시간 연장 (Extend Session)',
+          en: 'Extend Session Time',
+          ja: 'ルーム時間延長 (Extend Session)',
+          es: 'Extender Tiempo de Sala (Extend Session)',
+          'zh-TW': '延長房間時間 (Extend Session)',
+          'zh-HK': '延長房間時間 (Extend Session)',
+        }[activeLocale] || '방 시간 연장 (Extend Session)';
+
+        const noticeTitle = {
+          ko: '안내',
+          en: 'Notice',
+          ja: 'ご案内',
+          es: 'Aviso',
+          'zh-TW': '說明',
+          'zh-HK': '說明',
+        }[activeLocale] || '안내';
+
+        const extendInfoDesc = {
+          ko: <>방의 활성 시간을 <strong className="text-white">24시간 연장</strong>합니다.<br />연장 후에도 기존에 접속해 있던 관객들의 링크 및 QR 코드는 변경 없이 그대로 유지됩니다.</>,
+          en: <>Extends the active room session by <strong className="text-white">24 hours</strong>.<br />The existing entry links and QR codes remain unchanged and work seamlessly.</>,
+          ja: <>ルームの有効時間を <strong className="text-white">24時間延長</strong> します。<br />延長後も既存の観客用リンクやQRコードは変更なくそのまま維持されます。</>,
+          es: <>Extiende la duración activa de la sala por <strong className="text-white">24 horas</strong>.<br />El enlace de acceso y código QR se mantendrán sin cambios.</>,
+          'zh-TW': <>延長房間有效時間 <strong className="text-white">24 小時</strong>。<br />延長後觀眾原本使用的連結與 QR Code 均維持不變，可繼續使用。</>,
+          'zh-HK': <>延長房間有效時間 <strong className="text-white">24 小時</strong>。<br />延長後觀眾原本使用的連結與 QR Code 均維持不變，可繼續使用。</>,
+        }[activeLocale] || <>방의 활성 시간을 <strong className="text-white">24시간 연장</strong>합니다.<br />연장 후에도 기존에 접속해 있던 관객들의 링크 및 QR 코드는 변경 없이 그대로 유지됩니다.</>;
+
+        const currentPlanLabel = {
+          ko: '현재 티어',
+          en: 'Current Plan',
+          ja: '現在のプラン',
+          es: 'Plan Actual',
+          'zh-TW': '目前方案',
+          'zh-HK': '目前方案',
+        }[activeLocale] || '현재 티어';
+
+        const currentExpiryLabel = {
+          ko: '현재 만료 예정 시각',
+          en: 'Current Expiration',
+          ja: '現在の有効期限',
+          es: 'Expiración Actual',
+          'zh-TW': '目前到期時間',
+          'zh-HK': '目前到期時間',
+        }[activeLocale] || '현재 만료 예정 시각';
+
+        const extendedExpiryLabel = {
+          ko: '연장 후 만료 예정 시각',
+          en: 'Extended Expiration',
+          ja: '延長後の有効期限',
+          es: 'Nueva Expiración',
+          'zh-TW': '延長後到期時間',
+          'zh-HK': '延長後到期時間',
+        }[activeLocale] || '연장 후 만료 예정 시각';
+
+        const proceedToPaymentLabel = {
+          ko: '결제 단계로 이동하기',
+          en: 'Proceed to Payment',
+          ja: '決済手続きへ進む',
+          es: 'Proceder al Pago',
+          'zh-TW': '前往結帳步驟',
+          'zh-HK': '前往結帳步驟',
+        }[activeLocale] || '결제 단계로 이동하기';
+
+        return (
+          <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="glass-effect border border-white/10 rounded-3xl w-full max-w-md p-7 relative z-10 animate-in fade-in zoom-in-95 duration-150 text-left flex flex-col gap-6 text-white bg-[#12121a]">
+              
+              {/* Header */}
+              <div className="flex justify-between items-center pb-4 border-b border-white/10">
+                <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
+                  {modalTitle}
+                </h3>
+                {!isExtending && extendStep !== 'success' && (
+                  <button
+                    onClick={() => setIsExtendModalOpen(false)}
+                    className="text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg transition-colors cursor-pointer text-xs font-bold hover:bg-white/5"
+                  >
+                    {t('close', activeLocale)}
+                  </button>
+                )}
+              </div>
+
+              {/* Content Switcher */}
+              {extendStep === 'info' && (
+                <div className="flex flex-col gap-5 text-left">
+                  <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl">
+                    <span className="font-extrabold text-indigo-300 block mb-1">{noticeTitle}</span>
+                    {extendInfoDesc}
+                  </div>
+                  
+                  <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-2.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">{currentPlanLabel}</span>
+                      <span className="text-white font-extrabold uppercase">{room.tier} Plan</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">{currentExpiryLabel}</span>
+                      <span className="text-zinc-300 font-mono">
+                        {new Date(new Date(room.created_at).getTime() + 24 * 60 * 60 * 1000).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between border-t border-white/5 pt-2">
+                      <span className="text-indigo-400 font-bold">{extendedExpiryLabel}</span>
+                      <span className="text-indigo-300 font-mono font-bold">
+                        {new Date(Math.max(Date.now(), new Date(room.created_at).getTime() + 24 * 60 * 60 * 1000) + 24 * 60 * 60 * 1000).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setExtendStep('payment')}
+                    className="w-full py-4 rounded-2xl bg-white text-black hover:bg-zinc-200 font-extrabold text-sm transition-all duration-200 cursor-pointer shadow-lg shadow-white/5"
+                  >
+                    {proceedToPaymentLabel}
+                  </button>
+                </div>
               )}
+
+              {extendStep === 'payment' && (() => {
+                const extendPayDesc = {
+                  ko: <>방 연장 24시간 이용권을 결제합니다.<br />기존 이용 요금 대비 <strong className="text-indigo-300">20% 할인된 장기 고객 혜택가</strong>가 자동 적용됩니다.</>,
+                  en: <>Process payment for a 24-hour session extension.<br />A <strong className="text-indigo-300">20% loyalty discount</strong> is automatically applied.</>,
+                  ja: <>ルーム24時間延長チケットの決済を行います。<br />通常の利用料金から <strong className="text-indigo-300">20%割引された延長特別価格</strong> が自動適用されます。</>,
+                  es: <>Se procesará el pago del pase de extensión de 24 horas.<br />Se aplica un <strong className="text-indigo-300">20% de descuento automático</strong> por fidelidad.</>,
+                  'zh-TW': <>付款購買 24 小時延長時間。<br />系統已自動套用 <strong className="text-indigo-300">8 折的續用優惠價</strong>。</>,
+                  'zh-HK': <>付款購買 24 小時延長時間。<br />系統已自動套用 <strong className="text-indigo-300">8 折的續用優惠價</strong>。</>,
+                }[activeLocale] || <>방 연장 24시간 이용권을 결제합니다.<br />기존 이용 요금 대비 <strong className="text-indigo-300">20% 할인된 장기 고객 혜택가</strong>가 자동 적용됩니다.</>;
+
+                const simulatorTitle = {
+                  ko: '가상 결제 모듈 시뮬레이터',
+                  en: 'Checkout Module Simulator',
+                  ja: '仮想決済モジュールシミュレー타',
+                  es: 'Simulador de Módulo de Pago',
+                  'zh-TW': '虛擬結帳模擬器',
+                  'zh-HK': '虛擬結帳模擬器',
+                }[activeLocale] || '가상 결제 모듈 시뮬레이터';
+
+                const productLabel = {
+                  ko: '결제 대상 상품',
+                  en: 'Product',
+                  ja: '決済対象商品',
+                  es: 'Producto',
+                  'zh-TW': '購買項目',
+                  'zh-HK': '購買項目',
+                }[activeLocale] || '결제 대상 상품';
+
+                const productVal = {
+                  ko: '24시간 시간 연장 이용권',
+                  en: '24-Hour Session Extension Pass',
+                  ja: '24時間ルーム延長チケット',
+                  es: 'Pase de Extensión de 24 Horas',
+                  'zh-TW': '24 小時延長使用券',
+                  'zh-HK': '24 小時延長使用券',
+                }[activeLocale] || '24시간 시간 연장 이용권';
+
+                const originalPriceLabel = {
+                  ko: '정가',
+                  en: 'Regular Price',
+                  ja: '定価',
+                  es: 'Precio Original',
+                  'zh-TW': '原價',
+                  'zh-HK': '原價',
+                }[activeLocale] || '정가';
+
+                const discountLabel = {
+                  ko: '연장 할인 (20%)',
+                  en: 'Extension Discount (20%)',
+                  ja: '延長割引 (20%)',
+                  es: 'Descuento por Extensión (20%)',
+                  'zh-TW': '續用優惠 (2 折)',
+                  'zh-HK': '續用優惠 (2 折)',
+                }[activeLocale] || '연장 할인 (20%)';
+
+                const finalAmtLabel = {
+                  ko: '최종 결제 금액',
+                  en: 'Total Price',
+                  ja: '最終決済金額',
+                  es: 'Total Final',
+                  'zh-TW': '最終結帳金額',
+                  'zh-HK': '最終結帳金額',
+                }[activeLocale] || '최종 결제 금액';
+
+                const refundWarningTitle = {
+                  ko: '경고 (환불/취소 정책 동의)',
+                  en: 'Warning (Refund & Cancellation Policy)',
+                  ja: '警告（払い戻し・キャンセルポリシーへの同意）',
+                  es: 'Advertencia (Términos de Cancelación y Reembolso)',
+                  'zh-TW': '警告 (同意退款與取消政策)',
+                  'zh-HK': '警告 (同意退款與取消政策)',
+                }[activeLocale] || '경고 (환불/취소 정책 동의)';
+
+                const refundWarningBody = {
+                  ko: '방 시간 연장은 결제 완료 즉시 예약 리소스가 즉시 할당되어 24시간 연장 처리가 실행되므로, 단순 변심으로 인한 환불 및 결제 취소가 엄격히 불가능합니다. 이에 동의하시는 경우에만 결제를 진행해 주세요.',
+                  en: 'Session extensions allocate resources immediately upon checkout. Therefore, refunds or cancellations due to change of mind are strictly prohibited. Proceed only if you agree.',
+                  ja: 'ルームの時間延長は、決済完了と同時にリソースが即時割り当てられて延長処理が実行されるため、お客様都合による払い戻しや決済のキャンセルは一切お受けできません。同意の上で決済を進めてください。',
+                  es: 'La extensión de tiempo asigna recursos al instante tras el pago; por lo tanto, no se permiten reembolsos ni cancelaciones por cambio de opinión. Procede solo si estás de acuerdo.',
+                  'zh-TW': '房間延長服務於付款後會立即分配系統資源並完成延展，因此購買後無法以任何個人理由申請退款或取消交易。請在同意此項政策的前提下進行結帳。',
+                  'zh-HK': '房間延長服務於付款後會立即分配系統資源並完成延展，因此購買後無法以任何個人理由申請退款或取消交易。請在同意此項政策的前提下進行結帳。',
+                }[activeLocale] || '방 시간 연장은 결제 완료 즉시 예약 리소스가 즉시 할당되어 24시간 연장 처리가 실행되므로, 단순 변심으로 인한 환불 및 결제 취소가 엄격히 불가능합니다. 이에 동의하시는 경우에만 결제를 진행해 주세요.';
+
+                const previousStepLabel = {
+                  ko: '이전으로',
+                  en: 'Back',
+                  ja: '戻る',
+                  es: 'Atrás',
+                  'zh-TW': '上一步',
+                  'zh-HK': '上一步',
+                }[activeLocale] || '이전으로';
+
+                const completePaymentLabel = {
+                  ko: '결제 승인 완료',
+                  en: 'Complete Payment',
+                  ja: '決済を承認する',
+                  es: 'Completar Pago',
+                  'zh-TW': '完成付款',
+                  'zh-HK': '完成付款',
+                }[activeLocale] || '결제 승인 완료';
+
+                const approvingLabel = {
+                  ko: '승인 중...',
+                  en: 'Processing...',
+                  ja: '承認中...',
+                  es: 'Procesando...',
+                  'zh-TW': '授權中...',
+                  'zh-HK': '授權中...',
+                }[activeLocale] || '승인 중...';
+
+                const regularPriceStr = activeLocale === 'ko'
+                  ? `${TIER_CONFIGS[room.tier].priceKrw.toLocaleString()}원`
+                  : `₩${TIER_CONFIGS[room.tier].priceKrw.toLocaleString()}`;
+
+                const discountStr = activeLocale === 'ko'
+                  ? `-${Math.round(TIER_CONFIGS[room.tier].priceKrw * 0.2).toLocaleString()}원`
+                  : `-₩${Math.round(TIER_CONFIGS[room.tier].priceKrw * 0.2).toLocaleString()}`;
+
+                const finalAmtStr = activeLocale === 'ko'
+                  ? `${Math.round(TIER_CONFIGS[room.tier].priceKrw * 0.8).toLocaleString()}원`
+                  : `₩${Math.round(TIER_CONFIGS[room.tier].priceKrw * 0.8).toLocaleString()}`;
+
+                return (
+                  <div className="flex flex-col gap-5 text-left">
+                    <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                      {extendPayDesc}
+                    </div>
+
+                    <div className="bg-black/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3.5">
+                      <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">{simulatorTitle}</span>
+                      
+                      <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
+                        <span className="text-zinc-400">{productLabel}</span>
+                        <span className="text-white font-extrabold">{productVal}</span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
+                        <span className="text-zinc-400">{originalPriceLabel}</span>
+                        <span className="text-zinc-500 line-through font-mono">
+                          {regularPriceStr}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
+                        <span className="text-zinc-400">{discountLabel}</span>
+                        <span className="text-red-400 font-bold">
+                          {discountStr}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center text-xs sm:text-sm">
+                        <span className="text-zinc-400">{finalAmtLabel}</span>
+                        <span className="text-indigo-300 font-black font-mono">
+                          {finalAmtStr}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 환불 취소 불가 고지 */}
+                    <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-xs text-red-400 leading-relaxed">
+                      <span className="font-extrabold block mb-1">{refundWarningTitle}</span>
+                      {refundWarningBody}
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setExtendStep('info')}
+                        disabled={isExtending}
+                        className="flex-1 py-4 rounded-2xl bg-white/5 text-zinc-400 font-bold hover:bg-white/10 hover:text-white transition-all text-sm cursor-pointer disabled:opacity-50 border border-white/5"
+                      >
+                        {previousStepLabel}
+                      </button>
+                      
+                      <button
+                        onClick={handleExtendRoom}
+                        disabled={isExtending}
+                        className="flex-1 py-4 rounded-2xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg"
+                      >
+                        {isExtending ? (
+                          <span>{approvingLabel}</span>
+                        ) : (
+                          <span>{completePaymentLabel}</span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {extendStep === 'success' && (() => {
+                const successTitle = {
+                  ko: '시간 연장 완료',
+                  en: 'Extension Complete',
+                  ja: '時間延長完了',
+                  es: 'Extensión Completada',
+                  'zh-TW': '時間延長完成',
+                  'zh-HK': '時間延長完成',
+                }[activeLocale] || '시간 연장 완료';
+
+                const successDesc = {
+                  ko: <>방 시간이 성공적으로 <strong className="text-white">24시간 연장</strong>되었습니다.<br />관람객 접속용 링크 및 QR 코드는 변함 없이 기존 것 그대로 정상 가동됩니다.</>,
+                  en: <>The session has been successfully extended by <strong className="text-white">24 hours</strong>.<br />The existing entry links and QR codes remain fully functional.</>,
+                  ja: <>ルームの有効期限が <strong className="text-white">24時間延長</strong> されました。<br />観客のアクセス用リンクやQRコードは変更なく、そのままご利用いただけます。</>,
+                  es: <>La sala se ha extendido con éxito por <strong className="text-white">24 horas</strong>.<br />Los enlaces y códigos QR existentes siguen siendo totalmente válidos.</>,
+                  'zh-TW': <>房間有效時間已成功延長 <strong className="text-white">24 小時</strong>。<br />觀眾入場用連結與 QR Code 均維持不變。</>,
+                  'zh-HK': <>房間有效時間已成功延長 <strong className="text-white">24 小時</strong>。<br />觀眾入場用連結與 QR Code 均維持不變。</>,
+                }[activeLocale] || <>방 시간이 성공적으로 <strong className="text-white">24시간 연장</strong>되었습니다.<br />관람객 접속용 링크 및 QR 코드는 변함 없이 기존 것 그대로 정상 가동됩니다.</>;
+
+                return (
+                  <div className="flex flex-col items-center text-center gap-5 py-4">
+                    <span className="text-xs font-black text-emerald-400 uppercase tracking-widest px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                      Success
+                    </span>
+                    
+                    <h4 className="text-lg sm:text-xl font-black text-white">{successTitle}</h4>
+                    
+                    <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-sm">
+                      {successDesc}
+                    </p>
+
+                    <button
+                      onClick={() => {
+                        setIsExtendModalOpen(false);
+                        setExtendStep('info');
+                      }}
+                      className="w-full py-4 mt-2 rounded-2xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all cursor-pointer shadow-lg"
+                    >
+                      {t('back_to_dashboard', activeLocale)}
+                    </button>
+                  </div>
+                );
+              })()}
+
             </div>
-
-            {/* Content Switcher */}
-            {extendStep === 'info' && (
-              <div className="flex flex-col gap-5 text-left">
-                <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl">
-                  <span className="font-extrabold text-indigo-300 block mb-1">안내</span>
-                  방의 활성 시간을 <strong className="text-white">24시간 연장</strong>합니다.<br />
-                  연장 후에도 기존에 접속해 있던 관객들의 링크 및 QR 코드는 변경 없이 그대로 유지됩니다.
-                </div>
-                
-                <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-2.5 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-zinc-500">현재 티어</span>
-                    <span className="text-white font-extrabold uppercase">{room.tier} Plan</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-zinc-500">현재 만료 예정 시각</span>
-                    <span className="text-zinc-300 font-mono">
-                      {new Date(new Date(room.created_at).getTime() + 24 * 60 * 60 * 1000).toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between border-t border-white/5 pt-2">
-                    <span className="text-indigo-400 font-bold">연장 후 만료 예정 시각</span>
-                    <span className="text-indigo-300 font-mono font-bold">
-                      {new Date(Math.max(Date.now(), new Date(room.created_at).getTime() + 24 * 60 * 60 * 1000) + 24 * 60 * 60 * 1000).toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => setExtendStep('payment')}
-                  className="w-full py-4 rounded-2xl bg-white text-black hover:bg-zinc-200 font-extrabold text-sm transition-all duration-200 cursor-pointer shadow-lg shadow-white/5"
-                >
-                  결제 단계로 이동하기
-                </button>
-              </div>
-            )}
-
-            {extendStep === 'payment' && (
-              <div className="flex flex-col gap-5 text-left">
-                <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                  방 연장 24시간 이용권을 결제합니다.<br />
-                  기존 이용 요금 대비 <strong className="text-indigo-300">20% 할인된 장기 고객 혜택가</strong>가 자동 적용됩니다.
-                </div>
-
-                <div className="bg-black/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3.5">
-                  <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">가상 결제 모듈 시뮬레이터</span>
-                  
-                  <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
-                    <span className="text-zinc-400">결제 대상 상품</span>
-                    <span className="text-white font-extrabold">24시간 시간 연장 이용권</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
-                    <span className="text-zinc-400">정가</span>
-                    <span className="text-zinc-500 line-through font-mono">
-                      {TIER_CONFIGS[room.tier].priceKrw.toLocaleString()}원
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
-                    <span className="text-zinc-400">연장 할인 (20%)</span>
-                    <span className="text-red-400 font-bold">
-                      -{Math.round(TIER_CONFIGS[room.tier].priceKrw * 0.2).toLocaleString()}원
-                    </span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center text-xs sm:text-sm">
-                    <span className="text-zinc-400">최종 결제 금액</span>
-                    <span className="text-indigo-300 font-black font-mono">
-                      {Math.round(TIER_CONFIGS[room.tier].priceKrw * 0.8).toLocaleString()}원
-                    </span>
-                  </div>
-                </div>
-
-                {/* 환불 취소 불가 고지 */}
-                <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-xs text-red-400 leading-relaxed">
-                  <span className="font-extrabold block mb-1">경고 (환불/취소 정책 동의)</span>
-                  방 시간 연장은 결제 완료 즉시 예약 리소스가 즉시 할당되어 24시간 연장 처리가 실행되므로, 단순 변심으로 인한 **환불 및 결제 취소가 엄격히 불가능**합니다. 이에 동의하시는 경우에만 결제를 진행해 주세요.
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setExtendStep('info')}
-                    disabled={isExtending}
-                    className="flex-1 py-4 rounded-2xl bg-white/5 text-zinc-400 font-bold hover:bg-white/10 hover:text-white transition-all text-sm cursor-pointer disabled:opacity-50 border border-white/5"
-                  >
-                    이전으로
-                  </button>
-                  
-                  <button
-                    onClick={handleExtendRoom}
-                    disabled={isExtending}
-                    className="flex-1 py-4 rounded-2xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 shadow-lg"
-                  >
-                    {isExtending ? (
-                      <span>승인 중...</span>
-                    ) : (
-                      <span>결제 승인 완료</span>
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {extendStep === 'success' && (
-              <div className="flex flex-col items-center text-center gap-5 py-4">
-                <span className="text-xs font-black text-emerald-400 uppercase tracking-widest px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                  Success
-                </span>
-                
-                <h4 className="text-lg sm:text-xl font-black text-white">시간 연장 완료</h4>
-                
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-sm">
-                  방 시간이 성공적으로 **24시간 연장**되었습니다.<br />
-                  관람객 접속용 링크 및 QR 코드는 변함 없이 기존 것 그대로 정상 가동됩니다.
-                </p>
-
-                <button
-                  onClick={() => {
-                    setIsExtendModalOpen(false);
-                    setExtendStep('info');
-                  }}
-                  className="w-full py-4 mt-2 rounded-2xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all cursor-pointer shadow-lg"
-                >
-                  대시보드로 돌아가기
-                </button>
-              </div>
-            )}
-
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 14. Passcode Settings Modal Dialog */}
-      {isPasscodeDrawerOpen && room && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-effect border border-white/10 rounded-3xl w-full max-w-md p-7 relative z-10 animate-in fade-in zoom-in-95 duration-150 text-left flex flex-col gap-6 text-white bg-[#12121a]">
-            {/* Header */}
-            <div className="flex justify-between items-center pb-4 border-b border-white/10">
-              <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
-                방 비밀번호 설정 (Security Passcode)
-              </h3>
-              {!isPasscodeUpdating && (
-                <button
-                  type="button"
-                  onClick={() => setIsPasscodeDrawerOpen(false)}
-                  className="text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg transition-colors cursor-pointer text-xs font-bold hover:bg-white/5"
-                >
-                  닫기
-                </button>
-              )}
-            </div>
+      {isPasscodeDrawerOpen && room && (() => {
+        const passcodeModalTitle = {
+          ko: '방 비밀번호 설정 (Security Passcode)',
+          en: 'Room Passcode Settings (Security Passcode)',
+          ja: 'ルームパスコード設定 (Security Passcode)',
+          es: 'Contraseña de la Sala (Security Passcode)',
+          'zh-TW': '房間密碼設定 (Security Passcode)',
+          'zh-HK': '房間密碼設定 (Security Passcode)',
+        }[activeLocale] || '방 비밀번호 설정 (Security Passcode)';
 
-            {/* Form */}
-            <div className="flex flex-col gap-4 text-left">
-              <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                방에 비밀번호를 설정하여 허가되지 않은 사용자의 무단 입장을 방지할 수 있습니다. 4~6자리의 숫자로 입력하세요.
-              </div>
+        const passcodeDesc = {
+          ko: '방에 비밀번호를 설정하여 허가되지 않은 사용자의 무단 입장을 방지할 수 있습니다. 4~6자리의 숫자로 입력하세요.',
+          en: 'Set a passcode for your room to prevent unauthorized access. Enter 4 to 6 digits.',
+          ja: 'パスコードを設定することで、第三者の無断入場を防ぐことができます。4〜6桁の数字を入力してください。',
+          es: 'Configura una contraseña para evitar accesos no autorizados. Ingresa de 4 a 6 dígitos.',
+          'zh-TW': '設定房間密碼可防止未授權的用戶進入。請輸入 4 到 6 位數字。',
+          'zh-HK': '設定房間密碼可防止未授權的用戶進入。請輸入 4 到 6 位數字。',
+        }[activeLocale] || '방에 비밀번호를 설정하여 허가되지 않은 사용자의 무단 입장을 방지할 수 있습니다. 4~6자리의 숫자로 입력하세요.';
 
-              <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
-                <div>
-                  <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2">입장 비밀번호</label>
-                  <input
-                    type="text"
-                    value={passcodeVal}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9]/g, '');
-                      if (val.length <= 6) {
-                        setPasscodeVal(val);
-                      }
-                    }}
-                    placeholder="비밀번호 없이 즉시 입장하려면 비워두세요"
-                    className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-center text-white tracking-widest text-sm font-black focus:outline-none focus:border-indigo-500 uppercase font-mono"
-                    maxLength={6}
-                    disabled={isPasscodeUpdating}
-                  />
-                </div>
-                {passcodeUpdateError && (
-                  <p className="text-xs text-red-400 font-bold">{passcodeUpdateError}</p>
-                )}
-              </div>
+        const passcodeLabel = {
+          ko: '입장 비밀번호',
+          en: 'Entrance Passcode',
+          ja: '入場パスコード',
+          es: 'Contraseña de Acceso',
+          'zh-TW': '入場密碼',
+          'zh-HK': '入場密碼',
+        }[activeLocale] || '입장 비밀번호';
 
-              <div className="flex gap-3 mt-2">
-                {room.passcode && (
+        const passcodePlaceholder = {
+          ko: '비밀번호 없이 즉시 입장하려면 비워두세요',
+          en: 'Leave empty to allow entry without password',
+          ja: 'パスコードなしで入場する場合は空欄にしてください',
+          es: 'Deja vacío para entrar sin contraseña',
+          'zh-TW': '若不設密碼直接入場請留空',
+          'zh-HK': '若不設密碼直接入場請留空',
+        }[activeLocale] || '비밀번호 없이 즉시 입장하려면 비워두세요';
+
+        const removePasscodeLabel = {
+          ko: '비밀번호 해제',
+          en: 'Remove Passcode',
+          ja: 'パスコード解除',
+          es: 'Eliminar Contraseña',
+          'zh-TW': '解除密碼',
+          'zh-HK': '解除密碼',
+        }[activeLocale] || '비밀번호 해제';
+
+        const validationError = {
+          ko: '비밀번호는 4~6자리의 숫자여야 합니다.',
+          en: 'Passcode must be a 4 to 6 digit number.',
+          ja: 'パスコードは4〜6桁の数字である必要があります。',
+          es: 'La contraseña debe ser un número de 4 a 6 dígitos.',
+          'zh-TW': '密碼必須為 4 到 6 位數字。',
+          'zh-HK': '密碼必須為 4 到 6 位數字。',
+        }[activeLocale] || '비밀번호는 4~6자리의 숫자여야 합니다.';
+
+        const saveLabel = {
+          ko: isPasscodeUpdating ? '저장 중...' : '저장 완료',
+          en: isPasscodeUpdating ? 'Saving...' : 'Save',
+          ja: isPasscodeUpdating ? '保存中...' : '保存',
+          es: isPasscodeUpdating ? 'Guardando...' : 'Guardar',
+          'zh-TW': isPasscodeUpdating ? '儲存中...' : '儲存',
+          'zh-HK': isPasscodeUpdating ? '儲存中...' : '儲存',
+        }[activeLocale] || (isPasscodeUpdating ? '저장 중...' : '저장 완료');
+
+        return (
+          <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="glass-effect border border-white/10 rounded-3xl w-full max-w-md p-7 relative z-10 animate-in fade-in zoom-in-95 duration-150 text-left flex flex-col gap-6 text-white bg-[#12121a]">
+              {/* Header */}
+              <div className="flex justify-between items-center pb-4 border-b border-white/10">
+                <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
+                  {passcodeModalTitle}
+                </h3>
+                {!isPasscodeUpdating && (
                   <button
                     type="button"
-                    onClick={() => handleUpdatePasscode('')}
-                    disabled={isPasscodeUpdating}
-                    className="flex-1 py-4 rounded-2xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all font-extrabold text-sm border border-red-500/20 disabled:opacity-50"
+                    onClick={() => setIsPasscodeDrawerOpen(false)}
+                    className="text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg transition-colors cursor-pointer text-xs font-bold hover:bg-white/5"
                   >
-                    비밀번호 해제
+                    {t('close', activeLocale)}
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (passcodeVal && (passcodeVal.length < 4 || passcodeVal.length > 6)) {
-                      setPasscodeUpdateError('비밀번호는 4~6자리의 숫자여야 합니다.');
-                      return;
-                    }
-                    handleUpdatePasscode(passcodeVal);
-                  }}
-                  disabled={isPasscodeUpdating}
-                  className="flex-1 py-4 rounded-2xl bg-white text-black hover:bg-zinc-200 transition-all font-extrabold text-sm disabled:opacity-50"
-                >
-                  {isPasscodeUpdating ? '저장 중...' : '저장 완료'}
-                </button>
+              </div>
+
+              {/* Form */}
+              <div className="flex flex-col gap-4 text-left">
+                <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  {passcodeDesc}
+                </div>
+
+                <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2">{passcodeLabel}</label>
+                    <input
+                      type="text"
+                      value={passcodeVal}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, '');
+                        if (val.length <= 6) {
+                          setPasscodeVal(val);
+                        }
+                      }}
+                      placeholder={passcodePlaceholder}
+                      className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-center text-white tracking-widest text-sm font-black focus:outline-none focus:border-indigo-500 uppercase font-mono"
+                      maxLength={6}
+                      disabled={isPasscodeUpdating}
+                    />
+                  </div>
+                  {passcodeUpdateError && (
+                    <p className="text-xs text-red-400 font-bold">{passcodeUpdateError}</p>
+                  )}
+                </div>
+
+                <div className="flex gap-3 mt-2">
+                  {room.passcode && (
+                    <button
+                      type="button"
+                      onClick={() => handleUpdatePasscode('')}
+                      disabled={isPasscodeUpdating}
+                      className="flex-1 py-4 rounded-2xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all font-extrabold text-sm border border-red-500/20 disabled:opacity-50"
+                    >
+                      {removePasscodeLabel}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (passcodeVal && (passcodeVal.length < 4 || passcodeVal.length > 6)) {
+                        setPasscodeUpdateError(validationError);
+                        return;
+                      }
+                      handleUpdatePasscode(passcodeVal);
+                    }}
+                    disabled={isPasscodeUpdating}
+                    className="flex-1 py-4 rounded-2xl bg-white text-black hover:bg-zinc-200 transition-all font-extrabold text-sm disabled:opacity-50"
+                  >
+                    {saveLabel}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Vault (보관 & 공유) Modal */}
       {isVaultOpen && (
@@ -3506,7 +4297,7 @@ export default function HostDashboard() {
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <span>보관 & 공유</span>
+                <span>{t('vault_share', activeLocale)}</span>
               </h3>
               <button 
                 onClick={() => {
@@ -3533,7 +4324,14 @@ export default function HostDashboard() {
                     : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                내 기기에 보관
+                {{
+                  ko: '내 기기에 보관',
+                  en: 'Save on Device',
+                  ja: '端末に保存',
+                  es: 'Guardar en Dispositivo',
+                  'zh-TW': '儲存至本機',
+                  'zh-HK': '儲存至本機',
+                }[activeLocale] || '내 기기에 보관'}
               </button>
               <button
                 type="button"
@@ -3546,7 +4344,7 @@ export default function HostDashboard() {
                     : 'text-zinc-500 hover:text-zinc-300'
                 }`}
               >
-                무선 전송
+                {t('wireless_transfer', activeLocale)}
               </button>
             </div>
 
@@ -3555,13 +4353,13 @@ export default function HostDashboard() {
               {vaultTab === 'slots' ? (
                 <div className="space-y-6">
                   <div>
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">현재 연출팩 저장</span>
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-2">{t('save_current_theme', activeLocale)}</span>
                     <div className="flex gap-2">
                       <input
                         type="text"
                         value={newSlotName}
                         onChange={(e) => setNewSlotName(e.target.value.slice(0, 15))}
-                        placeholder="저장할 테마 이름 입력"
+                        placeholder={t('enter_theme_name', activeLocale)}
                         className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-white/40 focus:bg-black/50 text-sm font-semibold transition-colors"
                         maxLength={15}
                       />
@@ -3570,41 +4368,58 @@ export default function HostDashboard() {
                         onClick={handleSaveSlotPackage}
                         className="px-4 py-2.5 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-bold transition-all cursor-pointer select-none"
                       >
-                        저장
+                        {t('save', activeLocale)}
                       </button>
                     </div>
                     <p className="text-[10px] text-zinc-500 mt-1.5 leading-relaxed">
-                      💡 현재 원터치 연출 보드에 있는 프리셋들이 이 브라우저의 보관함에 슬롯으로 안전하게 저장됩니다.
+                      {{
+                        ko: '💡 현재 원터치 연출 보드에 있는 프리셋들이 이 브라우저의 보관함에 슬롯으로 안전하게 저장됩니다.',
+                        en: "💡 Presets currently on the Quick Preset Board will be safely saved as a slot in this browser's local cache.",
+                        ja: '💡 クイック演出ボードにある現在のプリセットが、ブラウザの保管庫にスロットとして安全に保存されます。',
+                        es: '💡 Los ajustes del Tablero de Efectos se guardarán de forma segura en las ranuras de almacenamiento de este navegador.',
+                        'zh-TW': '💡 單鍵快速演出板上的演出設定將會安全地儲存至瀏覽器快取的主題格中。',
+                        'zh-HK': '💡 單擊快速演出板上的演出設定將會安全地儲存至瀏覽器快取的主題格中。',
+                      }[activeLocale] || '💡 현재 원터치 연출 보드에 있는 프리셋들이 이 브라우저의 보관함에 슬롯으로 안전하게 저장됩니다.'}
                     </p>
                   </div>
 
                   <div className="border-t border-white/5 pt-4">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-3">저장된 테마 슬롯 목록</span>
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block mb-3">{t('saved_theme_slots', activeLocale)}</span>
                     {savedSlots.length === 0 ? (
                       <div className="text-center py-8 border border-dashed border-white/5 rounded-2xl bg-black/10">
-                        <p className="text-xs text-zinc-500 font-bold">보관된 슬롯이 없습니다.</p>
+                        <p className="text-xs text-zinc-500 font-bold">{t('no_saved_slots', activeLocale)}</p>
                       </div>
                     ) : (
                       <div className="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
-                        {savedSlots.map((slot, index) => (
-                          <div 
-                            key={index}
-                            onClick={() => handleLoadSlotPackage(index)}
-                            className="group flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all cursor-pointer"
-                          >
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-xs font-bold text-white truncate">{slot.name}</span>
-                              <span className="text-[9px] text-zinc-400 font-bold mt-0.5">{slot.presets.length}개의 프리셋</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={(e) => handleDeleteSlotPackage(index, e)}
-                              className="p-1.5 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        {savedSlots.map((slot, index) => {
+                          const presetsCountStr = {
+                            ko: `${slot.presets.length}개의 프리셋`,
+                            en: `${slot.presets.length} presets`,
+                            ja: `${slot.presets.length}個のプリセット`,
+                            es: `${slot.presets.length} presets`,
+                            'zh-TW': `${slot.presets.length} 個預設卡片`,
+                            'zh-HK': `${slot.presets.length} 個預設卡片`,
+                          }[activeLocale] || `${slot.presets.length}개의 프리셋`;
+                          return (
+                            <div 
+                              key={index}
+                              onClick={() => handleLoadSlotPackage(index)}
+                              className="group flex items-center justify-between p-3.5 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all cursor-pointer"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ))}
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-xs font-bold text-white truncate">{slot.name}</span>
+                                <span className="text-[9px] text-zinc-400 font-bold mt-0.5">{presetsCountStr}</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={(e) => handleDeleteSlotPackage(index, e)}
+                                className="p-1.5 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -3614,24 +4429,24 @@ export default function HostDashboard() {
                     <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-left flex items-start gap-3">
                       <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_#f59e0b] mt-1.5" />
                       <div className="flex-1">
-                        <span className="text-xs text-zinc-300 font-bold block mb-1">브라우저 캐시 주의 (삭제 금지)</span>
+                        <span className="text-xs text-zinc-300 font-bold block mb-1">{t('browser_cache_warning_title', activeLocale)}</span>
                         <span className="text-xs text-zinc-400 leading-relaxed block">
-                          방문 기록(인터넷 캐시/쿠키)을 청소하거나 브라우저 저장소를 초기화하면 저장해 둔 보관함 슬롯 데이터가 **함께 삭제되어 절대로 복구할 수 없습니다**. 소중한 디자인 팩은 수시로 <b>[무선 전송]</b> 탭을 통해 백업 또는 다른 기기로 전송해 두시길 강력히 권장합니다.
+                          {t('browser_cache_warning_desc', activeLocale)}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex justify-between items-center text-left gap-4">
                       <div className="min-w-0 pr-4">
-                        <span className="text-xs text-zinc-400 font-bold block">대시보드 초기화</span>
-                        <span className="text-xs text-zinc-500 mt-1 block">이 방의 모든 프리셋과 보관함 슬롯을 초기 기본값으로 리셋합니다.</span>
+                        <span className="text-xs text-zinc-400 font-bold block">{t('reset_dashboard', activeLocale)}</span>
+                        <span className="text-xs text-zinc-500 mt-1 block">{t('reset_dashboard_desc', activeLocale)}</span>
                       </div>
                       <button
                         type="button"
                         onClick={handleResetDashboard}
                         className="py-2.5 px-4 rounded-xl border border-white/10 text-zinc-400 hover:text-red-400 hover:border-red-500/30 bg-white/5 hover:bg-red-500/10 cursor-pointer text-xs font-bold transition-all text-center active:scale-95 shrink-0 hover:shadow-[0_0_12px_rgba(239,68,68,0.1)]"
                       >
-                        전체 초기 리셋
+                        {t('factory_reset', activeLocale)}
                       </button>
                     </div>
                   </div>
@@ -3652,7 +4467,7 @@ export default function HostDashboard() {
                           : 'text-zinc-400 hover:text-zinc-200'
                       }`}
                     >
-                      전송하기 (내보내기)
+                      {t('send_export', activeLocale)}
                     </button>
                     <button
                       type="button"
@@ -3665,22 +4480,22 @@ export default function HostDashboard() {
                           : 'text-zinc-400 hover:text-zinc-200'
                       }`}
                     >
-                      가져오기
+                      {t('import', activeLocale)}
                     </button>
                   </div>
 
                   {shareMode === 'send' ? (
                     <div className="space-y-5 flex flex-col items-center">
                       <div className="text-center">
-                        <p className="text-xs font-bold text-zinc-300">현재 원터치 연출 보드의 프리셋을 다른 기기로 무선 공유합니다.</p>
-                        <p className="text-[10px] text-zinc-500 mt-1 font-bold">공유 코드는 생성 시점으로부터 24시간 동안 유효합니다.</p>
+                        <p className="text-xs font-bold text-zinc-300">{t('wireless_transfer_desc', activeLocale)}</p>
+                        <p className="text-[10px] text-zinc-500 mt-1 font-bold">{t('share_code_valid_desc', activeLocale)}</p>
                       </div>
 
                       {exportCode ? (
                         <div className="space-y-5 w-full flex flex-col items-center">
                           {/* 6 Digit Code Display */}
                           <div className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-center relative group">
-                            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">무선 공유 코드</span>
+                            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">{t('wireless_share_code', activeLocale)}</span>
                             <span className="text-3xl font-mono font-black text-white bg-white/[0.03] rounded-xl px-4 py-2 border border-white/5 inline-block select-all tracking-wider">{exportCode}</span>
                             <button
                               type="button"
@@ -3706,20 +4521,20 @@ export default function HostDashboard() {
                           disabled={isSharingLoading}
                           className="w-full py-3.5 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-bold shadow-md transition-all disabled:opacity-50 cursor-pointer animate-pulse"
                         >
-                          {isSharingLoading ? '코드 생성 중...' : '무선 공유 코드 생성'}
+                          {isSharingLoading ? t('generating_code', activeLocale) : t('generate_share_code', activeLocale)}
                         </button>
                       )}
                     </div>
                   ) : (
                     <div className="space-y-5">
                       <div className="space-y-2">
-                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">공유 코드로 가져오기</span>
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">{t('import_with_code', activeLocale)}</span>
                         <div className="flex gap-2">
                           <input
                             type="text"
                             value={shareCodeInput}
                             onChange={(e) => setShareCodeInput(e.target.value.slice(0, 6))}
-                            placeholder="6자리 공유 코드 입력 (예: AB3D9E)"
+                            placeholder={t('enter_6digit_code', activeLocale)}
                             className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white uppercase focus:outline-none focus:border-white/40 focus:bg-black/50 text-sm font-semibold tracking-wider font-mono transition-colors"
                             maxLength={6}
                           />
@@ -3729,14 +4544,14 @@ export default function HostDashboard() {
                             disabled={isSharingLoading}
                             className="px-4 py-2.5 bg-white hover:bg-zinc-200 text-black rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
                           >
-                            불러오기
+                            {t('load', activeLocale)}
                           </button>
                         </div>
                       </div>
 
                       {/* QR Scan Area */}
                       <div className="border-t border-white/5 pt-4 space-y-4">
-                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">QR 코드로 가져오기</span>
+                        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block">{t('import_with_qr', activeLocale)}</span>
                         {isScanning ? (
                           <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-white/10 bg-black flex items-center justify-center">
                             <video ref={scannerVideoRef} className="absolute inset-0 w-full h-full object-cover" />
@@ -3749,7 +4564,7 @@ export default function HostDashboard() {
                               onClick={stopScanning}
                               className="absolute bottom-4 px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer"
                             >
-                              스캔 중단
+                              {t('stop_scan', activeLocale)}
                             </button>
                           </div>
                         ) : (
@@ -3758,7 +4573,7 @@ export default function HostDashboard() {
                             onClick={startScanning}
                             className="w-full py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
                           >
-                            <span>카메라로 QR 코드 스캔 📷</span>
+                            <span>{t('scan_qr_camera', activeLocale)}</span>
                           </button>
                         )}
                       </div>
@@ -3777,6 +4592,7 @@ export default function HostDashboard() {
           <HostFullscreenSignboard 
             preset={currentBroadcastPreset} 
             onClose={() => setIsStandaloneFullscreen(false)} 
+            activeLocale={activeLocale}
           />
         </div>
       )}
@@ -3785,7 +4601,7 @@ export default function HostDashboard() {
 }
 
 // 12. Host Standalone Fullscreen Signboard Component
-function HostFullscreenSignboard({ preset, onClose }: { preset: Preset; onClose: () => void }) {
+function HostFullscreenSignboard({ preset, onClose, activeLocale }: { preset: Preset; onClose: () => void; activeLocale: string }) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const wakeLockRef = useRef<any>(null);
 
@@ -3814,7 +4630,14 @@ function HostFullscreenSignboard({ preset, onClose }: { preset: Preset; onClose:
   const displayText = preset.effect === 'countdown'
     ? String(countdownVal)
     : isLuckyDrawWait
-      ? '추첨 대기 중'
+      ? {
+          ko: '추첨 대기 중',
+          en: 'Waiting for draw...',
+          ja: '抽選待機中',
+          es: 'Esperando sorteo...',
+          'zh-TW': '等待抽獎中',
+          'zh-HK': '等待抽獎中',
+        }[activeLocale] || '추첨 대기 중'
       : (preset.text || '');
 
   // Use dynamic fitting hook to sync text sizes proportional to viewport container dimensions
@@ -3971,6 +4794,24 @@ function HostFullscreenSignboard({ preset, onClose }: { preset: Preset; onClose:
     }
   };
 
+  const exitBtnText = {
+    ko: '닫기 (Exit)',
+    en: 'Exit',
+    ja: '閉じる (Exit)',
+    es: 'Cerrar (Exit)',
+    'zh-TW': '關閉 (Exit)',
+    'zh-HK': '關閉 (Exit)',
+  }[activeLocale] || '닫기 (Exit)';
+
+  const dblClickInstruction = {
+    ko: '화면을 더블클릭하거나 ESC 키를 누르면 종료됩니다.',
+    en: 'Double-click screen or press ESC to exit.',
+    ja: '画面をダブルクリックするか、ESCキーを押すと終了します。',
+    es: 'Haz doble clic en la pantalla o presiona ESC para salir.',
+    'zh-TW': '按兩下畫面或按 ESC 鍵即可退出。',
+    'zh-HK': '雙擊畫面或按 ESC 鍵即可退出。',
+  }[activeLocale] || '화면을 더블클릭하거나 ESC 키를 누르면 종료됩니다.';
+
   return (
     <div 
       ref={containerRef}
@@ -4109,12 +4950,12 @@ function HostFullscreenSignboard({ preset, onClose }: { preset: Preset; onClose:
           onClick={onClose}
           className="py-2.5 px-5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/10 text-white font-bold text-xs tracking-wider flex items-center gap-2 cursor-pointer shadow-lg active:scale-95 transition-all"
         >
-          <span>닫기 (Exit)</span>
+          <span>{exitBtnText}</span>
         </button>
       </div>
 
       <div className={`absolute bottom-6 left-6 z-40 text-[10px] text-zinc-500 transition-opacity duration-300 ${showExitBtn ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        화면을 더블클릭하거나 ESC 키를 누르면 종료됩니다.
+        {dblClickInstruction}
       </div>
 
       {/* Invisible silent video loop to force-keep iOS devices awake */}
