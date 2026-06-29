@@ -60,12 +60,17 @@ function MiniCountdownPreview({ preset }: MiniCountdownPreviewProps) {
 }
 
 function LocalSignboardFallback() {
-  let text = '대시보드 로딩 중...';
-  if (typeof window !== 'undefined') {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  let text = '';
+  if (mounted && typeof window !== 'undefined') {
     const saved = localStorage.getItem('glowwave_local_locale') || 
                   localStorage.getItem('glowwave_host_locale') || 
                   localStorage.getItem('glowwave_home_locale');
-    const lang = saved || navigator.language.toLowerCase();
+    const lang = (saved || navigator.language || '').toLowerCase();
     if (lang.startsWith('ja')) text = 'ダッシュボード読み込み中...';
     else if (lang.startsWith('es')) text = 'Cargando tablero...';
     else if (lang.startsWith('zh-tw') || lang.startsWith('zh-cn') || lang.includes('tw')) text = '儀表板載入中...';
@@ -73,11 +78,12 @@ function LocalSignboardFallback() {
     else if (lang.startsWith('ko')) text = '대시보드 로딩 중...';
     else text = 'Loading dashboard...';
   }
+
   return (
     <div className="min-h-screen bg-[#030305] flex items-center justify-center text-white font-sans">
       <div className="flex flex-col items-center gap-4">
         <div className="w-8 h-8 rounded-full border-4 border-violet-500/20 border-t-violet-500 animate-spin" />
-        <p className="text-xs text-zinc-400 font-medium">{text}</p>
+        <p className="text-xs text-zinc-400 font-medium h-4">{text}</p>
       </div>
     </div>
   );
@@ -90,6 +96,21 @@ export default function StandaloneSignboard() {
     </React.Suspense>
   );
 }
+
+const DEFAULT_PRESET_TEXTS = new Set([
+  // Korean
+  '단색', '부드러운 깜빡이', '경찰 사이렌', '사이키', '당첨!', '스크롤', '카운트다운', '앰비언트',
+  // English
+  'Solid Color', 'Soft Blink', 'Psychedelic', 'Winner!', 'Scroll', 'Countdown',
+  // Japanese
+  '単色', 'ゆっくり点滅', 'サイケデリック', 'アタリ！', 'スクロール', 'カウントダウン',
+  // Spanish
+  'Color Sólido', 'Parpadeo Suave', '¡A BAILAR!', '¡GANADOR!', 'Desplazar', 'Cuenta Atrás',
+  // Traditional Chinese (TW)
+  '單色', '呼吸閃爍', '狂歡霓虹', '中獎！', '滾動跑馬燈', '倒數計時',
+  // Traditional Chinese (HK)
+  '單色', '呼吸閃爍', '狂歡霓虹', '中獎！', '滾動跑馬燈', '倒數計時'
+]);
 
 function LocalSignboardContent() {
   const searchParams = useSearchParams();
@@ -433,11 +454,7 @@ function LocalSignboardContent() {
       }
 
       // If presets list consists only of defaults of any language, translate them to currentLocale defaults
-      const isOnlyDefaults = presetsList.length <= 6 && presetsList.every(p => 
-        ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].some(loc => 
-          getDefaultsByLocale(loc as Locale).some(d => d.text === p.text)
-        )
-      );
+      const isOnlyDefaults = presetsList.length <= 6 && presetsList.every(p => DEFAULT_PRESET_TEXTS.has(p.text.trim()));
       if (isOnlyDefaults || presetsList.length === 0) {
         presetsList = [...localDefaults];
         localStorage.setItem('glowwave_local_presets', JSON.stringify(presetsList));
@@ -564,11 +581,7 @@ function LocalSignboardContent() {
     localStorage.setItem('glowwave_home_locale', newLocale);
 
     // If presets list is empty or matches defaults of any language, translate them
-    const isOnlyDefaults = presets.length <= 6 && presets.every(p => 
-      ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].some(loc => 
-        getDefaultsByLocale(loc as Locale).some(d => d.text === p.text)
-      )
-    );
+    const isOnlyDefaults = presets.length <= 6 && presets.every(p => DEFAULT_PRESET_TEXTS.has(p.text.trim()));
 
     if (isOnlyDefaults || presets.length === 0) {
       const newDefaults = getDefaultsByLocale(newLocale);

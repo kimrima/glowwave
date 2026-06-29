@@ -61,6 +61,50 @@ export const TIER_CONFIGS: Record<TierType, TierConfig> = {
   },
 };
 
+export const getLocalizedPrice = (tier: TierType, locale: string): string => {
+  if (tier === 'free') {
+    switch (locale) {
+      case 'ko': return '무료';
+      case 'ja': return '無料';
+      case 'es': return 'Gratis';
+      case 'zh-TW':
+      case 'zh-HK': return '免費';
+      default: return 'Free';
+    }
+  }
+
+  const prices: Record<'lite' | 'pro' | 'max', Record<string, string>> = {
+    lite: {
+      ko: '5,000원',
+      en: '$3.99 USD',
+      ja: '¥600 JPY',
+      es: '$3.99 USD',
+      'zh-TW': 'NT$ 130 TWD',
+      'zh-HK': 'HK$ 30 HKD',
+    },
+    pro: {
+      ko: '25,000원',
+      en: '$19.99 USD',
+      ja: '¥3,000 JPY',
+      es: '$19.99 USD',
+      'zh-TW': 'NT$ 650 TWD',
+      'zh-HK': 'HK$ 150 HKD',
+    },
+    max: {
+      ko: '50,000원',
+      en: '$39.99 USD',
+      ja: '¥6,000 JPY',
+      es: '$39.99 USD',
+      'zh-TW': 'NT$ 1,300 TWD',
+      'zh-HK': 'HK$ 300 HKD',
+    }
+  };
+
+  const localeKey = ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(locale) ? locale : 'en';
+  return prices[tier][localeKey] || prices[tier]['en'];
+};
+
+
 export interface Room {
   id: string;
   host_session_token: string;

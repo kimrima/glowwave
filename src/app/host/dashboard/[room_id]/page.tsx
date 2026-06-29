@@ -26,7 +26,7 @@ import {
   Maximize2,
   Globe
 } from 'lucide-react';
-import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS } from '@/lib/types';
+import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS, getLocalizedPrice } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import jsQR from 'jsqr';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
@@ -36,6 +36,21 @@ import useFitText from '@/hooks/useFitText';
 
 // Fallback host-aligned defaults
 const fallbackDefaults: Preset[] = getDefaultsByLocale('ko');
+
+const DEFAULT_PRESET_TEXTS = new Set([
+  // Korean
+  '단색', '부드러운 깜빡이', '경찰 사이렌', '사이키', '당첨!', '스크롤', '카운트다운', '앰비언트',
+  // English
+  'Solid Color', 'Soft Blink', 'Psychedelic', 'Winner!', 'Scroll', 'Countdown',
+  // Japanese
+  '単色', 'ゆっくり点滅', 'サイケデリック', 'アタリ！', 'スクロール', 'カウントダウン',
+  // Spanish
+  'Color Sólido', 'Parpadeo Suave', '¡A BAILAR!', '¡GANADOR!', 'Desplazar', 'Cuenta Atrás',
+  // Traditional Chinese (TW)
+  '單色', '呼吸閃爍', '狂歡霓虹', '中獎！', '滾動跑馬燈', '倒數計時',
+  // Traditional Chinese (HK)
+  '單色', '呼吸閃爍', '狂歡霓虹', '中獎！', '滾動跑馬燈', '倒數計時'
+]);
 
 interface MiniCountdownPreviewProps {
   preset: Preset;
@@ -528,11 +543,7 @@ export default function HostDashboard() {
       }
 
       // If presets list consists only of defaults of any language, translate them to currentLocale defaults
-      const isOnlyDefaults = loadedPresets.length <= 6 && loadedPresets.every(p => 
-        ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].some(loc => 
-          getDefaultsByLocale(loc as Locale).some(d => d.text === p.text)
-        )
-      );
+      const isOnlyDefaults = loadedPresets.length <= 6 && loadedPresets.every(p => DEFAULT_PRESET_TEXTS.has(p.text.trim()));
       if (isOnlyDefaults || loadedPresets.length === 0) {
         loadedPresets = [...hostDefaults];
         localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(loadedPresets));
@@ -1068,11 +1079,7 @@ export default function HostDashboard() {
     localStorage.setItem('glowwave_local_locale', newLocale);
 
     // If presets list is empty or matches defaults of any language, translate them
-    const isOnlyDefaults = presets.length <= 6 && presets.every(p => 
-      ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].some(loc => 
-        getDefaultsByLocale(loc as Locale).some(d => d.text === p.text)
-      )
-    );
+    const isOnlyDefaults = presets.length <= 6 && presets.every(p => DEFAULT_PRESET_TEXTS.has(p.text.trim()));
 
     if (isOnlyDefaults || presets.length === 0) {
       const newDefaults = getDefaultsByLocale(newLocale);
@@ -1554,7 +1561,9 @@ export default function HostDashboard() {
       <div className="min-h-screen bg-[#0B0B0F] flex items-center justify-center text-white">
         <div className="flex flex-col items-center gap-4">
           <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin" />
-          <p className="text-sm text-zinc-400 font-medium">{t('dashboard_loading', activeLocale) || '대시보드 로딩 중...'}</p>
+          <p className="text-sm text-zinc-400 font-medium h-5">
+            {isHydrated ? (t('dashboard_loading', activeLocale) || '대시보드 로딩 중...') : ''}
+          </p>
         </div>
       </div>
     );
@@ -3743,7 +3752,9 @@ export default function HostDashboard() {
                       const planName = tKey === 'lite' ? 'Lite Plan' : tKey === 'pro' ? 'Pro Plan' : 'Max Plan';
                       const formattedPrice = activeLocale === 'ko'
                         ? `${config.priceKrw.toLocaleString()}원`
-                        : `₩${config.priceKrw.toLocaleString()}`;
+                        : ['en', 'es'].includes(activeLocale)
+                          ? `$${config.priceUsd} USD`
+                          : `${getLocalizedPrice(tKey, activeLocale)} ($${config.priceUsd} USD)`;
                       return (
                         <button
                           key={tKey}
@@ -3857,7 +3868,9 @@ export default function HostDashboard() {
 
               const formattedPrice = activeLocale === 'ko'
                 ? `${TIER_CONFIGS[selectedUpgradeTier].priceKrw.toLocaleString()}원`
-                : `₩${TIER_CONFIGS[selectedUpgradeTier].priceKrw.toLocaleString()}`;
+                : ['en', 'es'].includes(activeLocale)
+                  ? `$${TIER_CONFIGS[selectedUpgradeTier].priceUsd} USD`
+                  : `${getLocalizedPrice(selectedUpgradeTier, activeLocale)} ($${TIER_CONFIGS[selectedUpgradeTier].priceUsd} USD)`;
 
               return (
                 <div className="flex flex-col gap-5 text-left">
@@ -4211,17 +4224,49 @@ export default function HostDashboard() {
                   'zh-HK': '授權中...',
                 }[activeLocale] || '승인 중...';
 
-                const regularPriceStr = activeLocale === 'ko'
-                  ? `${TIER_CONFIGS[room.tier].priceKrw.toLocaleString()}원`
-                  : `₩${TIER_CONFIGS[room.tier].priceKrw.toLocaleString()}`;
+                const getFormattedLocalPrice = (tier: TierType, loc: string, mult: number = 1) => {
+                  if (tier === 'free') {
+                    return {
+                      ko: '무료',
+                      en: 'Free',
+                      ja: '無料',
+                      es: 'Gratis',
+                      'zh-TW': '免費',
+                      'zh-HK': '免費'
+                    }[loc] || '무료';
+                  }
+                  const baseUsd = TIER_CONFIGS[tier].priceUsd;
+                  const usdVal = baseUsd * mult;
+                  
+                  if (loc === 'ko') {
+                    const krwVal = Math.round(TIER_CONFIGS[tier].priceKrw * mult);
+                    return mult === 0.2 ? `-${krwVal.toLocaleString()}원` : `${krwVal.toLocaleString()}원`;
+                  }
+                  
+                  let localPriceStr = '';
+                  const lowerLoc = loc.toLowerCase();
+                  if (lowerLoc.startsWith('ja')) {
+                    const jpyVal = Math.round((tier === 'lite' ? 300 : tier === 'pro' ? 600 : 1500) * mult);
+                    localPriceStr = `${jpyVal.toLocaleString()}円`;
+                  } else if (lowerLoc.startsWith('zh-tw') || lowerLoc.includes('tw')) {
+                    const twdVal = Math.round((tier === 'lite' ? 60 : tier === 'pro' ? 120 : 300) * mult);
+                    localPriceStr = `NT$${twdVal.toLocaleString()}`;
+                  } else if (lowerLoc.startsWith('zh-hk') || lowerLoc.includes('hk')) {
+                    const hkdVal = Math.round((tier === 'lite' ? 15 : tier === 'pro' ? 30 : 75) * mult);
+                    localPriceStr = `HK$${hkdVal.toLocaleString()}`;
+                  }
+                  
+                  const usdFormatted = mult === 0.2 ? `-$${usdVal.toFixed(2)} USD` : `$${usdVal.toFixed(2)} USD`;
+                  if (!localPriceStr) return usdFormatted;
+                  
+                  return mult === 0.2 
+                    ? `-${localPriceStr} (${usdFormatted})`
+                    : `${localPriceStr} (${usdFormatted})`;
+                };
 
-                const discountStr = activeLocale === 'ko'
-                  ? `-${Math.round(TIER_CONFIGS[room.tier].priceKrw * 0.2).toLocaleString()}원`
-                  : `-₩${Math.round(TIER_CONFIGS[room.tier].priceKrw * 0.2).toLocaleString()}`;
-
-                const finalAmtStr = activeLocale === 'ko'
-                  ? `${Math.round(TIER_CONFIGS[room.tier].priceKrw * 0.8).toLocaleString()}원`
-                  : `₩${Math.round(TIER_CONFIGS[room.tier].priceKrw * 0.8).toLocaleString()}`;
+                const regularPriceStr = getFormattedLocalPrice(room.tier, activeLocale, 1);
+                const discountStr = getFormattedLocalPrice(room.tier, activeLocale, 0.2);
+                const finalAmtStr = getFormattedLocalPrice(room.tier, activeLocale, 0.8);
 
                 return (
                   <div className="flex flex-col gap-5 text-left">

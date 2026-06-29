@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Globe, ChevronDown, X, ArrowLeft } from 'lucide-react';
-import { Preset, TierType, TIER_CONFIGS } from '@/lib/types';
+import { Preset, TierType, TIER_CONFIGS, getLocalizedPrice } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import { t, Locale } from '@/lib/translations';
 import { getDefaultsByLocale } from '@/lib/templates';
@@ -492,19 +492,10 @@ export default function HostSetup() {
                     </div>
                     <div className="text-right">
                       <div className="text-xs font-black text-white font-mono">
-                        {cfg.priceKrw === 0 ? (
-                          {
-                            ko: '무료',
-                            en: 'Free',
-                            ja: '無料',
-                            es: 'Gratis',
-                            'zh-TW': '免費',
-                            'zh-HK': '免費'
-                          }[activeLocale] || '무료'
-                        ) : `${cfg.priceKrw.toLocaleString()}원`}
+                        {getLocalizedPrice(tierKey, activeLocale)}
                       </div>
-                      {cfg.priceKrw > 0 && (
-                        <div className="text-[9px] text-zinc-500 font-bold font-mono">${cfg.priceUsd} USD</div>
+                      {cfg.priceKrw > 0 && activeLocale !== 'ko' && (
+                        <div className="text-[9px] text-zinc-500 font-bold font-mono">(₩{cfg.priceKrw.toLocaleString()} KRW)</div>
                       )}
                     </div>
                   </button>
@@ -591,7 +582,9 @@ export default function HostSetup() {
                     <span className="text-indigo-400 font-extrabold text-sm">
                       {paymentMethod === 'toss' 
                         ? `${TIER_CONFIGS[selectedTier].priceKrw.toLocaleString()}원` 
-                        : `$${TIER_CONFIGS[selectedTier].priceUsd} USD`}
+                        : ['en', 'es'].includes(activeLocale)
+                          ? `$${TIER_CONFIGS[selectedTier].priceUsd} USD`
+                          : `${getLocalizedPrice(selectedTier, activeLocale)} ($${TIER_CONFIGS[selectedTier].priceUsd} USD)`}
                     </span>
                   </div>
                 </div>
