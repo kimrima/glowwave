@@ -3,22 +3,20 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Globe, ChevronDown, X, ArrowLeft } from 'lucide-react';
 import { Preset, TierType, TIER_CONFIGS } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
+import { t, Locale } from '@/lib/translations';
+import { getDefaultsByLocale } from '@/lib/templates';
 
 export default function HostSetup() {
   const router = useRouter();
-  
-  // Default presets: reconfigured to Solid, Psychedelic, Police Siren, Countdown, Scroll, Lucky Draw
-  const defaultPresets: Preset[] = [
-    { bg_color: '#0B0B0F', text: '단색', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100 },
-    { bg_color: '#3B82F6', text: '부드러운 깜빡이', text_color: '#FFFFFF', effect: 'blink', speed: 1527, font_family: 'sans-thin', font_size: 100 },
-    { bg_color: '#FF0000', text: '경찰 사이렌', text_color: '#FFFFFF', effect: 'blink', speed: 1527, bg_color_secondary: '#0000FF', font_family: 'sans-thin', font_size: 100 },
-    { bg_color: '#0B0B0F', text: '당첨!', text_color: '#FFD700', effect: 'luckydraw_wait', speed: 1527, bg_color_secondary: '#FFD700', result_text: '아쉽네요! 다음 기회에..', font_family: 'sans-thin', font_size: 100, lucky_draw_count: 1 },
-    { bg_color: '#F97316', text: '스크롤', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100 },
-    { bg_color: '#8B5CF6', text: '카운트다운', text_color: '#FFFFFF', effect: 'countdown', speed: 1000, countdown_seconds: 5, result_text: 'START', font_family: 'sans-thin', font_size: 100 },
-  ];
+
+  // Active Locale State
+  const [activeLocale, setActiveLocale] = useState<Locale>('ko');
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+
+  const defaultPresets = getDefaultsByLocale(activeLocale);
 
   const [selectedTier, setSelectedTier] = useState<TierType>('free');
   const [hostEmail, setHostEmail] = useState('');
@@ -36,6 +34,28 @@ export default function HostSetup() {
   // Import Status from Solo Signboard
   const [importStatus, setImportStatus] = useState<'free' | 'premium' | null>(null);
   const [importedPresetCount, setImportedPresetCount] = useState<number>(0);
+
+  // 1. Initial State Hydration
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedLocale = (localStorage.getItem('glowwave_host_locale') || 
+                           localStorage.getItem('glowwave_home_locale') || 
+                           localStorage.getItem('glowwave_local_locale')) as Locale;
+      if (savedLocale && ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(savedLocale)) {
+        setActiveLocale(savedLocale);
+      } else {
+        const navLang = navigator.language.toLowerCase();
+        let currentLocale: Locale = 'ko';
+        if (navLang.startsWith('ko')) currentLocale = 'ko';
+        else if (navLang.startsWith('ja')) currentLocale = 'ja';
+        else if (navLang.startsWith('es')) currentLocale = 'es';
+        else if (navLang.startsWith('zh-tw') || navLang.startsWith('zh-cn')) currentLocale = 'zh-TW';
+        else if (navLang.startsWith('zh-hk')) currentLocale = 'zh-HK';
+        else currentLocale = 'en';
+        setActiveLocale(currentLocale);
+      }
+    }
+  }, []);
 
   // Check URL parameters for preset importing
   useEffect(() => {
@@ -78,14 +98,30 @@ export default function HostSetup() {
     // Email Validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!hostEmail || !emailRegex.test(hostEmail)) {
-      setEmailError('유효한 이메일 주소를 입력해 주세요.');
+      const invalidEmailMsg = {
+        ko: '유효한 이메일 주소를 입력해 주세요.',
+        en: 'Please enter a valid email address.',
+        ja: '有効なメールアドレスを入力してください。',
+        es: 'Por favor, ingrese un correo electrónico válido.',
+        'zh-TW': '請輸入有效的電子郵件地址。',
+        'zh-HK': '請輸入有效的電子郵件地址。'
+      }[activeLocale] || '유효한 이메일 주소를 입력해 주세요.';
+      setEmailError(invalidEmailMsg);
       return;
     }
     setEmailError('');
 
     // Passcode Validation
     if (selectedTier !== 'free' && passcode && (passcode.length < 4 || passcode.length > 6)) {
-      setPasscodeError('비밀번호는 4~6자리의 숫자여야 합니다.');
+      const invalidPasscodeMsg = {
+        ko: '비밀번호는 4~6자리의 숫자여야 합니다.',
+        en: 'Passcode must be a 4 to 6 digit number.',
+        ja: 'パスコードは4〜6桁 of 数字である必要があります。',
+        es: 'La contraseña debe ser un número de 4 a 6 dígitos.',
+        'zh-TW': '密碼必須為 4 到 6 位數字。',
+        'zh-HK': '密碼必須為 4 到 6 位數字。'
+      }[activeLocale] || '비밀번호는 4~6자리의 숫자여야 합니다.';
+      setPasscodeError(invalidPasscodeMsg);
       return;
     }
     setPasscodeError('');
@@ -133,7 +169,15 @@ export default function HostSetup() {
       }
     } catch (err: any) {
       console.error(err);
-      alert(err.message || '방 생성 중 오류가 발생했습니다.');
+      const roomCreateErr = {
+        ko: '방 생성 중 오류가 발생했습니다.',
+        en: 'An error occurred during room creation.',
+        ja: 'ルーム作成中にエラーが発生しました。',
+        es: 'Ocurrió un error al crear la sala.',
+        'zh-TW': '建立房間時發生錯誤。',
+        'zh-HK': '建立房間時發生錯誤。'
+      }[activeLocale] || '방 생성 중 오류가 발생했습니다.';
+      alert(err.message || roomCreateErr);
       setIsProcessing(false);
     }
   };
@@ -170,7 +214,15 @@ export default function HostSetup() {
       }, 1500);
     } catch (err: any) {
       console.error(err);
-      alert(err.message || '결제 처리 중 오류가 발생했습니다.');
+      const paymentErr = {
+        ko: '결제 처리 중 오류가 발생했습니다.',
+        en: 'An error occurred during payment processing.',
+        ja: '決済処理中にエラーが発生しました。',
+        es: 'Ocurrió un error al procesar el pago.',
+        'zh-TW': '付款處理時發生錯誤。',
+        'zh-HK': '付款處理時發生錯誤。'
+      }[activeLocale] || '결제 처리 중 오류가 발생했습니다.';
+      alert(err.message || paymentErr);
       setIsProcessing(false);
     }
   };
@@ -182,13 +234,84 @@ export default function HostSetup() {
       <div className="absolute bottom-[10%] right-[-10%] neon-glow-circle-2 opacity-30" />
 
       {/* Header */}
-      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
+      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-50 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-black text-xl tracking-tight text-white font-outfit">
-            <span>GlowWave</span>
-          </Link>
-          <div className="text-[10px] text-zinc-500 font-black font-mono tracking-widest animate-pulse">
-            SETUP BUILDER v1.2
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/"
+              className="text-zinc-400 hover:text-white transition-all text-xs font-extrabold flex items-center gap-1.5 cursor-pointer select-none bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 shadow-sm"
+            >
+              {
+                {
+                  ko: '← 뒤로가기',
+                  en: '← Back',
+                  ja: '← 戻る',
+                  es: '← Volver',
+                  'zh-TW': '← 返回',
+                  'zh-HK': '← 返回',
+                }[activeLocale] || '← 뒤로가기'
+              }
+            </Link>
+            <Link href="/" className="flex items-center gap-2 font-black text-xl tracking-tight text-white font-outfit">
+              <span>GlowWave</span>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Language Selector Dropdown */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-zinc-300 hover:text-white text-xs font-bold transition-all cursor-pointer select-none"
+              >
+                <Globe className="w-3.5 h-3.5" />
+                <span className="uppercase">{activeLocale}</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isLangDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isLangDropdownOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40 bg-transparent" 
+                    onClick={() => setIsLangDropdownOpen(false)}
+                  />
+                  <div className="absolute right-0 mt-1.5 w-28 bg-[#0F0F15]/95 border border-white/10 rounded-xl shadow-2xl overflow-hidden py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                    {[
+                      { val: 'ko', label: '한국어' },
+                      { val: 'en', label: 'English' },
+                      { val: 'ja', label: '日本語' },
+                      { val: 'es', label: 'Español' },
+                      { val: 'zh-TW', label: '繁體中文' },
+                      { val: 'zh-HK', label: '繁體中文 (HK)' }
+                    ].map((loc) => (
+                      <button
+                        key={loc.val}
+                        type="button"
+                        onClick={() => {
+                          setActiveLocale(loc.val as Locale);
+                          localStorage.setItem('glowwave_host_locale', loc.val);
+                          localStorage.setItem('glowwave_home_locale', loc.val);
+                          localStorage.setItem('glowwave_local_locale', loc.val);
+                          setIsLangDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2 text-xs font-bold transition-colors ${
+                          activeLocale === loc.val 
+                            ? 'bg-white/10 text-white font-extrabold' 
+                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {loc.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="text-[10px] text-zinc-500 font-black font-mono tracking-widest animate-pulse hidden sm:block">
+              SETUP BUILDER v1.2
+            </div>
           </div>
         </div>
       </header>
@@ -200,21 +323,29 @@ export default function HostSetup() {
         <div className="lg:col-span-6 flex flex-col gap-8 pr-0 lg:pr-8 py-4">
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold">
-              <span>비밀번호 없이 3초 만에 생성</span>
+              <span>{t('setup_badge', activeLocale)}</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight tracking-tight">
-              어두운 행사장을 빛낼<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">우리만의 모바일 전광판</span>
+              {activeLocale === 'ko' ? (
+                <>
+                  어두운 행사장을 빛낼<br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">우리만의 모바일 전광판</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">{t('setup_title', activeLocale)}</span><br />
+                  <span className="text-sm text-zinc-400 font-bold">{t('setup_subtitle', activeLocale)}</span>
+                </>
+              )}
             </h1>
             <p className="text-sm text-zinc-400 leading-relaxed max-w-md">
-              번거로운 가입이나 앱 다운로드 없이, 이메일 주소만으로 방을 개설할 수 있습니다. 
-              생성 완료 후 호스트 리모컨 대시보드에서 마음껏 자막과 효과를 연출해 보세요!
+              {t('setup_desc', activeLocale)}
             </p>
           </div>
 
           {/* Phone Mockup Showcase: Replace preview with solid indigo GLOWWAVE */}
           <div className="flex flex-col items-center lg:items-start">
-            <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-4 tracking-wider">미리보기 (GLOWWAVE SOLID)</span>
+            <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-4 tracking-wider">{t('setup_preview_label', activeLocale)}</span>
             <LandscapePhoneMockup preset={{ bg_color: '#6366F1', text: 'GLOWWAVE', text_color: '#FFFFFF', effect: 'none', speed: 1000 }} />
           </div>
         </div>
@@ -223,7 +354,7 @@ export default function HostSetup() {
         <div className="lg:col-span-6 flex flex-col justify-center">
           <form onSubmit={handleStartSetup} className="glass-effect rounded-2xl p-6 sm:p-8 flex flex-col gap-6 bg-[#12121a]">
             <h2 className="text-xl font-bold text-white mb-2">
-              참여 인원 및 요금제 선택
+              {t('setup_title', activeLocale)}
             </h2>
 
             {/* Dynamic Import Alert/Warning Banner */}
@@ -237,23 +368,23 @@ export default function HostSetup() {
                   {selectedTier === 'free' ? (
                     <>
                       <span className="shrink-0 text-amber-400">⚠️</span>
-                      <span>1인 프리셋 일부 연동 (무료 제한 모드)</span>
+                      <span>{t('setup_import_free_title', activeLocale)}</span>
                     </>
                   ) : (
                     <>
                       <span className="shrink-0 text-indigo-400">⚡</span>
-                      <span>1인 프리셋 무손실 연동 (프리미엄 모드)</span>
+                      <span>{t('setup_import_premium_title', activeLocale)}</span>
                     </>
                   )}
                 </h4>
                 <p className="text-[10px] text-zinc-400 leading-relaxed font-semibold">
                   {selectedTier === 'free' ? (
                     <span>
-                      무료 방 개설 시 1인 모드에서 제작하신 <strong>{importedPresetCount}개 중 상위 6개</strong>만 승계되며, 둥글몽글/스포티/레트로 폰트와 꽃가루/별빛 등의 특수효과는 기본형으로 자동 대체됩니다.
+                      {t('setup_import_free_desc', activeLocale).replace('{cnt}', String(importedPresetCount))}
                     </span>
                   ) : (
                     <span>
-                      작성하신 <strong>{importedPresetCount}개의 디자인 프리셋</strong>과 전용 글꼴 및 특수 효과가 단 1%의 유실도 없이 100% 온전하게 승계되어 멀티방으로 이동합니다! 결제 완료 후 즉시 복원됩니다.
+                      {t('setup_import_premium_desc', activeLocale).replace('{cnt}', String(importedPresetCount))}
                     </span>
                   )}
                 </p>
@@ -263,7 +394,7 @@ export default function HostSetup() {
             {/* Email Input Step (No login logic) */}
             <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4">
               <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                이메일 주소 (비회원 영수증 및 복구용)
+                {t('setup_email_label', activeLocale)}
               </label>
               <input
                 type="email"
@@ -281,7 +412,7 @@ export default function HostSetup() {
                   {emailError}
                 </p>
               ) : (
-                <p className="text-[10px] text-zinc-500 mt-2 font-medium">이메일만으로 결제 정보를 식별하고 나중에 복구할 수 있습니다.</p>
+                <p className="text-[10px] text-zinc-500 mt-2 font-medium">{t('setup_email_tip', activeLocale)}</p>
               )}
             </div>
 
@@ -289,7 +420,7 @@ export default function HostSetup() {
             {selectedTier !== 'free' && (
               <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 animate-in fade-in slide-in-from-top-3 duration-200">
                 <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                  방 입장 비밀번호 (숫자 4~6자리, 선택사항)
+                  {t('setup_passcode_label', activeLocale)}
                 </label>
                 <input
                   type="password"
@@ -311,7 +442,7 @@ export default function HostSetup() {
                   </p>
                 ) : (
                   <p className="text-[10px] text-zinc-500 mt-2 font-medium">
-                    비밀번호를 설정하면 올바른 번호를 입력한 관객만 전광판에 참여할 수 있습니다. 비워두면 비밀번호 없이 즉시 접속됩니다.
+                    {t('setup_passcode_tip', activeLocale)}
                   </p>
                 )}
               </div>
@@ -337,14 +468,40 @@ export default function HostSetup() {
                   >
                     <div>
                       <div className="font-extrabold text-white text-xs flex items-center gap-2">
-                        {cfg.name}
+                        {
+                          {
+                            free: t('forever_free', activeLocale) || cfg.name,
+                            lite: cfg.name,
+                            pro: t('pro_plan', activeLocale) || cfg.name
+                          }[tierKey] || cfg.name
+                        }
                         {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />}
                       </div>
-                      <div className="text-[10px] text-zinc-400 mt-1 font-semibold">최대 동시 접속 {cfg.maxParticipants}명</div>
+                      <div className="text-[10px] text-zinc-400 mt-1 font-semibold">
+                        {
+                          {
+                            ko: `최대 동시 접속 ${cfg.maxParticipants}명`,
+                            en: `Max participants: ${cfg.maxParticipants}`,
+                            ja: `最大接続人数: ${cfg.maxParticipants}名`,
+                            es: `Capacidad máxima: ${cfg.maxParticipants} personas`,
+                            'zh-TW': `最大同連線數 ${cfg.maxParticipants} 人`,
+                            'zh-HK': `最大同連線數 ${cfg.maxParticipants} 人`
+                          }[activeLocale] || `최대 동시 접속 ${cfg.maxParticipants}명`
+                        }
+                      </div>
                     </div>
                     <div className="text-right">
                       <div className="text-xs font-black text-white font-mono">
-                        {cfg.priceKrw === 0 ? '무료' : `${cfg.priceKrw.toLocaleString()}원`}
+                        {cfg.priceKrw === 0 ? (
+                          {
+                            ko: '무료',
+                            en: 'Free',
+                            ja: '無料',
+                            es: 'Gratis',
+                            'zh-TW': '免費',
+                            'zh-HK': '免費'
+                          }[activeLocale] || '무료'
+                        ) : `${cfg.priceKrw.toLocaleString()}원`}
                       </div>
                       {cfg.priceKrw > 0 && (
                         <div className="text-[9px] text-zinc-500 font-bold font-mono">${cfg.priceUsd} USD</div>
@@ -364,10 +521,10 @@ export default function HostSetup() {
               {isProcessing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
-                  생성 중...
+                  {t('setup_creating', activeLocale)}
                 </>
               ) : (
-                '이벤트 방 개설하기'
+                t('card_host_btn', activeLocale)
               )}
             </button>
           </form>
@@ -390,9 +547,9 @@ export default function HostSetup() {
               <div className="flex flex-col gap-5">
                 <div className="flex justify-between items-center pb-3 border-b border-white/10">
                   <h3 className="text-base font-bold text-white">
-                    간편 비회원 결제창
+                    {t('setup_checkout_title', activeLocale)}
                   </h3>
-                  <span className="text-xs text-zinc-500 font-mono">방 번호: {createdRoomInfo?.room_id}</span>
+                  <span className="text-xs text-zinc-500 font-mono">{t('room_code', activeLocale)}: {createdRoomInfo?.room_id}</span>
                 </div>
 
                 {/* PG Method Selector */}
@@ -422,15 +579,15 @@ export default function HostSetup() {
                 {/* PG Checkout Simulator Card */}
                 <div className="bg-black/50 border border-white/5 rounded-xl p-4 flex flex-col gap-3">
                   <div className="text-xs text-zinc-400 flex justify-between">
-                    <span>상품명</span>
-                    <span className="text-white font-semibold">GlowWave 이벤트 티켓 ({TIER_CONFIGS[selectedTier].name})</span>
+                    <span>{t('setup_checkout_prod', activeLocale)}</span>
+                    <span className="text-white font-semibold">GlowWave Room Ticket ({TIER_CONFIGS[selectedTier].name})</span>
                   </div>
                   <div className="text-xs text-zinc-400 flex justify-between">
-                    <span>이메일</span>
+                    <span>{t('setup_checkout_email', activeLocale)}</span>
                     <span className="text-white font-semibold">{hostEmail}</span>
                   </div>
                   <div className="text-xs text-zinc-400 flex justify-between border-t border-white/5 pt-3 mt-1">
-                    <span>최종 결제 금액</span>
+                    <span>{t('setup_checkout_total', activeLocale)}</span>
                     <span className="text-indigo-400 font-extrabold text-sm">
                       {paymentMethod === 'toss' 
                         ? `${TIER_CONFIGS[selectedTier].priceKrw.toLocaleString()}원` 
@@ -440,7 +597,7 @@ export default function HostSetup() {
                 </div>
 
                 <div className="text-[10px] text-zinc-500 leading-normal">
-                  <span>본 결제는 시뮬레이션입니다. 결제하기 버튼을 누르면 즉시 카드사 PG 웹훅 API를 호출하여 방장 대시보드가 활성화됩니다.</span>
+                  <span>{t('setup_checkout_sim_warning', activeLocale)}</span>
                 </div>
 
                 <div className="flex gap-3 mt-2">
@@ -449,7 +606,7 @@ export default function HostSetup() {
                     onClick={() => setIsCheckoutOpen(false)}
                     className="flex-1 py-3 rounded-xl bg-white/5 text-zinc-300 font-semibold hover:bg-white/10 transition-all text-xs"
                   >
-                    취소
+                    {t('cancel', activeLocale)}
                   </button>
                   <button
                     disabled={isProcessing}
@@ -459,10 +616,10 @@ export default function HostSetup() {
                     {isProcessing ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
-                        결제 승인 중...
+                        {t('setup_checkout_processing', activeLocale)}
                       </>
                     ) : (
-                      '결제하기'
+                      t('setup_btn_checkout', activeLocale)
                     )}
                   </button>
                 </div>

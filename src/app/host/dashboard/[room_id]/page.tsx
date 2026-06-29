@@ -91,6 +91,7 @@ export default function HostDashboard() {
   // Active Locale State
   const [activeLocale, setActiveLocale] = useState<Locale>('ko');
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const defaults = getDefaultsByLocale(activeLocale);
 
   // Upgrade Plan Modal States
@@ -526,6 +527,17 @@ export default function HostDashboard() {
         }
       }
 
+      // If presets list consists only of defaults of any language, translate them to currentLocale defaults
+      const isOnlyDefaults = loadedPresets.length <= 6 && loadedPresets.every(p => 
+        ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].some(loc => 
+          getDefaultsByLocale(loc as Locale).some(d => d.text === p.text)
+        )
+      );
+      if (isOnlyDefaults || loadedPresets.length === 0) {
+        loadedPresets = [...hostDefaults];
+        localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(loadedPresets));
+      }
+
       // Migrate presets: remove emojis, convert size to number, and set correct premium effects
       let migrated = false;
       const emojiRegex = /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
@@ -689,6 +701,7 @@ export default function HostDashboard() {
 
       setIsAuthorized(true);
       setLoading(false);
+      setIsHydrated(true);
 
       // Connect Real-time Engine
       connectRealtime(roomId);
@@ -698,6 +711,7 @@ export default function HostDashboard() {
       setAuthErrorMessage('네트워크 연결이 일시적으로 원활하지 않습니다. 인터넷 연결을 확인해 주세요.');
       setIsNetworkError(true);
       setLoading(false);
+      setIsHydrated(true);
     }
   }, [roomId, token, connectRealtime]);
 
@@ -1535,12 +1549,12 @@ export default function HostDashboard() {
     }
   };
 
-  if (loading) {
+  if (loading || !isHydrated) {
     return (
       <div className="min-h-screen bg-[#0B0B0F] flex items-center justify-center text-white">
         <div className="flex flex-col items-center gap-4">
           <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin" />
-          <p className="text-sm text-zinc-400 font-medium">대시보드 세션 검증 중...</p>
+          <p className="text-sm text-zinc-400 font-medium">{t('dashboard_loading', activeLocale) || '대시보드 로딩 중...'}</p>
         </div>
       </div>
     );
@@ -1552,19 +1566,57 @@ export default function HostDashboard() {
       <div className="min-h-screen bg-[#0B0B0F] text-foreground flex flex-col justify-center items-center px-6 text-center">
         <div className="glass-effect p-8 rounded-2xl max-w-md border border-indigo-500/20">
           <RefreshCw className="w-12 h-12 text-indigo-400 mx-auto mb-4 animate-spin" style={{ animationDuration: '3s' }} />
-          <h2 className="text-xl font-bold text-white mb-2">서버 연결 일시 지연</h2>
+          <h2 className="text-xl font-bold text-white mb-2">
+            {
+              {
+                ko: '서버 연결 일시 지연',
+                en: 'Server Connection Delayed',
+                ja: 'サーバー接続遅延',
+                es: 'Conexión de servidor retrasada',
+                'zh-TW': '伺服器連線延遲',
+                'zh-HK': '伺服器連線延遲'
+              }[activeLocale] || '서버 연결 일시 지연'
+            }
+          </h2>
           <p className="text-sm text-zinc-400 mb-6 whitespace-pre-line font-medium leading-relaxed">
-            {authErrorMessage || "인터넷 연결이 불안정하거나 서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요."}
+            {authErrorMessage || 
+              {
+                ko: '인터넷 연결이 불안정하거나 서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.',
+                en: 'Internet connection is unstable or the server response is delayed. Please try again in a moment.',
+                ja: 'インターネット接続が不安定か、サーバーの応答が遅れています。しばらくしてからもう一度お試しください。',
+                es: 'La conexión a Internet es inestable o la respuesta del servidor se retrasa. Por favor, inténtelo de nuevo en un momento.',
+                'zh-TW': '網路連線不穩定或伺服器回應延遲。請稍後再試。',
+                'zh-HK': '網路連線不穩定或伺服器回應延遲。請稍後再試。'
+              }[activeLocale] || '인터넷 연결이 불안정하거나 서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.'
+            }
           </p>
           <div className="flex flex-col gap-2 w-full">
             <button
               onClick={() => initDashboard()}
               className="py-3 px-4 rounded-xl bg-white text-black font-extrabold text-sm hover:bg-zinc-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg"
             >
-              다시 연결 시도 ⚡
+              {
+                {
+                  ko: '다시 연결 시도 ⚡',
+                  en: 'Retry Connection ⚡',
+                  ja: '再接続を試行 ⚡',
+                  es: 'Reintentar Conexión ⚡',
+                  'zh-TW': '重新嘗試連線 ⚡',
+                  'zh-HK': '重新嘗試連線 ⚡'
+                }[activeLocale] || '다시 연결 시도 ⚡'
+              }
             </button>
             <Link href="/" className="text-sm text-zinc-400 hover:text-white py-2 font-semibold">
-              메인 홈으로 가기
+              {
+                {
+                  ko: '메인 홈으로 가기',
+                  en: 'Go to Home',
+                  ja: 'メインホームへ戻る',
+                  es: 'Ir al Inicio',
+                  'zh-TW': '回首頁',
+                  'zh-HK': '回首頁'
+                }[activeLocale] || '메인 홈으로 가기'
+              }
             </Link>
           </div>
         </div>
@@ -1578,16 +1630,54 @@ export default function HostDashboard() {
       <div className="min-h-screen bg-[#0B0B0F] text-foreground flex flex-col justify-center items-center px-6 text-center">
         <div className="glass-effect p-8 rounded-2xl max-w-md border border-red-500/10">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">권한이 없거나 만료된 방입니다</h2>
+          <h2 className="text-xl font-bold text-white mb-2">
+            {
+              {
+                ko: '권한이 없거나 만료된 방입니다',
+                en: 'Unauthorized or Expired Room',
+                ja: '権限がないか期限切れのルームです',
+                es: 'Sala no autorizada o caducada',
+                'zh-TW': '無權限或已過期的房間',
+                'zh-HK': '無權限或已過期的房間'
+              }[activeLocale] || '권한이 없거나 만료된 방입니다'
+            }
+          </h2>
           <p className="text-sm text-zinc-400 mb-6 whitespace-pre-line font-medium leading-relaxed">
-            {authErrorMessage || "이 방의 활성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오."}
+            {authErrorMessage || 
+              {
+                ko: '이 방의 활성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 獲得하십시오.',
+                en: 'Active session info for this room is missing. Please retrieve access using the [Restore Purchase] feature with your payment email.',
+                ja: 'このルームの有効なセッション情報がブラウザにありません。決済されたメールアドレスを使用し「購入履歴の復元」機能で権限を取得してください。',
+                es: 'No se encuentra información de sesión activa para esta sala. Recupere el acceso utilizando la función [Restaurar compra] con su correo electrónico de pago.',
+                'zh-TW': '瀏覽器中無此房間的啟用工作階段資訊。請使用您付款時填寫的電子郵件，透過 [還原購買紀錄] 功能重新取得管理權限。',
+                'zh-HK': '瀏覽器中無此房間的啟用工作階段資訊。請使用您付款時填寫的電子郵件，透過 [還原購買紀錄] 功能重新取得管理權限。'
+              }[activeLocale] || '이 방의 활성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오.'
+            }
           </p>
           <div className="flex flex-col gap-2">
             <Link href="/recovery" className="py-3 px-4 rounded-xl bg-white text-black font-semibold text-sm hover:bg-zinc-200 transition-all flex items-center justify-center">
-              구매 내역 복구하기
+              {
+                {
+                  ko: '구매 내역 복구하기',
+                  en: 'Restore Purchase History',
+                  ja: '購入履歴を復元する',
+                  es: 'Restaurar historial de compras',
+                  'zh-TW': '還原購買紀錄',
+                  'zh-HK': '還原購買紀錄'
+                }[activeLocale] || '구매 내역 복구하기'
+              }
             </Link>
             <Link href="/" className="text-sm text-zinc-400 hover:text-white py-2 font-semibold">
-              메인 홈으로 가기
+              {
+                {
+                  ko: '메인 홈으로 가기',
+                  en: 'Go to Home',
+                  ja: 'メインホームへ戻る',
+                  es: 'Ir al Inicio',
+                  'zh-TW': '回首頁',
+                  'zh-HK': '回首頁'
+                }[activeLocale] || '메인 홈으로 가기'
+              }
             </Link>
           </div>
         </div>
@@ -4297,13 +4387,13 @@ export default function HostDashboard() {
         }[activeLocale] || '비밀번호 해제';
 
         const validationError = {
-          ko: '비밀번호는 4~6자리의 숫자여야 합니다.',
+          ko: t('err_passcode_length', activeLocale) || '비밀번호는 4~6자리의 숫자여야 합니다.',
           en: 'Passcode must be a 4 to 6 digit number.',
           ja: 'パスコードは4〜6桁の数字である必要があります。',
           es: 'La contraseña debe ser un número de 4 a 6 dígitos.',
           'zh-TW': '密碼必須為 4 到 6 位數字。',
           'zh-HK': '密碼必須為 4 到 6 位數字。',
-        }[activeLocale] || '비밀번호는 4~6자리의 숫자여야 합니다.';
+        }[activeLocale] || t('err_passcode_length', activeLocale) || '비밀번호는 4~6자리의 숫자여야 합니다.';
 
         const saveLabel = {
           ko: isPasscodeUpdating ? '저장 중...' : '저장 완료',

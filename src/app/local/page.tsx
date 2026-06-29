@@ -98,6 +98,7 @@ function LocalSignboardContent() {
   // Active Locale State
   const [activeLocale, setActiveLocale] = useState<Locale>('ko');
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // Active signboard design state
   const [currentBroadcastPreset, setCurrentBroadcastPreset] = useState<Preset>({
@@ -431,6 +432,17 @@ function LocalSignboardContent() {
         localStorage.setItem('glowwave_local_presets', JSON.stringify(presetsList));
       }
 
+      // If presets list consists only of defaults of any language, translate them to currentLocale defaults
+      const isOnlyDefaults = presetsList.length <= 6 && presetsList.every(p => 
+        ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].some(loc => 
+          getDefaultsByLocale(loc as Locale).some(d => d.text === p.text)
+        )
+      );
+      if (isOnlyDefaults || presetsList.length === 0) {
+        presetsList = [...localDefaults];
+        localStorage.setItem('glowwave_local_presets', JSON.stringify(presetsList));
+      }
+
       // Migrate presets
       const emojiRegex = /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
       presetsList = presetsList.map(p => {
@@ -468,6 +480,7 @@ function LocalSignboardContent() {
         handleImportByScannedKey(importKey);
         window.history.replaceState({}, document.title, window.location.pathname);
       }
+      setIsHydrated(true);
     }
   }, []);
 
@@ -808,6 +821,10 @@ function LocalSignboardContent() {
       }
     }
   };
+
+  if (!isHydrated) {
+    return <LocalSignboardFallback />;
+  }
 
   return (
     <div className="min-h-screen bg-[#030305] text-foreground flex flex-col justify-between bg-grid-pattern relative overflow-hidden font-sans">
@@ -1777,6 +1794,7 @@ function LocalSignboardContent() {
           <LocalFullscreenSignboard 
             preset={currentBroadcastPreset} 
             onClose={() => setIsStandaloneFullscreen(false)} 
+            locale={activeLocale}
           />
         </div>
       )}
@@ -2345,30 +2363,30 @@ function LocalSignboardContent() {
             </button>
 
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-black text-white leading-tight tracking-tight font-outfit">보관함 및 연출 공유</h2>
+              <h2 className="text-2xl font-black text-white leading-tight tracking-tight font-outfit">{t('vault_modal_title', activeLocale)}</h2>
               <p className="text-sm text-zinc-400 mt-2 font-medium">
-                전광판 프리셋을 기기에 안전하게 저장하거나 다른 기기로 전송합니다.
+                {t('vault_modal_desc', activeLocale)}
               </p>
             </div>
 
             {/* Modal Internal Tabs */}
             <div className="flex border-b border-white/10 gap-1.5 mb-8 overflow-x-auto pb-1.5 scrollbar-none">
               {[
-                { tab: 'slots', label: '내 기기에 보관' },
-                { tab: 'share', label: '무선 전송 (보내기/받기)' },
-                { tab: 'sync', label: '여러 기기 연결 (싱크)' }
-              ].map((t) => (
+                { tab: 'slots', label: t('tab_my_device', activeLocale) },
+                { tab: 'share', label: t('tab_wireless', activeLocale) },
+                { tab: 'sync', label: t('tab_sync_multiple', activeLocale) }
+              ].map((tItem) => (
                 <button
-                  key={t.tab}
+                  key={tItem.tab}
                   type="button"
-                  onClick={() => setVaultTab(t.tab as any)}
+                  onClick={() => setVaultTab(tItem.tab as any)}
                   className={`px-5 py-2.5 text-xs sm:text-sm font-extrabold rounded-xl transition-all active:scale-95 shrink-0 whitespace-nowrap ${
-                    vaultTab === t.tab 
+                    vaultTab === tItem.tab 
                       ? 'bg-white/10 border border-white/15 text-white shadow-md' 
                       : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02]'
                   }`}
                 >
-                  {t.label}
+                  {tItem.label}
                 </button>
               ))}
             </div>
@@ -2377,9 +2395,9 @@ function LocalSignboardContent() {
             {vaultTab === 'slots' && (
               <div className="space-y-6 animate-in fade-in duration-200">
                 <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
-                  <h4 className="text-sm font-bold text-white mb-1.5">내 기기 브라우저 보관함</h4>
+                  <h4 className="text-sm font-bold text-white mb-1.5">{t('vault_slots_title', activeLocale)}</h4>
                   <p className="text-xs text-zinc-400 leading-relaxed">
-                    현재 프리셋 구성을 슬롯에 보관해 두고 필요할 때 클릭 한 번으로 빠르게 다시 불러옵니다.
+                    {t('vault_slots_desc', activeLocale)}
                   </p>
                 </div>
 
@@ -2388,7 +2406,7 @@ function LocalSignboardContent() {
                     type="text"
                     value={newSlotName}
                     onChange={(e) => setNewSlotName(e.target.value.slice(0, 15))}
-                    placeholder="저장할 테마 이름 입력"
+                    placeholder={t('input_theme_placeholder', activeLocale)}
                     className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/40 focus:bg-black/60 text-sm font-semibold transition-colors"
                     maxLength={15}
                   />
@@ -2396,7 +2414,7 @@ function LocalSignboardContent() {
                     onClick={handleSaveSlotPackage}
                     className="px-5 py-3 rounded-xl bg-white hover:bg-zinc-200 text-black text-sm font-extrabold transition-all cursor-pointer shrink-0 shadow-md active:scale-95"
                   >
-                    슬롯 저장
+                    {t('btn_save_slot', activeLocale)}
                   </button>
                 </div>
 
@@ -2410,10 +2428,12 @@ function LocalSignboardContent() {
                       >
                         <div className="min-w-0 pr-4">
                           <span className="text-sm font-semibold text-white block truncate">{slot.name}</span>
-                          <span className="text-xs text-zinc-400 font-medium font-mono mt-1 block">프리셋 {slot.presets?.length || 0}개 수록</span>
+                          <span className="text-xs text-zinc-400 font-medium font-mono mt-1 block">
+                            {t('presets_count_label', activeLocale).replace('{cnt}', String(slot.presets?.length || 0))}
+                          </span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-xs text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">불러오기 &rarr;</span>
+                          <span className="text-xs text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">{t('load_action', activeLocale)} &rarr;</span>
                           <button
                             type="button"
                             onClick={(e) => handleDeleteSlotPackage(idx, e)}
@@ -2426,7 +2446,7 @@ function LocalSignboardContent() {
                     ))
                   ) : (
                     <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.01] p-10 text-center text-zinc-500 font-bold text-xs">
-                      보관된 테마가 없습니다. 이름을 입력하고 슬롯을 추가해 보세요.
+                      {t('no_saved_slots_desc', activeLocale)}
                     </div>
                   )}
                 </div>
@@ -2436,24 +2456,24 @@ function LocalSignboardContent() {
                   <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl text-left flex items-start gap-3">
                     <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_#f59e0b] mt-1.5" />
                     <div className="flex-1">
-                      <span className="text-xs text-zinc-300 font-bold block mb-1">브라우저 캐시 주의</span>
+                      <span className="text-xs text-zinc-300 font-bold block mb-1">{t('browser_cache_warning_title_local', activeLocale)}</span>
                       <span className="text-xs text-zinc-400 leading-relaxed block">
-                        가입이 없는 로컬 전용 모드로, 인터넷 캐시/쿠키 청소 시 저장된 보관함 슬롯도 함께 지워집니다. 안전한 보관을 위해 가끔 <b>[무선 전송 (보내기/받기)]</b> 탭에서 다른 기기로 백업하여 안전하게 복사해 두시길 권장합니다.
+                        {t('browser_cache_warning_desc_local', activeLocale)}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex justify-between items-center text-left gap-4">
                     <div className="min-w-0 pr-4">
-                      <span className="text-xs text-zinc-400 font-bold block">대시보드 리셋</span>
-                      <span className="text-xs text-zinc-500 mt-1 block">모든 프리셋과 보관함을 초기 기본값으로 리셋합니다.</span>
+                      <span className="text-xs text-zinc-400 font-bold block">{t('reset_dashboard', activeLocale)}</span>
+                      <span className="text-xs text-zinc-500 mt-1 block">{t('reset_dashboard_desc', activeLocale)}</span>
                     </div>
                     <button
                       type="button"
                       onClick={handleResetDashboard}
                       className="py-2.5 px-4 rounded-xl border border-white/10 text-zinc-400 hover:text-red-400 hover:border-red-500/30 bg-white/5 hover:bg-red-500/10 cursor-pointer text-xs font-bold transition-all text-center active:scale-95 shrink-0 hover:shadow-[0_0_12px_rgba(239,68,68,0.1)]"
                     >
-                      전체 초기 리셋
+                      {t('factory_reset', activeLocale)}
                     </button>
                   </div>
                 </div>
@@ -2464,9 +2484,9 @@ function LocalSignboardContent() {
             {vaultTab === 'share' && (
               <div className="space-y-5 animate-in fade-in duration-200">
                 <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
-                  <h4 className="text-sm font-bold text-white mb-1.5">기기 간 무선 전송</h4>
+                  <h4 className="text-sm font-bold text-white mb-1.5">{t('wireless_transfer_title', activeLocale)}</h4>
                   <p className="text-xs text-zinc-400 leading-relaxed">
-                    스마트폰 카메라 스캔이나 6자리 공유 코드로 프리셋을 간편하게 보내고 받을 수 있습니다.
+                    {t('wireless_transfer_desc', activeLocale)}
                   </p>
                 </div>
 
@@ -2484,7 +2504,7 @@ function LocalSignboardContent() {
                         : 'text-zinc-500 hover:text-zinc-300'
                     }`}
                   >
-                    내 프리셋 보내기 (QR 생성)
+                    {t('btn_send_presets_qr', activeLocale)}
                   </button>
                   <button
                     type="button"
@@ -2495,7 +2515,7 @@ function LocalSignboardContent() {
                         : 'text-zinc-500 hover:text-zinc-300'
                     }`}
                   >
-                    다른 프리셋 가져오기 (스캔/입력)
+                    {t('btn_receive_presets_scan', activeLocale)}
                   </button>
                 </div>
 
@@ -2504,7 +2524,7 @@ function LocalSignboardContent() {
                   <div className="space-y-4 animate-in fade-in duration-150">
                     <div className="bg-black/50 border border-white/5 p-6 rounded-2xl flex flex-col items-center gap-4 text-center min-h-[180px] justify-center relative">
                       {isSharingLoading ? (
-                        <span className="text-sm text-zinc-400 animate-pulse">임시 무선 연동 토큰 생성 중...</span>
+                        <span className="text-sm text-zinc-400 animate-pulse">{t('token_generating', activeLocale)}</span>
                       ) : shareQrUrl ? (
                         <div className="flex flex-col items-center gap-4 animate-in fade-in duration-200">
                           <div className="bg-white p-3 rounded-2xl shadow-2xl">
@@ -2512,7 +2532,7 @@ function LocalSignboardContent() {
                             <img src={shareQrUrl} alt="Preset Share QR" className="w-40 h-40 rounded-xl" />
                           </div>
                           <span className="text-xs text-zinc-300 font-bold">
-                            📱 상대방 스마트폰 카메라로 비추면 즉시 내 프리셋이 복사 적용됩니다!
+                            {t('send_instructions', activeLocale)}
                           </span>
                           
                           <div className="flex items-center gap-2 mt-1 bg-black/45 px-4 py-2.5 rounded-xl border border-white/10">
@@ -2521,20 +2541,20 @@ function LocalSignboardContent() {
                               onClick={handleCopyShareCodeText}
                               className="text-xs text-zinc-300 hover:text-white font-extrabold transition-colors active:scale-95 pl-2 border-l border-white/15"
                             >
-                              {isCodeCopied ? '복사 완료' : '코드 복사'}
+                              {isCodeCopied ? t('copy_complete', activeLocale) : t('copy_code', activeLocale)}
                             </button>
                           </div>
                         </div>
                       ) : (
                         <div className="py-6 px-4 text-center space-y-4">
                           <p className="text-xs text-zinc-400 leading-relaxed">
-                            현재 기기에 세팅된 원터치 프리셋 패키지를 다른 폰으로 바로 전송할 수 있는 QR 코드를 만듭니다.
+                            {t('send_desc', activeLocale)}
                           </p>
                           <button
                             onClick={handleGenerateShareCode}
                             className="w-full py-4 rounded-xl bg-white text-black font-extrabold text-xs shadow-lg hover:bg-zinc-200 transition-all cursor-pointer flex items-center justify-center active:scale-95"
                           >
-                            전송용 QR 코드 및 번호 생성
+                            {t('btn_generate_qr_code', activeLocale)}
                           </button>
                         </div>
                       )}
@@ -2563,32 +2583,32 @@ function LocalSignboardContent() {
                           onClick={stopScanning}
                           className="w-full py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all cursor-pointer active:scale-95"
                         >
-                          스캔 취소
+                          {t('btn_cancel_scan', activeLocale)}
                         </button>
                       </div>
                     ) : (
                       <div className="bg-black/40 border border-white/5 p-5 rounded-2xl space-y-5">
                         <div className="space-y-2">
-                          <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">방법 A: 카메라로 즉시 스캔</span>
+                          <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">{t('receive_method_a', activeLocale)}</span>
                           <button
                             type="button"
                             onClick={startScanning}
                             className="w-full py-3.5 rounded-xl border border-dashed border-white/15 hover:border-white/30 hover:bg-white/[0.02] text-zinc-300 hover:text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
                           >
-                            카메라 QR 스캔 켜기
+                            {t('btn_enable_qr_scan', activeLocale)}
                           </button>
                         </div>
 
                         <div className="h-[1px] bg-white/5" />
 
                         <div className="space-y-2">
-                          <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">방법 B: 6자리 코드 입력</span>
+                          <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">{t('receive_method_b', activeLocale)}</span>
                           <div className="flex gap-2">
                             <input
                               type="text"
                               value={shareCodeInput}
                               onChange={(e) => setShareCodeInput(e.target.value.toUpperCase())}
-                              placeholder="6자리 코드 입력 (예: X8Y3ZA)"
+                              placeholder={t('input_6digit_placeholder', activeLocale)}
                               className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white tracking-widest text-center text-sm font-black focus:outline-none focus:border-white/40 focus:bg-black/65 uppercase font-mono"
                               maxLength={6}
                             />
@@ -2596,7 +2616,7 @@ function LocalSignboardContent() {
                               onClick={handleImportShareCode}
                               className="px-5 rounded-xl bg-white text-black text-xs font-black hover:bg-zinc-200 transition-colors cursor-pointer shrink-0 active:scale-95"
                             >
-                              가져오기
+                              {t('btn_import', activeLocale)}
                             </button>
                           </div>
                         </div>
@@ -2611,9 +2631,9 @@ function LocalSignboardContent() {
             {vaultTab === 'sync' && (
               <div className="space-y-5 animate-in fade-in duration-200">
                 <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
-                  <h4 className="text-sm font-bold text-white mb-1.5">여러 기기 연결 (싱크)</h4>
+                  <h4 className="text-sm font-bold text-white mb-1.5">{t('sync_tab_title', activeLocale)}</h4>
                   <p className="text-xs text-zinc-400 leading-relaxed">
-                    현재 프리셋 세팅을 가져와 다수의 관객 스마트폰 화면들을 실시간 조종하는 멀티 싱크 방을 개설합니다.
+                    {t('sync_tab_desc', activeLocale)}
                   </p>
                 </div>
 
@@ -2622,9 +2642,9 @@ function LocalSignboardContent() {
                   <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left active:scale-[0.99] min-h-[220px]">
                     <div>
                       <span className="text-[10px] font-mono text-zinc-400 font-extrabold uppercase block tracking-wider mb-2">FREE PLAN</span>
-                      <h3 className="text-base font-black text-white mb-2">일부 제한 연동 (무료 방)</h3>
+                      <h3 className="text-base font-black text-white mb-2">{t('sync_option_free_title', activeLocale)}</h3>
                       <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                        상위 6개 프리셋만 동기화하여 무료 방을 개설합니다. (유료 폰트 및 파티클은 자동 제외)
+                        {t('sync_option_free_desc', activeLocale)}
                       </p>
                     </div>
 
@@ -2633,7 +2653,7 @@ function LocalSignboardContent() {
                       onClick={() => handleStartImportRoom('free')}
                       className="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 font-bold text-xs transition-all cursor-pointer text-center active:scale-95"
                     >
-                      무료 방 개설
+                      {t('btn_create_free_room', activeLocale)}
                     </button>
                   </div>
 
@@ -2641,9 +2661,9 @@ function LocalSignboardContent() {
                   <div className="rounded-2xl p-5 border border-white/15 bg-white/[0.02] hover:bg-white/[0.04] transition-all flex flex-col justify-between text-left relative overflow-hidden group shadow-lg shadow-white/5 active:scale-[0.99] min-h-[220px]">
                     <div>
                       <span className="text-[10px] font-mono text-white font-extrabold block tracking-wider mb-2">PREMIUM PLAN</span>
-                      <h3 className="text-base font-black text-white mb-2">무손실 100% 연동 (유료 방)</h3>
+                      <h3 className="text-base font-black text-white mb-2">{t('sync_option_premium_title', activeLocale)}</h3>
                       <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                        모든 연출 프리셋과 프리미엄 폰트, 별빛/하트 등 특수 효과를 완벽하게 유지하여 개설합니다.
+                        {t('sync_option_premium_desc', activeLocale)}
                       </p>
                     </div>
 
@@ -2652,7 +2672,7 @@ function LocalSignboardContent() {
                       onClick={() => handleStartImportRoom('premium')}
                       className="w-full py-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-extrabold text-xs transition-all cursor-pointer text-center active:scale-95"
                     >
-                      프리미엄 방 개설
+                      {t('btn_create_premium_room', activeLocale)}
                     </button>
                   </div>
                 </div>
@@ -2670,35 +2690,36 @@ function LocalSignboardContent() {
           
           {importError ? (
             <div className="max-w-md animate-in fade-in duration-300">
-              <h3 className="text-lg font-black text-white mb-2">프리셋 연동에 실패했습니다</h3>
+              <h3 className="text-lg font-black text-white mb-2">{t('import_failed_title', activeLocale)}</h3>
               <p className="text-xs text-zinc-400 leading-relaxed mb-6 font-semibold">{importError}</p>
               <button
                 onClick={() => setIsImportLoading(false)}
                 className="py-3 px-6 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-xs hover:bg-white/10 transition-all cursor-pointer"
               >
-                닫고 대시보드로 가기
+                {t('btn_close_to_dashboard', activeLocale)}
               </button>
             </div>
           ) : (
             <div className="animate-in fade-in duration-300">
-              <h3 className="text-base font-black text-white mb-2">GlowWave 기기 간 프리셋 연동</h3>
+              <h3 className="text-base font-black text-white mb-2">{t('sync_connect_title', activeLocale)}</h3>
               <p className="text-xs text-zinc-400 font-medium">{importMessage}</p>
             </div>
           )}
         </div>
       )}
-
     </div>
   );
 }
+
 
 // Local Fullscreen Signboard Component (Matches HostFullscreenSignboard exactly)
 interface LocalFullscreenSignboardProps {
   preset: Preset;
   onClose: () => void;
+  locale: Locale;
 }
 
-function LocalFullscreenSignboard({ preset, onClose }: LocalFullscreenSignboardProps) {
+function LocalFullscreenSignboard({ preset, onClose, locale }: LocalFullscreenSignboardProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const wakeLockRef = useRef<any>(null);
 
@@ -2727,7 +2748,7 @@ function LocalFullscreenSignboard({ preset, onClose }: LocalFullscreenSignboardP
   const displayText = preset.effect === 'countdown'
     ? String(countdownVal)
     : isLuckyDrawWait
-      ? '추첨 대기 중'
+      ? (t('raffle_board', locale) || '추첨 대기 중')
       : (preset.text || '');
 
   // FitText Hook
@@ -3012,12 +3033,21 @@ function LocalFullscreenSignboard({ preset, onClose }: LocalFullscreenSignboardP
           onClick={onClose}
           className="py-2.5 px-5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/10 text-white font-bold text-xs tracking-wider flex items-center gap-2 cursor-pointer shadow-lg active:scale-95 transition-all"
         >
-          닫기 (Exit)
+          {t('close', locale)} (Exit)
         </button>
       </div>
 
       <div className={`absolute bottom-6 left-6 z-40 text-[10px] text-zinc-500 transition-opacity duration-300 ${showExitBtn ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        화면을 더블클릭하거나 ESC 키를 누르면 종료됩니다.
+        {
+          {
+            ko: '화면을 더블클릭하거나 ESC 키를 누르면 종료됩니다.',
+            en: 'Double-click the screen or press ESC to exit.',
+            ja: '画面をダブルクリックするか、ESCキーを押すと終了します。',
+            es: 'Haga doble clic en la pantalla o presione ESC para salir.',
+            'zh-TW': '連按兩下螢幕或按 ESC 鍵即可退出。',
+            'zh-HK': '連按兩下螢幕或按 ESC 鍵即可退出。'
+          }[locale] || '화면을 더블클릭하거나 ESC 키를 누르면 종료됩니다.'
+        }
       </div>
 
       {/* Sleep prevention silent video loop */}
