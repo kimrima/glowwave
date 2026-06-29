@@ -90,6 +90,7 @@ export default function HostDashboard() {
   
   // Active Locale State
   const [activeLocale, setActiveLocale] = useState<Locale>('ko');
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const defaults = getDefaultsByLocale(activeLocale);
 
   // Upgrade Plan Modal States
@@ -452,7 +453,10 @@ export default function HostDashboard() {
 
       // Determine active locale
       let currentLocale: Locale = 'ko';
-      const savedLocale = localStorage.getItem(`glowwave_host_locale_${roomId}`) as Locale || localStorage.getItem('glowwave_host_locale') as Locale;
+      const savedLocale = (localStorage.getItem(`glowwave_host_locale_${roomId}`) || 
+                           localStorage.getItem('glowwave_host_locale') || 
+                           localStorage.getItem('glowwave_home_locale') || 
+                           localStorage.getItem('glowwave_local_locale')) as Locale;
       if (savedLocale && ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(savedLocale)) {
         currentLocale = savedLocale;
         setActiveLocale(savedLocale);
@@ -1046,6 +1050,8 @@ export default function HostDashboard() {
     setActiveLocale(newLocale);
     localStorage.setItem(`glowwave_host_locale_${roomId}`, newLocale);
     localStorage.setItem('glowwave_host_locale', newLocale);
+    localStorage.setItem('glowwave_home_locale', newLocale);
+    localStorage.setItem('glowwave_local_locale', newLocale);
 
     // If presets list is empty or matches defaults of any language, translate them
     const isOnlyDefaults = presets.length <= 6 && presets.every(p => 
@@ -1596,7 +1602,7 @@ export default function HostDashboard() {
       <div className="absolute bottom-[20%] right-[-10%] neon-glow-circle-2 opacity-25" />
 
       {/* Header */}
-      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-10 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
+      <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-30 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="font-black text-white tracking-tight font-outfit text-sm uppercase">GlowWave Host Remote</span>
@@ -1611,37 +1617,50 @@ export default function HostDashboard() {
             </button>
 
             {/* Language Selector Dropdown */}
-            <div className="relative group">
+            <div className="relative">
               <button
                 type="button"
+                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
                 className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold text-white cursor-pointer shadow-sm select-none transition-all"
               >
                 <Globe className="w-3.5 h-3.5 text-zinc-400" />
                 <span className="uppercase">{activeLocale}</span>
               </button>
-              <div className="absolute right-0 mt-2 w-40 rounded-2xl border border-white/10 bg-[#0c0c14]/95 backdrop-blur-lg p-1.5 shadow-2xl opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto transition-all duration-200 z-50">
-                {[
-                  { code: 'ko', label: '한국어 (KR)' },
-                  { code: 'en', label: 'English (US)' },
-                  { code: 'ja', label: '日本語 (JP)' },
-                  { code: 'es', label: 'Español (ES)' },
-                  { code: 'zh-TW', label: '繁體中文 (TW)' },
-                  { code: 'zh-HK', label: '繁體中文 (HK)' }
-                ].map((lang) => (
-                  <button
-                    key={lang.code}
-                    type="button"
-                    onClick={() => handleLocaleChange(lang.code as Locale)}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      activeLocale === lang.code
-                        ? 'bg-white text-black font-extrabold'
-                        : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    {lang.label}
-                  </button>
-                ))}
-              </div>
+              {isLangDropdownOpen && (
+                <>
+                  {/* Invisible backdrop to close the dropdown when clicking outside */}
+                  <div 
+                    className="fixed inset-0 z-40 cursor-default" 
+                    onClick={() => setIsLangDropdownOpen(false)} 
+                  />
+                  <div className="absolute right-0 mt-2 w-40 rounded-2xl border border-white/10 bg-[#0c0c14]/95 backdrop-blur-lg p-1.5 shadow-2xl transition-all duration-200 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    {[
+                      { code: 'ko', label: '한국어 (KR)' },
+                      { code: 'en', label: 'English (US)' },
+                      { code: 'ja', label: '日本語 (JP)' },
+                      { code: 'es', label: 'Español (ES)' },
+                      { code: 'zh-TW', label: '繁體中文 (TW)' },
+                      { code: 'zh-HK', label: '繁體中文 (HK)' }
+                    ].map((lang) => (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => {
+                          handleLocaleChange(lang.code as Locale);
+                          setIsLangDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          activeLocale === lang.code
+                            ? 'bg-white text-black font-extrabold'
+                            : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {lang.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
             
             <button 
@@ -2076,7 +2095,7 @@ export default function HostDashboard() {
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <Volume2 className="w-4 h-4 text-zinc-400" />
-                <h2 className="text-sm font-bold text-white">즉석 라이브 메시지 전송 (Custom Broadcast)</h2>
+                <h2 className="text-sm font-bold text-white">{t('instant_live_broadcast', activeLocale)}</h2>
               </div>
               <span className="text-[9px] font-bold font-mono text-zinc-500">LIVE CONTROLLER</span>
             </div>
@@ -2089,7 +2108,16 @@ export default function HostDashboard() {
                     type="text"
                     value={customText}
                     onChange={(e) => setCustomText(e.target.value.slice(0, 15))}
-                    placeholder="즉석 구호 입력 (예: 소리질러!)"
+                    placeholder={
+                      {
+                        ko: '즉석 구호 입력 (예: 소리질러!)',
+                        en: 'Enter instant text (e.g. Make some noise!)',
+                        ja: 'スローガン入力 (例：声を出せ！)',
+                        es: 'Texto instantáneo (ej: ¡Haz ruido!)',
+                        'zh-TW': '輸入即時文字 (例：叫出來！)',
+                        'zh-HK': '輸入即時文字 (例：叫出來！)',
+                      }[activeLocale] || '즉석 구호 입력 (예: 소리질러!)'
+                    }
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-white text-sm font-semibold"
                     maxLength={15}
                   />
@@ -2105,7 +2133,7 @@ export default function HostDashboard() {
                     
                     const customPreset: Preset = {
                       bg_color: customBgColor,
-                      text: customText.trim() || (customEffect === 'luckydraw_wait' ? '당첨!' : 'GLOW WAVE'),
+                      text: customText.trim() || (customEffect === 'luckydraw_wait' ? t('raffle_win', activeLocale) : 'GLOW WAVE'),
                       text_color: customTextColor,
                       effect: customEffect,
                       speed: calculatedSpeed,
@@ -2119,7 +2147,7 @@ export default function HostDashboard() {
                   }}
                   className="btn-primary h-[48px] px-6 rounded-xl text-xs font-black flex items-center justify-center cursor-pointer shrink-0"
                 >
-                  송출하기
+                  {t('broadcast', activeLocale)}
                 </button>
               </div>
 
@@ -2130,7 +2158,7 @@ export default function HostDashboard() {
                   
                   {/* 배경 테마 */}
                   <div className="lg:col-span-4 flex flex-col gap-2">
-                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">배경 테마</span>
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">{t('bg_color', activeLocale)}</span>
                     <div className="flex flex-wrap items-center gap-2 bg-black/45 p-2 rounded-xl border border-white/5 min-h-12">
                       {[
                         '#EF4444', '#3B82F6', '#10B981', '#8B5CF6', '#F97316', '#EC4899', '#FFFFFF', '#0B0B0F'
@@ -2216,7 +2244,7 @@ export default function HostDashboard() {
 
                   {/* 글자 색상 */}
                   <div className="lg:col-span-4 flex flex-col gap-2">
-                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">글자 색상</span>
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">{t('text_color', activeLocale)}</span>
                     <div className="flex flex-wrap items-center gap-2 bg-black/45 p-2 rounded-xl border border-white/5 min-h-12">
                       {[
                         '#FFFFFF', '#000000', '#FFD700', '#EF4444', '#10B981', '#3B82F6'
@@ -2300,7 +2328,18 @@ export default function HostDashboard() {
                   {/* 글자 크기 */}
                   <div className="lg:col-span-4 flex flex-col gap-2">
                     <div className="flex justify-between text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">
-                      <span>글자 크기</span>
+                      <span>
+                        {
+                          {
+                            ko: '글자 크기',
+                            en: 'Text Size',
+                            ja: '文字サイズ',
+                            es: 'Tamaño de texto',
+                            'zh-TW': '文字大小',
+                            'zh-HK': '文字大小',
+                          }[activeLocale] || '글자 크기'
+                        }
+                      </span>
                       <span className="text-indigo-400 font-extrabold">{customFontSize}%</span>
                     </div>
                     <div className="flex items-center bg-black/45 px-3 rounded-xl border border-white/5 h-12">
@@ -2320,7 +2359,18 @@ export default function HostDashboard() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-5 border-t border-white/5">
                   {/* 글꼴 스타일 */}
                   <div className="lg:col-span-6 flex flex-col gap-2">
-                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">글꼴 스타일</span>
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">
+                      {
+                        {
+                          ko: '글꼴 스타일',
+                          en: 'Font Style',
+                          ja: 'フォントスタイル',
+                          es: 'Estilo de fuente',
+                          'zh-TW': '字型樣式',
+                          'zh-HK': '字型樣식',
+                        }[activeLocale] || '글꼴 스타일'
+                      }
+                    </span>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 items-center">
                       {getLocalizedFonts(activeLocale).map((item) => {
                         const isPremium = item.val === 'neon' || item.val === 'pixel' || item.val === 'plump';
@@ -2352,14 +2402,25 @@ export default function HostDashboard() {
 
                   {/* 모션 효과 */}
                   <div className="lg:col-span-6 flex flex-col gap-2">
-                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">모션 효과</span>
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">
+                      {
+                        {
+                          ko: '모션 효과',
+                          en: 'Motion Effect',
+                          ja: 'モーション効果',
+                          es: 'Efecto de movimiento',
+                          'zh-TW': '動態效果',
+                          'zh-HK': '動態效果',
+                        }[activeLocale] || '모션 효과'
+                      }
+                    </span>
                     <div className="grid grid-cols-5 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 h-12 items-center">
                       {[
-                        { val: 'none', label: '정적' },
-                        { val: 'blink', label: '깜빡' },
-                        { val: 'marquee', label: '흐름' },
-                        { val: 'countdown', label: '타이머' },
-                        { val: 'luckydraw_wait', label: '추첨' }
+                        { val: 'none', label: t('static', activeLocale) },
+                        { val: 'blink', label: t('blink', activeLocale) },
+                        { val: 'marquee', label: t('scroll', activeLocale) },
+                        { val: 'countdown', label: t('timer', activeLocale) },
+                        { val: 'luckydraw_wait', label: t('raffle', activeLocale) }
                       ].map((item) => (
                         <button
                           type="button"
@@ -2385,13 +2446,56 @@ export default function HostDashboard() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-5 border-t border-white/5">
                   {/* 특수 효과 */}
                   <div className="lg:col-span-12 flex flex-col gap-2">
-                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">특수 효과</span>
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">{t('special_effect', activeLocale)}</span>
                     <div className="grid grid-cols-4 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 items-center min-h-12">
                       {[
-                        { val: 'none', label: '없음' },
-                        { val: 'hearts', label: '하트', isPremium: true },
-                        { val: 'confetti', label: '꽃가루', isPremium: true },
-                        { val: 'stars', label: '별빛', isPremium: true }
+                        {
+                          val: 'none',
+                          label: {
+                            ko: '없음',
+                            en: 'None',
+                            ja: 'なし',
+                            es: 'Ninguno',
+                            'zh-TW': '無',
+                            'zh-HK': '無',
+                          }[activeLocale] || '없음'
+                        },
+                        {
+                          val: 'hearts',
+                          label: {
+                            ko: '하트',
+                            en: 'Hearts',
+                            ja: 'ハート',
+                            es: 'Corazones',
+                            'zh-TW': '愛心',
+                            'zh-HK': '愛心',
+                          }[activeLocale] || '하트',
+                          isPremium: true
+                        },
+                        {
+                          val: 'confetti',
+                          label: {
+                            ko: '꽃가루',
+                            en: 'Confetti',
+                            ja: '紙吹雪',
+                            es: 'Confeti',
+                            'zh-TW': '紙花',
+                            'zh-HK': '紙花',
+                          }[activeLocale] || '꽃가루',
+                          isPremium: true
+                        },
+                        {
+                          val: 'stars',
+                          label: {
+                            ko: '별빛',
+                            en: 'Stars',
+                            ja: '星空',
+                            es: 'Estrellas',
+                            'zh-TW': '星光',
+                            'zh-HK': '星光',
+                          }[activeLocale] || '별빛',
+                          isPremium: true
+                        }
                       ].map((item) => (
                         <button
                           type="button"

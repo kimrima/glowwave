@@ -44,7 +44,9 @@ export default function Home() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const savedLocale = localStorage.getItem('glowwave_home_locale') as Locale;
+      const savedLocale = (localStorage.getItem('glowwave_home_locale') || 
+                           localStorage.getItem('glowwave_host_locale') || 
+                           localStorage.getItem('glowwave_local_locale')) as Locale;
       if (savedLocale && ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(savedLocale)) {
         setActiveLocale(savedLocale);
       } else {
@@ -66,6 +68,7 @@ export default function Home() {
     setActiveLocale(newLocale);
     localStorage.setItem('glowwave_home_locale', newLocale);
     localStorage.setItem('glowwave_host_locale', newLocale);
+    localStorage.setItem('glowwave_local_locale', newLocale);
   };
 
   const formatTimeLeft = (detail: RoomDetail) => {
