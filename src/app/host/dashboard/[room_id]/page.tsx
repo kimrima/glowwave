@@ -1799,24 +1799,59 @@ export default function HostDashboard() {
         <div className="glass-effect rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 bg-[#12121a] border border-white/5">
           <div className="flex flex-wrap items-center gap-6">
             <div>
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">방 코드</span>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">
+                {
+                  {
+                    ko: '방 코드',
+                    en: 'Room Code',
+                    ja: 'ルームコード',
+                    es: 'Código de sala',
+                    'zh-TW': '房號',
+                    'zh-HK': '房號'
+                  }[activeLocale] || '방 코드'
+                }
+              </span>
               <span className="text-xl font-mono font-black text-white select-all">{roomId}</span>
             </div>
             
             <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
             
             <div>
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">실시간 접속자</span>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">
+                {
+                  {
+                    ko: '실시간 접속자',
+                    en: 'Spectators',
+                    ja: 'リアルタイム接続者',
+                    es: 'Espectadores',
+                    'zh-TW': '即時人數',
+                    'zh-HK': '即時人數'
+                  }[activeLocale] || '실시간 접속자'
+                }
+              </span>
               <span className="text-xl font-black text-white flex items-baseline gap-1">
                 <span>{activeParticipants}</span>
-                <span className="text-[10px] text-zinc-500 font-bold">/ {room?.max_participants}명</span>
+                <span className="text-[10px] text-zinc-500 font-bold">
+                  {activeLocale === 'ko' ? `/ ${room?.max_participants}명` : `/ ${room?.max_participants}`}
+                </span>
               </span>
             </div>
 
             <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
 
             <div>
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">사용 중인 요금제</span>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">
+                {
+                  {
+                    ko: '사용 중인 요금제',
+                    en: 'Active Plan',
+                    ja: '利用中のプラン',
+                    es: 'Plan Activo',
+                    'zh-TW': '使用中方案',
+                    'zh-HK': '使用中方案'
+                  }[activeLocale] || '사용 중인 요금제'
+                }
+              </span>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-white/5 uppercase border border-white/5">
                   {room?.tier}
@@ -1830,7 +1865,16 @@ export default function HostDashboard() {
                     }}
                     className="text-[9px] font-bold text-indigo-400 hover:text-indigo-300 cursor-pointer transition-colors"
                   >
-                    업그레이드
+                    {
+                      {
+                        ko: '업그레이드',
+                        en: 'Upgrade Plan',
+                        ja: 'アップグレード',
+                        es: 'Actualizar',
+                        'zh-TW': '升級方案',
+                        'zh-HK': '升級方案'
+                      }[activeLocale] || '업그레이드'
+                    }
                   </button>
                 )}
               </div>
@@ -1840,10 +1884,30 @@ export default function HostDashboard() {
               <>
                 <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
                 <div>
-                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">방 비밀번호</span>
+                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">
+                    {
+                      {
+                        ko: '방 비밀번호',
+                        en: 'Room Passcode',
+                        ja: 'ルーム暗証番号',
+                        es: 'Clave de sala',
+                        'zh-TW': '房間密碼',
+                        'zh-HK': '房間密碼'
+                      }[activeLocale] || '방 비밀번호'
+                    }
+                  </span>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-[#ffffff]/[0.03] border border-white/5 font-mono">
-                      {room.passcode ? room.passcode : '설정 없음'}
+                      {room.passcode ? room.passcode : (
+                        {
+                          ko: '설정 없음',
+                          en: 'Not Set',
+                          ja: '設定なし',
+                          es: 'Sin configurar',
+                          'zh-TW': '未設定',
+                          'zh-HK': '未設定'
+                        }[activeLocale] || '설정 없음'
+                      )}
                     </span>
                     <button
                       type="button"
@@ -1854,7 +1918,16 @@ export default function HostDashboard() {
                       }}
                       className="text-[9px] font-bold text-indigo-400 hover:text-indigo-300 cursor-pointer transition-colors"
                     >
-                      설정/변경
+                      {
+                        {
+                          ko: '설정/변경',
+                          en: 'Set/Change',
+                          ja: '設定/変更',
+                          es: 'Configurar',
+                          'zh-TW': '設定/變更',
+                          'zh-HK': '設定/變更'
+                        }[activeLocale] || '설정/변경'
+                      }
                     </button>
                   </div>
                 </div>
@@ -1865,7 +1938,18 @@ export default function HostDashboard() {
 
             <div className="flex items-center gap-3">
               <div>
-                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">남은 시간</span>
+                <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">
+                  {
+                    {
+                      ko: '남은 시간',
+                      en: 'Time Remaining',
+                      ja: '残り時間',
+                      es: 'Tiempo Restante',
+                      'zh-TW': '剩餘時間',
+                      'zh-HK': '剩餘時間'
+                    }[activeLocale] || '남은 시간'
+                  }
+                </span>
                 <span className={`text-xs sm:text-sm font-black font-mono tracking-tight block mt-1 ${
                   timeRemaining === '만료됨' || timeRemaining.startsWith('0시간') || timeRemaining.startsWith('1시간') || timeRemaining.startsWith('2시간')
                     ? 'text-red-500 animate-pulse' 
@@ -1893,7 +1977,18 @@ export default function HostDashboard() {
                     : 'border-white/10 text-zinc-400 hover:text-white hover:bg-white/5 hover:border-white/20'
                 }`}
               >
-                <span>시간 연장</span>
+                <span>
+                  {
+                    {
+                      ko: '시간 연장',
+                      en: 'Extend Time',
+                      ja: '時間を延長',
+                      es: 'Extender Tiempo',
+                      'zh-TW': '延長時間',
+                      'zh-HK': '延長時間'
+                    }[activeLocale] || '시간 연장'
+                  }
+                </span>
                 {(timeRemaining === '만료됨' || timeRemaining.startsWith('0시간') || timeRemaining.startsWith('1시간') || timeRemaining.startsWith('2시간')) && (
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
                 )}
@@ -1902,14 +1997,36 @@ export default function HostDashboard() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">시스템 연결 상태</span>
+            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">
+              {
+                {
+                  ko: '시스템 연결 상태',
+                  en: 'System Connection',
+                  ja: 'システム接続状態',
+                  es: 'Conexión del Sistema',
+                  'zh-TW': '系統連線狀態',
+                  'zh-HK': '系統連線狀態'
+                }[activeLocale] || '시스템 연결 상태'
+              }
+            </span>
             {channelStatus === 'connected' ? (
               <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/30 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)]">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                <span>연결됨</span>
+                <span>
+                  {
+                    {
+                      ko: '연결됨',
+                      en: 'Connected',
+                      ja: '接続済み',
+                      es: 'Conectado',
+                      'zh-TW': '已連線',
+                      'zh-HK': '已連線'
+                    }[activeLocale] || '연결됨'
+                  }
+                </span>
               </div>
             ) : (
               <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-950/30 border border-amber-500/30 text-amber-400 text-xs font-bold tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(245,158,11,0.15)]">
@@ -1917,7 +2034,18 @@ export default function HostDashboard() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
                 </span>
-                <span>연결 중</span>
+                <span>
+                  {
+                    {
+                      ko: '연결 중',
+                      en: 'Connecting',
+                      ja: '接続中',
+                      es: 'Conectando',
+                      'zh-TW': '連線中',
+                      'zh-HK': '連線中'
+                    }[activeLocale] || '연결 중'
+                  }
+                </span>
               </div>
             )}
           </div>
@@ -2147,7 +2275,29 @@ export default function HostDashboard() {
                         }
                       }}
                       className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/20 text-white/50 hover:text-white hover:bg-black/50 transition-all z-20 cursor-pointer shadow-sm border border-white/5"
-                      title={activeCategory === 'custom' ? "수정" : "내 프리셋으로 가져와 편집"}
+                      title={
+                        activeCategory === 'custom'
+                          ? (
+                              {
+                                ko: '수정',
+                                en: 'Edit',
+                                ja: '編集',
+                                es: 'Editar',
+                                'zh-TW': '編輯',
+                                'zh-HK': '編輯'
+                              }[activeLocale] || '수정'
+                            )
+                          : (
+                              {
+                                ko: '내 프리셋으로 가져와 편집',
+                                en: 'Import to My Presets and Edit',
+                                ja: 'マイプリセットにインポートして編集',
+                                es: 'Importar a mis ajustes y editar',
+                                'zh-TW': '匯入到我的預設並編輯',
+                                'zh-HK': '匯入到我的預設並編輯'
+                              }[activeLocale] || '내 프리셋으로 가져와 편집'
+                            )
+                      }
                     >
                       <Edit3 className="w-3 h-3" />
                     </button>
@@ -2170,7 +2320,14 @@ export default function HostDashboard() {
                     // Else, open edit drawer to add custom preset
                     const newPreset: Preset = {
                       bg_color: '#EF4444',
-                      text: '새 연출',
+                      text: {
+                        ko: '새 연출',
+                        en: 'New Preset',
+                        ja: '新規演出',
+                        es: 'Nueva escena',
+                        'zh-TW': '新演出',
+                        'zh-HK': '新演出'
+                      }[activeLocale] || '새 연출',
                       text_color: '#FFFFFF',
                       effect: 'none',
                       speed: 1000
@@ -2182,7 +2339,18 @@ export default function HostDashboard() {
                 >
                   <div className="flex items-center gap-1.5">
                     <Plus className="w-4 h-4" />
-                    <span className="text-sm font-bold">새 연출 추가</span>
+                    <span className="text-sm font-bold">
+                      {
+                        {
+                          ko: '새 연출 추가',
+                          en: 'Add New Preset',
+                          ja: '新規演出を追加',
+                          es: 'Agregar escena',
+                          'zh-TW': '新增演出',
+                          'zh-HK': '新增演出'
+                        }[activeLocale] || '새 연출 추가'
+                      }
+                    </span>
                   </div>
                 </div>
               )}
@@ -2470,7 +2638,7 @@ export default function HostDashboard() {
                         }[activeLocale] || '글꼴 스타일'
                       }
                     </span>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 items-center">
+                    <div className="flex flex-wrap gap-1 bg-black/45 p-1.5 rounded-xl border border-white/5 items-center">
                       {getLocalizedFonts(activeLocale).map((item) => {
                         const isPremium = item.val === 'neon' || item.val === 'pixel' || item.val === 'plump';
                         return (
@@ -2479,7 +2647,7 @@ export default function HostDashboard() {
                             key={item.val}
                             onClick={() => handleFontSelect(item.val as any, false)}
                             style={{ fontFamily: item.fontFamily, fontWeight: item.fontWeight as any }}
-                            className={`py-2 px-0.5 rounded-lg text-xs md:text-sm transition-all cursor-pointer whitespace-nowrap ${
+                            className={`flex-1 min-w-[70px] sm:min-w-[85px] py-2 px-1 rounded-lg text-xs md:text-sm transition-all cursor-pointer whitespace-nowrap text-center ${
                               customFontFamily === item.val
                                 ? 'bg-white text-black font-extrabold shadow-sm'
                                 : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
@@ -2644,7 +2812,18 @@ export default function HostDashboard() {
               {customEffect === 'countdown' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-5 border-t border-white/5 animate-in fade-in duration-200">
                   <div className="flex flex-col gap-2">
-                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">카운트다운 시간</span>
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">
+                      {
+                        {
+                          ko: '카운트다운 시간',
+                          en: 'Countdown Time',
+                          ja: 'カウントダウン時間',
+                          es: 'Tiempo de cuenta regresiva',
+                          'zh-TW': '倒數時間',
+                          'zh-HK': '倒數時間'
+                        }[activeLocale] || '카운트다운 시간'
+                      }
+                    </span>
                     <div className="grid grid-cols-5 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 h-12 items-center">
                       {[3, 5, 10, 30, 60].map((sec) => (
                         <button
@@ -2657,13 +2836,24 @@ export default function HostDashboard() {
                               : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                           }`}
                         >
-                          {sec}초
+                          {activeLocale === 'ko' ? `${sec}초` : (activeLocale === 'ja' ? `${sec}秒` : `${sec}s`)}
                         </button>
                       ))}
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">종료 시 출력 문구</span>
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">
+                      {
+                        {
+                          ko: '종료 시 출력 문구',
+                          en: 'Message on End',
+                          ja: '終了時の表示テキスト',
+                          es: 'Texto al finalizar',
+                          'zh-TW': '結束時顯示文字',
+                          'zh-HK': '結束時顯示文字'
+                        }[activeLocale] || '종료 시 출력 문구'
+                      }
+                    </span>
                     <input
                       type="text"
                       value={customResultText}
@@ -2680,18 +2870,67 @@ export default function HostDashboard() {
               {customEffect === 'luckydraw_wait' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-5 border-t border-white/5 animate-in fade-in duration-200">
                   <div className="flex flex-col gap-2">
-                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">당첨 시 문구 (즉석 구호 입력란에서 수정)</span>
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">
+                      {
+                        {
+                          ko: '당첨 시 문구 (즉석 구호 입력란에서 수정)',
+                          en: 'Winner Message (edit in instant slogan input)',
+                          ja: '当選時の表示テキスト（即座スローガン入力欄で編集）',
+                          es: 'Texto de ganador (editar en entrada de eslogan)',
+                          'zh-TW': '中獎時文字（在即時口號輸入框修改）',
+                          'zh-HK': '中獎時文字（在即時口號輸入框修改）'
+                        }[activeLocale] || '당첨 시 문구 (즉석 구호 입력란에서 수정)'
+                      }
+                    </span>
                     <div className="flex items-center bg-black/30 px-4 rounded-xl border border-white/5 h-12 text-xs md:text-sm text-zinc-400 font-semibold select-none">
-                      {customText || '당첨!'} (당첨)
+                      {customText || (
+                        {
+                          ko: '당첨!',
+                          en: 'Winner!',
+                          ja: '当選！',
+                          es: '¡Ganador!',
+                          'zh-TW': '中獎！',
+                          'zh-HK': '中獎！'
+                        }[activeLocale] || '당첨!'
+                      )} ({
+                        {
+                          ko: '당첨',
+                          en: 'Winner',
+                          ja: '当選',
+                          es: 'Ganador',
+                          'zh-TW': '中獎',
+                          'zh-HK': '中獎'
+                        }[activeLocale] || '당첨'
+                      })
                     </div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">낙첨 시 출력 문구</span>
+                    <span className="text-xs md:text-sm font-extrabold text-zinc-400 tracking-wider">
+                      {
+                        {
+                          ko: '낙첨 시 출력 문구',
+                          en: 'Loser Message',
+                          ja: '落選時の表示テキスト',
+                          es: 'Texto de perdedor',
+                          'zh-TW': '未中獎時顯示文字',
+                          'zh-HK': '未中獎時顯示文字'
+                        }[activeLocale] || '낙첨 시 출력 문구'
+                      }
+                    </span>
                     <input
                       type="text"
                       value={customResultText}
                       onChange={(e) => setCustomResultText(e.target.value.slice(0, 15))}
-                      placeholder="아쉽네요! 다음 기회에.."
+                      placeholder={
+                        {
+                          ko: '아쉽네요! 다음 기회에..',
+                          en: 'Better luck next time!',
+                          ja: '残念！次の機会に..',
+                          es: '¡Suerte para la próxima!',
+                          'zh-TW': '真可惜！下次還有機會..',
+                          'zh-HK': '真可惜！下次還有機會..'
+                        }[activeLocale] || '아쉽네요! 다음 기회에..'
+                      }
                       className="w-full bg-black/45 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white text-xs md:text-sm font-semibold h-12"
                       maxLength={15}
                     />
@@ -2703,9 +2942,29 @@ export default function HostDashboard() {
               {(customEffect === 'blink' || customEffect === 'marquee' || customEffect === 'luckydraw_wait') && (
                 <div className="pt-4 border-t border-white/5 animate-in fade-in duration-200">
                   <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
-                    <span>전송 애니메이션 속도 조절</span>
+                    <span>
+                      {
+                        {
+                          ko: '전송 애니메이션 속도 조절',
+                          en: 'Animation Speed Adjust',
+                          ja: 'アニメーション速度調節',
+                          es: 'Ajustar velocidad de animación',
+                          'zh-TW': '動畫速度調整',
+                          'zh-HK': '動畫速度調整'
+                        }[activeLocale] || '전송 애니메이션 속도 조절'
+                      }
+                    </span>
                     <span className="text-indigo-400 font-extrabold">
-                      속도: {customSpeed}%
+                      {
+                        {
+                          ko: '속도',
+                          en: 'Speed',
+                          ja: '速度',
+                          es: 'Velocidad',
+                          'zh-TW': '速度',
+                          'zh-HK': '速度'
+                        }[activeLocale] || '속도'
+                      }: {customSpeed}%
                     </span>
                   </div>
                   <input
@@ -2730,7 +2989,18 @@ export default function HostDashboard() {
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
               <h2 className="text-sm font-bold text-white uppercase tracking-wider">LIVE ON AIR</h2>
             </div>
-            <p className="text-[11px] text-zinc-500 mb-4 self-start">현재 모든 관객 화면에 송출 중인 실시간 연출 화면입니다.</p>
+            <p className="text-[11px] text-zinc-500 mb-4 self-start">
+              {
+                {
+                  ko: '현재 모든 관객 화면에 송출 중인 실시간 연출 화면입니다.',
+                  en: 'This is the live screen currently broadcasting to all spectators.',
+                  ja: '현재 모든 관객 화면에 송출 중인 실시간 연출 화면입니다.',
+                  es: 'Esta es la pantalla en vivo que se está transmitiendo a todos los espectadores.',
+                  'zh-TW': '目前正在向所有觀眾畫面播出的即時演出畫面。',
+                  'zh-HK': '目前正在向所有觀眾畫面播出的即時演出畫面。'
+                }[activeLocale] || '현재 모든 관객 화면에 송출 중인 실시간 연출 화면입니다.'
+              }
+            </p>
             <div className="w-full max-w-[420px] flex flex-col items-center">
               <div className="w-full flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl relative group overflow-hidden">
                 <LandscapePhoneMockup preset={currentBroadcastPreset} />
@@ -2742,7 +3012,16 @@ export default function HostDashboard() {
                   className="hidden lg:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-2 text-white font-bold text-xs cursor-pointer"
                 >
                   <Maximize2 className="w-5 h-5 text-indigo-400" />
-                  내 화면에 전체화면으로 띄우기
+                  {
+                    {
+                      ko: '내 화면에 전체화면으로 띄우기',
+                      en: 'Show in Fullscreen on My Device',
+                      ja: '自分の画面에全画面で表示',
+                      es: 'Mostrar en pantalla completa en mi dispositivo',
+                      'zh-TW': '在我的螢幕上以全螢幕顯示',
+                      'zh-HK': '在我的螢幕上以全螢幕顯示'
+                    }[activeLocale] || '내 화면에 전체화면으로 띄우기'
+                  }
                 </button>
               </div>
 
@@ -2752,7 +3031,18 @@ export default function HostDashboard() {
                 className="mt-3 w-full py-2 px-4 rounded-xl bg-white/5 hover:bg-white/10 active:scale-[0.99] text-white font-bold text-xs tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer border border-white/10 hover:border-white/20 shadow-md"
               >
                 <Maximize2 className="w-3.5 h-3.5" />
-                <span>내 기기를 전광판으로 사용 (전체화면)</span>
+                <span>
+                  {
+                    {
+                      ko: '내 기기를 전광판으로 사용 (전체화면)',
+                      en: 'Use My Device as Signboard (Fullscreen)',
+                      ja: '自分の機器を電光掲示板として使用 (全画面)',
+                      es: 'Usar mi dispositivo como cartelera (Pantalla completa)',
+                      'zh-TW': '將我的裝置當作電子看板使用（全螢幕）',
+                      'zh-HK': '將我的裝置當作電子看板使用（全螢幕）'
+                    }[activeLocale] || '내 기기를 전광판으로 사용 (전체화면)'
+                  }
+                </span>
               </button>
             </div>
 
@@ -2763,10 +3053,30 @@ export default function HostDashboard() {
                   onClick={handleDrawWinner}
                   className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black text-xs tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl shadow-amber-500/20 animate-bounce cursor-pointer border border-amber-300"
                 >
-                  <span>결과 발표 (추첨 완료)</span>
+                  <span>
+                    {
+                      {
+                        ko: '결과 발표 (추첨 완료)',
+                        en: 'Announce Result (Draw Winner)',
+                        ja: '結果発表 (抽選完了)',
+                        es: 'Anunciar resultado (Sorteo finalizado)',
+                        'zh-TW': '公佈結果（抽籤完成）',
+                        'zh-HK': '公佈結果（抽籤完成）'
+                      }[activeLocale] || '결과 발표 (추첨 완료)'
+                    }
+                  </span>
                 </button>
                 <p className="text-[10px] text-zinc-400 text-center leading-relaxed font-semibold">
-                  ⚠️ [결과 발표] 버튼을 누르면 현재 접속해 있는 관객 중 <b>단 1명만</b> 무작위로 당첨자로 선정되어 해당 관객 스마트폰 화면에 당첨 문구가 나타나며, 나머지 관객 화면에는 꽝 문구가 나타납니다.
+                  {
+                    {
+                      ko: <>⚠️ [결과 발표] 버튼을 누르면 현재 접속해 있는 관객 중 <b>단 1명만</b> 무작위로 당첨자로 선정되어 해당 관객 스마트폰 화면에 당첨 문구가 나타나며, 나머지 관객 화면에는 꽝 문구가 나타납니다.</>,
+                      en: <>⚠️ Clicking the [Announce Result] button will randomly select <b>only 1 winner</b> among connected spectators, displaying the winning slogan on their smartphone screen, while others see a loser message.</>,
+                      ja: <>⚠️ [結果発表] ボタンを押すと、現在接続中の観客の中から<b>たった1人だけ</b>がランダムで当選者に選ばれ、その観客のスマホ画面に当選メッセージが表示され、残りの観客には落選メッセージが表示されます。</>,
+                      es: <>⚠️ Al presionar el botón [Anunciar resultado], se seleccionará aleatoriamente a <b>solo 1 ganador</b> entre los espectadores conectados, mostrando el texto de ganador en su pantalla, mientras que los demás verán el texto de perdedor.</>,
+                      'zh-TW': <>⚠️ 按下 [公佈結果] 按鈕，系統將在目前連線的觀眾中隨機抽取 <b>僅限 1 名</b> 中獎者，並在該觀眾的手機螢幕上顯示中獎文字，其餘觀眾螢幕上顯示未中獎文字。</>,
+                      'zh-HK': <>⚠️ 按下 [公佈結果] 按鈕，系統將在目前連線의觀眾中隨機抽取 <b>僅限 1 名</b> 中獎者，並在該觀眾的手機螢幕上顯示中獎文字，其餘觀眾螢幕上顯示未中獎文字。</>
+                    }[activeLocale] || <>⚠️ [결과 발표] 버튼을 누르면 현재 접속해 있는 관객 중 <b>단 1명만</b> 무작위로 당첨자로 선정되어 해당 관객 스마트폰 화면에 당첨 문구가 나타나며, 나머지 관객 화면에는 꽝 문구가 나타납니다.</>
+                  }
                 </p>
               </div>
             )}
@@ -2775,8 +3085,30 @@ export default function HostDashboard() {
           {/* Admission QR Card */}
           <div className="glass-effect rounded-2xl p-4 sm:p-6 flex flex-col items-center text-center bg-[#12121a]">
             <Share2 className="w-6 h-6 text-indigo-400 mb-3" />
-            <h2 className="text-lg font-bold text-white mb-1">관객 입장안내 (Admission QR)</h2>
-            <p className="text-xs text-zinc-500 mb-6">관객들이 카메라로 스캔하여 즉시 입장할 수 있도록 스크린에 QR을 띄우거나 링크를 복사해 주세요.</p>
+            <h2 className="text-lg font-bold text-white mb-1">
+              {
+                {
+                  ko: '관객 입장안내 (Admission QR)',
+                  en: 'Spectator Entry Guide (Admission QR)',
+                  ja: '観客入場案内 (入場QR)',
+                  es: 'Guía de Entrada de Espectadores (Admission QR)',
+                  'zh-TW': '觀眾入場指南（入場 QR）',
+                  'zh-HK': '觀眾入場指南（入場 QR）'
+                }[activeLocale] || '관객 입장안내 (Admission QR)'
+              }
+            </h2>
+            <p className="text-xs text-zinc-500 mb-6">
+              {
+                {
+                  ko: '관객들이 카메라로 스캔하여 즉시 입장할 수 있도록 스크린에 QR을 띄우거나 링크를 복사해 주세요.',
+                  en: 'Display the QR on the screen or copy the link so spectators can scan it and enter immediately.',
+                  ja: '観客이カメラでスキャンして即時入場できるよう、スクリーンにQRを表示するかリンクをコピーしてください。',
+                  es: 'Muestre el QR en la pantalla o copie el enlace para que los espectadores puedan escanearlo e ingresar de inmediato.',
+                  'zh-TW': '請將 QR 顯示在螢幕上或複製連結，以便觀眾使用相機掃描即時入場。',
+                  'zh-HK': '請將 QR 顯示在螢幕上或複製連結，以便觀眾使用相機掃描即時入場。'
+                }[activeLocale] || '관객들이 카메라로 스캔하여 즉시 입장할 수 있도록 스크린에 QR을 띄우거나 링크를 복사해 주세요.'
+              }
+            </p>
 
             {/* QR Wrapper */}
             <div className="bg-white p-3 rounded-2xl mb-6 shadow-xl relative group">
@@ -2796,7 +3128,7 @@ export default function HostDashboard() {
               <button 
                 onClick={copyAudienceUrl}
                 className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-all"
-                title="복사"
+                title={t('copy', activeLocale)}
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
               </button>
@@ -2807,21 +3139,48 @@ export default function HostDashboard() {
                 onClick={copyAudienceUrl}
                 className="w-full py-3 rounded-xl border border-white/5 bg-white/5 font-semibold text-white text-xs hover:bg-white/10 transition-all flex items-center justify-center cursor-pointer"
               >
-                관객용 URL 링크 복사하기
+                {
+                  {
+                    ko: '관객용 URL 링크 복사하기',
+                    en: 'Copy Spectator URL Link',
+                    ja: '観客用URLリンクをコピー',
+                    es: 'Copiar enlace URL de espectadores',
+                    'zh-TW': '複製觀眾用 URL 連結',
+                    'zh-HK': '複製觀眾用 URL 連結'
+                  }[activeLocale] || '관객용 URL 링크 복사하기'
+                }
               </button>
               
               <button
                 onClick={() => window.open(`/host/present/${roomId}?token=${token}`, '_blank')}
                 className="w-full py-3 rounded-xl bg-indigo-500 font-bold text-white text-xs hover:bg-indigo-600 transition-all flex items-center justify-center cursor-pointer shadow-lg shadow-indigo-500/10"
               >
-                새 창으로 관객 안내 스크린 열기
+                {
+                  {
+                    ko: '새 창으로 관객 안내 스크린 열기',
+                    en: 'Open Spectator Entry Screen in New Window',
+                    ja: '別ウィンドウで観客案内画面を開く',
+                    es: 'Abrir pantalla de guía en nueva ventana',
+                    'zh-TW': '在新視窗開啟觀眾引導畫面',
+                    'zh-HK': '在新視窗開啟觀眾引導畫面'
+                  }[activeLocale] || '새 창으로 관객 안내 스크린 열기'
+                }
               </button>
               
               <button
                 onClick={downloadQrCode}
                 className="w-full py-3 rounded-xl border border-white/10 bg-white/10 font-semibold text-white text-xs hover:bg-white/15 transition-all flex items-center justify-center cursor-pointer"
               >
-                입장 QR 이미지 다운로드
+                {
+                  {
+                    ko: '입장 QR 이미지 다운로드',
+                    en: 'Download Admission QR Image',
+                    ja: '入場QR画像をダウンロード',
+                    es: 'Descargar imagen de QR de entrada',
+                    'zh-TW': '下載入場 QR 圖片',
+                    'zh-HK': '下載入場 QR 圖片'
+                  }[activeLocale] || '입장 QR 이미지 다운로드'
+                }
               </button>
             </div>
           </div>
@@ -2830,11 +3189,53 @@ export default function HostDashboard() {
           <div className="glass-effect rounded-2xl p-6 text-xs text-zinc-500 leading-normal flex flex-col gap-2 bg-[#12121a]">
             <div className="font-bold text-zinc-400 mb-1 flex items-center gap-1.5">
               <Smartphone className="w-3.5 h-3.5" />
-              현장 운영 팁 (Host Guide)
+              {
+                {
+                  ko: '현장 운영 팁 (Host Guide)',
+                  en: 'On-site Operations Tips (Host Guide)',
+                  ja: '現場運営のコツ (Host Guide)',
+                  es: 'Consejos de Operación en el Sitio (Host Guide)',
+                  'zh-TW': '現場營運提示（Host Guide）',
+                  'zh-HK': '現場營運提示（Host Guide）'
+                }[activeLocale] || '현장 운영 팁 (Host Guide)'
+              }
             </div>
-            <div>1. 관객 입장 QR 코드를 무대 전광판이나 입구 배너에 크게 확대해서 게시하세요.</div>
-            <div>2. 행사 시작 전 관객에게 스마트폰 화면이 꺼지지 않도록 접속 화면을 그대로 켜두라 말씀하세요. W3C Wake Lock API가 작동하고 있어 열려 있는 한 꺼지지 않습니다.</div>
-            <div>3. 동시 접속 수가 요금제 한도에 도달하면 신규 접속 관객에게 대기 화면이 표시됩니다.</div>
+            <div>
+              {
+                {
+                  ko: '1. 관객 입장 QR 코드를 무대 전광판이나 입구 배너에 크게 확대해서 게시하세요.',
+                  en: '1. Display the spectator entry QR code largely on the stage screen or entrance banners.',
+                  ja: '1. 観客入場QRコードをステージの電光掲시판이나入口のバナーに大きく拡大して掲示してください。',
+                  es: '1. Muestre el código QR de entrada de espectadores en grande en la pantalla del escenario o banners de entrada.',
+                  'zh-TW': '1. 請將觀眾入場 QR 碼放大顯示在舞台電子看板或入口橫幅上。',
+                  'zh-HK': '1. 請將觀眾入場 QR 碼放大顯示在舞台電子看板或入口橫幅上。'
+                }[activeLocale] || '1. 관객 입장 QR 코드를 무대 전광판이나 입구 배너에 크게 확대해서 게시하세요.'
+              }
+            </div>
+            <div>
+              {
+                {
+                  ko: '2. 행사 시작 전 관객에게 스마트폰 화면이 꺼지지 않도록 접속 화면을 그대로 켜두라 말씀하세요. W3C Wake Lock API가 작동하고 있어 열려 있는 한 꺼지지 않습니다.',
+                  en: '2. Ask spectators to keep the page open so their screen stays active. The W3C Wake Lock API will keep it on.',
+                  ja: '2. イベント開始前に、観客へスマホ画面が消えないように接続画面をそのまま開いておくようお伝えください。W3C Wake Lock APIが動作しているため、開いている限り消えません。',
+                  es: '2. Pida a los espectadores que mantengan la página abierta para que su pantalla siga activa. W3C Wake Lock API la mantendrá encendida.',
+                  'zh-TW': '2. 活動開始前，請告訴觀眾保持連線畫面開啟以防止手機螢幕變暗。由於 W3C Wake Lock API 正在運作，只要畫面開啟就不會自動關閉。',
+                  'zh-HK': '2. 活動開始前，請告訴觀眾保持連線畫面開啟以防止手機螢幕變暗。由於 W3C Wake Lock API 正在運作，只要畫面開啟就不會自動關閉。'
+                }[activeLocale] || '2. 행사 시작 전 관객에게 스마트폰 화면이 꺼지지 않도록 접속 화면을 그대로 켜두라 말씀하세요. W3C Wake Lock API가 작동하고 있어 열려 있는 한 꺼지지 않습니다.'
+              }
+            </div>
+            <div>
+              {
+                {
+                  ko: '3. 동시 접속 수가 요금제 한도에 도달하면 신규 접속 관객에게 대기 화면이 표시됩니다.',
+                  en: '3. If the maximum connection limit is reached, a waiting screen will display for new spectators.',
+                  ja: '3. 同時接続数がプランの制限に達すると、新規接続の観客には待機画面が表示されます。',
+                  es: '3. Si se alcanza el límite de conexiones simultáneas, se mostrará una pantalla de espera para los nuevos espectadores.',
+                  'zh-TW': '3. 當同時間連線人數達到方案上限時，新連線的觀眾將會看到排隊等待畫面。',
+                  'zh-HK': '3. 當同時間連線人數達到方案上限時，新連線的觀眾將會看到排隊等待畫面。'
+                }[activeLocale] || '3. 동시 접속 수가 요금제 한도에 도달하면 신규 접속 관객에게 대기 화면이 표시됩니다.'
+              }
+            </div>
           </div>
         </div>
 
@@ -2860,11 +3261,30 @@ export default function HostDashboard() {
             {/* Floating Preview Card on Left for Desktop/Tablet Screens */}
             <div className="hidden lg:block absolute right-[calc(100%+24px)] top-6 z-20 w-[420px]">
               <div className="glass-effect rounded-2xl p-5 bg-[#12121a]/95 border border-white/10 shadow-2xl flex flex-col items-center">
-                <span className="text-[10px] font-black font-mono text-indigo-400 uppercase mb-3 tracking-widest">실시간 연출 미리보기 (Floating Sync)</span>
+                <span className="text-[10px] font-black font-mono text-indigo-400 uppercase mb-3 tracking-widest">
+                  {
+                    {
+                      ko: '실시간 연출 미리보기 (Floating Sync)',
+                      en: 'Realtime Preview (Floating Sync)',
+                      ja: 'リアルタイムプレビュー (Floating Sync)',
+                      es: 'Vista previa en tiempo real (Floating Sync)',
+                      'zh-TW': '即時效果預覽 (Floating Sync)',
+                      'zh-HK': '即時效果預覽 (Floating Sync)'
+                    }[activeLocale] || '실시간 연출 미리보기 (Floating Sync)'
+                  }
+                </span>
                 <LandscapePhoneMockup preset={editingPreset} />
                 <div className="mt-3.5 text-[9.5px] text-zinc-400 text-center font-semibold leading-normal">
-                  수정창 좌측 빈 공간에 연출 화면이 고정됩니다.<br/>
-                  스크롤을 내려도 항상 변경 사항을 실시간으로 확인할 수 있습니다.
+                  {
+                    {
+                      ko: <>수정창 좌측 빈 공간에 연출 화면이 고정됩니다.<br/>스크롤을 내려도 항상 변경 사항을 실시간으로 확인할 수 있습니다.</>,
+                      en: <>The preview screen is pinned to the left of the editing window.<br/>You can verify changes in real-time even when scrolling.</>,
+                      ja: <>編集ウィンドウの左側の空きスペースに演出画面が固定されます。<br/>スクロールしても常に変更内容をリアルタイムで確認できます。</>,
+                      es: <>La pantalla de vista previa está fijada a la izquierda de la ventana de edición.<br/>Puede ver los cambios en tiempo real incluso al desplazarse.</>,
+                      'zh-TW': <>預覽畫面會固定在編輯視窗左側的空白處。<br/>即使向下滾動，也能隨時即時確認變更內容。</>,
+                      'zh-HK': <>預覽畫面會固定在編輯視窗左側的空白處。<br/>即使向下滾動，也能隨時即時確認變更內容。</>
+                    }[activeLocale] || <>수정창 좌측 빈 공간에 연출 화면이 고정됩니다.<br/>스크롤을 내려도 항상 변경 사항을 실시간으로 확인할 수 있습니다.</>
+                  }
                 </div>
               </div>
             </div>
@@ -2875,7 +3295,28 @@ export default function HostDashboard() {
               <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <span>
-                    {editingPresetIndex >= presets.length ? '새 커스텀 프리셋 추가' : `프리셋 P${editingPresetIndex + 1} 편집`}
+                    {editingPresetIndex >= presets.length 
+                      ? (
+                          {
+                            ko: '새 커스텀 프리셋 추가',
+                            en: 'Add Custom Preset',
+                            ja: 'カスタムプリセットを追加',
+                            es: 'Agregar ajuste personalizado',
+                            'zh-TW': '新增自訂預設',
+                            'zh-HK': '新增自訂預設'
+                          }[activeLocale] || '새 커스텀 프리셋 추가'
+                        )
+                      : (
+                          {
+                            ko: `프리셋 P${editingPresetIndex + 1} 편집`,
+                            en: `Edit Preset P${editingPresetIndex + 1}`,
+                            ja: `プリセット P${editingPresetIndex + 1} を編集`,
+                            es: `Editar Ajuste P${editingPresetIndex + 1}`,
+                            'zh-TW': `編輯預設 P${editingPresetIndex + 1}`,
+                            'zh-HK': `編輯預設 P${editingPresetIndex + 1}`
+                          }[activeLocale] || `프리셋 P${editingPresetIndex + 1} 편집`
+                        )
+                    }
                   </span>
                 </h3>
                 <button 
@@ -2888,7 +3329,18 @@ export default function HostDashboard() {
 
               {/* Landscape Live Preview Mockup Inside Drawer */}
               <div className="p-6 border-b border-white/5 bg-black/40 flex flex-col items-center lg:hidden">
-                <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-3 tracking-wider">실시간 연출 미리보기 (Mockup Sync)</span>
+                <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-3 tracking-wider">
+                  {
+                    {
+                      ko: '실시간 연출 미리보기 (Mockup Sync)',
+                      en: 'Realtime Preview (Mockup Sync)',
+                      ja: 'リアルタイムプレビュー (Mockup Sync)',
+                      es: 'Vista previa en tiempo real (Mockup Sync)',
+                      'zh-TW': '即時效果預覽 (Mockup Sync)',
+                      'zh-HK': '即時效果預覽 (Mockup Sync)'
+                    }[activeLocale] || '실시간 연출 미리보기 (Mockup Sync)'
+                  }
+                </span>
                 <LandscapePhoneMockup preset={editingPreset} />
               </div>
 
@@ -2896,7 +3348,18 @@ export default function HostDashboard() {
               <div className="p-6 flex flex-col gap-5">
                 {/* Output Text */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">출력 문구</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                    {
+                      {
+                        ko: '출력 문구',
+                        en: 'Text Output',
+                        ja: '表示テキスト',
+                        es: 'Texto de salida',
+                        'zh-TW': '顯示文字',
+                        'zh-HK': '顯示文字'
+                      }[activeLocale] || '출력 문구'
+                    }
+                  </label>
                   <input
                     type="text"
                     value={editingPreset.text || ''}
@@ -2908,7 +3371,18 @@ export default function HostDashboard() {
 
                 {/* Background Color Grid */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">배경 색상</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                    {
+                      {
+                        ko: '배경 색상',
+                        en: 'Background Color',
+                        ja: '背景色',
+                        es: 'Color de fondo',
+                        'zh-TW': '背景顏色',
+                        'zh-HK': '背景顏色'
+                      }[activeLocale] || '배경 색상'
+                    }
+                  </label>
                   <div className="grid grid-cols-6 gap-2">
                     {[
                       '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
@@ -2940,7 +3414,7 @@ export default function HostDashboard() {
                       <div 
                         className="h-9 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center" 
                         style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
-                        title="커스텀 색상 선택"
+                        title={t('custom_color_select', activeLocale)}
                       >
                         <input
                           type="color"
@@ -2959,14 +3433,25 @@ export default function HostDashboard() {
 
                 {/* 모션 효과 */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">모션 효과</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                    {
+                      {
+                        ko: '모션 효과',
+                        en: 'Motion Effect',
+                        ja: 'モーション効果',
+                        es: 'Efecto de movimiento',
+                        'zh-TW': '動態效果',
+                        'zh-HK': '動態效果'
+                      }[activeLocale] || '모션 효과'
+                    }
+                  </label>
                   <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 h-11 items-center font-medium">
                     {[
-                      { val: 'none', label: '정적' },
-                      { val: 'blink', label: '깜빡' },
-                      { val: 'marquee', label: '흐름' },
-                      { val: 'countdown', label: '타이머' },
-                      { val: 'luckydraw_wait', label: '추첨' }
+                      { val: 'none', label: t('static', activeLocale) },
+                      { val: 'blink', label: t('blink', activeLocale) },
+                      { val: 'marquee', label: t('scroll', activeLocale) },
+                      { val: 'countdown', label: t('timer', activeLocale) },
+                      { val: 'luckydraw_wait', label: t('raffle', activeLocale) }
                     ].map((item) => (
                       <button
                         type="button"
@@ -3010,7 +3495,18 @@ export default function HostDashboard() {
                 {/* Secondary Background Color Grid for Duo-Color Flash */}
                 {(editingPreset.effect === 'blink' || editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw') && (
                   <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
-                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">보조 배경 색상 (듀오 사이키/당첨 번쩍임/경계선 색상용)</label>
+                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                      {
+                        {
+                          ko: '보조 배경 색상 (듀오 사이키/당첨 번쩍임/경계선 색상용)',
+                          en: 'Secondary Background Color (duo flash/raffle border)',
+                          ja: '補助背景色 (デュオ点滅/当選エフェクト/境界線用)',
+                          es: 'Color de fondo secundario (doble parpadeo/borde de sorteo)',
+                          'zh-TW': '輔助背景顏色（雙色閃爍/中獎特效/邊框用）',
+                          'zh-HK': '輔助背景顏色（雙色閃爍/中獎特效/邊框用）'
+                        }[activeLocale] || '보조 배경 색상 (듀오 사이키/당첨 번쩍임/경계선 색상용)'
+                      }
+                    </label>
                     <div className="flex gap-2 mb-3">
                       <button
                         type="button"
@@ -3026,7 +3522,18 @@ export default function HostDashboard() {
                         }`}
                       >
                         <Slash className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                        <span>단색 (부드러운 깜빡이)</span>
+                        <span>
+                          {
+                            {
+                              ko: '단색 (부드러운 깜빡이)',
+                              en: 'Solid Color (smooth fade)',
+                              ja: '単色 (スムーズ点滅)',
+                              es: 'Color sólido (desvanecimiento suave)',
+                              'zh-TW': '單色（平滑閃爍）',
+                              'zh-HK': '單色（平滑閃爍）'
+                            }[activeLocale] || '단색 (부드러운 깜빡이)'
+                          }
+                        </span>
                       </button>
                     </div>
                     <div className="grid grid-cols-6 gap-2">
@@ -3060,7 +3567,7 @@ export default function HostDashboard() {
                         <div 
                           className="h-9 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center" 
                           style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
-                          title="커스텀 보조 색상 선택"
+                          title={t('custom_secondary_color_select', activeLocale)}
                         >
                           <input
                             type="color"
@@ -3076,7 +3583,16 @@ export default function HostDashboard() {
                       )}
                     </div>
                     <p className="text-[10px] text-zinc-500 mt-2.5 leading-relaxed font-medium">
-                      💡 <b>단색 (부드러운 깜빡이)</b> 선택 시, 배경색이 서서히 밝아지고 어두워지는 자연스러운 페이드 점멸이 작동합니다. 보조 배경 색상을 지정하면 두 색상이 정밀 교대하며 강력하게 번쩍이는 <b>사이렌(사이키) 효과</b>가 적용됩니다.
+                      {
+                        {
+                          ko: <>💡 <b>단색 (부드러운 깜빡이)</b> 선택 시, 배경색이 서서히 밝아지고 어두워지는 자연스러운 페이드 점멸이 작동합니다. 보조 배경 색상을 지정하면 두 색상이 정밀 교대하며 강력하게 번쩍이는 <b>사이렌(사이키) 효과</b>가 적용됩니다.</>,
+                          en: <>💡 Selecting <b>Solid Color (smooth fade)</b> triggers a smooth fading pulse. Specifying a secondary background color applies a high-energy <b>siren (psyche) strobe effect</b> alternating between both colors.</>,
+                          ja: <>💡 <b>単色 (スムーズ点滅)</b> を選択すると、背景色が徐々に明暗を繰り返す自然なフェード点滅が動作します。補助背景色を指定すると、2つの色が交互に強力に点滅する<b>サイレン（サイケ）効果</b>が適用されます。</>,
+                          es: <>💡 Al seleccionar <b>Color sólido (desvanecimiento suave)</b>, se activa un pulso de desvanecimiento suave. Al especificar un color de fondo secundario, se aplica un efecto estroboscópico de alta energía <b>sirena (psique)</b> que alterna entre ambos colores.</>,
+                          'zh-TW': <>💡 選擇 <b>單色（平滑閃爍）</b> 時，背景色會呈現漸明漸暗的自然淡入淡出閃爍。若指定輔助背景色，則會交替顯示兩色，套用強烈的<b>警示燈（閃光）效果</b>。</>,
+                          'zh-HK': <>💡 選擇 <b>單色（平滑閃爍）</b> 時，背景色會呈現漸明漸暗的自然淡入淡出閃爍。若指定輔助背景色，則會交替顯示兩色，套用強烈的<b>警示燈（閃光）效果</b>。</>
+                        }[activeLocale] || <>💡 <b>단색 (부드러운 깜빡이)</b> 선택 시, 배경색이 서서히 밝아지고 어두워지는 자연스러운 페이드 점멸이 작동합니다. 보조 배경 색상을 지정하면 두 색상이 정밀 교대하며 강력하게 번쩍이는 <b>사이렌(사이키) 효과</b>가 적용됩니다.</>
+                      }
                     </p>
                   </div>
                 )}
@@ -3085,9 +3601,29 @@ export default function HostDashboard() {
                 {(editingPreset.effect === 'blink' || editingPreset.effect === 'marquee' || editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw') && (
                   <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
                     <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
-                      <span>애니메이션 속도 조절</span>
+                      <span>
+                        {
+                          {
+                            ko: '애니메이션 속도 조절',
+                            en: 'Animation Speed Adjust',
+                            ja: 'アニメーション速度調節',
+                            es: 'Ajustar velocidad de animación',
+                            'zh-TW': '動畫速度調整',
+                            'zh-HK': '動畫速度調整'
+                          }[activeLocale] || '애니메이션 속도 조절'
+                        }
+                      </span>
                       <span className="text-indigo-400 font-extrabold">
-                        속도: {getSpeedFactor(editingPreset.effect, editingPreset.speed)}%
+                        {
+                          {
+                            ko: '속도',
+                            en: 'Speed',
+                            ja: '速度',
+                            es: 'Velocidad',
+                            'zh-TW': '速度',
+                            'zh-HK': '速度'
+                          }[activeLocale] || '속도'
+                        }: {getSpeedFactor(editingPreset.effect, editingPreset.speed)}%
                       </span>
                     </div>
                     <input
@@ -3109,7 +3645,18 @@ export default function HostDashboard() {
                 {editingPreset.effect === 'countdown' && (
                   <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200 flex flex-col gap-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">카운트다운 지속 초 (Seconds)</label>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                        {
+                          {
+                            ko: '카운트다운 지속 초 (Seconds)',
+                            en: 'Countdown Duration (Seconds)',
+                            ja: 'カウントダウン継続秒数 (Seconds)',
+                            es: 'Duración de la cuenta regresiva (segundos)',
+                            'zh-TW': '倒數持續秒數 (Seconds)',
+                            'zh-HK': '倒數持續秒數 (Seconds)'
+                          }[activeLocale] || '카운트다운 지속 초 (Seconds)'
+                        }
+                      </label>
                       <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-full border border-white/5">
                         {[3, 5, 10, 30, 60].map((sec) => (
                           <button
@@ -3122,14 +3669,25 @@ export default function HostDashboard() {
                                 : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                             }`}
                           >
-                            {sec}초
+                            {activeLocale === 'ko' ? `${sec}초` : (activeLocale === 'ja' ? `${sec}秒` : `${sec}s`)}
                           </button>
                         ))}
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">종료 시 출력 문구 (Result Text)</label>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                        {
+                          {
+                            ko: '종료 시 출력 문구 (Result Text)',
+                            en: 'Message on End (Result Text)',
+                            ja: '終了時の表示テキスト (Result Text)',
+                            es: 'Texto al finalizar (Result Text)',
+                            'zh-TW': '結束時顯示文字 (Result Text)',
+                            'zh-HK': '結束時顯示文字 (Result Text)'
+                          }[activeLocale] || '종료 시 출력 문구 (Result Text)'
+                        }
+                      </label>
                       <input
                         type="text"
                         value={editingPreset.result_text || ''}
@@ -3146,35 +3704,97 @@ export default function HostDashboard() {
                 {(editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw') && (
                   <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200 flex flex-col gap-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">당첨 시 출력 문구 (Winner Text)</label>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                        {
+                          {
+                            ko: '당첨 시 출력 문구 (Winner Text)',
+                            en: 'Winner Message (Winner Text)',
+                            ja: '当選時の表示テキスト (Winner Text)',
+                            es: 'Texto de ganador (Winner Text)',
+                            'zh-TW': '中獎時顯示文字 (Winner Text)',
+                            'zh-HK': '中獎時顯示文字 (Winner Text)'
+                          }[activeLocale] || '당첨 시 출력 문구 (Winner Text)'
+                        }
+                      </label>
                       <input
                         type="text"
                         value={editingPreset.text || ''}
                         onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, 15) }))}
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
                         maxLength={15}
-                        placeholder="당첨!"
+                        placeholder={
+                          {
+                            ko: '당첨!',
+                            en: 'Winner!',
+                            ja: '当選！',
+                            es: '¡Ganador!',
+                            'zh-TW': '中獎！',
+                            'zh-HK': '中獎！'
+                          }[activeLocale] || '당첨!'
+                        }
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">낙첨 시 출력 문구 (Loser Text)</label>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                        {
+                          {
+                            ko: '낙첨 시 출력 문구 (Loser Text)',
+                            en: 'Loser Message (Loser Text)',
+                            ja: '落選時の表示テキスト (Loser Text)',
+                            es: 'Texto de perdedor (Loser Text)',
+                            'zh-TW': '未中獎時顯示文字 (Loser Text)',
+                            'zh-HK': '未中獎時顯示文字 (Loser Text)'
+                          }[activeLocale] || '낙첨 시 출력 문구 (Loser Text)'
+                        }
+                      </label>
                       <input
                         type="text"
                         value={editingPreset.result_text || ''}
                         onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, 15) }))}
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
                         maxLength={15}
-                        placeholder="아쉽네요! 다음 기회에.."
+                        placeholder={
+                          {
+                            ko: '아쉽네요! 다음 기회에..',
+                            en: 'Better luck next time!',
+                            ja: '残念！次の機会に..',
+                            es: '¡Suerte para la próxima!',
+                            'zh-TW': '真可惜！下次還有機會..',
+                            'zh-HK': '真可惜！下次還有機會..'
+                          }[activeLocale] || '아쉽네요! 다음 기회에..'
+                        }
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">당첨 인원 수 (Winners Count)</label>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                        {
+                          {
+                            ko: '당첨 인원 수 (Winners Count)',
+                            en: 'Winners Count',
+                            ja: '当選人数 (Winners Count)',
+                            es: 'Número de ganadores',
+                            'zh-TW': '中獎人數 (Winners Count)',
+                            'zh-HK': '中獎人數 (Winners Count)'
+                          }[activeLocale] || '당첨 인원 수 (Winners Count)'
+                        }
+                      </label>
                       {room?.tier === 'free' ? (
                         <div className="flex items-center gap-2 bg-black/40 border border-white/5 rounded-lg px-4 py-2.5 text-xs text-zinc-500 font-semibold select-none">
                           <Lock className="w-3.5 h-3.5" />
-                          <span>1명 (무료 테스트 플랜 고정)</span>
+                          <span>
+                            {
+                              {
+                                ko: '1명 (무료 테스트 플랜 고정)',
+                                en: '1 Person (Locked on Free Trial)',
+                                ja: '1人 (無料テストプラン固定)',
+                                es: '1 Persona (Bloqueado en prueba gratuita)',
+                                'zh-TW': '1人（免費測試方案固定）',
+                                'zh-HK': '1人（免費測試方案固定）'
+                              }[activeLocale] || '1명 (무료 테스트 플랜 고정)'
+                            }
+                          </span>
                         </div>
                       ) : (
                         <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-full border border-white/5">
@@ -3189,13 +3809,28 @@ export default function HostDashboard() {
                                   : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                               }`}
                             >
-                              {num}명
+                              {activeLocale === 'ko' ? `${num}명` : (
+                                activeLocale === 'ja' ? `${num}人` : (
+                                  activeLocale === 'es' ? `${num} pers.` : `${num} Pax`
+                                )
+                              )}
                             </button>
                           ))}
                         </div>
                       )}
                       {room?.tier === 'free' && (
-                        <p className="text-[9px] text-zinc-500 mt-1 font-medium">💡 기본형(Lite) 이상의 요금제로 업그레이드하면 최대 10명까지 다중 추첨이 가능합니다.</p>
+                        <p className="text-[9px] text-zinc-500 mt-1 font-medium">
+                          {
+                            {
+                              ko: '💡 기본형(Lite) 이상의 요금제로 업그레이드하면 최대 10명까지 다중 추첨이 가능합니다.',
+                              en: '💡 Upgrade to Lite or higher plan to draw up to 10 winners simultaneously.',
+                              ja: '💡 ライト(Lite)以上のプランにアップグレードすると、最大10人まで同時抽選が可能です。',
+                              es: '💡 Actualice al plan Lite o superior para sortear hasta 10 ganadores simultáneamente.',
+                              'zh-TW': '💡 升級至基本型（Lite）以上方案，即可進行最多 10 人的多重抽籤。',
+                              'zh-HK': '💡 升級至基本型（Lite）以上方案，即可進行最多 10 人的多重抽籤。'
+                            }[activeLocale] || '💡 기본형(Lite) 이상의 요금제로 업그레이드하면 최대 10명까지 다중 추첨이 가능합니다.'
+                          }
+                        </p>
                       )}
                     </div>
                   </div>
@@ -3203,7 +3838,18 @@ export default function HostDashboard() {
 
                 {/* 글자 색상 */}
                 <div className="pt-3 border-t border-white/5">
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 색상</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                    {
+                      {
+                        ko: '글자 색상',
+                        en: 'Text Color',
+                        ja: '文字色',
+                        es: 'Color del texto',
+                        'zh-TW': '文字顏色',
+                        'zh-HK': '文字顏色'
+                      }[activeLocale] || '글자 색상'
+                    }
+                  </label>
                   <div className="grid grid-cols-3 gap-2 h-10 items-center font-medium">
                     <button
                       type="button"
@@ -3215,7 +3861,18 @@ export default function HostDashboard() {
                       }`}
                     >
                       <span className="w-3 h-3 rounded-full bg-white border border-black/20" />
-                      <span>흰색</span>
+                      <span>
+                        {
+                          {
+                            ko: '흰색',
+                            en: 'White',
+                            ja: '白',
+                            es: 'Blanco',
+                            'zh-TW': '白色',
+                            'zh-HK': '白色'
+                          }[activeLocale] || '흰색'
+                        }
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -3227,7 +3884,18 @@ export default function HostDashboard() {
                       }`}
                     >
                       <span className="w-3 h-3 rounded-full bg-black border border-white/20" />
-                      <span>검은색</span>
+                      <span>
+                        {
+                          {
+                            ko: '검은색',
+                            en: 'Black',
+                            ja: '黒',
+                            es: 'Negro',
+                            'zh-TW': '黑色',
+                            'zh-HK': '黑色'
+                          }[activeLocale] || '검은색'
+                        }
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -3239,15 +3907,37 @@ export default function HostDashboard() {
                       }`}
                     >
                       <span className="w-3 h-3 rounded-full bg-[#FFD700] border border-white/10" />
-                      <span>노란색</span>
+                      <span>
+                        {
+                          {
+                            ko: '노란색',
+                            en: 'Yellow',
+                            ja: '黄',
+                            es: 'Amarillo',
+                            'zh-TW': '黃色',
+                            'zh-HK': '黃色'
+                          }[activeLocale] || '노란색'
+                        }
+                      </span>
                     </button>
                   </div>
                 </div>
 
                 {/* 글꼴 스타일 */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
-                  <div className="grid grid-cols-3 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 items-center font-medium">
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                    {
+                      {
+                        ko: '글꼴 스타일',
+                        en: 'Font Style',
+                        ja: 'フォントスタイル',
+                        es: 'Estilo de fuente',
+                        'zh-TW': '字型樣式',
+                        'zh-HK': '字型樣式'
+                      }[activeLocale] || '글꼴 스타일'
+                    }
+                  </label>
+                  <div className="flex flex-wrap gap-1 bg-black/40 p-1 rounded-xl border border-white/5 items-center font-medium">
                     {getLocalizedFonts(activeLocale).map((item) => {
                       const isPremium = item.val === 'neon' || item.val === 'pixel' || item.val === 'plump';
                       return (
@@ -3256,7 +3946,7 @@ export default function HostDashboard() {
                           key={item.val}
                           onClick={() => handleFontSelect(item.val as any, true)}
                           style={{ fontFamily: item.fontFamily, fontWeight: item.fontWeight as any }}
-                          className={`py-2 px-1 rounded-lg text-xs transition-all cursor-pointer ${
+                          className={`flex-1 min-w-[75px] py-2 px-1 rounded-lg text-xs transition-all cursor-pointer text-center ${
                             (editingPreset.font_family || 'sans-thin') === item.val
                               ? 'bg-white text-black shadow-sm font-extrabold'
                               : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
@@ -3278,7 +3968,18 @@ export default function HostDashboard() {
 
                 {/* 특수 효과 */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">특수 효과</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                    {
+                      {
+                        ko: '특수 효과',
+                        en: 'Special Effect',
+                        ja: '特殊効果',
+                        es: 'Efecto especial',
+                        'zh-TW': '特殊效果',
+                        'zh-HK': '特殊效果'
+                      }[activeLocale] || '특수 효과'
+                    }
+                  </label>
                   <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 h-11 items-center font-medium font-sans">
                     {[
                       { val: 'none', label: '없음' },
@@ -3331,7 +4032,18 @@ export default function HostDashboard() {
                 {/* 글자 크기 */}
                 <div>
                   <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                    <span>글자 크기</span>
+                    <span>
+                      {
+                        {
+                          ko: '글자 크기',
+                          en: 'Font Size',
+                          ja: 'フォントサイズ',
+                          es: 'Tamaño de fuente',
+                          'zh-TW': '字型大小',
+                          'zh-HK': '字型大小'
+                        }[activeLocale] || '글자 크기'
+                      }
+                    </span>
                     <span className="text-indigo-400 font-extrabold">{editingPreset.font_size || 100}%</span>
                   </div>
                   <div className="flex items-center h-10">
@@ -3383,7 +4095,16 @@ export default function HostDashboard() {
                     }}
                     className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-bold hover:bg-white/10 transition-all text-xs cursor-pointer"
                   >
-                    저장만 하기
+                    {
+                      {
+                        ko: '저장만 하기',
+                        en: 'Save Only',
+                        ja: '保存のみ',
+                        es: 'Solo guardar',
+                        'zh-TW': '僅儲存',
+                        'zh-HK': '僅儲存'
+                      }[activeLocale] || '저장만 하기'
+                    }
                   </button>
                   <button
                     type="button"
@@ -3413,7 +4134,16 @@ export default function HostDashboard() {
                     }}
                     className="btn-primary flex-1 py-3 rounded-xl text-xs font-bold cursor-pointer"
                   >
-                    저장 후 바로 송출
+                    {
+                      {
+                        ko: '저장 후 바로 송출',
+                        en: 'Save & Broadcast',
+                        ja: '保存して配信',
+                        es: 'Guardar y transmitir',
+                        'zh-TW': '儲存並即時傳送',
+                        'zh-HK': '儲存並即時傳送'
+                      }[activeLocale] || '저장 후 바로 송출'
+                    }
                   </button>
                 </div>
                 {editingPresetIndex === presets.length && (
@@ -3436,7 +4166,16 @@ export default function HostDashboard() {
                     }}
                     className="w-full py-2.5 rounded-xl border border-dashed border-zinc-700 bg-transparent text-zinc-400 hover:text-white hover:border-zinc-500 hover:bg-white/5 font-bold transition-all text-[11px] cursor-pointer"
                   >
-                    저장 없이 바로 송출 (1회성 송출)
+                    {
+                      {
+                        ko: '저장 없이 바로 송출 (1회성 송출)',
+                        en: 'Broadcast Without Saving (One-time)',
+                        ja: '保存せずに配信 (1回限り)',
+                        es: 'Transmitir sin guardar (Una sola vez)',
+                        'zh-TW': '不儲存直接傳送（一次性傳送）',
+                        'zh-HK': '不儲存直接傳送（一次性傳送）'
+                      }[activeLocale] || '저장 없이 바로 송출 (1회성 송출)'
+                    }
                   </button>
                 )}
               </div>
@@ -3451,7 +4190,16 @@ export default function HostDashboard() {
                     }}
                     className="text-zinc-500 hover:text-white transition-colors cursor-pointer underline underline-offset-4"
                   >
-                    기본값으로 초기화
+                    {
+                      {
+                        ko: '기본값으로 초기화',
+                        en: 'Reset to Default',
+                        ja: 'デフォルトに初期化',
+                        es: 'Restablecer a valores predeterminados',
+                        'zh-TW': '重設為預設值',
+                        'zh-HK': '重設為預設值'
+                      }[activeLocale] || '기본값으로 초기화'
+                    }
                   </button>
                 )}
 
@@ -3474,7 +4222,16 @@ export default function HostDashboard() {
                     }}
                     className="text-red-500/80 hover:text-red-400 transition-colors cursor-pointer underline underline-offset-4"
                   >
-                    이 커스텀 프리셋 삭제
+                    {
+                      {
+                        ko: '이 커스텀 프리셋 삭제',
+                        en: 'Delete Custom Preset',
+                        ja: 'このカスタムプリセットを削除',
+                        es: 'Eliminar este ajuste personalizado',
+                        'zh-TW': '刪除此自訂預設',
+                        'zh-HK': '刪除此自訂預設'
+                      }[activeLocale] || '이 커스텀 프리셋 삭제'
+                    }
                   </button>
                 )}
 
@@ -3483,7 +4240,16 @@ export default function HostDashboard() {
                   onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }}
                   className="text-zinc-500 hover:text-white transition-colors cursor-pointer underline underline-offset-4"
                 >
-                  취소
+                  {
+                    {
+                      ko: '취소',
+                      en: 'Cancel',
+                      ja: 'キャンセル',
+                      es: 'Cancelar',
+                      'zh-TW': '取消',
+                      'zh-HK': '取消'
+                    }[activeLocale] || '취소'
+                  }
                 </button>
               </div>
             </div>

@@ -1418,14 +1418,14 @@ function LocalSignboardContent() {
                         }[activeLocale] || '글꼴 스타일'
                       }
                     </span>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 bg-black/45 p-1.5 rounded-xl border border-white/5 items-center">
+                    <div className="flex flex-wrap gap-1 bg-black/45 p-1 rounded-xl border border-white/5 items-center">
                       {getLocalizedFonts(activeLocale).map((item) => (
                         <button
                           key={item.val}
                           type="button"
                           onClick={() => handleFontSelect(item.val as any, false)}
                           style={{ fontFamily: item.fontFamily, fontWeight: item.fontWeight as any }}
-                          className={`py-2 px-0.5 rounded-lg text-xs md:text-sm transition-all cursor-pointer whitespace-nowrap ${
+                          className={`flex-1 min-w-[70px] sm:min-w-[85px] py-2 px-1 rounded-lg text-xs md:text-sm transition-all cursor-pointer whitespace-nowrap text-center ${
                             customFontFamily === item.val
                               ? 'bg-white text-black font-extrabold shadow-sm'
                               : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
@@ -2179,14 +2179,14 @@ function LocalSignboardContent() {
                 {/* 글꼴 스타일 */}
                 <div>
                   <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
-                  <div className="grid grid-cols-3 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 items-center font-medium">
+                  <div className="flex flex-wrap gap-1 bg-black/40 p-1 rounded-xl border border-white/5 items-center font-medium">
                     {getLocalizedFonts(activeLocale).map((item) => (
                       <button
                         type="button"
                         key={item.val}
                         onClick={() => handleFontSelect(item.val as any, true)}
                         style={{ fontFamily: item.fontFamily, fontWeight: item.fontWeight as any }}
-                        className={`py-2 px-1 rounded-lg text-xs transition-all cursor-pointer ${
+                        className={`flex-1 min-w-[75px] py-2 px-1 rounded-lg text-xs transition-all cursor-pointer text-center ${
                           (editingPreset.font_family || 'sans-thin') === item.val
                             ? 'bg-white text-black shadow-sm font-extrabold'
                             : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
