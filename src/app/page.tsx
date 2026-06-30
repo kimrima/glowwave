@@ -382,7 +382,7 @@ export default function Home() {
 
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-white/5 bg-[#030305]/60 backdrop-blur-md pt-[calc(env(safe-area-inset-top,0px)+12px)]">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-black text-xl tracking-tight text-white font-outfit">
             <span>GlowWave</span>
           </Link>
@@ -462,7 +462,7 @@ export default function Home() {
         <div className="absolute top-[10%] left-[10%] neon-glow-circle-1" />
         <div className="absolute top-[30%] right-[10%] neon-glow-circle-2" />
         
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
           
           <div className="text-center max-w-3xl mx-auto mb-16 relative">
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-white/5 bg-white/[0.02] text-zinc-400 text-[10px] font-bold mb-6 tracking-widest uppercase font-mono">
@@ -728,7 +728,7 @@ export default function Home() {
       <section id="trial" className="py-16 md:py-24 border-t border-white/5 relative bg-black/40 bg-grid-pattern overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 neon-glow-circle-1 opacity-50" />
         
-        <div className="max-w-6xl mx-auto px-6 relative z-10">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
           <div className="text-center mb-12">
             <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 font-outfit text-gradient">{t('sim_title', activeLocale)}</h2>
             <p className="text-xs text-zinc-400 font-semibold max-w-md mx-auto leading-relaxed">{t('sim_desc', activeLocale)}</p>
@@ -878,7 +878,7 @@ export default function Home() {
 
       {/* Features Grid Section */}
       <section id="features" className="py-16 md:py-24 border-t border-white/5">
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 font-outfit text-gradient">{t('features_title', activeLocale)}</h2>
             <p className="text-xs text-zinc-400 max-w-xl mx-auto font-medium">{t('features_desc', activeLocale)}</p>
@@ -930,7 +930,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-white/5 bg-[#07070a] py-12">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2 font-bold text-base text-white">
             <span>GlowWave</span>
           </div>

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Sparkles, Users, Tv, RefreshCw, AlertCircle, X, ShieldAlert } from 'lucide-react';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { t, Locale } from '@/lib/translations';
 
 export default function PresentationView() {
   const params = useParams();
@@ -11,6 +12,7 @@ export default function PresentationView() {
   const rawRoomId = params.room_id as string;
   const roomId = rawRoomId ? rawRoomId.toUpperCase() : '';
 
+  const [activeLocale, setActiveLocale] = useState<Locale>('ko');
   const [loading, setLoading] = useState(true);
   const [isValidRoom, setIsValidRoom] = useState<boolean | null>(null);
   const [activeParticipants, setActiveParticipants] = useState<number>(0);
@@ -24,8 +26,28 @@ export default function PresentationView() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setOriginUrl(window.location.origin);
+
+      // Determine active locale
+      const queryLang = new URLSearchParams(window.location.search).get('lang');
+      const savedLocale = (localStorage.getItem(`glowwave_host_locale_${roomId}`) || 
+                           localStorage.getItem('glowwave_host_locale') || 
+                           localStorage.getItem('glowwave_home_locale') || 
+                           localStorage.getItem('glowwave_local_locale')) as Locale;
+      const targetLang = queryLang || savedLocale;
+      if (targetLang && ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(targetLang)) {
+        setActiveLocale(targetLang as Locale);
+      } else {
+        const navLang = navigator.language.toLowerCase();
+        let currentLocale: Locale = 'en';
+        if (navLang.startsWith('ko')) currentLocale = 'ko';
+        else if (navLang.startsWith('ja')) currentLocale = 'ja';
+        else if (navLang.startsWith('es')) currentLocale = 'es';
+        else if (navLang.startsWith('zh-tw') || navLang.startsWith('zh-cn')) currentLocale = 'zh-TW';
+        else if (navLang.startsWith('zh-hk')) currentLocale = 'zh-HK';
+        setActiveLocale(currentLocale);
+      }
     }
-  }, []);
+  }, [roomId]);
 
   useEffect(() => {
     if (!roomId) return;
@@ -145,7 +167,7 @@ export default function PresentationView() {
       <div className="min-h-screen bg-[#0B0B0F] flex items-center justify-center text-white">
         <div className="flex flex-col items-center gap-4">
           <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin" />
-          <p className="text-sm text-zinc-400 font-medium">안내 스크린 활성화 중...</p>
+          <p className="text-sm text-zinc-400 font-medium">{t('present_loading', activeLocale)}</p>
         </div>
       </div>
     );
@@ -156,13 +178,13 @@ export default function PresentationView() {
       <div className="min-h-screen bg-[#0B0B0F] text-foreground flex flex-col justify-center items-center px-6 text-center">
         <div className="glass-effect p-8 rounded-2xl max-w-md border border-red-500/10">
           <ShieldAlert className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">존재하지 않거나 만료된 방입니다</h2>
-          <p className="text-sm text-zinc-400 mb-6">입력하신 방 코드의 활성 세션 정보를 찾을 수 없습니다.</p>
+          <h2 className="text-xl font-bold text-white mb-2">{t('present_invalid_title', activeLocale)}</h2>
+          <p className="text-sm text-zinc-400 mb-6">{t('present_invalid_desc', activeLocale)}</p>
           <button 
             onClick={handleClose} 
-            className="py-3 px-6 rounded-xl bg-white text-black font-semibold text-sm hover:bg-zinc-200 transition-all"
+            className="py-3 px-6 rounded-xl bg-white text-black font-semibold text-sm hover:bg-zinc-200 transition-all cursor-pointer"
           >
-            화면 닫기
+            {t('present_btn_close', activeLocale)}
           </button>
         </div>
       </div>
@@ -181,19 +203,19 @@ export default function PresentationView() {
       {/* Top Header */}
       <header className="flex items-center justify-between z-10 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-xl tracking-tight text-white">GlowWave</span>
+          <span className="font-bold text-xl tracking-tight text-white font-outfit">GlowWave</span>
         </div>
         
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-            <span>실시간 안내 송출 중</span>
+            <span>{t('present_broadcasting', activeLocale)}</span>
           </div>
           
           <button 
             onClick={handleClose}
-            className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all"
-            title="화면 닫기"
+            className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all cursor-pointer"
+            title={t('present_btn_close', activeLocale)}
           >
             <X className="w-5 h-5" />
           </button>
@@ -205,8 +227,8 @@ export default function PresentationView() {
         <div className="glass-effect rounded-3xl p-8 max-w-lg w-full border border-white/10 shadow-2xl shadow-indigo-500/5 flex flex-col items-center gap-6">
           <div className="flex flex-col items-center gap-1">
             <Tv className="w-8 h-8 text-indigo-400 mb-1" />
-            <h1 className="text-2xl font-black tracking-tight text-white">관객 입장안내</h1>
-            <p className="text-xs text-zinc-400">카메라로 아래 QR 코드를 스캔하여 전광판에 참여하세요!</p>
+            <h1 className="text-2xl font-black tracking-tight text-white">{t('audience_entry_guide', activeLocale)}</h1>
+            <p className="text-xs text-zinc-400">{t('present_subtitle', activeLocale)}</p>
           </div>
 
           {/* QR Code */}
@@ -221,43 +243,57 @@ export default function PresentationView() {
 
           {/* Room Code Display for Manual Entry */}
           <div className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 px-4 flex flex-col items-center justify-center gap-1 font-sans">
-            <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">QR 스캔이 잘 안 되거나 너무 먼 경우</span>
+            <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{t('present_remote_title', activeLocale)}</span>
             <div className="flex flex-wrap items-center justify-center gap-4 my-1">
               <div className="flex items-center gap-2">
                 <span className="text-3xl font-black text-indigo-300 font-mono tracking-widest">{roomId}</span>
-                <span className="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 text-[10px] font-bold">입장 코드</span>
+                <span className="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 text-[10px] font-bold">{t('present_entry_code', activeLocale)}</span>
               </div>
               {passcode && (
                 <div className="flex items-center gap-2 sm:border-l sm:border-white/10 sm:pl-4">
                   <span className="text-3xl font-black text-amber-400 font-mono tracking-widest">{passcode}</span>
-                  <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold">비밀번호</span>
+                  <span className="px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 text-[10px] font-bold">{t('present_passcode', activeLocale)}</span>
                 </div>
               )}
             </div>
-            <span className="text-[10px] text-zinc-400">GlowWave 홈페이지에서 코드를 직접 입력하고 참여해 주세요!</span>
+            <span className="text-[10px] text-zinc-400">{t('present_manual_guide', activeLocale)}</span>
           </div>
 
           {/* Instructions Box */}
           <div className="w-full bg-black/40 border border-white/5 rounded-2xl p-4 flex flex-col gap-3 text-left">
             <div className="flex items-start gap-2">
               <span className="w-5 h-5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">1</span>
-              <p className="text-xs text-zinc-300">스마트폰 기본 카메라 앱을 열어 QR 코드를 비춰주세요.</p>
+              <p className="text-xs text-zinc-300">{t('present_step1', activeLocale)}</p>
             </div>
             <div className="flex items-start gap-2 border-t border-white/5 pt-2">
               <span className="w-5 h-5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">2</span>
-              <p className="text-xs text-zinc-300">접속 시 나타나는 <b>[입장하기]</b> 버튼을 누르면 전광판 화면에 동기화됩니다.</p>
+              <p className="text-xs text-zinc-300">
+                {activeLocale === 'ko' ? (
+                  <>접속 시 나타나는 <b>[입장하기]</b> 버튼을 누르면 전광판 화면에 동기화됩니다.</>
+                ) : activeLocale === 'ja' ? (
+                  <>接続時に表示される <b>【入場する】</b> ボタンを押すと、電光掲示板に同期されます。</>
+                ) : activeLocale === 'es' ? (
+                  <>Presiona el botón <b>[Entrar]</b> al conectarte para sincronizar con el letrero.</>
+                ) : (activeLocale === 'zh-TW' || activeLocale === 'zh-HK') ? (
+                  <>點擊載入後出現的 <b>[進入]</b> 按鈕，即可與電子看板同步。</>
+                ) : (
+                  <>Tap the <b>[Enter]</b> button that appears upon connection to sync with the signboard.</>
+                )}
+              </p>
             </div>
             <div className="flex items-start gap-2 border-t border-white/5 pt-2">
               <span className="w-5 h-5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">3</span>
-              <p className="text-xs text-zinc-300">행사 진행 중 화면이 꺼지지 않도록 탭 상태를 계속 유지해 주세요.</p>
+              <p className="text-xs text-zinc-300">{t('present_step3', activeLocale)}</p>
             </div>
           </div>
 
           {/* Live Participant Count */}
           <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-500/10 border border-indigo-500/20">
             <Users className="w-4 h-4 text-indigo-300" />
-            <span className="text-xs text-zinc-400 font-semibold">현재 입장한 관객 수:</span>
-            <span className="text-sm font-black text-indigo-300 font-mono animate-pulse">{activeParticipants}명</span>
+            <span className="text-xs text-zinc-400 font-semibold">{t('present_active_users', activeLocale)}</span>
+            <span className="text-sm font-black text-indigo-300 font-mono animate-pulse">
+              {activeParticipants}{t('present_user_unit', activeLocale)}
+            </span>
           </div>
         </div>
       </main>

@@ -112,6 +112,45 @@ const DEFAULT_PRESET_TEXTS = new Set([
   '單色', '呼吸閃爍', '狂歡霓虹', '中獎！', '滾動跑馬燈', '倒數計時'
 ]);
 
+const DEFAULT_PRESET_MAP: Record<string, number> = {
+  // Index 0: Solid Color
+  '단색': 0, 'Solid Color': 0, '単色': 0, 'Color Sólido': 0, '單色': 0, '앰비언트': 0,
+  // Index 1: Soft Blink
+  '부드러운 깜빡이': 1, 'Soft Blink': 1, 'ゆっくり点滅': 1, 'Parpadeo Suave': 1, '呼吸閃爍': 1,
+  // Index 2: Psychedelic
+  '사이키': 2, 'Psychedelic': 2, 'サイケデリック': 2, '¡A BAILAR!': 2, '狂歡霓虹': 2,
+  // Index 3: Winner!
+  '당첨!': 3, 'Winner!': 3, 'アタリ！': 3, '¡GANADOR!': 3, '中獎！': 3,
+  // Index 4: Scroll
+  '스크롤': 4, 'Scroll': 4, 'Desplazar': 4, '滾動跑馬燈': 4,
+  // Index 5: Countdown
+  '카운트다운': 5, 'Countdown': 5, 'カウントダウン': 5, 'Cuenta Atrás': 5, '倒數計時': 5
+};
+
+const translateDefaultPresets = (presetsList: Preset[], targetLocale: Locale): Preset[] => {
+  const targetDefaults = getDefaultsByLocale(targetLocale);
+  const emojiRegex = /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+  return presetsList.map(p => {
+    const cleaned = p.text.replace(emojiRegex, '').trim();
+    if (cleaned in DEFAULT_PRESET_MAP) {
+      const idx = DEFAULT_PRESET_MAP[cleaned];
+      const defaultPreset = targetDefaults[idx];
+      if (defaultPreset) {
+        return {
+          ...p,
+          text: defaultPreset.text,
+          result_text: (p.effect === 'countdown' && (!p.result_text || p.result_text === 'START' || p.result_text === '시작' || p.result_text === 'スタート' || p.result_text === '¡EMPEZAR!' || p.result_text === '開始'))
+            ? defaultPreset.result_text
+            : (p.effect === 'luckydraw_wait' && (!p.result_text || p.result_text === '아쉽네요! 다음 기회에..' || p.result_text === 'Good luck next time!' || p.result_text === '残念！また今度ね..' || p.result_text === '¡Suerte la próxima!' || p.result_text === '沒中，再接再厲！' || p.result_text === '冇中，下次好運！'))
+              ? defaultPreset.result_text
+              : p.result_text
+        };
+      }
+    }
+    return p;
+  });
+};
+
 function LocalSignboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -453,12 +492,13 @@ function LocalSignboardContent() {
         localStorage.setItem('glowwave_local_presets', JSON.stringify(presetsList));
       }
 
-      // If presets list consists only of defaults of any language, translate them to currentLocale defaults
-      const isOnlyDefaults = presetsList.length <= 6 && presetsList.every(p => DEFAULT_PRESET_TEXTS.has(p.text.trim()));
-      if (isOnlyDefaults || presetsList.length === 0) {
+      // Automatically translate matching default presets to currentLocale
+      if (presetsList.length === 0) {
         presetsList = [...localDefaults];
-        localStorage.setItem('glowwave_local_presets', JSON.stringify(presetsList));
+      } else {
+        presetsList = translateDefaultPresets(presetsList, currentLocale);
       }
+      localStorage.setItem('glowwave_local_presets', JSON.stringify(presetsList));
 
       // Migrate presets
       const emojiRegex = /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
@@ -480,6 +520,25 @@ function LocalSignboardContent() {
           activePreset = JSON.parse(savedActive);
         } catch (e) {}
       }
+
+      // Translate activePreset if it is a default one
+      const activeTrimmed = activePreset.text.trim();
+      if (activeTrimmed in DEFAULT_PRESET_MAP) {
+        const idx = DEFAULT_PRESET_MAP[activeTrimmed];
+        const newDefaults = getDefaultsByLocale(currentLocale);
+        if (newDefaults[idx]) {
+          activePreset = {
+            ...activePreset,
+            text: newDefaults[idx].text,
+            result_text: (activePreset.effect === 'countdown' && (!activePreset.result_text || activePreset.result_text === 'START' || activePreset.result_text === '시작' || activePreset.result_text === 'スタート' || activePreset.result_text === '¡EMPEZAR!' || activePreset.result_text === '開始'))
+              ? newDefaults[idx].result_text
+              : (activePreset.effect === 'luckydraw_wait' && (!activePreset.result_text || activePreset.result_text === '아쉽네요! 다음 기회에..' || activePreset.result_text === 'Good luck next time!' || activePreset.result_text === '残念！また今度ね..' || activePreset.result_text === '¡Suerte la próxima!' || activePreset.result_text === '沒中，再接再厲！' || activePreset.result_text === '冇中，下次好運！'))
+                ? newDefaults[idx].result_text
+                : activePreset.result_text
+          };
+        }
+      }
+
       setCurrentBroadcastPreset(activePreset);
       applyPresetToController(activePreset);
 
@@ -580,16 +639,36 @@ function LocalSignboardContent() {
     localStorage.setItem('glowwave_host_locale', newLocale);
     localStorage.setItem('glowwave_home_locale', newLocale);
 
-    // If presets list is empty or matches defaults of any language, translate them
-    const isOnlyDefaults = presets.length <= 6 && presets.every(p => DEFAULT_PRESET_TEXTS.has(p.text.trim()));
+    let updated: Preset[] = [];
+    if (presets.length === 0) {
+      updated = getDefaultsByLocale(newLocale);
+    } else {
+      updated = translateDefaultPresets(presets, newLocale);
+    }
+    setPresets(updated);
+    localStorage.setItem('glowwave_local_presets', JSON.stringify(updated));
 
-    if (isOnlyDefaults || presets.length === 0) {
+    // Update active preset if it matches a default one
+    let activePreset = currentBroadcastPreset;
+    const emojiRegex = /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+    const cleanedText = activePreset.text.replace(emojiRegex, '').trim();
+    if (cleanedText in DEFAULT_PRESET_MAP) {
+      const idx = DEFAULT_PRESET_MAP[cleanedText];
       const newDefaults = getDefaultsByLocale(newLocale);
-      setPresets(newDefaults);
-      localStorage.setItem('glowwave_local_presets', JSON.stringify(newDefaults));
-      setCurrentBroadcastPreset(newDefaults[0]);
-      applyPresetToController(newDefaults[0]);
-      setActivePresetIndex(0);
+      if (newDefaults[idx]) {
+        activePreset = {
+          ...activePreset,
+          text: newDefaults[idx].text,
+          result_text: (activePreset.effect === 'countdown' && (!activePreset.result_text || activePreset.result_text === 'START' || activePreset.result_text === '시작' || activePreset.result_text === 'スタート' || activePreset.result_text === '¡EMPEZAR!' || activePreset.result_text === '開始'))
+            ? newDefaults[idx].result_text
+            : (activePreset.effect === 'luckydraw_wait' && (!activePreset.result_text || activePreset.result_text === '아쉽네요! 다음 기회에..' || activePreset.result_text === 'Good luck next time!' || activePreset.result_text === '残念！また今도ね..' || activePreset.result_text === '¡Suerte la próxima!' || activePreset.result_text === '沒中，再接再厲！' || activePreset.result_text === '冇中，下次好運！'))
+              ? newDefaults[idx].result_text
+              : activePreset.result_text
+        };
+        setCurrentBroadcastPreset(activePreset);
+        applyPresetToController(activePreset);
+        localStorage.setItem('glowwave_local_active_preset', JSON.stringify(activePreset));
+      }
     }
   };
 
