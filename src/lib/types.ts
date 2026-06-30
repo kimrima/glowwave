@@ -104,6 +104,46 @@ export const getLocalizedPrice = (tier: TierType, locale: string): string => {
   return prices[tier][localeKey] || prices[tier]['en'];
 };
 
+export const getLocalizedTierName = (tier: TierType, locale: string): string => {
+  const names: Record<TierType, Record<string, string>> = {
+    free: {
+      ko: '무료 플랜 (Free)',
+      en: 'Free Plan',
+      ja: '無料プラン (Free)',
+      es: 'Plan Gratuito',
+      'zh-TW': '免費方案 (Free)',
+      'zh-HK': '免費方案 (Free)',
+    },
+    lite: {
+      ko: '기본형 (Lite)',
+      en: 'Lite Plan',
+      ja: 'ライトプラン (Lite)',
+      es: 'Plan Lite',
+      'zh-TW': '基本型方案 (Lite)',
+      'zh-HK': '基本型方案 (Lite)',
+    },
+    pro: {
+      ko: '프리미엄 (Pro)',
+      en: 'Pro Plan',
+      ja: 'プロプラン (Pro)',
+      es: 'Plan Pro',
+      'zh-TW': '進階方案 (Pro)',
+      'zh-HK': '進階方案 (Pro)',
+    },
+    max: {
+      ko: '맥스형 (Max)',
+      en: 'Max Plan',
+      ja: 'マックスプラン (Max)',
+      es: 'Plan Max',
+      'zh-TW': '極致方案 (Max)',
+      'zh-HK': '極致方案 (Max)',
+    },
+  };
+  const localeKey = ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(locale) ? locale : 'en';
+  return names[tier][localeKey] || names[tier]['en'];
+};
+
+
 
 export interface Room {
   id: string;

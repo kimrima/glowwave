@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Globe, ChevronDown, X, ArrowLeft } from 'lucide-react';
-import { Preset, TierType, TIER_CONFIGS, getLocalizedPrice } from '@/lib/types';
+import { Preset, TierType, TIER_CONFIGS, getLocalizedPrice, getLocalizedTierName } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import { t, Locale } from '@/lib/translations';
 import { getDefaultsByLocale } from '@/lib/templates';
@@ -116,7 +116,7 @@ export default function HostSetup() {
       const invalidPasscodeMsg = {
         ko: '비밀번호는 4~6자리의 숫자여야 합니다.',
         en: 'Passcode must be a 4 to 6 digit number.',
-        ja: 'パスコードは4〜6桁 of 数字である必要があります。',
+        ja: 'パスコードは4〜6桁の数字である必要があります。',
         es: 'La contraseña debe ser un número de 4 a 6 dígitos.',
         'zh-TW': '密碼必須為 4 到 6 位數字。',
         'zh-HK': '密碼必須為 4 到 6 位數字。'
@@ -141,7 +141,15 @@ export default function HostSetup() {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || '방 생성 실패');
+        const roomCreateFailedMsg = {
+          ko: '방 생성 실패',
+          en: 'Failed to create room',
+          ja: 'ルーム作成に失敗しました',
+          es: 'Error al crear la sala',
+          'zh-TW': '建立房間失敗',
+          'zh-HK': '建立房間失敗'
+        }[activeLocale] || '방 생성 실패';
+        throw new Error(data.error || roomCreateFailedMsg);
       }
 
       setCreatedRoomInfo({
@@ -199,7 +207,15 @@ export default function HostSetup() {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || '결제 웹훅 통신 실패');
+        const webhookFailedMsg = {
+          ko: '결제 웹훅 통신 실패',
+          en: 'Payment webhook communication failed',
+          ja: '決済ウェブフック通信に失敗しました',
+          es: 'Fallo en la comunicación del webhook de pago',
+          'zh-TW': '付款回呼通訊失敗',
+          'zh-HK': '付款回呼通訊失敗'
+        }[activeLocale] || '결제 웹훅 통신 실패';
+        throw new Error(data.error || webhookFailedMsg);
       }
 
       // Save default presets and authorization to LocalStorage
@@ -432,7 +448,16 @@ export default function HostSetup() {
                       setPasscodeError('');
                     }
                   }}
-                  placeholder="예: 1234"
+                  placeholder={
+                    {
+                      ko: '예: 1234',
+                      en: 'e.g. 1234',
+                      ja: '例: 1234',
+                      es: 'ej. 1234',
+                      'zh-TW': '例如: 1234',
+                      'zh-HK': '例如: 1234'
+                    }[activeLocale] || '예: 1234'
+                  }
                   className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white tracking-widest text-center text-sm font-black focus:outline-none focus:border-white font-mono"
                   maxLength={6}
                 />
@@ -468,13 +493,7 @@ export default function HostSetup() {
                   >
                     <div>
                       <div className="font-extrabold text-white text-xs flex items-center gap-2">
-                        {
-                          {
-                            free: t('forever_free', activeLocale) || cfg.name,
-                            lite: cfg.name,
-                            pro: t('pro_plan', activeLocale) || cfg.name
-                          }[tierKey] || cfg.name
-                        }
+                        {getLocalizedTierName(tierKey, activeLocale)}
                         {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />}
                       </div>
                       <div className="text-[10px] text-zinc-400 mt-1 font-semibold">
@@ -553,7 +572,16 @@ export default function HostSetup() {
                         : 'border-white/5 bg-white/5 text-zinc-400'
                     }`}
                   >
-                    토스페이 / 국내 카드
+                    {
+                      {
+                        ko: '토스페이 / 국내 카드',
+                        en: 'Toss Pay / Domestic Card',
+                        ja: 'Toss Pay / 国内カード',
+                        es: 'Toss Pay / Tarjeta nacional',
+                        'zh-TW': 'Toss Pay / 韓國國內卡',
+                        'zh-HK': 'Toss Pay / 韓國國內卡'
+                      }[activeLocale] || '토스페이 / 국내 카드'
+                    }
                   </button>
                   <button
                     onClick={() => setPaymentMethod('stripe')}
@@ -571,7 +599,7 @@ export default function HostSetup() {
                 <div className="bg-black/50 border border-white/5 rounded-xl p-4 flex flex-col gap-3">
                   <div className="text-xs text-zinc-400 flex justify-between">
                     <span>{t('setup_checkout_prod', activeLocale)}</span>
-                    <span className="text-white font-semibold">GlowWave Room Ticket ({TIER_CONFIGS[selectedTier].name})</span>
+                    <span className="text-white font-semibold">GlowWave Room Ticket ({getLocalizedTierName(selectedTier, activeLocale)})</span>
                   </div>
                   <div className="text-xs text-zinc-400 flex justify-between">
                     <span>{t('setup_checkout_email', activeLocale)}</span>

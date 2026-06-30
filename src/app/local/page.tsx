@@ -1784,8 +1784,8 @@ function LocalSignboardContent() {
                       en: 'Modified presets are automatically saved in the browser. Clearing browser history/cache may delete data, so backup your precious design sets on mobile using the [Vault & Share] menu!',
                       ja: '編集したプリセットはブラウザに自動保存されます。履歴（キャッシュ/クッキー）を削除するとデータが消える可能性があるため、大切なデザインは上部の【保管＆共有】メニューからモバイルにバックアップしてください！',
                       es: 'Los ajustes modificados se guardan automáticamente en el navegador. Limpiar el historial (caché/cookies) puede borrar los datos, ¡así que haga una copia de seguridad en el menú [Bóveda y Compartir]!',
-                      'zh-TW': '修改後的預設會自動儲存於瀏覽器中。清除瀏覽器紀錄（快取/Cookie）可能會導致資料遺失，請務必使用上方の [保管與分享] 選單將珍貴的設計備份至行動裝置！',
-                      'zh-HK': '修改後的預設會自動儲存於瀏覽器中。清除瀏覽器紀錄（快取/Cookie）可能會導致資料遺失，請務必使用上方的 [保管與分享] 選單將珍貴의設計備份至行動裝置！',
+                      'zh-TW': '修改後的預設會自動儲存於瀏覽器中。清除瀏覽器紀錄（快取/Cookie）可能會導致資料遺失，請務必使用上方的 [保管與分享] 選單將珍貴的設計備份至行動裝置！',
+                      'zh-HK': '修改後的預設會自動儲存於瀏覽器中。清除瀏覽器紀錄（快取/Cookie）可能會導致資料遺失，請務必使用上方的 [保管與分享] 選單將珍貴的設計備份至行動裝置！',
                     }[activeLocale] || '수정한 프리셋들은 **브라우저에 자동 저장**됩니다. 방문 기록(캐시/쿠키)을 청소하면 데이터가 소멸할 수 있으니, 소중한 디자인 세트는 상단의 **[보관 & 공유]** 메뉴에서 모바일로 백업해 두세요!'
                   }
                 </p>
@@ -1827,11 +1827,12 @@ function LocalSignboardContent() {
             {/* Floating Preview Card on Left for Desktop/Tablet Screens */}
             <div className="hidden lg:block absolute right-[calc(100%+24px)] top-6 z-20 w-[420px]">
               <div className="glass-effect rounded-2xl p-5 bg-[#12121a]/95 border border-white/10 shadow-2xl flex flex-col items-center">
-                <span className="text-[10px] font-black font-mono text-indigo-400 uppercase mb-3 tracking-widest">실시간 연출 미리보기</span>
+                <span className="text-[10px] font-black font-mono text-indigo-400 uppercase mb-3 tracking-widest">
+                  {t('live_direction_preview', activeLocale)}
+                </span>
                 <LandscapePhoneMockup preset={editingPreset} />
                 <div className="mt-3.5 text-[9.5px] text-zinc-400 text-center font-semibold leading-normal">
-                  수정창 좌측에 연출 화면이 고정됩니다.<br/>
-                  설정을 변경하면 화면에 즉시 적용되어 변경 사항을 실시간으로 확인합니다.
+                  {t('preview_floating_sync_desc', activeLocale)}
                 </div>
               </div>
             </div>
@@ -1840,7 +1841,7 @@ function LocalSignboardContent() {
               {/* Header */}
               <div className="p-4 border-b border-white/5 flex justify-between items-center bg-black/20">
                 <h3 className="text-sm font-bold text-white">
-                  {editingPresetIndex >= presets.length ? '새 커스텀 프리셋 추가' : `프리셋 P${editingPresetIndex + 1} 편집`}
+                  {editingPresetIndex >= presets.length ? t('edit_title_add', activeLocale) : `${t('edit_title_preset', activeLocale)} P${editingPresetIndex + 1}`}
                 </h3>
                 <button 
                   onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }}
@@ -1852,7 +1853,9 @@ function LocalSignboardContent() {
 
               {/* Landscape Live Preview Mockup Inside Drawer (Mobile only) */}
               <div className="p-6 border-b border-white/5 bg-black/40 flex flex-col items-center lg:hidden">
-                <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-3 tracking-wider">실시간 연출 미리보기</span>
+                <span className="text-[10px] font-bold font-mono text-zinc-500 uppercase mb-3 tracking-wider">
+                  {t('live_direction_preview', activeLocale)}
+                </span>
                 <LandscapePhoneMockup preset={editingPreset} />
               </div>
 
@@ -1860,7 +1863,18 @@ function LocalSignboardContent() {
               <div className="p-6 flex flex-col gap-5">
                 {/* Output Text */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">출력 문구</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                    {
+                      {
+                        ko: '출력 문구',
+                        en: 'Display Text',
+                        ja: '表示テキスト',
+                        es: 'Texto de pantalla',
+                        'zh-TW': '顯示文字',
+                        'zh-HK': '顯示文字'
+                      }[activeLocale] || '출력 문구'
+                    }
+                  </label>
                   <input
                     type="text"
                     value={editingPreset.text || ''}
@@ -1903,7 +1917,16 @@ function LocalSignboardContent() {
                     <div 
                       className="h-9 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center" 
                       style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
-                      title="커스텀 색상 선택"
+                      title={
+                        {
+                          ko: '커스텀 색상 선택',
+                          en: 'Select custom color',
+                          ja: 'カスタム色の選択',
+                          es: 'Seleccionar color personalizado',
+                          'zh-TW': '選擇自訂顏色',
+                          'zh-HK': '選擇自訂顏色',
+                        }[activeLocale] || '커스텀 색상 선택'
+                      }
                     >
                       <input
                         type="color"
@@ -1921,14 +1944,14 @@ function LocalSignboardContent() {
 
                 {/* 모션 효과 */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">모션 효과</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{t('animation_effect', activeLocale)}</label>
                   <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 h-11 items-center font-medium">
                     {[
-                      { val: 'none', label: '정적' },
-                      { val: 'blink', label: '깜빡' },
-                      { val: 'marquee', label: '흐름' },
-                      { val: 'countdown', label: '타이머' },
-                      { val: 'luckydraw_wait', label: '추첨' }
+                      { val: 'none', label: t('static', activeLocale) || '정적' },
+                      { val: 'blink', label: t('blink', activeLocale) || '깜빡' },
+                      { val: 'marquee', label: t('scroll', activeLocale) || '흐름' },
+                      { val: 'countdown', label: t('timer', activeLocale) || '타이머' },
+                      { val: 'luckydraw_wait', label: t('raffle', activeLocale) || '추첨' }
                     ].map((item) => (
                       <button
                         type="button"
@@ -1972,7 +1995,7 @@ function LocalSignboardContent() {
                 {/* Secondary Color Grid */}
                 {(editingPreset.effect === 'blink' || editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw') && (
                   <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
-                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">보조 배경 색상 (듀오 교대 번쩍임/경계선 색상용)</label>
+                    <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{t('secondary_bg_color', activeLocale)}</label>
                     <div className="flex gap-2 mb-3">
                       <button
                         type="button"
@@ -1988,7 +2011,7 @@ function LocalSignboardContent() {
                         }`}
                       >
                         <Slash className="w-3.5 h-3.5 text-red-500 shrink-0" />
-                        <span>단색 (부드러운 깜빡이)</span>
+                        <span>{t('single_color_fade', activeLocale)}</span>
                       </button>
                     </div>
                     <div className="grid grid-cols-6 gap-2">
@@ -2021,7 +2044,16 @@ function LocalSignboardContent() {
                       <div 
                         className="h-9 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center" 
                         style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
-                        title="커스텀 보조 색상 선택"
+                        title={
+                          {
+                            ko: '커스텀 보조 색상 선택',
+                            en: 'Select custom secondary color',
+                            ja: 'カスタム補助色の選択',
+                            es: 'Seleccionar color secundario personalizado',
+                            'zh-TW': '選擇自訂輔助顏色',
+                            'zh-HK': '選擇自訂輔助顏色',
+                          }[activeLocale] || '커스텀 보조 색상 선택'
+                        }
                       >
                         <input
                           type="color"
@@ -2042,9 +2074,29 @@ function LocalSignboardContent() {
                 {(editingPreset.effect === 'blink' || editingPreset.effect === 'marquee' || editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw') && (
                   <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
                     <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-2.5">
-                      <span>애니메이션 속도 조절</span>
-                      <span className="text-indigo-400 font-extrabold">
-                        속도: {getSpeedFactor(editingPreset.effect, editingPreset.speed)}%
+                      <span>
+                        {
+                          {
+                            ko: '애니메이션 속도 조절',
+                            en: 'Animation Speed',
+                            ja: 'アニメーション速度調整',
+                            es: 'Ajustar velocidad de animación',
+                            'zh-TW': '調整動畫速度',
+                            'zh-HK': '調整動畫速度',
+                          }[activeLocale] || '애니메이션 속도 조절'
+                        }
+                      </span>
+                      <span className="text-indigo-400 font-extrabold font-mono">
+                        {
+                          {
+                            ko: '속도',
+                            en: 'Speed',
+                            ja: '速度',
+                            es: 'Velocidad',
+                            'zh-TW': '速度',
+                            'zh-HK': '速度',
+                          }[activeLocale] || '속도'
+                        }: {getSpeedFactor(editingPreset.effect, editingPreset.speed)}%
                       </span>
                     </div>
                     <input
@@ -2066,7 +2118,7 @@ function LocalSignboardContent() {
                 {editingPreset.effect === 'countdown' && (
                   <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200 flex flex-col gap-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">카운트다운 지속 초 (Seconds)</label>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{t('countdown_duration', activeLocale)}</label>
                       <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-full border border-white/5">
                         {[3, 5, 10, 30, 60].map((sec) => (
                           <button
@@ -2079,14 +2131,23 @@ function LocalSignboardContent() {
                                 : 'text-zinc-400 hover:text-white hover:bg-white/[0.02]'
                             }`}
                           >
-                            {sec}초
+                            {
+                              {
+                                ko: `${sec}초`,
+                                en: `${sec}s`,
+                                ja: `${sec}秒`,
+                                es: `${sec}s`,
+                                'zh-TW': `${sec}秒`,
+                                'zh-HK': `${sec}秒`,
+                              }[activeLocale] || `${sec}초`
+                            }
                           </button>
                         ))}
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">종료 시 출력 문구</label>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{t('countdown_end_text', activeLocale)}</label>
                       <input
                         type="text"
                         value={editingPreset.result_text || ''}
@@ -2103,26 +2164,26 @@ function LocalSignboardContent() {
                 {(editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw') && (
                   <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200 flex flex-col gap-4">
                     <div>
-                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">당첨 시 출력 문구</label>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{t('winner_text', activeLocale)}</label>
                       <input
                         type="text"
                         value={editingPreset.text || ''}
                         onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, 15) }))}
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
                         maxLength={15}
-                        placeholder="당첨!"
+                        placeholder={t('raffle_win_default', activeLocale) || '당첨!'}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">낙첨 시 출력 문구</label>
+                      <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{t('lose_text', activeLocale)}</label>
                       <input
                         type="text"
                         value={editingPreset.result_text || ''}
                         onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, 15) }))}
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
                         maxLength={15}
-                        placeholder="아쉽네요! 다음 기회에.."
+                        placeholder={t('lucky_draw_vibe', activeLocale) || '아쉽네요! 다음 기회에..'}
                       />
                     </div>
                   </div>
@@ -2130,7 +2191,7 @@ function LocalSignboardContent() {
 
                 {/* 글자 색상 */}
                 <div className="pt-3 border-t border-white/5">
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글자 색상</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{t('text_color', activeLocale)}</label>
                   <div className="grid grid-cols-6 gap-2">
                     {[
                       '#FFFFFF', '#000000', '#FFD700', '#EF4444', '#10B981', '#3B82F6'
@@ -2161,7 +2222,16 @@ function LocalSignboardContent() {
                     <div 
                       className="h-9 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center" 
                       style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
-                      title="커스텀 글자 색상 선택"
+                      title={
+                        {
+                          ko: '커스텀 글자 색상 선택',
+                          en: 'Select custom text color',
+                          ja: 'カスタム文字色の選択',
+                          es: 'Seleccionar color de texto personalizado',
+                          'zh-TW': '選擇自訂文字顏色',
+                          'zh-HK': '選擇自訂文字顏色',
+                        }[activeLocale] || '커스텀 글자 색상 선택'
+                      }
                     >
                       <input
                         type="color"
@@ -2178,7 +2248,7 @@ function LocalSignboardContent() {
 
                 {/* 글꼴 스타일 */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">글꼴 스타일</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{t('font', activeLocale)}</label>
                   <div className="flex flex-wrap gap-1 bg-black/40 p-1 rounded-xl border border-white/5 items-center font-medium">
                     {getLocalizedFonts(activeLocale).map((item) => (
                       <button
@@ -2200,13 +2270,13 @@ function LocalSignboardContent() {
 
                 {/* 특수 효과 */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">특수 효과</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{t('special_effect', activeLocale)}</label>
                   <div className="grid grid-cols-4 gap-1 bg-black/40 p-1 rounded-xl border border-white/5 h-11 items-center font-medium">
                     {[
-                      { val: 'none', label: '없음' },
-                      { val: 'hearts', label: '하트' },
-                      { val: 'confetti', label: '꽃가루' },
-                      { val: 'stars', label: '별빛' }
+                      { val: 'none', label: t('none', activeLocale) || '없음' },
+                      { val: 'hearts', label: t('hearts', activeLocale) || '하트' },
+                      { val: 'confetti', label: t('confetti', activeLocale) || '꽃가루' },
+                      { val: 'stars', label: t('stars', activeLocale) || '별빛' }
                     ].map((item) => (
                       <button
                         type="button"
@@ -2227,8 +2297,19 @@ function LocalSignboardContent() {
                 {/* 글자 크기 */}
                 <div>
                   <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
-                    <span>글자 크기</span>
-                    <span className="text-indigo-400 font-extrabold">{editingPreset.font_size || 100}%</span>
+                    <span>
+                      {
+                        {
+                          ko: '글자 크기',
+                          en: 'Text Size',
+                          ja: '文字サイズ',
+                          es: 'Tamaño de texto',
+                          'zh-TW': '文字大小',
+                          'zh-HK': '文字大小',
+                        }[activeLocale] || '글자 크기'
+                      }
+                    </span>
+                    <span className="text-indigo-400 font-extrabold font-mono">{editingPreset.font_size || 100}%</span>
                   </div>
                   <div className="flex items-center h-10">
                     <input
@@ -2273,7 +2354,16 @@ function LocalSignboardContent() {
                   }}
                   className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-bold hover:bg-white/10 transition-all text-xs cursor-pointer"
                 >
-                  저장만 하기
+                  {
+                    {
+                      ko: '저장만 하기',
+                      en: 'Save only',
+                      ja: '保存のみ',
+                      es: 'Solo guardar',
+                      'zh-TW': '僅儲存',
+                      'zh-HK': '僅儲存',
+                    }[activeLocale] || '저장만 하기'
+                  }
                 </button>
                 
                 <button
@@ -2300,7 +2390,16 @@ function LocalSignboardContent() {
                   }}
                   className="btn-primary flex-1 py-3 rounded-xl text-xs font-bold cursor-pointer"
                 >
-                  저장 후 바로 송출
+                  {
+                    {
+                      ko: '저장 후 바로 송출',
+                      en: 'Save & Broadcast',
+                      ja: '保存して即送信',
+                      es: 'Guardar y emitir',
+                      'zh-TW': '儲存並立即傳送',
+                      'zh-HK': '儲存並立即傳送',
+                    }[activeLocale] || '저장 후 바로 송출'
+                  }
                 </button>
               </div>
 
@@ -2320,7 +2419,16 @@ function LocalSignboardContent() {
                   }}
                   className="w-full py-2.5 rounded-xl border border-dashed border-zinc-700 bg-transparent text-zinc-400 hover:text-white hover:border-zinc-500 hover:bg-white/5 font-bold transition-all text-[11px] cursor-pointer"
                 >
-                  저장 없이 바로 송출 (1회성 송출)
+                  {
+                    {
+                      ko: '저장 없이 바로 송출 (1회성 송출)',
+                      en: 'Broadcast without saving (One-time)',
+                      ja: '保存せずに即送信 (1回限り)',
+                      es: 'Emitir sin guardar (Solo una vez)',
+                      'zh-TW': '不儲存直接傳送 (一次性)',
+                      'zh-HK': '不儲存直接傳送 (一次性)',
+                    }[activeLocale] || '저장 없이 바로 송출 (1회성 송출)'
+                  }
                 </button>
               )}
 
@@ -2331,7 +2439,16 @@ function LocalSignboardContent() {
                     onClick={() => setEditingPreset({ ...defaults[editingPresetIndex] })}
                     className="text-zinc-500 hover:text-white transition-colors cursor-pointer underline underline-offset-4"
                   >
-                    기본값으로 초기화
+                    {
+                      {
+                        ko: '기본값으로 초기화',
+                        en: 'Reset to default',
+                        ja: 'デフォルトに戻す',
+                        es: 'Restablecer valores predeterminados',
+                        'zh-TW': '重設為預設值',
+                        'zh-HK': '重設為預設值',
+                      }[activeLocale] || '기본값으로 초기화'
+                    }
                   </button>
                 )}
 
@@ -2341,7 +2458,16 @@ function LocalSignboardContent() {
                     onClick={() => handleDeleteLocalPreset(editingPresetIndex)}
                     className="text-red-500/80 hover:text-red-400 transition-colors cursor-pointer underline underline-offset-4"
                   >
-                    이 커스텀 프리셋 삭제
+                    {
+                      {
+                        ko: '이 커스텀 프리셋 삭제',
+                        en: 'Delete this custom preset',
+                        ja: 'このカスタムプリセットを削除',
+                        es: 'Eliminar este ajuste personalizado',
+                        'zh-TW': '刪除此自訂預設',
+                        'zh-HK': '刪除此自訂預設',
+                      }[activeLocale] || '이 커스텀 프리셋 삭제'
+                    }
                   </button>
                 )}
 
@@ -2350,7 +2476,16 @@ function LocalSignboardContent() {
                   onClick={() => { setEditingPresetIndex(null); setEditingPreset(null); }}
                   className="text-zinc-500 hover:text-white transition-colors cursor-pointer underline underline-offset-4"
                 >
-                  취소
+                  {
+                    {
+                      ko: '취소',
+                      en: 'Cancel',
+                      ja: 'キャンセル',
+                      es: 'Cancelar',
+                      'zh-TW': '取消',
+                      'zh-HK': '取消',
+                    }[activeLocale] || '취소'
+                  }
                 </button>
               </div>
             </div>

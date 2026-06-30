@@ -26,7 +26,7 @@ import {
   Maximize2,
   Globe
 } from 'lucide-react';
-import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS, getLocalizedPrice } from '@/lib/types';
+import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS, getLocalizedPrice, getLocalizedTierName } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import jsQR from 'jsqr';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
@@ -4515,7 +4515,7 @@ export default function HostDashboard() {
                     {getUpgradableTiers().map((tKey) => {
                       const config = TIER_CONFIGS[tKey];
                       const isSelected = selectedUpgradeTier === tKey;
-                      const planName = tKey === 'lite' ? 'Lite Plan' : tKey === 'pro' ? 'Pro Plan' : 'Max Plan';
+                      const planName = getLocalizedTierName(tKey, activeLocale);
                       const formattedPrice = activeLocale === 'ko'
                         ? `${config.priceKrw.toLocaleString()}원`
                         : ['en', 'es'].includes(activeLocale)
@@ -4861,13 +4861,13 @@ export default function HostDashboard() {
                     <div className="flex justify-between">
                       <span className="text-zinc-500">{currentExpiryLabel}</span>
                       <span className="text-zinc-300 font-mono">
-                        {new Date(new Date(room.created_at).getTime() + 24 * 60 * 60 * 1000).toLocaleString()}
+                        {new Date(new Date(room.created_at).getTime() + 24 * 60 * 60 * 1000).toLocaleString(activeLocale === 'zh-TW' ? 'zh-TW' : (activeLocale === 'zh-HK' ? 'zh-HK' : activeLocale))}
                       </span>
                     </div>
                     <div className="flex justify-between border-t border-white/5 pt-2">
                       <span className="text-indigo-400 font-bold">{extendedExpiryLabel}</span>
                       <span className="text-indigo-300 font-mono font-bold">
-                        {new Date(Math.max(Date.now(), new Date(room.created_at).getTime() + 24 * 60 * 60 * 1000) + 24 * 60 * 60 * 1000).toLocaleString()}
+                        {new Date(Math.max(Date.now(), new Date(room.created_at).getTime() + 24 * 60 * 60 * 1000) + 24 * 60 * 60 * 1000).toLocaleString(activeLocale === 'zh-TW' ? 'zh-TW' : (activeLocale === 'zh-HK' ? 'zh-HK' : activeLocale))}
                       </span>
                     </div>
                   </div>

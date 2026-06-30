@@ -258,7 +258,7 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     setup_import_premium_title: '1인 프리셋 무손실 연동 (프리미엄 모드)',
     setup_import_premium_desc: '작성하신 {cnt}개의 디자인 프리셋과 전용 글꼴 및 특수 효과가 단 1%의 유실도 없이 100% 온전하게 승계되어 멀티방으로 이동합니다! 결제 완료 후 즉시 복원됩니다.',
     setup_checkout_title: '간편 비회원 결제창',
-    setup_checkout_prod: '商品名',
+    setup_checkout_prod: '결제 대상 상품',
     setup_checkout_email: '이메일',
     setup_checkout_total: '최종 결제 금액',
     setup_checkout_sim_warning: '본 결제는 시뮬레이션입니다. 결제하기 버튼을 누르면 즉시 카드사 PG 웹훅 API를 호출하여 방장 대시보드가 활성화됩니다.',

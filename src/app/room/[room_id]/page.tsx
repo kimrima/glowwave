@@ -12,6 +12,202 @@ import {
 import { Preset } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import useFitText from '@/hooks/useFitText';
+import { Locale } from '@/lib/translations';
+
+const ROOM_TRANSLATIONS: Record<Locale, Record<string, string>> = {
+  ko: {
+    err_title: '접속 오류',
+    err_back: '홈으로 돌아가기',
+    cap_title: '접속 인원 제한 초과',
+    cap_desc: '본 방은 주최자의 요금제별 지정 동시 접속 한도에 도달했습니다.\n기존 참여자가 나가거나 주최자가 상위 등급으로 업그레이드할 때까지 입장이 제한됩니다.',
+    cap_btn: '메인 홈으로 가기',
+    inactive_title: '결제 승인 확인 중...',
+    inactive_desc: '방장이 결제를 완료할 때까지 대기하고 있습니다.\n결제가 확인되는 즉시 자동으로 전광판 화면이 열립니다.',
+    pass_title: '비밀번호가 필요한 방입니다',
+    pass_desc: '이 방은 입장 비밀번호 보안이 활성화되어 있습니다.\n방장이 제공한 숫자 4~6자리 비밀번호를 입력해 주세요.',
+    pass_placeholder: '숫자 비밀번호 입력',
+    pass_btn_home: '홈으로 가기',
+    pass_btn_enter: '입장하기',
+    pass_verifying: '검증 중...',
+    pass_failed: '인증 실패',
+    low_power_title: '화면 꺼짐 안내',
+    low_power_desc: '기기의 저전력 모드가 켜져 있으면 화면이 꺼질 수 있습니다. 꺼짐 방지를 위해 설정을 해제해 주세요.',
+    ready_title: '전광판 동기화 준비 완료',
+    ready_low_power_warn: '스마트폰의 [저전력 모드]가 켜져 있으면 화면 꺼짐 방지가 정상 작동하지 않습니다. 원활한 연출을 위해 저전력 모드를 해제해 주세요.',
+    ready_ios_title: '아이폰(iOS) 전체화면 설정 권장',
+    ready_ios_desc_chrome: '아이폰 크롬 브라우저는 주소창과 메뉴바를 숨길 수 없어 일반 브라우저로 접속 시 전광판이 잘려 보입니다. 아래 순서대로 홈 화면에 추가하여 실행하시면 완벽한 전체화면 앱으로 이용 가능합니다.',
+    ready_ios_desc_safari: '아이폰 사파리 브라우저는 주소창과 메뉴바를 숨길 수 없어 일반 브라우저로 접속 시 전광판이 잘려 보입니다. 아래 순서대로 홈 화면에 추가하여 실행하시면 완벽한 전체화면 앱으로 이용 가능합니다.',
+    ready_ios_step1_chrome: '크롬 화면의 [공유 버튼](우측 상단 주소창 옆 또는 하단 메뉴의 공유 아이콘)을 클릭합니다.',
+    ready_ios_step1_safari: '사파리 화면 하단 중앙의 [공유 버튼](네모에 위 화살표 모양)을 클릭합니다.',
+    ready_ios_step2: '메뉴 목록 중 [홈 화면에 추가]를 선택합니다.',
+    ready_ios_step3: '바탕화면에 생성된 GlowWave 아이콘으로 재접속해 주세요.',
+    ready_ios_tip: '💡 이미 홈 화면에 GlowWave 앱을 추가하셨다면, 홈 화면에서 앱을 직접 실행하시고 입장 코드 {code}를 입력하여 참여하시는 것이 가장 편리합니다!',
+    ready_ios_btn_bypass: '※ 홈 화면에 추가하지 않고 그냥 브라우저로 이용하려면 아래 버튼을 누르세요.',
+    ready_android_desc: '아래 [입장하기] 버튼을 누르면 전광판 화면이 시작되며 가로 전체화면 모드 및 화면 켜짐 유지가 실행됩니다.',
+    ready_btn_enter: '입장하기',
+    watermark_create: '나만의 전광판 만들기(무료)',
+  },
+  en: {
+    err_title: 'Connection Error',
+    err_back: 'Back to Home',
+    cap_title: 'Capacity Limit Exceeded',
+    cap_desc: 'This room has reached its simultaneous connection limit.\nEntry is restricted until existing participants leave or the host upgrades the plan.',
+    cap_btn: 'Go to Main Home',
+    inactive_title: 'Verifying Payment Approval...',
+    inactive_desc: 'Waiting for the host to complete the payment.\nThe signboard screen will open automatically as soon as payment is confirmed.',
+    pass_title: 'Passcode Required',
+    pass_desc: 'This room has passcode security enabled.\nPlease enter the 4 to 6 digit passcode provided by the host.',
+    pass_placeholder: 'Enter passcode',
+    pass_btn_home: 'Back to Home',
+    pass_btn_enter: 'Enter Room',
+    pass_verifying: 'Verifying...',
+    pass_failed: 'Authentication failed',
+    low_power_title: 'Screen Sleep Warning',
+    low_power_desc: 'If your device\'s Low Power Mode is on, the screen may turn off. Please disable it to keep the screen awake.',
+    ready_title: 'Signboard Ready to Sync',
+    ready_low_power_warn: 'If Low Power Mode is enabled on your smartphone, screen sleep prevention will not function properly. Please disable Low Power Mode.',
+    ready_ios_title: 'iOS Full Screen Recommended',
+    ready_ios_desc_chrome: 'Chrome on iOS cannot hide the address and menu bars, which may cut off the signboard. Follow the steps below to add it to your Home Screen for a seamless full-screen experience.',
+    ready_ios_desc_safari: 'Safari on iOS cannot hide the address and menu bars, which may cut off the signboard. Follow the steps below to add it to your Home Screen for a seamless full-screen experience.',
+    ready_ios_step1_chrome: 'Tap the [Share Button] in Chrome (next to the address bar or in the menu).',
+    ready_ios_step1_safari: 'Tap the [Share Button] at the bottom center of Safari (rectangle with up arrow).',
+    ready_ios_step2: 'Select [Add to Home Screen] from the menu.',
+    ready_ios_step3: 'Open the app using the new GlowWave icon on your Home Screen.',
+    ready_ios_tip: '💡 If you have already added GlowWave to your Home Screen, it is easiest to launch it directly and enter Room Code {code}!',
+    ready_ios_btn_bypass: '※ To continue using your browser without adding to the Home Screen, tap below.',
+    ready_android_desc: 'Tap the [Enter Room] button below to open the signboard in full screen and prevent the screen from sleeping.',
+    ready_btn_enter: 'Enter Room',
+    watermark_create: 'Create your own signboard (Free)',
+  },
+  ja: {
+    err_title: '接続エラー',
+    err_back: 'ホームに戻る',
+    cap_title: '接続人数制限超過',
+    cap_desc: 'このルームは主催者のプランで指定された同時接続上限に達しました。\n既存の参加者が退出するか、主催者が上位プランにアップグレードするまで入場が制限されます。',
+    cap_btn: 'メインホームへ移動',
+    inactive_title: '決済承認の確認中...',
+    inactive_desc: '主催者が決済を完了するまで待機しています。\n決済が確認され次第、自動的に電光掲示板画面が開きます。',
+    pass_title: 'パスコードが必要です',
+    pass_desc: 'このルームは入場パスコードによるセキュリティが有効です。\n主催者から提供された4〜6桁の数字のパスコードを入力してください。',
+    pass_placeholder: 'パスコードを入力',
+    pass_btn_home: 'ホームへ移動',
+    pass_btn_enter: '入場する',
+    pass_verifying: '検証中...',
+    pass_failed: '認証に失敗しました',
+    low_power_title: 'スリープ防止警告',
+    low_power_desc: '端末の低電力モードが有効な場合、画面が消えることがあります。スリープを防ぐために設定を解除してください。',
+    ready_title: '電光掲示板同期準備完了',
+    ready_low_power_warn: 'スマートフォンの「低電力モード」がONになっていると、画面消灯防止機能が正しく動作しません。円滑な演出のために低電力モードを解除してください。',
+    ready_ios_title: 'iOSでの全画面表示設定の推奨',
+    ready_ios_desc_chrome: 'iOSのChromeブラウザはアドレスバーとメニューバーを非表示にできないため、通常のブラウザ接続では電光掲示板が切れて表示される場合があります。以下の手順でホーム画面に追加して実行すると、完璧な全画面表示アプリとしてご利用いただけます。',
+    ready_ios_desc_safari: 'iOSのSafariブラウザはアドレスバーとメニューバーを非表示にできないため、通常のブラウザ接続では電光掲示板が切れて表示される場合があります。以下の手順でホーム画面に追加して実行すると、完璧な全画面表示アプリとしてご利用いただけます。',
+    ready_ios_step1_chrome: 'Chrome画面の「共有ボタン」（右上のアドレスバーの横、または下部メニューの共有アイコン）をタップします。',
+    ready_ios_step1_safari: 'Safari画面下部中央の「共有ボタン」（四角に上矢印のアイコン）をタップします。',
+    ready_ios_step2: 'メニューリストから「ホーム画面に追加」を選択します。',
+    ready_ios_step3: 'デスクトップに生成されたGlowWaveアイコンから再接続してください。',
+    ready_ios_tip: '💡 すでにホーム画面にGlowWaveアプリを追加している場合は、ホーム画面から直接起動し、入場コード {code} を入力して参加するのが最も便利です！',
+    ready_ios_btn_bypass: '※ ホーム画面に追加せず、ブラウザのままで利用する場合は下のボタンをタップしてください。',
+    ready_android_desc: '下の「入場する」ボタンをタップすると、電光掲示板画面が起動し、横全画面モードおよび画面常時点灯が有効になります。',
+    ready_btn_enter: '入場する',
+    watermark_create: '自分だけの電光掲示板を作る（無料）',
+  },
+  es: {
+    err_title: 'Error de Conexión',
+    err_back: 'Volver al Inicio',
+    cap_title: 'Límite de Capacidad Excedido',
+    cap_desc: 'Esta sala ha alcanzado su límite de conexión simulánea.\nEl ingreso está restringido hasta que los participantes salgan o el anfitrión actualice su plan.',
+    cap_btn: 'Ir al Inicio Principal',
+    inactive_title: 'Verificando Pago...',
+    inactive_desc: 'Esperando que el anfitrión complete el pago.\nLa pantalla se abrirá automáticamente tan pronto como se confirme el pago.',
+    pass_title: 'Contraseña Requerida',
+    pass_desc: 'Esta sala tiene habilitada la seguridad por contraseña.\nPor favor, ingrese la contraseña de 4 a 6 dígitos proporcionada por el anfitrión.',
+    pass_placeholder: 'Ingrese la contraseña',
+    pass_btn_home: 'Ir al Inicio',
+    pass_btn_enter: 'Entrar',
+    pass_verifying: 'Verificando...',
+    pass_failed: 'Error de autenticación',
+    low_power_title: 'Advertencia de Suspensión',
+    low_power_desc: 'Si el modo de bajo consumo de su dispositivo está activado, la pantalla puede apagarse. Desactívelo para mantener la pantalla encendida.',
+    ready_title: 'Signboard Listo para Sincronizar',
+    ready_low_power_warn: 'Si el modo de bajo consumo está activado en su teléfono, la prevención de apagado de pantalla no funcionará correctamente. Desactívelo para una mejor experiencia.',
+    ready_ios_title: 'Pantalla Completa iOS Recomendada',
+    ready_ios_desc_chrome: 'Chrome en iOS no puede ocultar las barras de dirección y menú, lo que puede recortar el letrero. Siga los pasos a continuación para agregarlo a su pantalla de inicio para una experiencia de pantalla completa.',
+    ready_ios_desc_safari: 'Safari en iOS no puede ocultar las barras de dirección y menú, lo que puede recortar el letrero. Siga los pasos a continuación para agregarlo a su pantalla de inicio para una experiencia de pantalla completa.',
+    ready_ios_step1_chrome: 'Toque el [Botón Compartir] en Chrome (al lado de la barra de direcciones o en el menú).',
+    ready_ios_step1_safari: 'Toque el [Botón Compartir] en la parte inferior central de Safari (rectángulo con flecha hacia arriba).',
+    ready_ios_step2: 'Seleccione [Agregar a la pantalla de inicio] en el menú.',
+    ready_ios_step3: 'Abra la aplicación con el nuevo ícono de GlowWave en su pantalla de inicio.',
+    ready_ios_tip: '💡 Si ya ha agregado GlowWave a su pantalla de inicio, ¡es más fácil iniciarla directamente e ingresar el código de sala {code}!',
+    ready_ios_btn_bypass: '※ Para continuar usando el navegador sin agregarlo a la pantalla de inicio, toque abajo.',
+    ready_android_desc: 'Toque el botón [Entrar] a continuación para iniciar el letrero en pantalla completa y evitar que la pantalla se apague.',
+    ready_btn_enter: 'Entrar',
+    watermark_create: 'Crea tu propio letrero (Gratis)',
+  },
+  'zh-TW': {
+    err_title: '連線錯誤',
+    err_back: '返回首頁',
+    cap_title: '連線人數已達上限',
+    cap_desc: '本房間已達主辦方方案設定的同時連線人數上限。\n在現有參與者退出或主辦方升級方案前，暫時限制進入。',
+    cap_btn: '前往首頁',
+    inactive_title: '正在確認付款授權...',
+    inactive_desc: '正在等待房主完成付款。\n付款確認後，電子看板畫面將會自動開啟。',
+    pass_title: '此房間需要密碼',
+    pass_desc: '此房間已啟用進入密碼安全保護。\n請輸入房主提供的 4 到 6 位數字密碼。',
+    pass_placeholder: '請輸入數字密碼',
+    pass_btn_home: '回首頁',
+    pass_btn_enter: '進入房間',
+    pass_verifying: '驗證中...',
+    pass_failed: '驗證失敗',
+    low_power_title: '螢幕休眠提示',
+    low_power_desc: '若您的裝置開啟了低電量模式，螢幕可能會自動關閉。請關閉此模式以保持螢幕常亮。',
+    ready_title: '電子看板已準備好同步',
+    ready_low_power_warn: '如果您的智慧型手機啟動了「低電量模式」，防螢幕休眠功能將無法正常運作。請關閉低電量模式。',
+    ready_ios_title: '建議設定 iOS 全螢幕',
+    ready_ios_desc_chrome: 'iOS 的 Chrome 瀏覽器無法隱藏網址列與選單列，可能會導致看板顯示不完整。請按照以下步驟加入主畫面，以獲得最佳的全螢幕體驗。',
+    ready_ios_desc_safari: 'iOS 的 Safari 瀏覽器無法隱藏網址列與選單列，可能會導致看板顯示不完整。請按照以下步驟加入主畫面，以獲得最佳的全螢幕體驗。',
+    ready_ios_step1_chrome: '點擊 Chrome 中的 [分享按鈕]（網址列旁或選單中的分享圖示）。',
+    ready_ios_step1_safari: '點擊 Safari 畫面正下方的 [分享按鈕]（正方形加向上箭頭）。',
+    ready_ios_step2: '從選單中選擇 [加入主畫面]。',
+    ready_ios_step3: '從主畫面上新增的 GlowWave 圖示重新開啟。',
+    ready_ios_tip: '💡 如果您已經將 GlowWave 加入主畫面，直接開啟並輸入房間代碼 {code} 是最便利的方式！',
+    ready_ios_btn_bypass: '※ 若要直接使用瀏覽器而不加入主畫面，請點擊下方按鈕。',
+    ready_android_desc: '點擊下方 [進入房間] 按鈕將開啟全螢幕電子看板並防止螢幕休眠。',
+    ready_btn_enter: '進入房間',
+    watermark_create: '製作專屬電子看板（免費）',
+  },
+  'zh-HK': {
+    err_title: '連線錯誤',
+    err_back: '返回首頁',
+    cap_title: '連線人數已達上限',
+    cap_desc: '本房間已達主辦方方案設定的同時連線人數上限。\n在現有參與者退出或主辦方升級方案前，暫時限制進入。',
+    cap_btn: '前往首頁',
+    inactive_title: '正在確認付款授權...',
+    inactive_desc: '正在等待房主完成付款。\n電子看板畫面將會自動開啟。',
+    pass_title: '此房間需要密碼',
+    pass_desc: '此房間已啟用進入密碼安全保護。\n請輸入房主提供的 4 到 6 位數字密碼。',
+    pass_placeholder: '請輸入數字密碼',
+    pass_btn_home: '回首頁',
+    pass_btn_enter: '進入房間',
+    pass_verifying: '驗證中...',
+    pass_failed: '驗證失敗',
+    low_power_title: '螢幕休眠提示',
+    low_power_desc: '若您的裝置開啟了低電量模式，螢幕可能會自動關閉。請關閉此模式以保持螢幕常亮。',
+    ready_title: '電子看板已準備好同步',
+    ready_low_power_warn: '如果您的智慧型手機啟動了「低電量模式」，防螢幕休眠功能將無法正常運作。請關閉低電量模式。',
+    ready_ios_title: '建議設定 iOS 全螢幕',
+    ready_ios_desc_chrome: 'iOS 的 Chrome 瀏覽器無法隱藏網址列與選單列，可能會導致看板顯示不完整。請按照以下步驟加入主畫面，以獲得最佳的全螢幕體驗。',
+    ready_ios_desc_safari: 'iOS 的 Safari 瀏覽器無法隱藏網址列與選單列，可能會導致看板顯示不完整。請按照以下步驟加入主畫面，以獲得最佳的全螢幕體驗。',
+    ready_ios_step1_chrome: '點擊 Chrome 中的 [分享按鈕]（網址列旁或選單中的分享圖示）。',
+    ready_ios_step1_safari: '點擊 Safari 畫面正下方的 [分享按鈕]（正方形加向上箭頭）。',
+    ready_ios_step2: '從選單中選擇 [加入主畫面]。',
+    ready_ios_step3: '從主畫面上新增的 GlowWave 圖示重新開啟。',
+    ready_ios_tip: '💡 如果您已經將 GlowWave 加入主畫面，直接開啟並輸入房間代碼 {code} 是最便利的方式！',
+    ready_ios_btn_bypass: '※ 若要直接使用瀏覽器而不加入主畫面，請點擊下方按鈕。',
+    ready_android_desc: '點擊下方 [進入房間] 按鈕將開啟全螢幕電子看板並防止螢幕休眠。',
+    ready_btn_enter: '進入房間',
+    watermark_create: '製作專屬電子看板（免費）',
+  }
+};
 
 export default function AudienceRoom() {
   const params = useParams();
@@ -178,6 +374,31 @@ export default function AudienceRoom() {
     currentPreset.font_size || 100
   );
 
+  // Active Locale State
+  const [activeLocale, setActiveLocale] = useState<Locale>('ko');
+
+  // Hydrate Locale
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedLocale = (localStorage.getItem('glowwave_host_locale') || 
+                           localStorage.getItem('glowwave_home_locale') || 
+                           localStorage.getItem('glowwave_local_locale')) as Locale;
+      if (savedLocale && ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(savedLocale)) {
+        setActiveLocale(savedLocale);
+      } else {
+        const navLang = navigator.language.toLowerCase();
+        let currentLocale: Locale = 'ko';
+        if (navLang.startsWith('ko')) currentLocale = 'ko';
+        else if (navLang.startsWith('ja')) currentLocale = 'ja';
+        else if (navLang.startsWith('es')) currentLocale = 'es';
+        else if (navLang.startsWith('zh-tw') || navLang.startsWith('zh-cn')) currentLocale = 'zh-TW';
+        else if (navLang.startsWith('zh-hk')) currentLocale = 'zh-HK';
+        else currentLocale = 'en';
+        setActiveLocale(currentLocale);
+      }
+    }
+  }, []);
+
   // Passcode States
   const [passcodeLocked, setPasscodeLocked] = useState(false);
   const [enteredPasscode, setEnteredPasscode] = useState('');
@@ -268,7 +489,15 @@ export default function AudienceRoom() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || '비밀번호가 올바르지 않습니다.');
+        const invalidPassMsg = {
+          ko: '비밀번호가 올바르지 않습니다.',
+          en: 'Incorrect passcode.',
+          ja: 'パスコードが正しくありません。',
+          es: 'Contraseña incorrecta.',
+          'zh-TW': '密碼不正確。',
+          'zh-HK': '密碼不正確。'
+        }[activeLocale] || '비밀번호가 올바르지 않습니다.';
+        throw new Error(data.error || invalidPassMsg);
       }
 
       // Success
@@ -282,7 +511,7 @@ export default function AudienceRoom() {
       requestWakeLock();
     } catch (err: any) {
       console.error(err);
-      setPasscodeErrorMsg(err.message || '인증 실패');
+      setPasscodeErrorMsg(err.message || ROOM_TRANSLATIONS[activeLocale].pass_failed);
     } finally {
       setPasscodeChecking(false);
     }
@@ -300,13 +529,27 @@ export default function AudienceRoom() {
           return;
         }
 
-        let errorMsg = '방 정보를 불러오는 과정에서 오류가 발생했습니다.';
+        let errorMsg = {
+          ko: '방 정보를 불러오는 과정에서 오류가 발생했습니다.',
+          en: 'An error occurred while loading room information.',
+          ja: 'ルーム情報の読み込み中にエラーが発生しました。',
+          es: 'Ocurrió un error al cargar la información de la sala.',
+          'zh-TW': '載入房間資訊時發生錯誤。',
+          'zh-HK': '載入房間資訊時發生錯誤。'
+        }[activeLocale] || '방 정보를 불러오는 과정에서 오류가 발생했습니다.';
         try {
           const errData = await response.json();
           if (errData.suggestion) {
             errorMsg = errData.suggestion;
           } else if (response.status === 404) {
-            errorMsg = '존재하지 않거나 만료된 방 번호입니다. 방은 생성 후 24시간 동안만 유지됩니다.';
+            errorMsg = {
+              ko: '존재하지 않거나 만료된 방 번호입니다. 방은 생성 후 24시간 동안만 유지됩니다.',
+              en: 'This room code does not exist or has expired. Rooms only last for 24 hours.',
+              ja: '存在しないか期限切れのルーム番号です。ルームは作成後24時間のみ維持されます。',
+              es: 'Este código de sala no existe o ha expirado. Las salas solo duran 24 horas.',
+              'zh-TW': '此房間代碼不存在或已過期。房間自建立起僅維持 24 小時。',
+              'zh-HK': '此房間代碼不存在或已過期。房間自建立起僅維持 24 小時。'
+            }[activeLocale] || '존재하지 않거나 만료된 방 번호입니다. 방은 생성 후 24시간 동안만 유지됩니다.';
           }
         } catch (e) {}
         
@@ -581,7 +824,18 @@ export default function AudienceRoom() {
       <div className="fixed inset-0 bg-[#0B0B0F] flex items-center justify-center text-white z-50">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-          <p className="text-sm font-semibold tracking-wider text-zinc-400">이벤트 전광판 동기화 중...</p>
+          <p className="text-sm font-semibold tracking-wider text-zinc-400">
+            {
+              {
+                ko: '이벤트 전광판 동기화 중...',
+                en: 'Syncing event signboard...',
+                ja: 'イベント電光掲示板の同期中...',
+                es: 'Sincronizando el letrero del evento...',
+                'zh-TW': '活動電子看板同步中...',
+                'zh-HK': '活動電子看板同步中...'
+              }[activeLocale] || '이벤트 전광판 동기화 중...'
+            }
+          </p>
         </div>
       </div>
     );
@@ -592,10 +846,10 @@ export default function AudienceRoom() {
       <div className="fixed inset-0 bg-[#0B0B0F] flex items-center justify-center px-6 text-center text-white z-50">
         <div className="glass-effect p-8 rounded-2xl max-w-sm border border-red-500/10">
           <WifiOff className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-lg font-bold text-white mb-2">접속 오류</h2>
+          <h2 className="text-lg font-bold text-white mb-2">{ROOM_TRANSLATIONS[activeLocale].err_title}</h2>
           <p className="text-sm text-zinc-400 mb-6">{error}</p>
           <button onClick={() => router.push('/')} className="w-full py-3 rounded-xl bg-white text-black font-semibold text-xs hover:bg-zinc-200 transition-all">
-            홈으로 돌아가기
+            {ROOM_TRANSLATIONS[activeLocale].err_back}
           </button>
         </div>
       </div>
@@ -607,13 +861,12 @@ export default function AudienceRoom() {
       <div className="fixed inset-0 bg-[#0B0B0F] flex items-center justify-center px-6 text-center text-white z-50">
         <div className="glass-effect p-8 rounded-2xl max-w-sm border border-yellow-500/20">
           <Lock className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
-          <h2 className="text-lg font-extrabold text-white mb-2">접속 인원 제한 초과</h2>
-          <p className="text-xs text-zinc-400 mb-6 leading-relaxed">
-            본 방은 주최자의 요금제별 지정 동시 접속 한도에 도달했습니다.<br />
-            기존 참여자가 나가거나 주최자가 상위 등급으로 업그레이드할 때까지 입장이 제한됩니다.
+          <h2 className="text-lg font-extrabold text-white mb-2">{ROOM_TRANSLATIONS[activeLocale].cap_title}</h2>
+          <p className="text-xs text-zinc-400 mb-6 leading-relaxed whitespace-pre-line">
+            {ROOM_TRANSLATIONS[activeLocale].cap_desc}
           </p>
           <button onClick={() => router.push('/')} className="w-full py-3 rounded-xl bg-white/5 text-zinc-300 font-semibold text-xs hover:bg-white/10 transition-all">
-            메인 홈으로 가기
+            {ROOM_TRANSLATIONS[activeLocale].cap_btn}
           </button>
         </div>
       </div>
@@ -625,9 +878,9 @@ export default function AudienceRoom() {
       <div className="fixed inset-0 bg-[#0B0B0F] flex items-center justify-center px-6 text-center text-white z-50">
         <div className="flex flex-col items-center gap-4 max-w-sm">
           <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-          <h2 className="text-lg font-bold text-white">결제 승인 확인 중...</h2>
-          <p className="text-xs text-zinc-500 leading-normal">
-            방장이 결제를 완료할 때까지 대기하고 있습니다.<br />결제가 확인되는 즉시 자동으로 전광판 화면이 열립니다.
+          <h2 className="text-lg font-bold text-white">{ROOM_TRANSLATIONS[activeLocale].inactive_title}</h2>
+          <p className="text-xs text-zinc-500 leading-normal whitespace-pre-line">
+            {ROOM_TRANSLATIONS[activeLocale].inactive_desc}
           </p>
         </div>
       </div>
@@ -642,10 +895,9 @@ export default function AudienceRoom() {
             <div className="w-12 h-12 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
               <Lock className="w-5 h-5" />
             </div>
-            <h2 className="text-lg font-black text-white mt-2">비밀번호가 필요한 방입니다</h2>
-            <p className="text-xs text-zinc-400 leading-relaxed font-semibold">
-              이 방은 입장 비밀번호 보안이 활성화되어 있습니다.<br />
-              방장이 제공한 숫자 4~6자리 비밀번호를 입력해 주세요.
+            <h2 className="text-lg font-black text-white mt-2">{ROOM_TRANSLATIONS[activeLocale].pass_title}</h2>
+            <p className="text-xs text-zinc-400 leading-relaxed font-semibold whitespace-pre-line">
+              {ROOM_TRANSLATIONS[activeLocale].pass_desc}
             </p>
           </div>
 
@@ -662,7 +914,7 @@ export default function AudienceRoom() {
                   setPasscodeErrorMsg('');
                 }
               }}
-              placeholder="숫자 비밀번호 입력"
+              placeholder={ROOM_TRANSLATIONS[activeLocale].pass_placeholder}
               className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3.5 text-center text-white tracking-widest text-base font-black focus:outline-none focus:border-indigo-500 uppercase font-mono"
               maxLength={6}
               disabled={passcodeChecking}
@@ -679,14 +931,14 @@ export default function AudienceRoom() {
               onClick={() => router.push('/')}
               className="flex-1 py-3.5 rounded-xl bg-white/5 text-zinc-400 font-bold hover:bg-white/10 hover:text-white transition-all text-xs border border-white/5 cursor-pointer"
             >
-              홈으로 가기
+              {ROOM_TRANSLATIONS[activeLocale].pass_btn_home}
             </button>
             <button
               type="submit"
               disabled={passcodeChecking || enteredPasscode.length < 4}
               className="flex-1 py-3.5 rounded-xl bg-white text-black font-extrabold text-xs hover:bg-zinc-200 transition-all disabled:opacity-50 cursor-pointer"
             >
-              {passcodeChecking ? '검증 중...' : '입장하기'}
+              {passcodeChecking ? ROOM_TRANSLATIONS[activeLocale].pass_verifying : ROOM_TRANSLATIONS[activeLocale].pass_btn_enter}
             </button>
           </div>
         </form>
@@ -713,15 +965,44 @@ export default function AudienceRoom() {
           }}
           className="absolute top-[calc(env(safe-area-inset-top,0px)+24px)] left-6 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-[11px] font-extrabold text-zinc-300 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5 cursor-pointer z-50"
         >
-          &larr; 뒤로가기
+          {
+            {
+              ko: '← 뒤로가기',
+              en: '← Back',
+              ja: '← 戻る',
+              es: '← Volver',
+              'zh-TW': '← 返回',
+              'zh-HK': '← 返回'
+            }[activeLocale] || '← 뒤로가기'
+          }
         </button>
         <div className="relative mb-6">
           <Smartphone className="w-16 h-16 text-indigo-400 animate-pulse" />
           <RotateCw className="w-6 h-6 text-indigo-300 absolute -bottom-1 -right-1 animate-spin" style={{ animationDuration: '3s' }} />
         </div>
-        <h2 className="text-xl font-black text-white mb-2">스마트폰을 가로로 돌려주세요</h2>
+        <h2 className="text-xl font-black text-white mb-2">
+          {
+            {
+              ko: '스마트폰을 가로로 돌려주세요',
+              en: 'Please rotate your smartphone landscape',
+              ja: 'スマートフォンを横向きにしてください',
+              es: 'Por favor gire su teléfono horizontalmente',
+              'zh-TW': '請將手機轉為橫向',
+              'zh-HK': '請將手機轉為橫向'
+            }[activeLocale] || '스마트폰을 가로로 돌려주세요'
+          }
+        </h2>
         <p className="text-xs text-zinc-500 leading-relaxed max-w-xs">
-          빛의 방사 면적을 최대화하고 자막이 깨지지 않도록 하기 위해 가로 모드 회전이 필수입니다.
+          {
+            {
+              ko: '빛의 방사 면적을 최대화하고 자막이 깨지지 않도록 하기 위해 가로 모드 회전이 필수입니다.',
+              en: 'Landscape rotation is required to maximize emitting surface and prevent text clipping.',
+              ja: '発光面積を最大化し、テキストの切れを防ぐために横向きでの回転が必須です。',
+              es: 'Se requiere rotación horizontal para maximizar la luz y evitar el corte de texto.',
+              'zh-TW': '為最大化發光面積並避免文字被切斷，必須旋轉為橫向模式。',
+              'zh-HK': '為最大化發光面積並避免文字被切斷，必須旋轉為橫向模式。'
+            }[activeLocale] || '빛의 방사 면적을 최대화하고 자막이 깨지지 않도록 하기 위해 가로 모드 회전이 필수입니다.'
+          }
         </p>
       </div>
 
@@ -745,7 +1026,25 @@ export default function AudienceRoom() {
               }}
               className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
             >
-              {isFullscreen ? '화면 축소' : '전체화면 전환'}
+              {isFullscreen ? (
+                {
+                  ko: '화면 축소',
+                  en: 'Exit Fullscreen',
+                  ja: '全画面解除',
+                  es: 'Salir de pantalla completa',
+                  'zh-TW': '縮小畫面',
+                  'zh-HK': '縮小畫面'
+                }[activeLocale] || '화면 축소'
+              ) : (
+                {
+                  ko: '전체화면 전환',
+                  en: 'Full Screen',
+                  ja: '全画面表示',
+                  es: 'Pantalla completa',
+                  'zh-TW': '全螢幕切換',
+                  'zh-HK': '全螢幕切換'
+                }[activeLocale] || '전체화면 전환'
+              )}
             </button>
           ) : (
             <button
@@ -755,13 +1054,31 @@ export default function AudienceRoom() {
               }}
               className="px-3.5 py-2 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-black/70 transition-all font-bold cursor-pointer"
             >
-              아이폰 전체화면 가이드
+              {
+                {
+                  ko: '아이폰 전체화면 가이드',
+                  en: 'iPhone Full Screen Guide',
+                  ja: 'iPhone全画面ガイド',
+                  es: 'Guía de pantalla completa para iPhone',
+                  'zh-TW': 'iPhone 全螢幕指南',
+                  'zh-HK': 'iPhone 全螢幕指南'
+                }[activeLocale] || '아이폰 전체화면 가이드'
+              }
             </button>
           )
         )}
         {wakeLockError && (
           <span className="px-3.5 py-2 rounded-xl bg-amber-500/20 backdrop-blur-md border border-amber-500/30 text-[9px] text-amber-300 font-extrabold flex items-center gap-1.5 select-none shadow-lg animate-pulse">
-            ⚠️ 저전력 모드로 인해 화면이 꺼질 수 있습니다.
+            {
+              {
+                ko: '⚠️ 저전력 모드로 인해 화면이 꺼질 수 있습니다.',
+                en: '⚠️ Screen may turn off due to Low Power Mode.',
+                ja: '⚠️ 低電力モードのため、画面が消える場合があります。',
+                es: '⚠️ La pantalla puede apagarse debido al modo de bajo consumo.',
+                'zh-TW': '⚠️ 因低電量模式，螢幕可能會自動關閉。',
+                'zh-HK': '⚠️ 因低電量模式，螢幕可能會自動關閉。'
+              }[activeLocale] || '⚠️ 저전력 모드로 인해 화면이 꺼질 수 있습니다.'
+            }
           </span>
         )}
       </div>
@@ -772,7 +1089,7 @@ export default function AudienceRoom() {
           <div className="flex justify-between items-center mb-2">
             <span className="font-bold text-white flex items-center gap-1.5">
               <Smartphone className="w-4 h-4 text-indigo-400" />
-              {isChromeIOS ? '아이폰 Chrome 전체화면 팁' : '아이폰 Safari 전체화면 팁'}
+              {ROOM_TRANSLATIONS[activeLocale].ready_ios_title}
             </span>
             <button 
               onClick={(e) => {
@@ -786,22 +1103,22 @@ export default function AudienceRoom() {
           </div>
           <p className="leading-relaxed mb-3 text-zinc-400 font-medium">
             {isChromeIOS 
-              ? '아이폰 크롬 브라우저는 기본 주소창과 메뉴바가 숨겨지지 않습니다. 아래 방법으로 앱처럼 실행하시면 완벽한 전체화면으로 이용 가능합니다.'
-              : '아이폰 사파리 브라우저는 기본 주소창과 탭이 숨겨지지 않습니다. 아래 방법으로 앱처럼 실행하시면 완벽한 전체화면으로 이용 가능합니다.'
+              ? ROOM_TRANSLATIONS[activeLocale].ready_ios_desc_chrome 
+              : ROOM_TRANSLATIONS[activeLocale].ready_ios_desc_safari
             }
           </p>
           <div className="bg-white/5 rounded-xl p-3 text-[10px] flex flex-col gap-2 text-zinc-400 leading-normal border border-white/5 font-medium">
             {isChromeIOS ? (
               <>
-                <div>1. 크롬 화면의 <b>[공유 버튼]</b>(우측 상단 주소창 옆 또는 하단 메뉴의 공유 아이콘)을 누릅니다.</div>
-                <div>2. 목록 중 <b>[홈 화면에 추가]</b>를 클릭합니다.</div>
-                <div>3. 바탕화면에 설치된 아이콘을 눌러 실행하면 완벽한 전체화면 앱으로 구동됩니다.</div>
+                <div>{ROOM_TRANSLATIONS[activeLocale].ready_ios_step1_chrome}</div>
+                <div>{ROOM_TRANSLATIONS[activeLocale].ready_ios_step2}</div>
+                <div>{ROOM_TRANSLATIONS[activeLocale].ready_ios_step3}</div>
               </>
             ) : (
               <>
-                <div>1. 사파리 화면 하단 중앙의 <b>[공유 버튼]</b>(네모에서 위로 화살표가 나가는 모양)을 누릅니다.</div>
-                <div>2. 목록 중 <b>[홈 화면에 추가]</b>를 클릭합니다.</div>
-                <div>3. 바탕화면에 설치된 아이콘을 눌러 실행하면 완벽한 전체화면 앱으로 구동됩니다.</div>
+                <div>{ROOM_TRANSLATIONS[activeLocale].ready_ios_step1_safari}</div>
+                <div>{ROOM_TRANSLATIONS[activeLocale].ready_ios_step2}</div>
+                <div>{ROOM_TRANSLATIONS[activeLocale].ready_ios_step3}</div>
               </>
             )}
           </div>
