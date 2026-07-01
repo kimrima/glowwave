@@ -7,7 +7,7 @@ import { Preset, EffectType } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import QRScannerModal from '@/components/QRScannerModal';
 import { t, Locale } from '@/lib/translations';
-import { Globe } from 'lucide-react';
+import { Globe, QrCode, Plus } from 'lucide-react';
 
 const getSpeedFactor = (ms: number, effect: string) => {
   if (effect === 'blink') {
@@ -393,16 +393,16 @@ export default function Home() {
             <Link href="/recovery" className="hover:text-white transition-colors">{t('nav_recovery', activeLocale)}</Link>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Language Selector Dropdown */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
+                className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
               >
                 <Globe className="w-3.5 h-3.5 text-zinc-400" />
-                <span className="uppercase">{activeLocale}</span>
+                <span className="hidden sm:inline uppercase">{activeLocale}</span>
               </button>
               {isLangDropdownOpen && (
                 <>
@@ -442,15 +442,19 @@ export default function Home() {
 
             <button 
               onClick={() => setIsQRScannerOpen(true)}
-              className="btn-secondary text-xs px-4 py-2 rounded-xl text-zinc-300 hover:text-white transition-all cursor-pointer font-outfit"
+              className="btn-secondary text-xs p-2 sm:px-4 sm:py-2 rounded-xl text-zinc-300 hover:text-white transition-all cursor-pointer flex items-center gap-1.5 font-outfit"
+              title={t('btn_qr_join', activeLocale)}
             >
-              {t('btn_qr_join', activeLocale)}
+              <QrCode className="w-4 h-4 text-zinc-400" />
+              <span className="hidden sm:inline">{t('btn_qr_join', activeLocale)}</span>
             </button>
             <Link 
               href="/host/setup" 
-              className="btn-primary text-xs px-4 py-2 rounded-xl text-black hover:bg-zinc-200 transition-all cursor-pointer font-outfit"
+              className="btn-primary text-xs p-2 sm:px-4 sm:py-2 rounded-xl text-black hover:bg-zinc-200 transition-all cursor-pointer font-outfit flex items-center gap-1.5"
+              title={t('btn_create_room', activeLocale)}
             >
-              {t('btn_create_room', activeLocale)}
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('btn_create_room', activeLocale)}</span>
             </Link>
           </div>
         </div>

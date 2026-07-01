@@ -10,7 +10,9 @@ import {
   Check, 
   RefreshCw, 
   Edit3,
-  Globe
+  Globe,
+  FolderHeart,
+  ArrowLeft
 } from 'lucide-react';
 import jsQR from 'jsqr';
 import { Preset, EffectType } from '@/lib/types';
@@ -928,25 +930,38 @@ function LocalSignboardContent() {
       {/* Header */}
       <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-30 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link 
               href="/"
-              className="text-zinc-400 hover:text-white transition-all text-xs font-extrabold flex items-center gap-1.5 cursor-pointer select-none bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-xl border border-white/10 shadow-sm"
-            >
-              {
+              className="text-zinc-400 hover:text-white transition-all text-xs font-extrabold flex items-center gap-1.5 cursor-pointer select-none bg-white/5 hover:bg-white/10 p-2 sm:px-3 sm:py-1.5 rounded-xl border border-white/10 shadow-sm"
+              title={
                 {
-                  ko: '← 뒤로가기',
-                  en: '← Back',
-                  ja: '← 戻る',
-                  es: '← Volver',
-                  'zh-TW': '← 返回',
-                  'zh-HK': '← 返回',
-                }[activeLocale] || '← 뒤로가기'
+                  ko: '뒤로가기',
+                  en: 'Back',
+                  ja: '戻る',
+                  es: 'Volver',
+                  'zh-TW': '返回',
+                  'zh-HK': '返回',
+                }[activeLocale] || '뒤로가기'
               }
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">
+                {
+                  {
+                    ko: '뒤로가기',
+                    en: 'Back',
+                    ja: '戻る',
+                    es: 'Volver',
+                    'zh-TW': '返回',
+                    'zh-HK': '返回',
+                  }[activeLocale] || '뒤로가기'
+                }
+              </span>
             </Link>
-            <div className="flex items-center gap-2.5">
-              <span className="font-black text-white tracking-tight font-outfit text-sm uppercase">GlowWave Local</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20 font-black tracking-wider uppercase">
+            <div className="flex items-center gap-1.5 sm:gap-2.5">
+              <span className="hidden sm:inline font-black text-white tracking-tight font-outfit text-xs sm:text-sm uppercase">GlowWave Local</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-violet-500/10 text-violet-400 border border-violet-500/20 font-black tracking-wider uppercase whitespace-nowrap">
                 {
                   {
                     ko: '1인 모드',
@@ -961,16 +976,18 @@ function LocalSignboardContent() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={() => {
                 setVaultTab('slots');
                 setIsVaultOpen(true);
               }}
-              className="flex items-center bg-white/5 hover:bg-white/10 border border-white/10 px-4.5 py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
+              className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 p-2 sm:px-4 sm:py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
+              title={t('vault_share', activeLocale)}
             >
-              {t('vault_share', activeLocale)}
+              <FolderHeart className="w-4 h-4 text-zinc-300" />
+              <span className="hidden sm:inline">{t('vault_share', activeLocale)}</span>
             </button>
 
             {/* Language Selector Dropdown */}
@@ -978,10 +995,10 @@ function LocalSignboardContent() {
               <button
                 type="button"
                 onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3.5 py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
+                className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 p-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
               >
                 <Globe className="w-3.5 h-3.5 text-zinc-400" />
-                <span className="uppercase">{activeLocale}</span>
+                <span className="hidden sm:inline uppercase">{activeLocale}</span>
               </button>
               {isLangDropdownOpen && (
                 <>

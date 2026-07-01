@@ -24,7 +24,8 @@ import {
   Slash,
   Lock,
   Maximize2,
-  Globe
+  Globe,
+  FolderHeart
 } from 'lucide-react';
 import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS, getLocalizedPrice, getLocalizedTierName } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -1768,15 +1769,18 @@ export default function HostDashboard() {
       <header className="border-b border-white/5 bg-[#030305]/60 backdrop-blur-md relative z-30 pt-[calc(env(safe-area-inset-top,0px)+12px)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-black text-white tracking-tight font-outfit text-sm uppercase">GlowWave Host Remote</span>
+            <span className="hidden sm:inline font-black text-white tracking-tight font-outfit text-sm uppercase">GlowWave Host Remote</span>
+            <span className="sm:hidden font-black text-white tracking-tight font-outfit text-xs sm:text-sm uppercase">GlowWave Host</span>
           </div>
           
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setIsVaultOpen(true)}
-              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              className="p-2 sm:px-3 sm:py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+              title={t('vault_share', activeLocale)}
             >
-              <span>{t('vault_share', activeLocale)}</span>
+              <FolderHeart className="w-4 h-4 text-zinc-300" />
+              <span className="hidden sm:inline">{t('vault_share', activeLocale)}</span>
             </button>
 
             {/* Language Selector Dropdown */}
@@ -1784,10 +1788,10 @@ export default function HostDashboard() {
               <button
                 type="button"
                 onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold text-white cursor-pointer shadow-sm select-none transition-all"
+                className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold text-white cursor-pointer shadow-sm select-none transition-all"
               >
                 <Globe className="w-3.5 h-3.5 text-zinc-400" />
-                <span className="uppercase">{activeLocale}</span>
+                <span className="hidden sm:inline uppercase">{activeLocale}</span>
               </button>
               {isLangDropdownOpen && (
                 <>
