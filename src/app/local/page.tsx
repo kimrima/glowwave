@@ -314,6 +314,12 @@ function LocalSignboardContent() {
   const [syncRoomActiveParticipants, setSyncRoomActiveParticipants] = useState<number>(0);
   const [syncTimeRemaining, setSyncTimeRemaining] = useState<string>('');
 
+  // Sync Room Recovery states
+  const [syncRecoveryEmail, setSyncRecoveryEmail] = useState('');
+  const [isSyncRecoveryLoading, setIsSyncRecoveryLoading] = useState(false);
+  const [syncRecoveryRooms, setSyncRecoveryRooms] = useState<any[]>([]);
+  const [syncRecoveryMessage, setSyncRecoveryMessage] = useState('');
+
   // Active categories
   const [activeCategory, setActiveCategory] = useState<'custom' | 'busking' | 'sports' | 'party' | 'anniversary' | 'store'>('custom');
 
@@ -890,6 +896,84 @@ function LocalSignboardContent() {
     localStorage.removeItem('glowwave_local_sync_room_id');
     localStorage.removeItem('glowwave_local_sync_host_token');
     localStorage.removeItem('glowwave_local_sync_room_created_at');
+  };
+
+  const handleRecoverSyncRooms = async () => {
+    const email = syncRecoveryEmail.trim();
+    if (!email) {
+      setSyncRecoveryMessage(
+        activeLocale === 'ko' 
+          ? '이메일 주소를 입력해 주세요.' 
+          : 'Please enter your email address.'
+      );
+      return;
+    }
+
+    setIsSyncRecoveryLoading(true);
+    setSyncRecoveryMessage('');
+    setSyncRecoveryRooms([]);
+
+    try {
+      const res = await fetch(`/api/room/recover?email=${encodeURIComponent(email)}`);
+      if (!res.ok) throw new Error('API request failed');
+      const data = await res.json();
+      
+      if (data.rooms && data.rooms.length > 0) {
+        setSyncRecoveryRooms(data.rooms);
+        setSyncRecoveryMessage(
+          activeLocale === 'ko'
+            ? `${data.rooms.length}개의 활성화된 방을 찾았습니다.`
+            : `Found ${data.rooms.length} active room(s).`
+        );
+      } else {
+        setSyncRecoveryMessage(
+          activeLocale === 'ko'
+            ? '활성화된 방을 찾지 못했습니다.'
+            : 'No active rooms found for this email.'
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      setSyncRecoveryMessage(
+        activeLocale === 'ko'
+          ? '조회 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+          : 'An error occurred during lookup. Please try again.'
+      );
+    } finally {
+      setIsSyncRecoveryLoading(false);
+    }
+  };
+
+  const handleSelectRecoveredRoom = async (room: any) => {
+    setSyncRoomId(room.room_id);
+    setSyncHostToken(room.host_session_token);
+    setSyncRoomTier(room.tier);
+    setSyncRoomCreatedAt(room.created_at);
+    setSyncRoomActiveParticipants(0);
+    
+    localStorage.setItem('glowwave_local_sync_room_id', room.room_id);
+    localStorage.setItem('glowwave_local_sync_host_token', room.host_session_token);
+    localStorage.setItem('glowwave_local_sync_room_created_at', room.created_at);
+    
+    // Initialize room broadcast with the current preset
+    await fetch(`/api/room/${room.room_id}/broadcast`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        host_session_token: room.host_session_token,
+        preset: currentBroadcastPreset
+      })
+    }).catch((err) => console.error('[Local Recovery] Failed to broadcast initial state:', err));
+
+    setSyncRecoveryRooms([]);
+    setSyncRecoveryEmail('');
+    setSyncRecoveryMessage('');
+
+    alert(
+      activeLocale === 'ko'
+        ? '성공적으로 전광판이 복구 및 동기화되었습니다! 🎉'
+        : 'Room successfully recovered and synced! 🎉'
+    );
   };
 
   const handleLocaleChange = (newLocale: Locale) => {
@@ -3315,7 +3399,8 @@ function LocalSignboardContent() {
                     </div>
                   ) : (
                     /* Standard Pricing Selection */
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                       {/* Option A: Free Trial */}
                       <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left active:scale-[0.99] min-h-[250px]">
                         <div>
@@ -3413,6 +3498,72 @@ function LocalSignboardContent() {
                         </button>
                       </div>
                     </div>
+
+                    {/* Room Recovery Form */}
+                    <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all text-left">
+                      <h4 className="text-xs font-black text-white mb-2 flex items-center gap-1.5 font-sans">
+                        🔑 {activeLocale === 'ko' ? '기존 방(결제한 방) 동기화 복구하기' : 'Restore/Recover Existing Paid Room'}
+                      </h4>
+                      <p className="text-[11px] text-zinc-400 mb-3 leading-relaxed">
+                        {activeLocale === 'ko' 
+                          ? '결제시 입력하셨던 이메일 주소를 입력하시면, 현재 활성화되어 있는 방의 연동 키와 주소를 확인하여 복구할 수 있습니다.'
+                          : 'Enter the email address you used during payment to look up and restore your active room sessions.'}
+                      </p>
+                      <div className="flex gap-2">
+                        <input
+                          type="email"
+                          placeholder="your-email@example.com"
+                          value={syncRecoveryEmail}
+                          onChange={(e) => setSyncRecoveryEmail(e.target.value)}
+                          className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-zinc-300 font-sans focus:outline-none focus:border-violet-500/50"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRecoverSyncRooms}
+                          disabled={isSyncRecoveryLoading}
+                          className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:bg-violet-800 disabled:text-zinc-500 text-white font-bold text-xs transition-all cursor-pointer text-center active:scale-95 shrink-0"
+                        >
+                          {isSyncRecoveryLoading 
+                            ? (activeLocale === 'ko' ? '조회 중...' : 'Checking...') 
+                            : (activeLocale === 'ko' ? '방 조회' : 'Lookup Rooms')}
+                        </button>
+                      </div>
+                      
+                      {syncRecoveryMessage && (
+                        <p className="text-[10px] text-amber-400 mt-2 font-medium">{syncRecoveryMessage}</p>
+                      )}
+                      
+                      {syncRecoveryRooms.length > 0 && (
+                        <div className="mt-3 space-y-2 border-t border-white/5 pt-3">
+                          <label className="text-[10px] font-mono text-zinc-400 font-bold block">
+                            {activeLocale === 'ko' ? '복구 가능한 방 목록 (클릭 시 복구)' : 'Recoverable Rooms (Click to restore)'}
+                          </label>
+                          <div className="grid grid-cols-1 gap-2">
+                            {syncRecoveryRooms.map((room) => (
+                              <button
+                                key={room.room_id}
+                                type="button"
+                                onClick={() => handleSelectRecoveredRoom(room)}
+                                className="w-full p-3 rounded-xl border border-white/10 hover:bg-white/5 transition-all text-left flex justify-between items-center group active:scale-[0.99]"
+                              >
+                                <div>
+                                  <span className="text-xs font-black text-white block group-hover:text-violet-400 transition-colors">
+                                    ID: {room.room_id}
+                                  </span>
+                                  <span className="text-[10px] text-zinc-500 font-mono">
+                                    {room.tier.toUpperCase()} • Created: {new Date(room.created_at).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] font-bold text-violet-400 group-hover:translate-x-0.5 transition-transform">
+                                  {activeLocale === 'ko' ? '이 방 복구하기 →' : 'Restore →'}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   )}
                 </div>
               );
