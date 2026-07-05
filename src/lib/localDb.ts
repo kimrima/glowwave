@@ -237,7 +237,7 @@ export const localDb = {
   },
 
   async getRoom(roomId: string): Promise<Room | undefined> {
-    await this.cleanupExpiredRooms();
+    let room;
     if (isSupabaseConfigured() && supabase) {
       const { data, error } = await supabase
         .from('rooms')
@@ -248,14 +248,28 @@ export const localDb = {
         console.error('[localDb] Supabase getRoom error:', error);
         throw new Error(error.message);
       }
-      return data ? (data as Room) : undefined;
+      room = data ? (data as Room) : undefined;
     } else {
-      return this.rooms.get(roomId);
+      room = this.rooms.get(roomId);
     }
+
+    if (room) {
+      const createdAt = new Date(room.created_at);
+      const expiryPeriodMs = room.tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+      if (Date.now() - createdAt.getTime() > expiryPeriodMs) {
+        if (!isSupabaseConfigured()) {
+          this.rooms.delete(roomId);
+          this.currentStates.delete(roomId);
+          this.saveToDisk();
+        }
+        return undefined;
+      }
+    }
+    return room;
   },
 
   async getRoomsByEmail(email: string): Promise<Room[]> {
-    await this.cleanupExpiredRooms();
+    let roomsList: Room[] = [];
     if (isSupabaseConfigured() && supabase) {
       const { data, error } = await supabase
         .from('rooms')
@@ -266,12 +280,18 @@ export const localDb = {
         console.error('[localDb] Supabase getRoomsByEmail error:', error);
         return [];
       }
-      return (data || []) as Room[];
+      roomsList = (data || []) as Room[];
     } else {
-      return Array.from(this.rooms.values()).filter(
+      roomsList = Array.from(this.rooms.values()).filter(
         (room) => room.email.toLowerCase() === email.toLowerCase() && room.status === 'active'
       );
     }
+
+    return roomsList.filter(room => {
+      const createdAt = new Date(room.created_at);
+      const expiryPeriodMs = room.tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+      return Date.now() - createdAt.getTime() <= expiryPeriodMs;
+    });
   },
 
   async addPayment(

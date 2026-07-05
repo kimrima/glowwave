@@ -221,42 +221,17 @@ export default function Home() {
       let updatedRecentRooms = [...recentRooms];
       let hasChanges = false;
       
-      await Promise.all(
-        uniqueRoomIds.map(async (id) => {
-          try {
-            const res = await fetch(`/api/room/${id}/status`);
-            if (res.ok) {
-              const data = await res.json();
-              
-              const createdTime = new Date(data.created_at).getTime();
-              const limitMs = data.tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
-              const expireTime = createdTime + limitMs;
-              const diff = expireTime - Date.now();
-              
-              let isExpired = false;
-              if (diff <= 0 || data.status !== 'active') {
-                isExpired = true;
-                // Remove from recentRooms if expired
-                updatedRecentRooms = updatedRecentRooms.filter(r => r.roomId !== id);
-                hasChanges = true;
-              } else {
-                // Update active room details in loaded list if missing/mismatched
-                const matched = updatedRecentRooms.find(r => r.roomId === id);
-                if (matched && (!matched.tier || matched.createdAt !== data.created_at)) {
-                  matched.tier = data.tier;
-                  matched.createdAt = data.created_at;
-                  hasChanges = true;
-                }
-              }
-
-              results[id] = {
-                tier: data.tier,
-                createdAt: data.created_at,
-                isExpired,
-                diff,
-                loaded: true
-              };
-            } else {
+      try {
+        const idsQuery = uniqueRoomIds.join(',');
+        const res = await fetch(`/api/room/status?ids=${idsQuery}`);
+        if (res.ok) {
+          const data = await res.json();
+          const returnedRooms = data.rooms || [];
+          
+          for (const roomInfo of returnedRooms) {
+            const id = roomInfo.room_id;
+            
+            if (roomInfo.is_expired || roomInfo.error || roomInfo.status !== 'active') {
               results[id] = {
                 tier: 'free',
                 createdAt: new Date().toISOString(),
@@ -266,8 +241,44 @@ export default function Home() {
               };
               updatedRecentRooms = updatedRecentRooms.filter(r => r.roomId !== id);
               hasChanges = true;
+            } else {
+              const createdTime = new Date(roomInfo.created_at).getTime();
+              const limitMs = roomInfo.tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+              const expireTime = createdTime + limitMs;
+              const diff = expireTime - Date.now();
+              
+              if (diff <= 0) {
+                results[id] = {
+                  tier: roomInfo.tier,
+                  createdAt: roomInfo.created_at,
+                  isExpired: true,
+                  diff: 0,
+                  loaded: true
+                };
+                updatedRecentRooms = updatedRecentRooms.filter(r => r.roomId !== id);
+                hasChanges = true;
+              } else {
+                // Update active room details in loaded list if missing/mismatched
+                const matched = updatedRecentRooms.find(r => r.roomId === id);
+                if (matched && (!matched.tier || matched.createdAt !== roomInfo.created_at)) {
+                  matched.tier = roomInfo.tier;
+                  matched.createdAt = roomInfo.created_at;
+                  hasChanges = true;
+                }
+                
+                results[id] = {
+                  tier: roomInfo.tier,
+                  createdAt: roomInfo.created_at,
+                  isExpired: false,
+                  diff,
+                  loaded: true
+                };
+              }
             }
-          } catch (e) {
+          }
+        } else {
+          // Fallback if API fails
+          for (const id of uniqueRoomIds) {
             results[id] = {
               tier: 'free',
               createdAt: new Date().toISOString(),
@@ -278,8 +289,21 @@ export default function Home() {
             updatedRecentRooms = updatedRecentRooms.filter(r => r.roomId !== id);
             hasChanges = true;
           }
-        })
-      );
+        }
+      } catch (e) {
+        console.error('Error fetching batch room statuses:', e);
+        for (const id of uniqueRoomIds) {
+          results[id] = {
+            tier: 'free',
+            createdAt: new Date().toISOString(),
+            isExpired: true,
+            diff: 0,
+            loaded: true
+          };
+          updatedRecentRooms = updatedRecentRooms.filter(r => r.roomId !== id);
+          hasChanges = true;
+        }
+      }
 
       setRoomDetails(prev => ({ ...prev, ...results }));
 
@@ -959,6 +983,7 @@ export default function Home() {
         <QRScannerModal
           onScanSuccess={handleQRScanSuccess}
           onClose={() => setIsQRScannerOpen(false)}
+          activeLocale={activeLocale}
         />
       )}
 

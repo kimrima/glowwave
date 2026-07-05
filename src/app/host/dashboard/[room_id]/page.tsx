@@ -1029,6 +1029,46 @@ export default function HostDashboard() {
     }
   };
 
+  const handleSaveHostPreset = () => {
+    // Check tier limit: Free tier is limited to 6 presets max
+    if (room?.tier === 'free' && presets.length >= 6) {
+      setSelectedUpgradeTier(null);
+      setUpgradeStep('select');
+      setIsUpgradeModalOpen(true);
+      return;
+    }
+
+    const calculatedSpeed = getSpeedMs(customEffect, customSpeed);
+    const newPreset: Preset = {
+      bg_color: customBgColor,
+      text: customText.trim() || 'GLOW WAVE',
+      text_color: customTextColor,
+      effect: customEffect,
+      speed: calculatedSpeed,
+      font_size: customFontSize,
+      font_family: customFontFamily,
+      special_effect: customSpecialEffect,
+      countdown_seconds: customEffect === 'countdown' ? customCountdownSeconds : undefined,
+      result_text: (customEffect === 'countdown' || customEffect === 'luckydraw_wait') ? customResultText : undefined
+    };
+
+    const updated = [...presets, newPreset];
+    setPresets(updated);
+    localStorage.setItem(`glowwave_presets_${roomId}`, JSON.stringify(updated));
+    setActiveCategory('custom'); // Auto-switch to personal presets tab
+    
+    // Toast alert message localized
+    const successMsg = {
+      ko: '현재 즉석 라이브 설정이 내 프리셋에 추가되었습니다!',
+      en: 'Current live setting has been added to My Presets!',
+      ja: '現在の設定がマイプリセットに追加されました！',
+      es: '¡El ajuste actual ha sido añadido a mis ajustes!',
+      'zh-TW': '目前設定已新增至我的預設！',
+      'zh-HK': '目前設定已新增至我的預設！'
+    }[activeLocale] || '현재 즉석 라이브 설정이 내 프리셋에 추가되었습니다!';
+    alert(successMsg);
+  };
+
   // Slots Vault Handlers for Host
   const handleSaveSlotPackage = () => {
     const defaultName = {
@@ -2437,7 +2477,7 @@ export default function HostDashboard() {
             
             <div className="flex flex-col gap-5">
               {/* Text Input & Send Button Row (Combined side-by-side) */}
-              <div className="flex gap-3 items-center">
+              <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
                 <div className="flex-1 relative">
                   <input
                     type="text"
@@ -2461,29 +2501,61 @@ export default function HostDashboard() {
                   </span>
                 </div>
                 
-                <button
-                  type="button"
-                  onClick={() => {
-                    const calculatedSpeed = getSpeedMs(customEffect, customSpeed);
-                    
-                    const customPreset: Preset = {
-                      bg_color: customBgColor,
-                      text: customText.trim() || (customEffect === 'luckydraw_wait' ? t('raffle_win', activeLocale) : 'GLOW WAVE'),
-                      text_color: customTextColor,
-                      effect: customEffect,
-                      speed: calculatedSpeed,
-                      font_size: customFontSize,
-                      font_family: customFontFamily,
-                      special_effect: customSpecialEffect,
-                      countdown_seconds: customEffect === 'countdown' ? customCountdownSeconds : undefined,
-                      result_text: (customEffect === 'countdown' || customEffect === 'luckydraw_wait') ? customResultText : undefined
-                    };
-                    triggerPreset(customPreset, -1);
-                  }}
-                  className="btn-primary h-[48px] px-6 rounded-xl text-xs font-black flex items-center justify-center cursor-pointer shrink-0"
-                >
-                  {t('broadcast', activeLocale)}
-                </button>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const calculatedSpeed = getSpeedMs(customEffect, customSpeed);
+                      
+                      const customPreset: Preset = {
+                        bg_color: customBgColor,
+                        text: customText.trim() || (customEffect === 'luckydraw_wait' ? t('raffle_win', activeLocale) : 'GLOW WAVE'),
+                        text_color: customTextColor,
+                        effect: customEffect,
+                        speed: calculatedSpeed,
+                        font_size: customFontSize,
+                        font_family: customFontFamily,
+                        special_effect: customSpecialEffect,
+                        countdown_seconds: customEffect === 'countdown' ? customCountdownSeconds : undefined,
+                        result_text: (customEffect === 'countdown' || customEffect === 'luckydraw_wait') ? customResultText : undefined
+                      };
+                      triggerPreset(customPreset, -1);
+                    }}
+                    className="btn-primary h-[48px] px-5 sm:px-6 rounded-xl text-xs font-black flex items-center justify-center cursor-pointer flex-1 sm:flex-none transition-all hover:scale-102 duration-200"
+                  >
+                    {t('broadcast', activeLocale)}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveHostPreset}
+                    title={
+                      {
+                        ko: '내 프리셋에 추가',
+                        en: 'Add to My Presets',
+                        ja: 'マイプリセットに追加',
+                        es: 'Añadir a mis ajustes',
+                        'zh-TW': '新增至我的預設',
+                        'zh-HK': '新增至我的預設'
+                      }[activeLocale]
+                    }
+                    className="h-[48px] px-4 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 border border-zinc-700 hover:border-zinc-500 rounded-xl text-xs font-black text-white flex items-center justify-center gap-1.5 cursor-pointer transition-all hover:scale-102 duration-200 shrink-0"
+                  >
+                    <FolderHeart className="w-4 h-4 text-pink-400" />
+                    <span>
+                      {
+                        {
+                          ko: '프리셋 추가',
+                          en: 'Add Preset',
+                          ja: 'プリセット追加',
+                          es: 'Añadir ajuste',
+                          'zh-TW': '新增預設',
+                          'zh-HK': '新增預設'
+                        }[activeLocale] || '프리셋 추가'
+                      }
+                    </span>
+                  </button>
+                </div>
               </div>
 
               {/* iOS style Segmented Controls Row (Responsive Grid layout - Spaced 2-Row Layout) */}

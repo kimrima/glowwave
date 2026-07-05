@@ -2,13 +2,15 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Camera, X, Loader2, AlertCircle } from 'lucide-react';
+import { t, Locale } from '@/lib/translations';
 
 interface QRScannerModalProps {
   onScanSuccess: (roomId: string) => void;
   onClose: () => void;
+  activeLocale?: Locale;
 }
 
-export default function QRScannerModal({ onScanSuccess, onClose }: QRScannerModalProps) {
+export default function QRScannerModal({ onScanSuccess, onClose, activeLocale = 'ko' }: QRScannerModalProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [libLoaded, setLibLoaded] = useState(false);
@@ -34,7 +36,7 @@ export default function QRScannerModal({ onScanSuccess, onClose }: QRScannerModa
       script.async = true;
       script.onload = onScriptLoad;
       script.onerror = () => {
-        setError('QR 코드 스캐너 라이브러리를 불러오지 못했습니다. 네트워크 상태를 확인하세요.');
+        setError(t('camera_error_lib', activeLocale));
         setLoading(false);
       };
       document.body.appendChild(script);
@@ -77,7 +79,7 @@ export default function QRScannerModal({ onScanSuccess, onClose }: QRScannerModa
         setLoading(false);
       } catch (err: any) {
         console.error('Camera access error:', err);
-        setError('카메라 권한을 얻지 못했습니다. 브라우저 설정에서 카메라 권한을 허용해주세요.');
+        setError(t('camera_error_permission', activeLocale));
         setLoading(false);
       }
     };
@@ -184,14 +186,14 @@ export default function QRScannerModal({ onScanSuccess, onClose }: QRScannerModa
       <div className="glass-effect rounded-2xl w-full max-w-md p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150 border border-white/10 text-center">
         {/* Header */}
         <div className="flex justify-between items-center pb-3 border-b border-white/5 mb-5">
-          <h3 className="text-sm font-bold text-white flex items-center gap-2">
-            <Camera className="w-4 h-4 text-indigo-400" />
-            QR 코드 스캔
+          <h3 className="text-base font-bold text-white flex items-center gap-2">
+            <Camera className="w-5 h-5 text-indigo-400" />
+            {t('qr_scan_title', activeLocale)}
           </h3>
           <button 
             onClick={onClose} 
             className="text-zinc-500 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
-            title="닫기"
+            title={t('close', activeLocale)}
           >
             <X className="w-5 h-5" />
           </button>
@@ -202,14 +204,14 @@ export default function QRScannerModal({ onScanSuccess, onClose }: QRScannerModa
           {loading && (
             <div className="flex flex-col items-center gap-3 text-zinc-400 z-10">
               <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-              <p className="text-xs font-semibold">카메라 작동 중...</p>
+              <p className="text-sm font-semibold">{t('camera_loading', activeLocale)}</p>
             </div>
           )}
 
           {error && (
             <div className="flex flex-col items-center gap-3 text-red-400 p-6 z-10">
               <AlertCircle className="w-8 h-8" />
-              <p className="text-xs font-medium leading-relaxed">{error}</p>
+              <p className="text-sm font-medium leading-relaxed">{error}</p>
             </div>
           )}
 
@@ -244,11 +246,11 @@ export default function QRScannerModal({ onScanSuccess, onClose }: QRScannerModa
           )}
         </div>
 
-        <p className="text-xs text-zinc-400 leading-normal max-w-xs mx-auto">
-          QR 코드를 사각형 가이드라인 중앙에 맞춰주시면 자동으로 스캔하여 입장합니다.
+        <p className="text-sm sm:text-base text-zinc-300 font-bold leading-relaxed max-w-sm sm:max-w-md mx-auto px-1">
+          {t('qr_scan_guide', activeLocale)}
         </p>
-        <div className="mt-3 bg-white/5 border border-white/5 p-2 rounded-lg text-[10px] text-zinc-500 leading-normal max-w-xs mx-auto">
-          💡 <b>스캔이 잘 안 되시나요?</b> 거리가 너무 멀거나 카메라 줌이 되지 않을 때에는, 스크린 아래에 표시된 6자리 [입장 코드]를 홈 화면에 직접 입력해 주셔도 바로 입장하실 수 있습니다!
+        <div className="mt-4 bg-white/5 border border-white/10 p-3 sm:p-4 rounded-xl text-xs sm:text-sm text-zinc-400 font-medium leading-relaxed max-w-sm sm:max-w-md mx-auto text-left">
+          {t('qr_scan_help', activeLocale)}
         </div>
       </div>
 
