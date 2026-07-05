@@ -569,5 +569,135 @@ export const localDb = {
       }
       return false;
     }
+  },
+
+  async getAllRooms(): Promise<Room[]> {
+    if (isSupabaseConfigured() && supabase) {
+      const { data, error } = await supabase
+        .from('rooms')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('[localDb] Supabase getAllRooms error:', error);
+        return [];
+      }
+      return (data || []) as Room[];
+    } else {
+      this.loadFromDisk();
+      return Array.from(this.rooms.values()).sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    }
+  },
+
+  async updateRoom(roomId: string, updates: Partial<Room>): Promise<boolean> {
+    if (isSupabaseConfigured() && supabase) {
+      const { error } = await supabase
+        .from('rooms')
+        .update(updates)
+        .eq('id', roomId);
+      if (error) {
+        console.error('[localDb] Supabase updateRoom error:', error);
+        return false;
+      }
+      return true;
+    } else {
+      this.loadFromDisk();
+      const room = this.rooms.get(roomId);
+      if (room) {
+        this.rooms.set(roomId, { ...room, ...updates });
+        this.saveToDisk();
+        return true;
+      }
+      return false;
+    }
+  },
+
+  async deleteRoom(roomId: string): Promise<boolean> {
+    if (isSupabaseConfigured() && supabase) {
+      const { error } = await supabase
+        .from('rooms')
+        .delete()
+        .eq('id', roomId);
+      if (error) {
+        console.error('[localDb] Supabase deleteRoom error:', error);
+        return false;
+      }
+      return true;
+    } else {
+      this.loadFromDisk();
+      const deleted = this.rooms.delete(roomId);
+      this.currentStates.delete(roomId);
+      if (deleted) {
+        this.saveToDisk();
+        return true;
+      }
+      return false;
+    }
+  },
+
+  async getAllPayments(): Promise<Payment[]> {
+    if (isSupabaseConfigured() && supabase) {
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('[localDb] Supabase getAllPayments error:', error);
+        return [];
+      }
+      return (data || []) as Payment[];
+    } else {
+      this.loadFromDisk();
+      return [...this.payments].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    }
+  },
+
+  async updatePayment(paymentId: string, updates: Partial<Payment>): Promise<boolean> {
+    if (isSupabaseConfigured() && supabase) {
+      const { error } = await supabase
+        .from('payments')
+        .update(updates)
+        .eq('id', paymentId);
+      if (error) {
+        console.error('[localDb] Supabase updatePayment error:', error);
+        return false;
+      }
+      return true;
+    } else {
+      this.loadFromDisk();
+      const idx = this.payments.findIndex((p) => p.id === paymentId);
+      if (idx !== -1) {
+        this.payments[idx] = { ...this.payments[idx], ...updates };
+        this.saveToDisk();
+        return true;
+      }
+      return false;
+    }
+  },
+
+  async deletePayment(paymentId: string): Promise<boolean> {
+    if (isSupabaseConfigured() && supabase) {
+      const { error } = await supabase
+        .from('payments')
+        .delete()
+        .eq('id', paymentId);
+      if (error) {
+        console.error('[localDb] Supabase deletePayment error:', error);
+        return false;
+      }
+      return true;
+    } else {
+      this.loadFromDisk();
+      const idx = this.payments.findIndex((p) => p.id === paymentId);
+      if (idx !== -1) {
+        this.payments.splice(idx, 1);
+        this.saveToDisk();
+        return true;
+      }
+      return false;
+    }
   }
 };

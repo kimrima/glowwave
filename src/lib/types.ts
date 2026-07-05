@@ -154,6 +154,7 @@ export interface Room {
   max_participants: number;
   created_at: string;
   passcode?: string;
+  active_clients?: number;
 }
 
 export interface Payment {
