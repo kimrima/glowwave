@@ -141,6 +141,7 @@ export const localDb = {
     if (isSupabaseConfigured() && supabase) {
       const eighteenHoursAgo = new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString();
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
       
       // Perform delete on free rooms older than 18 hours
@@ -155,10 +156,16 @@ export const localDb = {
         console.error('[localDb] Supabase cleanup paid event rooms error:', roomErr);
       }
 
-      // Perform delete on store paid rooms (store, store_annual) older than 1 year
-      const { error: storeErr } = await supabase.from('rooms').delete().in('tier', ['store', 'store_annual']).lt('created_at', oneYearAgo);
-      if (storeErr) {
-        console.error('[localDb] Supabase cleanup store rooms error:', storeErr);
+      // Perform delete on monthly store paid rooms (store) older than 30 days
+      const { error: storeMonthlyErr } = await supabase.from('rooms').delete().eq('tier', 'store').lt('created_at', thirtyDaysAgo);
+      if (storeMonthlyErr) {
+        console.error('[localDb] Supabase cleanup store monthly rooms error:', storeMonthlyErr);
+      }
+
+      // Perform delete on annual store paid rooms (store_annual) older than 365 days
+      const { error: storeAnnualErr } = await supabase.from('rooms').delete().eq('tier', 'store_annual').lt('created_at', oneYearAgo);
+      if (storeAnnualErr) {
+        console.error('[localDb] Supabase cleanup store annual rooms error:', storeAnnualErr);
       }
       
       const { error: payErr } = await supabase.from('payments').delete().lt('created_at', twentyFourHoursAgo);
@@ -175,8 +182,10 @@ export const localDb = {
         let expiryPeriodMs = 24 * 60 * 60 * 1000; // Event tiers default: 24h
         if (room.tier === 'free') {
           expiryPeriodMs = 18 * 60 * 60 * 1000; // Free sync trial: 18h
-        } else if (room.tier === 'store' || room.tier === 'store_annual') {
-          expiryPeriodMs = 365 * 24 * 60 * 60 * 1000; // Store signage: 365 days
+        } else if (room.tier === 'store') {
+          expiryPeriodMs = 30 * 24 * 60 * 60 * 1000; // Store monthly: 30 days
+        } else if (room.tier === 'store_annual') {
+          expiryPeriodMs = 365 * 24 * 60 * 60 * 1000; // Store annual: 365 days
         }
         
         if (now.getTime() - createdAt.getTime() > expiryPeriodMs) {
@@ -271,7 +280,9 @@ export const localDb = {
       let expiryPeriodMs = 24 * 60 * 60 * 1000;
       if (room.tier === 'free') {
         expiryPeriodMs = 18 * 60 * 60 * 1000;
-      } else if (room.tier === 'store' || room.tier === 'store_annual') {
+      } else if (room.tier === 'store') {
+        expiryPeriodMs = 30 * 24 * 60 * 60 * 1000;
+      } else if (room.tier === 'store_annual') {
         expiryPeriodMs = 365 * 24 * 60 * 60 * 1000;
       }
 
@@ -311,7 +322,9 @@ export const localDb = {
       let expiryPeriodMs = 24 * 60 * 60 * 1000;
       if (room.tier === 'free') {
         expiryPeriodMs = 18 * 60 * 60 * 1000;
-      } else if (room.tier === 'store' || room.tier === 'store_annual') {
+      } else if (room.tier === 'store') {
+        expiryPeriodMs = 30 * 24 * 60 * 60 * 1000;
+      } else if (room.tier === 'store_annual') {
         expiryPeriodMs = 365 * 24 * 60 * 60 * 1000;
       }
       return Date.now() - createdAt.getTime() <= expiryPeriodMs;

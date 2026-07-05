@@ -529,7 +529,8 @@ export default function HostSetup() {
             )}
 
             {/* Plan Category Selector Tabs */}
-            <div className="bg-black/30 border border-white/5 p-1 rounded-2xl flex gap-1.5 mt-2">
+            {(importStatus !== null || planType === 'store') && (
+              <div className="bg-black/30 border border-white/5 p-1 rounded-2xl flex gap-1.5 mt-2">
               <button
                 type="button"
                 onClick={() => {
@@ -577,6 +578,7 @@ export default function HostSetup() {
                 }
               </button>
             </div>
+            )}
 
             {/* Tiers List */}
             <div className="flex flex-col gap-3">
@@ -585,7 +587,7 @@ export default function HostSetup() {
                   if (planType === 'store') {
                     return tierKey === 'store' || tierKey === 'store_annual';
                   } else {
-                    return tierKey === 'free' || tierKey === 'lite' || tierKey === 'pro';
+                    return tierKey === 'free' || tierKey === 'lite' || tierKey === 'pro' || tierKey === 'max';
                   }
                 })
                 .map((tierKey) => {
