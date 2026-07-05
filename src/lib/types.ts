@@ -20,7 +20,7 @@ export interface Preset {
   locale?: string;
 }
 
-export type TierType = 'free' | 'lite' | 'pro' | 'max';
+export type TierType = 'free' | 'lite' | 'pro' | 'max' | 'store' | 'store_annual';
 
 export interface TierConfig {
   name: string;
@@ -59,6 +59,20 @@ export const TIER_CONFIGS: Record<TierType, TierConfig> = {
     priceUsd: 39.99,
     description: '800명 이하 대규모 플래시몹, 대형 강연 전용',
   },
+  store: {
+    name: '매장 전용 요금제 (월간)',
+    maxParticipants: 3,
+    priceKrw: 4900,
+    priceUsd: 3.99,
+    description: '1인 매장용 실시간 원격 전광판 (월간 구독)',
+  },
+  store_annual: {
+    name: '매장 전용 요금제 (연간)',
+    maxParticipants: 3,
+    priceKrw: 39000,
+    priceUsd: 29.99,
+    description: '1인 매장용 실시간 원격 전광판 (연간 38% 할인)',
+  },
 };
 
 export const getLocalizedPrice = (tier: TierType, locale: string): string => {
@@ -73,7 +87,7 @@ export const getLocalizedPrice = (tier: TierType, locale: string): string => {
     }
   }
 
-  const prices: Record<'lite' | 'pro' | 'max', Record<string, string>> = {
+  const prices: Record<Exclude<TierType, 'free'>, Record<string, string>> = {
     lite: {
       ko: '5,000원',
       en: '$3.99 USD',
@@ -97,6 +111,22 @@ export const getLocalizedPrice = (tier: TierType, locale: string): string => {
       es: '$39.99 USD',
       'zh-TW': 'NT$ 1,300 TWD',
       'zh-HK': 'HK$ 300 HKD',
+    },
+    store: {
+      ko: '4,900원/월',
+      en: '$3.99/mo',
+      ja: '¥600/月',
+      es: '$3.99/mes',
+      'zh-TW': 'NT$ 130/月',
+      'zh-HK': 'HK$ 30/月',
+    },
+    store_annual: {
+      ko: '39,000원/년',
+      en: '$29.99/yr',
+      ja: '¥4,500/年',
+      es: '$29.99/año',
+      'zh-TW': 'NT$ 990/年',
+      'zh-HK': 'HK$ 230/年',
     }
   };
 
@@ -137,6 +167,22 @@ export const getLocalizedTierName = (tier: TierType, locale: string): string => 
       es: 'Plan Max',
       'zh-TW': '極致方案 (Max)',
       'zh-HK': '極致方案 (Max)',
+    },
+    store: {
+      ko: '매장용 월간 (Store Monthly)',
+      en: 'Store Signage Monthly',
+      ja: '店舗用月間 (Store Monthly)',
+      es: 'Letrero Mensual (Tienda)',
+      'zh-TW': '店家看板月方案',
+      'zh-HK': '店家看板月方案',
+    },
+    store_annual: {
+      ko: '매장용 연간 (Store Annual)',
+      en: 'Store Signage Annual',
+      ja: '店舗用年間 (Store Annual)',
+      es: 'Letrero Anual (Tienda)',
+      'zh-TW': '店家看板年方案',
+      'zh-HK': '店家看板年方案',
     },
   };
   const localeKey = ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(locale) ? locale : 'en';

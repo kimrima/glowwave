@@ -19,6 +19,7 @@ export default function HostSetup() {
   const defaultPresets = getDefaultsByLocale(activeLocale);
 
   const [selectedTier, setSelectedTier] = useState<TierType>('free');
+  const [planType, setPlanType] = useState<'event' | 'store'>('event');
   const [hostEmail, setHostEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passcode, setPasscode] = useState('');
@@ -62,10 +63,23 @@ export default function HostSetup() {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const importParam = params.get('import') as 'free' | 'premium' | null;
+      const planParam = params.get('plan');
+
+      if (planParam === 'store') {
+        setPlanType('store');
+        setSelectedTier('store');
+      } else {
+        setPlanType('event');
+      }
+
       if (importParam) {
         setImportStatus(importParam);
         if (importParam === 'premium') {
-          setSelectedTier('lite'); // Pre-select Lite for premium import path
+          if (planParam === 'store') {
+            setSelectedTier('store');
+          } else {
+            setSelectedTier('lite'); // Pre-select Lite for premium import path
+          }
         } else {
           setSelectedTier('free');
         }
@@ -473,10 +487,66 @@ export default function HostSetup() {
               </div>
             )}
 
+            {/* Plan Category Selector Tabs */}
+            <div className="bg-black/30 border border-white/5 p-1 rounded-2xl flex gap-1.5 mt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setPlanType('event');
+                  setSelectedTier('free');
+                }}
+                className={`flex-1 py-3 text-center rounded-xl text-xs font-black transition-all cursor-pointer select-none ${
+                  planType === 'event'
+                    ? 'bg-white text-black shadow-lg font-black'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5 font-bold'
+                }`}
+              >
+                {
+                  {
+                    ko: '이벤트/행사용 (18h-24h)',
+                    en: 'Event / Party (18h-24h)',
+                    ja: 'イベント・フェス用 (18h-24h)',
+                    es: 'Eventos y Fiestas (18h-24h)',
+                    'zh-TW': '活動/派對用 (18h-24h)',
+                    'zh-HK': '活動/派對用 (18h-24h)'
+                  }[activeLocale] || '이벤트/행사용 (18h-24h)'
+                }
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPlanType('store');
+                  setSelectedTier('store');
+                }}
+                className={`flex-1 py-3 text-center rounded-xl text-xs font-black transition-all cursor-pointer select-none ${
+                  planType === 'store'
+                    ? 'bg-white text-black shadow-lg font-black'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/5 font-bold'
+                }`}
+              >
+                {
+                  {
+                    ko: '매장 전광판 (1년 무중단)',
+                    en: 'Store Signage (1-Yr 24/7)',
+                    ja: '店舗看板用 (1年常時稼働)',
+                    es: 'Letrero de Tienda (1 año 24/7)',
+                    'zh-TW': '店家電子看板 (1年無中斷)',
+                    'zh-HK': '商戶電子看板 (1年無中斷)'
+                  }[activeLocale] || '매장 전광판 (1년 무중단)'
+                }
+              </button>
+            </div>
+
             {/* Tiers List */}
             <div className="flex flex-col gap-3">
               {(Object.keys(TIER_CONFIGS) as TierType[])
-                .filter((tierKey) => tierKey !== 'max')
+                .filter((tierKey) => {
+                  if (planType === 'store') {
+                    return tierKey === 'store' || tierKey === 'store_annual';
+                  } else {
+                    return tierKey === 'free' || tierKey === 'lite' || tierKey === 'pro';
+                  }
+                })
                 .map((tierKey) => {
                   const cfg = TIER_CONFIGS[tierKey];
                   const isSelected = selectedTier === tierKey;
@@ -609,10 +679,8 @@ export default function HostSetup() {
                     <span>{t('setup_checkout_total', activeLocale)}</span>
                     <span className="text-indigo-400 font-extrabold text-sm">
                       {paymentMethod === 'toss' 
-                        ? `${TIER_CONFIGS[selectedTier].priceKrw.toLocaleString()}원` 
-                        : ['en', 'es'].includes(activeLocale)
-                          ? `$${TIER_CONFIGS[selectedTier].priceUsd} USD`
-                          : `${getLocalizedPrice(selectedTier, activeLocale)} ($${TIER_CONFIGS[selectedTier].priceUsd} USD)`}
+                        ? getLocalizedPrice(selectedTier, 'ko') 
+                        : getLocalizedPrice(selectedTier, activeLocale)}
                     </span>
                   </div>
                 </div>

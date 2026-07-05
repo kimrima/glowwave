@@ -139,19 +139,26 @@ export const localDb = {
 
   async cleanupExpiredRooms(): Promise<void> {
     if (isSupabaseConfigured() && supabase) {
-      const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+      const eighteenHoursAgo = new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString();
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
       
-      // Perform delete on free rooms older than 6 hours
-      const { error: freeErr } = await supabase.from('rooms').delete().eq('tier', 'free').lt('created_at', sixHoursAgo);
+      // Perform delete on free rooms older than 18 hours
+      const { error: freeErr } = await supabase.from('rooms').delete().eq('tier', 'free').lt('created_at', eighteenHoursAgo);
       if (freeErr) {
         console.error('[localDb] Supabase cleanup free rooms error:', freeErr);
       }
 
-      // Perform delete on paid rooms older than 24 hours
-      const { error: roomErr } = await supabase.from('rooms').delete().neq('tier', 'free').lt('created_at', twentyFourHoursAgo);
+      // Perform delete on event paid rooms (lite, pro, max) older than 24 hours
+      const { error: roomErr } = await supabase.from('rooms').delete().in('tier', ['lite', 'pro', 'max']).lt('created_at', twentyFourHoursAgo);
       if (roomErr) {
-        console.error('[localDb] Supabase cleanup paid rooms error:', roomErr);
+        console.error('[localDb] Supabase cleanup paid event rooms error:', roomErr);
+      }
+
+      // Perform delete on store paid rooms (store, store_annual) older than 1 year
+      const { error: storeErr } = await supabase.from('rooms').delete().in('tier', ['store', 'store_annual']).lt('created_at', oneYearAgo);
+      if (storeErr) {
+        console.error('[localDb] Supabase cleanup store rooms error:', storeErr);
       }
       
       const { error: payErr } = await supabase.from('payments').delete().lt('created_at', twentyFourHoursAgo);
@@ -165,7 +172,13 @@ export const localDb = {
 
       for (const [roomId, room] of this.rooms.entries()) {
         const createdAt = new Date(room.created_at);
-        const expiryPeriodMs = room.tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+        let expiryPeriodMs = 24 * 60 * 60 * 1000; // Event tiers default: 24h
+        if (room.tier === 'free') {
+          expiryPeriodMs = 18 * 60 * 60 * 1000; // Free sync trial: 18h
+        } else if (room.tier === 'store' || room.tier === 'store_annual') {
+          expiryPeriodMs = 365 * 24 * 60 * 60 * 1000; // Store signage: 365 days
+        }
+        
         if (now.getTime() - createdAt.getTime() > expiryPeriodMs) {
           console.log(`[localDb] Expiring room: ${roomId} created at ${room.created_at}`);
           
@@ -255,7 +268,13 @@ export const localDb = {
 
     if (room) {
       const createdAt = new Date(room.created_at);
-      const expiryPeriodMs = room.tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+      let expiryPeriodMs = 24 * 60 * 60 * 1000;
+      if (room.tier === 'free') {
+        expiryPeriodMs = 18 * 60 * 60 * 1000;
+      } else if (room.tier === 'store' || room.tier === 'store_annual') {
+        expiryPeriodMs = 365 * 24 * 60 * 60 * 1000;
+      }
+
       if (Date.now() - createdAt.getTime() > expiryPeriodMs) {
         if (!isSupabaseConfigured()) {
           this.rooms.delete(roomId);
@@ -289,7 +308,12 @@ export const localDb = {
 
     return roomsList.filter(room => {
       const createdAt = new Date(room.created_at);
-      const expiryPeriodMs = room.tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+      let expiryPeriodMs = 24 * 60 * 60 * 1000;
+      if (room.tier === 'free') {
+        expiryPeriodMs = 18 * 60 * 60 * 1000;
+      } else if (room.tier === 'store' || room.tier === 'store_annual') {
+        expiryPeriodMs = 365 * 24 * 60 * 60 * 1000;
+      }
       return Date.now() - createdAt.getTime() <= expiryPeriodMs;
     });
   },

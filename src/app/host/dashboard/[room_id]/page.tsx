@@ -154,6 +154,20 @@ export default function HostDashboard() {
   const [upgradeStep, setUpgradeStep] = useState<'select' | 'payment' | 'success'>('select');
   const [selectedUpgradeTier, setSelectedUpgradeTier] = useState<TierType | null>(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [upgradePlanType, setUpgradePlanType] = useState<'event' | 'store'>('event');
+
+  // Auto-initialize plan type on modal open
+  useEffect(() => {
+    if (isUpgradeModalOpen && room) {
+      if (room.tier === 'store' || room.tier === 'store_annual') {
+        setUpgradePlanType('store');
+        setSelectedUpgradeTier(room.tier === 'store' ? 'store_annual' : null);
+      } else {
+        setUpgradePlanType('event');
+        setSelectedUpgradeTier(null);
+      }
+    }
+  }, [isUpgradeModalOpen, room]);
 
   // Time Extension Modal States
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
@@ -287,11 +301,16 @@ export default function HostDashboard() {
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
 
-    // 2. Room expiration ticker (6-hour for free, 24-hour for paid)
+    // 2. Room expiration ticker (18-hour for free, 24-hour for event paid, 365-day for store paid)
     if (!room?.created_at) return;
     const calculateTime = () => {
       const createdTime = new Date(room.created_at).getTime();
-      const limitMs = room.tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+      let limitMs = 24 * 60 * 60 * 1000;
+      if (room.tier === 'free') {
+        limitMs = 18 * 60 * 60 * 1000;
+      } else if (room.tier === 'store' || room.tier === 'store_annual') {
+        limitMs = 365 * 24 * 60 * 60 * 1000;
+      }
       const expireTime = createdTime + limitMs;
       const now = Date.now();
       const diff = expireTime - now;
@@ -301,18 +320,31 @@ export default function HostDashboard() {
         return;
       }
 
-      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-      const timeStr = {
-        ko: `${hours}시간 ${minutes}분 ${seconds}초`,
-        en: `${hours}h ${minutes}m ${seconds}s`,
-        ja: `${hours}時間 ${minutes}分 ${seconds}秒`,
-        es: `${hours}h ${minutes}m ${seconds}s`,
-        'zh-TW': `${hours}小時 ${minutes}分 ${seconds}秒`,
-        'zh-HK': `${hours}小時 ${minutes}分 ${seconds}秒`,
-      }[activeLocale] || `${hours}시간 ${minutes}분 ${seconds}초`;
+      let timeStr = '';
+      if (days > 0) {
+        timeStr = {
+          ko: `${days}일 ${hours}시간`,
+          en: `${days}d ${hours}h`,
+          ja: `${days}日 ${hours}時間`,
+          es: `${days}d ${hours}h`,
+          'zh-TW': `${days}天 ${hours}小時`,
+          'zh-HK': `${days}天 ${hours}小時`,
+        }[activeLocale] || `${days}d ${hours}h`;
+      } else {
+        timeStr = {
+          ko: `${hours}시간 ${minutes}분 ${seconds}초`,
+          en: `${hours}h ${minutes}m ${seconds}s`,
+          ja: `${hours}時間 ${minutes}分 ${seconds}秒`,
+          es: `${hours}h ${minutes}m ${seconds}s`,
+          'zh-TW': `${hours}小時 ${minutes}分 ${seconds}秒`,
+          'zh-HK': `${hours}小時 ${minutes}分 ${seconds}秒`,
+        }[activeLocale] || `${hours}시간 ${minutes}분 ${seconds}초`;
+      }
 
       setTimeRemaining(timeStr);
     };
@@ -855,10 +887,24 @@ export default function HostDashboard() {
 
   const getUpgradableTiers = () => {
     const currentTier = room?.tier || 'free';
-    const currentOrder = TIER_ORDER[currentTier] ?? 0;
-    return Object.keys(TIER_CONFIGS).filter(
-      (key) => TIER_ORDER[key] > currentOrder && key !== 'max'
-    ) as TierType[];
+    
+    if (upgradePlanType === 'store') {
+      if (currentTier === 'store_annual') {
+        return [] as TierType[];
+      }
+      if (currentTier === 'store') {
+        return ['store_annual'] as TierType[];
+      }
+      return ['store', 'store_annual'] as TierType[];
+    } else {
+      if (currentTier === 'store' || currentTier === 'store_annual') {
+        return [] as TierType[];
+      }
+      const currentOrder = TIER_ORDER[currentTier] ?? 0;
+      return Object.keys(TIER_CONFIGS).filter(
+        (key) => TIER_ORDER[key] > currentOrder && key !== 'max' && key !== 'store' && key !== 'store_annual'
+      ) as TierType[];
+    }
   };
 
   const handleExtendRoom = async () => {
@@ -2275,21 +2321,7 @@ export default function HostDashboard() {
                       }
 
                       if (isTransmitterLocked) {
-                        if (activeCategory === 'custom') {
-                          setEditingPresetIndex(index);
-                          setEditingPreset({ ...preset });
-                        } else {
-                          // Check tier limit: custom presets cannot exceed 6 on free tier
-                          if (room?.tier === 'free' && presets.length >= 6) {
-                            setSelectedUpgradeTier(null);
-                            setUpgradeStep('select');
-                            setIsUpgradeModalOpen(true);
-                            return;
-                          }
-                          // Import template as a new custom preset in edit drawer
-                          setEditingPresetIndex(presets.length);
-                          setEditingPreset({ ...preset });
-                        }
+                        applyPresetToController(preset);
                       } else {
                         triggerPreset(preset, activeCategory === 'custom' ? index : -1);
                       }
@@ -4596,8 +4628,148 @@ export default function HostDashboard() {
                 'zh-HK': '前往結帳步驟',
               }[activeLocale] || '결제 단계로 이동하기';
 
+              const storeBenefits = {
+                ko: {
+                  title: '매장 전광판 플랜 혜택',
+                  list: [
+                    '365일 24시간 중단 없는 무제한 전광판 송출',
+                    '기기 재부팅 시 자동 재접속 및 동기화',
+                    '다중 원격 제어 및 어드민 관리자 대시보드',
+                    '매장 맞춤형 템플릿 및 메뉴판 디자인',
+                    '프리미엄 폰트 및 화려한 전광판 특수효과',
+                    '광고 노출 및 워터마크 완벽 제거',
+                  ],
+                  capacity: '동시 화면 동기화 대수: 무제한',
+                },
+                en: {
+                  title: 'Store Signage Plan Benefits',
+                  list: [
+                    '365 days 24/7 Uninterrupted Playback',
+                    'Auto-reconnect & Sync on device reboot',
+                    'Multi-remote Control & Admin Dashboard',
+                    'Store-tailored Templates & Menu Boards',
+                    'Premium Fonts & Stunning Special Effects',
+                    'Ad-free & Complete Watermark Removal',
+                  ],
+                  capacity: 'Simultaneous Screen Sync: Unlimited',
+                },
+                ja: {
+                  title: '店舗看板プラン特典',
+                  list: [
+                    '365日24時間無制限のサイネージ送出',
+                    '再起動時の自動再接続＆画面同期',
+                    '複数リモート制御＆管理者ダッシュボード',
+                    '店舗向けテンプレート＆メニューボード',
+                    'プレミアムフォント＆看板特殊効果',
+                    '広告非表示＆ウォーターマーク完全除去',
+                  ],
+                  capacity: '同時画面同期数: 無制限',
+                },
+                es: {
+                  title: 'Beneficios del Plan Letrero',
+                  list: [
+                    'Transmisión 24/7 sin interrupción por 365 días',
+                    'Reconexión y sincronización automática al reiniciar',
+                    'Control remoto múltiple y panel de administración',
+                    'Plantillas personalizadas y menús de tienda',
+                    'Fuentes premium y efectos de letrero dinámicos',
+                    'Sin anuncios y eliminación total de marca de agua',
+                  ],
+                  capacity: 'Sincronización de pantallas: Ilimitada',
+                },
+                'zh-TW': {
+                  title: '廣告看板方案權益',
+                  list: [
+                    '365 天 24 小時無間斷播放',
+                    '裝置重啟時自動重新連線與同步',
+                    '多重遠端控制與管理員控制台',
+                    '店家專屬模板與菜單看板設計',
+                    '提供進階字型與華麗特選特效',
+                    '無廣告干擾及完全去除浮水印',
+                  ],
+                  capacity: '螢幕同步連線台數：無限制',
+                },
+                'zh-HK': {
+                  title: '廣告看板方案權益',
+                  list: [
+                    '365 天 24 小時無間斷播放',
+                    '裝置重啟時自動重新連線與同步',
+                    '多重遠端控制與管理員控制台',
+                    '店家專屬模板與菜單看板設計',
+                    '提供進階字型與華麗特選特效',
+                    '無廣告干擾及完全去除浮水印',
+                  ],
+                  capacity: '螢幕同步連線台數：無限制',
+                },
+              }[activeLocale] || {
+                title: '매장 전광판 플랜 혜택',
+                list: [
+                  '365일 24시간 중단 없는 무제한 전광판 송출',
+                  '기기 재부팅 시 자동 재접속 및 동기화',
+                  '다중 원격 제어 및 어드민 관리자 대시보드',
+                  '매장 맞춤형 템플릿 및 메뉴판 디자인',
+                  '프리미엄 폰트 및 화려한 전광판 특수효과',
+                  '광고 노출 및 워터마크 완벽 제거',
+                ],
+                capacity: '동시 화면 동기화 대수: 무제한',
+              };
+
+              const currentBenefits = upgradePlanType === 'store' ? storeBenefits : benefits;
+
+              const tabEventLabel = {
+                ko: '이벤트/행사용 (단기)',
+                en: 'Event / Party (Short-term)',
+                ja: 'イベント/パーティー (短期)',
+                es: 'Evento / Fiesta (Corto plazo)',
+                'zh-TW': '活動 / 派對 (短期)',
+                'zh-HK': '活動 / 派對 (短期)'
+              }[activeLocale] || '이벤트/행사용 (단기)';
+
+              const tabStoreLabel = {
+                ko: '매장 전광판용 (장기)',
+                en: 'Store Signage (Long-term)',
+                ja: '店舗看板/サイネージ (長期)',
+                es: 'Letrero de Tienda (Largo plazo)',
+                'zh-TW': '店家廣告看板 (長期)',
+                'zh-HK': '店家廣告看板 (長期)'
+              }[activeLocale] || '매장 전광판용 (장기)';
+
               return (
                 <div className="flex flex-col gap-5 text-left">
+                  {/* Category Tabs (only show if current tier is not store-related) */}
+                  {room?.tier !== 'store' && room?.tier !== 'store_annual' && (
+                    <div className="flex bg-white/5 p-1 rounded-xl border border-white/5 mb-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUpgradePlanType('event');
+                          setSelectedUpgradeTier(null);
+                        }}
+                        className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                          upgradePlanType === 'event'
+                            ? 'bg-white/10 text-white shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'
+                        }`}
+                      >
+                        {tabEventLabel}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUpgradePlanType('store');
+                          setSelectedUpgradeTier(null);
+                        }}
+                        className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                          upgradePlanType === 'store'
+                            ? 'bg-white/10 text-white shadow-sm'
+                            : 'text-zinc-400 hover:text-zinc-200'
+                        }`}
+                      >
+                        {tabStoreLabel}
+                      </button>
+                    </div>
+                  )}
+
                   {room?.tier === 'free' ? (
                     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent p-5 flex flex-col gap-3.5">
                       {/* Decorative glow background */}
@@ -4616,9 +4788,9 @@ export default function HostDashboard() {
                       </p>
 
                       <div className="pt-2 mt-1 border-t border-white/5 flex flex-col gap-2">
-                        <span className="text-[11px] font-black text-indigo-300 tracking-wider uppercase">{benefits.title}</span>
+                        <span className="text-[11px] font-black text-indigo-300 tracking-wider uppercase">{currentBenefits.title}</span>
                         <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px] font-semibold text-zinc-300">
-                          {benefits.list.map((bText, bIdx) => (
+                          {currentBenefits.list.map((bText, bIdx) => (
                             <div key={bIdx} className="flex items-center gap-1.5">
                               <svg className="w-3.5 h-3.5 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                               <span>{bText}</span>
@@ -4626,7 +4798,7 @@ export default function HostDashboard() {
                           ))}
                           <div className="flex items-center gap-1.5 col-span-2 mt-0.5 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1.5 rounded-lg">
                             <svg className="w-3.5 h-3.5 text-indigo-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                            <span className="text-zinc-300">{benefits.capacity}</span>
+                            <span className="text-zinc-300">{currentBenefits.capacity}</span>
                           </div>
                         </div>
                       </div>
@@ -5149,16 +5321,25 @@ export default function HostDashboard() {
                     return mult === 0.2 ? `-${krwVal.toLocaleString()}원` : `${krwVal.toLocaleString()}원`;
                   }
                   
+                  const basePrices: Record<Exclude<TierType, 'free'>, { jpy: number; twd: number; hkd: number }> = {
+                    lite: { jpy: 600, twd: 130, hkd: 30 },
+                    pro: { jpy: 3000, twd: 650, hkd: 150 },
+                    max: { jpy: 6000, twd: 1300, hkd: 300 },
+                    store: { jpy: 600, twd: 130, hkd: 30 },
+                    store_annual: { jpy: 4500, twd: 990, hkd: 230 }
+                  };
+
                   let localPriceStr = '';
                   const lowerLoc = loc.toLowerCase();
+                  const priceConfig = basePrices[tier];
                   if (lowerLoc.startsWith('ja')) {
-                    const jpyVal = Math.round((tier === 'lite' ? 300 : tier === 'pro' ? 600 : 1500) * mult);
+                    const jpyVal = Math.round(priceConfig.jpy * mult);
                     localPriceStr = `${jpyVal.toLocaleString()}円`;
                   } else if (lowerLoc.startsWith('zh-tw') || lowerLoc.includes('tw')) {
-                    const twdVal = Math.round((tier === 'lite' ? 60 : tier === 'pro' ? 120 : 300) * mult);
+                    const twdVal = Math.round(priceConfig.twd * mult);
                     localPriceStr = `NT$${twdVal.toLocaleString()}`;
                   } else if (lowerLoc.startsWith('zh-hk') || lowerLoc.includes('hk')) {
-                    const hkdVal = Math.round((tier === 'lite' ? 15 : tier === 'pro' ? 30 : 75) * mult);
+                    const hkdVal = Math.round(priceConfig.hkd * mult);
                     localPriceStr = `HK$${hkdVal.toLocaleString()}`;
                   }
                   

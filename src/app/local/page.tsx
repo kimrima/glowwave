@@ -12,7 +12,11 @@ import {
   Edit3,
   Globe,
   FolderHeart,
-  ArrowLeft
+  ArrowLeft,
+  Smartphone,
+  Copy,
+  ExternalLink,
+  QrCode
 } from 'lucide-react';
 import jsQR from 'jsqr';
 import { Preset, EffectType } from '@/lib/types';
@@ -20,6 +24,99 @@ import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import { LOCALIZED_TEMPLATES, getDefaultsByLocale } from '@/lib/templates';
 import { t, Locale, getLocalizedFonts } from '@/lib/translations';
 import useFitText from '@/hooks/useFitText';
+
+const LOCAL_SYNC_TRANSLATIONS: Record<Locale, {
+  start_sync: string;
+  stop_sync: string;
+  sync_active: string;
+  sync_active_desc: string;
+  copy_link: string;
+  copied: string;
+  qr_code: string;
+  qr_tip: string;
+  qr_toggle_show: string;
+  qr_toggle_hide: string;
+  warning_safari: string;
+}> = {
+  ko: {
+    start_sync: '📱 스마트폰/태블릿 실시간 연동 시작',
+    stop_sync: '실시간 연동 해제 (종료)',
+    sync_active: '실시간 모바일 연동 활성화됨',
+    sync_active_desc: '아래 QR 코드를 다른 스마트폰/태블릿 카메라로 스캔하거나 링크를 복사하여 브라우저에 띄우면, 현재 컨트롤러에서 조작하는 자막과 연출이 0.1초 만에 실시간으로 전광판처럼 동기화됩니다.',
+    copy_link: '연동 화면 주소 복사',
+    copied: '복사 완료!',
+    qr_code: '연동 QR 코드',
+    qr_tip: '스마트폰 카메라로 비추면 바로 전광판으로 작동합니다.',
+    qr_toggle_show: 'QR 코드 보기',
+    qr_toggle_hide: 'QR 코드 숨기기',
+    warning_safari: '※ 기기의 화면이 꺼지지 않도록 화면을 계속 켜두세요.'
+  },
+  en: {
+    start_sync: '📱 Start Mobile/Tablet Sync',
+    stop_sync: 'Disconnect Real-time Sync',
+    sync_active: 'Real-time Sync Active',
+    sync_active_desc: 'Scan the QR code with another smartphone/tablet camera or copy the link to open it in a browser. The screens will sync as a signboard in 0.1s.',
+    copy_link: 'Copy Sync Screen URL',
+    copied: 'Copied!',
+    qr_code: 'Sync QR Code',
+    qr_tip: 'Point your phone camera to use it as a signboard instantly.',
+    qr_toggle_show: 'Show QR Code',
+    qr_toggle_hide: 'Hide QR Code',
+    warning_safari: '* Keep the screen on so the signboard remains active.'
+  },
+  ja: {
+    start_sync: '📱 スマホ/タブレット連동開始',
+    stop_sync: 'リアルタイム連動解除 (終了)',
+    sync_active: 'リアルタイム連動が有効です',
+    sync_active_desc: '他のスマホやタブレットのカメラでQRコードをスキャンするか、リンクをコピーしてブラウザで開いてください。操作内容が0.1秒で同期されます。',
+    copy_link: '連動画面のURLをコピー',
+    copied: 'コピー完了！',
+    qr_code: '連動用QRコード',
+    qr_tip: 'カメラでスキャンすると、すぐに電光掲示板として動作します。',
+    qr_toggle_show: 'QRコードを表示',
+    qr_toggle_hide: 'QRコードを非表示',
+    warning_safari: '※ 画面が消えないように、そのまま表示しておいてください。'
+  },
+  es: {
+    start_sync: '📱 Iniciar Sincronización Móvil',
+    stop_sync: 'Desconectar Sincronización',
+    sync_active: 'Sincronización Activa',
+    sync_active_desc: 'Escanee el código QR con otra cámara de teléfono/tableta o copie el enlace para abrirlo en el navegador. La pantalla se sincronizará en 0.1s.',
+    copy_link: 'Copiar Enlace de Sincronización',
+    copied: '¡Copiado!',
+    qr_code: 'Código QR de Sincronización',
+    qr_tip: 'Apunte con la cámara para usarlo como letrero al instante.',
+    qr_toggle_show: 'Mostrar código QR',
+    qr_toggle_hide: 'Ocultar código QR',
+    warning_safari: '* Mantenga la pantalla encendida para que el letrero no se apague.'
+  },
+  'zh-TW': {
+    start_sync: '📱 啟動行動裝置/平板連動',
+    stop_sync: '解除實時連動 (結束)',
+    sync_active: '實時行動連動已啟用',
+    sync_active_desc: '使用其他手機/平板相機掃描下方 QR Code，或複製連結在瀏覽器中開啟，即可在 0.1 秒內同步呈現電子看板畫面。',
+    copy_link: '複製連動畫面連結',
+    copied: '複製成功！',
+    qr_code: '連動 QR Code',
+    qr_tip: '用手機相機掃描即可立即用作電子看板。',
+    qr_toggle_show: '顯示 QR Code',
+    qr_toggle_hide: '隱藏 QR Code',
+    warning_safari: '※ 請保持螢幕開啟以防止看板關閉。'
+  },
+  'zh-HK': {
+    start_sync: '📱 啟動行動裝置/平板連動',
+    stop_sync: '解除實時連動 (結束)',
+    sync_active: '實時行動連動已啟用',
+    sync_active_desc: '使用其他手機/平板相機掃描下方 QR Code，或複製連結在瀏覽器中開啟，即可在 0.1 秒內同步呈現電子看板畫面。',
+    copy_link: '複製連動畫面連結',
+    copied: '複製成功！',
+    qr_code: '連動 QR Code',
+    qr_tip: '用手機相機掃描即可立即用作電子看板。',
+    qr_toggle_show: '顯示 QR Code',
+    qr_toggle_hide: '隱藏 QR Code',
+    warning_safari: '※ 請保持螢幕開啟以防止看板關閉。'
+  }
+};
 
 // Fallback host-aligned defaults
 const defaults: Preset[] = getDefaultsByLocale('ko');
@@ -205,6 +302,17 @@ function LocalSignboardContent() {
 
   // Fullscreen Signboard View
   const [isStandaloneFullscreen, setIsStandaloneFullscreen] = useState(false);
+
+  // Real-time mobile sync state
+  const [syncRoomId, setSyncRoomId] = useState<string>('');
+  const [syncHostToken, setSyncHostToken] = useState<string>('');
+  const [isSyncCreating, setIsSyncCreating] = useState<boolean>(false);
+  const [copied, setCopied] = useState<boolean>(false);
+  const [isSyncQrVisible, setIsSyncQrVisible] = useState<boolean>(false);
+  const [syncRoomTier, setSyncRoomTier] = useState<string>('free');
+  const [syncRoomCreatedAt, setSyncRoomCreatedAt] = useState<string>('');
+  const [syncRoomActiveParticipants, setSyncRoomActiveParticipants] = useState<number>(0);
+  const [syncTimeRemaining, setSyncTimeRemaining] = useState<string>('');
 
   // Active categories
   const [activeCategory, setActiveCategory] = useState<'custom' | 'busking' | 'sports' | 'party' | 'anniversary' | 'store'>('custom');
@@ -551,6 +659,14 @@ function LocalSignboardContent() {
         } catch (e) {}
       }
 
+      // Restore mobile sync room and token
+      const savedSyncRoomId = localStorage.getItem('glowwave_local_sync_room_id');
+      const savedSyncHostToken = localStorage.getItem('glowwave_local_sync_host_token');
+      if (savedSyncRoomId && savedSyncHostToken) {
+        setSyncRoomId(savedSyncRoomId);
+        setSyncHostToken(savedSyncHostToken);
+      }
+
       // Check import search query
       const params = new URLSearchParams(window.location.search);
       const importKey = params.get('import');
@@ -561,6 +677,66 @@ function LocalSignboardContent() {
       setIsHydrated(true);
     }
   }, []);
+
+  // Poll sync room status
+  useEffect(() => {
+    if (!syncRoomId) return;
+
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(`/api/room/status?ids=${syncRoomId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const roomInfo = data.rooms?.[0];
+        if (roomInfo) {
+          if (roomInfo.is_expired) {
+            handleStopMobileSync();
+          } else {
+            setSyncRoomTier(roomInfo.tier);
+            setSyncRoomCreatedAt(roomInfo.created_at);
+            setSyncRoomActiveParticipants(roomInfo.current_participants || 0);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch sync room status:', e);
+      }
+    };
+
+    checkStatus();
+    const interval = setInterval(checkStatus, 5000);
+    return () => clearInterval(interval);
+  }, [syncRoomId]);
+
+  // Calculate trial countdown timer
+  useEffect(() => {
+    if (!syncRoomId || !syncRoomCreatedAt || !['free', 'lite', 'pro', 'max'].includes(syncRoomTier)) {
+      setSyncTimeRemaining('');
+      return;
+    }
+
+    const updateTimer = () => {
+      const created = new Date(syncRoomCreatedAt).getTime();
+      const limit = 18 * 60 * 60 * 1000; // 18 hours
+      const now = Date.now();
+      const diff = created + limit - now;
+
+      if (diff <= 0) {
+        setSyncTimeRemaining('Expired');
+        handleStopMobileSync();
+      } else {
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        const pad = (n: number) => String(n).padStart(2, '0');
+        setSyncTimeRemaining(`${pad(hours)}:${pad(minutes)}:${pad(seconds)}`);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [syncRoomId, syncRoomCreatedAt, syncRoomTier]);
 
   const applyPresetToController = (preset: Preset) => {
     setCustomText(preset.text);
@@ -600,6 +776,18 @@ function LocalSignboardContent() {
     setCurrentBroadcastPreset(presetWithTrigger);
     applyPresetToController(presetWithTrigger);
     localStorage.setItem('glowwave_local_active_preset', JSON.stringify(presetWithTrigger));
+
+    // Real-time mobile sync broadcast
+    if (syncRoomId && syncHostToken) {
+      fetch(`/api/room/${syncRoomId}/broadcast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          host_session_token: syncHostToken,
+          preset: presetWithTrigger
+        })
+      }).catch((err) => console.error('[Local Sync] Failed to broadcast:', err));
+    }
   };
 
   const handleDrawWinner = () => {
@@ -612,6 +800,18 @@ function LocalSignboardContent() {
     };
     setCurrentBroadcastPreset(drawResultPreset);
     localStorage.setItem('glowwave_local_active_preset', JSON.stringify(drawResultPreset));
+
+    // Real-time mobile sync broadcast
+    if (syncRoomId && syncHostToken) {
+      fetch(`/api/room/${syncRoomId}/broadcast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          host_session_token: syncHostToken,
+          preset: drawResultPreset
+        })
+      }).catch((err) => console.error('[Local Sync] Failed to draw winner:', err));
+    }
   };
 
   const handleResetDashboard = () => {
@@ -633,6 +833,63 @@ function LocalSignboardContent() {
       alert(t('reset_success', activeLocale));
       setIsVaultOpen(false);
     }
+  };
+
+  const handleStartMobileSync = async () => {
+    if (isSyncCreating) return;
+    setIsSyncCreating(true);
+    try {
+      const res = await fetch('/api/room/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'anonymous-local@glowwave.app',
+          tier: 'free',
+          passcode: ''
+        })
+      });
+      if (!res.ok) throw new Error('Failed to create sync room');
+      const data = await res.json();
+      setSyncRoomId(data.room_id);
+      setSyncHostToken(data.host_session_token);
+      setSyncRoomTier('free');
+      setSyncRoomCreatedAt(new Date().toISOString());
+      
+      // Save sync room and token to localStorage
+      localStorage.setItem('glowwave_local_sync_room_id', data.room_id);
+      localStorage.setItem('glowwave_local_sync_host_token', data.host_session_token);
+      localStorage.setItem('glowwave_local_sync_room_created_at', new Date().toISOString());
+      
+      // Initialize room broadcast with the current preset
+      await fetch(`/api/room/${data.room_id}/broadcast`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          host_session_token: data.host_session_token,
+          preset: currentBroadcastPreset
+        })
+      });
+    } catch (err: any) {
+      alert(
+        activeLocale === 'ko' 
+          ? `실시간 연동 시작 실패: ${err.message}` 
+          : `Failed to start real-time sync: ${err.message}`
+      );
+    } finally {
+      setIsSyncCreating(false);
+    }
+  };
+
+  const handleStopMobileSync = () => {
+    setSyncRoomId('');
+    setSyncHostToken('');
+    setSyncRoomTier('free');
+    setSyncRoomCreatedAt('');
+    setSyncRoomActiveParticipants(0);
+    setSyncTimeRemaining('');
+    localStorage.removeItem('glowwave_local_sync_room_id');
+    localStorage.removeItem('glowwave_local_sync_host_token');
+    localStorage.removeItem('glowwave_local_sync_room_created_at');
   };
 
   const handleLocaleChange = (newLocale: Locale) => {
@@ -905,10 +1162,12 @@ function LocalSignboardContent() {
   };
 
   // Free/Premium Sync Room redirects
-  const handleStartImportRoom = (tierType: 'free' | 'premium') => {
+  const handleStartImportRoom = (tierType: 'free' | 'premium', planType?: 'store') => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('glowwave_temp_import_presets', JSON.stringify(presets));
-      if (tierType === 'premium') {
+      if (planType === 'store') {
+        router.push('/host/setup?import=premium&plan=store');
+      } else if (tierType === 'premium') {
         router.push('/host/setup?import=premium');
       } else {
         router.push('/host/setup?import=free');
@@ -2872,56 +3131,210 @@ function LocalSignboardContent() {
             )}
 
             {/* Tab 3: Create Sync Room */}
-            {vaultTab === 'sync' && (
-              <div className="space-y-5 animate-in fade-in duration-200">
-                <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
-                  <h4 className="text-sm font-bold text-white mb-1.5">{t('sync_tab_title', activeLocale)}</h4>
-                  <p className="text-xs text-zinc-400 leading-relaxed">
-                    {t('sync_tab_desc', activeLocale)}
-                  </p>
-                </div>
+            {vaultTab === 'sync' && (() => {
+              const syncOptionATitle = {
+                ko: '일일 무료 체험 (18시간)',
+                en: 'Free Daily Trial (18 Hours)',
+                ja: '一日無料体験 (18時間)',
+                es: 'Prueba Diaria Gratis (18 Horas)',
+                'zh-TW': '一日免費體驗 (18 小時)',
+                'zh-HK': '一日免費體驗 (18 小時)',
+              }[activeLocale] || '일일 무료 체험 (18시간)';
 
-                <div className="grid md:grid-cols-2 gap-4">
-                  {/* Option A */}
-                  <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left active:scale-[0.99] min-h-[220px]">
-                    <div>
-                      <span className="text-[10px] font-mono text-zinc-400 font-extrabold uppercase block tracking-wider mb-2">FREE PLAN</span>
-                      <h3 className="text-base font-black text-white mb-2">{t('sync_option_free_title', activeLocale)}</h3>
-                      <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                        {t('sync_option_free_desc', activeLocale)}
-                      </p>
-                    </div>
+              const syncOptionADesc = {
+                ko: '별도의 가입이나 결제 없이 3초 만에 즉시 큐알을 생성하여 18시간 동안 전광판 원격 무선 조종을 체험합니다.',
+                en: 'Generate a QR code instantly in 3 seconds with no signup or payment to try remote signage control for 18 hours.',
+                ja: '登録や決済なしで3秒でQRコードを生成し、18時間電光掲示板のワイヤレス制御を体験できます。',
+                es: 'Genere un código QR al instante en 3 segundos sin registro ni pago para probar el control inalámbrico del letrero por 18 horas.',
+                'zh-TW': '無需註冊或付款即可在 3 秒內快速生成 QR Code，體驗實時無線操控看板 18 小時。',
+                'zh-HK': '無需註冊或付款即可在 3 秒內快速生成 QR Code，體驗實時無線操控看板 18 小時。',
+              }[activeLocale] || '별도의 가입이나 결제 없이 3초 만에 즉시 큐알을 생성하여 18시간 동안 전광판 원격 무선 조종을 체험합니다.';
 
-                    <button
-                      type="button"
-                      onClick={() => handleStartImportRoom('free')}
-                      className="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 font-bold text-xs transition-all cursor-pointer text-center active:scale-95"
-                    >
-                      {t('btn_create_free_room', activeLocale)}
-                    </button>
+              const syncOptionBTitle = {
+                ko: '매장 전용 24/7 플랜',
+                en: 'Store 24/7 Signage Plan',
+                ja: '店舗専用 24/7 プラン',
+                es: 'Plan de Letrero para Tiendas 24/7',
+                'zh-TW': '店家專屬 24/7 方案',
+                'zh-HK': '店家專屬 24/7 方案',
+              }[activeLocale] || '매장 전용 24/7 플랜';
+
+              const syncOptionBDesc = {
+                ko: '카페, 주점, 매장 홍보용. 연중무휴 24시간 끊김 없이 연속 작동하며, 입장 비밀번호 잠금 설정을 지원합니다.',
+                en: 'Ideal for cafés, pubs, and retail. Runs continuously 24/7 without disconnects, and supports secure passcode entry.',
+                ja: 'カフェ、居酒屋、店舗プロモーション用。接続切れなしで24時間連続稼働、入場用パスコードロックもサポートします。',
+                es: 'Ideal para cafés, pubs y tiendas. Funciona las 24 horas sin desconexiones y permite configurar contraseña de entrada.',
+                'zh-TW': '適用於咖啡廳、餐酒館及店家宣傳。全年無休 24 小時不斷線連續運作，並支援設定入場密碼鎖定。',
+                'zh-HK': '適用於咖啡廳、餐酒館及店家宣傳。全年無休 24 小時不斷線連續運作，並支援設定入場密碼鎖定。',
+              }[activeLocale] || '카페, 주점, 매장 홍보용. 연중무휴 24시간 끊김 없이 연속 작동하며, 입장 비밀번호 잠금 설정을 지원합니다.';
+
+              const syncOptionABtn = {
+                ko: '무료 체험방 개설',
+                en: 'Create Free Trial Room',
+                ja: '無料体験ルーム開拓',
+                es: 'Abrir Sala de Prueba',
+                'zh-TW': '開啟免費體驗房',
+                'zh-HK': '開啟免費體驗房',
+              }[activeLocale] || '무료 체험방 개설';
+
+              const syncOptionBBtn = {
+                ko: '매장 플랜 개설 (월 4,900원~)',
+                en: 'Get Store Plan ($3.99/mo~)',
+                ja: '店舗プラン開拓 (月600円〜)',
+                es: 'Obtener Plan de Tienda ($3.99/mes~)',
+                'zh-TW': '啟用店家方案 (月 NT$130~)',
+                'zh-HK': '啟用店家方案 (月 HK$30~)',
+              }[activeLocale] || '매장 플랜 개설 (월 4,900원~)';
+
+              return (
+                <div className="space-y-5 animate-in fade-in duration-200">
+                  <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
+                    <h4 className="text-sm font-bold text-white mb-1.5">{t('sync_tab_title', activeLocale)}</h4>
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                      {t('sync_tab_desc', activeLocale)}
+                    </p>
                   </div>
 
-                  {/* Option B */}
-                  <div className="rounded-2xl p-5 border border-white/15 bg-white/[0.02] hover:bg-white/[0.04] transition-all flex flex-col justify-between text-left relative overflow-hidden group shadow-lg shadow-white/5 active:scale-[0.99] min-h-[220px]">
-                    <div>
-                      <span className="text-[10px] font-mono text-white font-extrabold block tracking-wider mb-2">PREMIUM PLAN</span>
-                      <h3 className="text-base font-black text-white mb-2">{t('sync_option_premium_title', activeLocale)}</h3>
-                      <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                        {t('sync_option_premium_desc', activeLocale)}
-                      </p>
-                    </div>
+                  {syncRoomId ? (
+                    /* Active Sync Connection Panel */
+                    <div className="glass-effect rounded-2xl p-6 border border-white/10 bg-white/[0.02] flex flex-col gap-6 text-left">
+                      <div className="flex flex-col sm:flex-row items-center gap-6">
+                        {/* Left Side: QR Code Card */}
+                        <div className="bg-white p-3 rounded-2xl shadow-xl flex flex-col items-center">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`${window.location.origin}/room/${syncRoomId}`)}`} 
+                            alt="Sync Room QR" 
+                            className="w-36 h-36 rounded-lg"
+                          />
+                          <span className="text-[10px] font-black text-black tracking-widest mt-2">{syncRoomId}</span>
+                        </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleStartImportRoom('premium')}
-                      className="w-full py-3 rounded-xl bg-white hover:bg-zinc-200 text-black font-extrabold text-xs transition-all cursor-pointer text-center active:scale-95"
-                    >
-                      {t('btn_create_premium_room', activeLocale)}
-                    </button>
-                  </div>
+                        {/* Right Side: Status Details */}
+                        <div className="flex-1 space-y-4 w-full">
+                          <div>
+                            <span className="text-[10px] font-mono text-zinc-400 font-extrabold block tracking-wider mb-1">
+                              {t('sync_status_title', activeLocale)}
+                            </span>
+                            <div className="flex flex-wrap gap-2 items-center">
+                              {['store', 'store_annual'].includes(syncRoomTier) ? (
+                                <span className="px-2.5 py-1 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-400 text-[10px] font-black tracking-wide flex items-center gap-1 shadow-sm">
+                                  👑 {t('sync_unlimited_active', activeLocale)}
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-black tracking-wide flex items-center gap-1 shadow-sm">
+                                  ⏳ {t('sync_free_trial_remaining', activeLocale)}: {syncTimeRemaining || '--:--:--'}
+                                </span>
+                              )}
+                              <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-black tracking-wide flex items-center gap-1 shadow-sm">
+                                🟢 {syncRoomActiveParticipants} {t('present_user_unit', activeLocale)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-[10px] font-mono text-zinc-400 font-bold block">{t('copy_code', activeLocale)}</label>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                readOnly
+                                value={`${window.location.origin}/room/${syncRoomId}`}
+                                className="flex-1 bg-[#09090D] border border-white/10 rounded-lg px-3 py-1.5 text-[11px] text-zinc-300 font-mono focus:outline-none"
+                              />
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(`${window.location.origin}/room/${syncRoomId}`);
+                                  alert(activeLocale === 'ko' ? '링크가 클립보드에 복사되었습니다.' : 'Link copied to clipboard.');
+                                }}
+                                className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/15 text-zinc-300 hover:text-white transition-all text-xs font-bold shrink-0"
+                              >
+                                {t('copy_code', activeLocale)}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Upgrade Prompts for Free Trial */}
+                          {!['store', 'store_annual'].includes(syncRoomTier) && (
+                            <div className="p-3.5 bg-violet-500/5 border border-violet-500/20 rounded-xl space-y-2">
+                              <div className="text-[11px] font-extrabold text-violet-300 flex items-center gap-1">
+                                🚀 {t('store_signage_upgrade_title', activeLocale)}
+                              </div>
+                              <p className="text-[10px] text-zinc-400 font-medium leading-relaxed">
+                                {t('store_signage_upgrade_desc', activeLocale)}
+                              </p>
+                              <button
+                                onClick={() => handleStartImportRoom('premium', 'store')}
+                                className="w-full py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-[10px] transition-all text-center tracking-wide flex items-center justify-center gap-1 shadow-md shadow-violet-900/20 active:scale-95 animate-pulse"
+                              >
+                                💎 {t('sync_upgrade_prompt', activeLocale)}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 border-t border-white/5 pt-4 mt-2">
+                        <button
+                          onClick={handleStartMobileSync}
+                          disabled={isSyncCreating}
+                          className="flex-1 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-400 hover:text-white transition-all text-[11px] font-bold text-center active:scale-95"
+                        >
+                          🔄 {t('sync_regenerate_btn', activeLocale)}
+                        </button>
+                        <button
+                          onClick={handleStopMobileSync}
+                          className="flex-1 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 transition-all text-[11px] font-bold text-center active:scale-95"
+                        >
+                          ❌ {t('sync_disconnect_btn', activeLocale)}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Standard Pricing Selection */
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {/* Option A: Free Trial */}
+                      <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left active:scale-[0.99] min-h-[220px]">
+                        <div>
+                          <span className="text-[10px] font-mono text-amber-400 font-extrabold uppercase block tracking-wider mb-2">18H FREE TRIAL</span>
+                          <h3 className="text-base font-black text-white mb-2">{syncOptionATitle}</h3>
+                          <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                            {syncOptionADesc}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={handleStartMobileSync}
+                          disabled={isSyncCreating}
+                          className="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 font-bold text-xs transition-all cursor-pointer text-center active:scale-95"
+                        >
+                          {isSyncCreating ? '...' : syncOptionABtn}
+                        </button>
+                      </div>
+
+                      {/* Option B: Store Signage Subscription */}
+                      <div className="rounded-2xl p-5 border border-white/15 bg-white/[0.02] hover:bg-white/[0.04] transition-all flex flex-col justify-between text-left relative overflow-hidden group shadow-lg shadow-white/5 active:scale-[0.99] min-h-[220px]">
+                        <div>
+                          <span className="text-[10px] font-mono text-indigo-400 font-extrabold block tracking-wider mb-2">STORE SIGNAGE PLAN</span>
+                          <h3 className="text-base font-black text-white mb-2">{syncOptionBTitle}</h3>
+                          <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                            {syncOptionBDesc}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleStartImportRoom('premium', 'store')}
+                          className="w-full py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-extrabold text-xs transition-all cursor-pointer text-center active:scale-95"
+                        >
+                          {syncOptionBBtn}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
           </div>
         </div>
