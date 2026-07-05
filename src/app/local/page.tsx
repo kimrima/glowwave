@@ -2881,7 +2881,7 @@ function LocalSignboardContent() {
             onClick={() => setIsVaultOpen(false)}
           />
 
-          <div className="bg-neutral-950/95 border border-white/10 rounded-[2rem] max-w-2xl w-full p-6 sm:p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto font-sans text-left">
+          <div className="bg-neutral-950/95 border border-white/10 rounded-[2rem] max-w-4xl w-full p-6 sm:p-8 relative z-10 shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto font-sans text-left">
             <button 
               onClick={() => setIsVaultOpen(false)}
               className="absolute top-5 right-5 text-zinc-400 hover:text-white p-2 hover:bg-white/5 rounded-xl transition-colors cursor-pointer"
@@ -3315,9 +3315,9 @@ function LocalSignboardContent() {
                     </div>
                   ) : (
                     /* Standard Pricing Selection */
-                    <div className="grid md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                       {/* Option A: Free Trial */}
-                      <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left active:scale-[0.99] min-h-[220px]">
+                      <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left active:scale-[0.99] min-h-[250px]">
                         <div>
                           <span className="text-[10px] font-mono text-amber-400 font-extrabold uppercase block tracking-wider mb-2">18H FREE TRIAL</span>
                           <h3 className="text-base font-black text-white mb-2">{syncOptionATitle}</h3>
@@ -3330,14 +3330,72 @@ function LocalSignboardContent() {
                           type="button"
                           onClick={handleStartMobileSync}
                           disabled={isSyncCreating}
-                          className="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 font-bold text-xs transition-all cursor-pointer text-center active:scale-95"
+                          className="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 font-bold text-xs transition-all cursor-pointer text-center active:scale-95 mt-auto"
                         >
                           {isSyncCreating ? '...' : syncOptionABtn}
                         </button>
                       </div>
 
-                      {/* Option B: Store Signage Subscription */}
-                      <div className="rounded-2xl p-5 border border-white/15 bg-white/[0.02] hover:bg-white/[0.04] transition-all flex flex-col justify-between text-left relative overflow-hidden group shadow-lg shadow-white/5 active:scale-[0.99] min-h-[220px]">
+                      {/* Option B: Event Multi-user Sync */}
+                      <div className="glass-effect rounded-2xl p-5 border border-amber-500/20 bg-amber-500/[0.02] hover:bg-amber-500/[0.04] transition-all flex flex-col justify-between text-left active:scale-[0.99] min-h-[250px]">
+                        <div>
+                          <span className="text-[10px] font-mono text-amber-500 font-extrabold uppercase block tracking-wider mb-2">EVENT MULTI-USER SYNC</span>
+                          <h3 className="text-base font-black text-white mb-2">
+                            {{
+                              ko: '이벤트용 다인용 방 연동',
+                              en: 'Event Multi-user Sync',
+                              ja: 'イベント用ルーム連動',
+                              es: 'Sincronizar Evento Multiusuario',
+                              'zh-TW': '活動多用戶房間連動',
+                              'zh-HK': '活動多用戶房間連動',
+                            }[activeLocale] || '이벤트용 다인용 방 연동'}
+                          </h3>
+                          <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+                            {{
+                              ko: '관객이 접속하여 실시간 자막을 보내고 추첨에 참여할 수 있는 다인용 방으로 1인 전광판 프리셋을 연동해 이동합니다.',
+                              en: 'Import your presets to a multi-user room where spectators can join, send live text, and enter lucky draws.',
+                              ja: '観客が接続してリアルタイムでメッセージを送信したり、抽選に参加したりできる複数人向けルームに同期して移動します。',
+                              es: 'Sincronice sus ajustes en una sala multiusuario donde los espectadores pueden unirse, enviar textos y sorteos.',
+                              'zh-TW': '將預設卡片連動至多用戶活動房間，支援觀眾連線傳送文字及參與即時抽獎。',
+                              'zh-HK': '將預設卡片連動至多用戶活動房間，支援觀眾連線傳送文字 및 參與即時抽獎。',
+                            }[activeLocale] || '관객이 접속하여 실시간 자막을 보내고 추첨에 참여할 수 있는 다인용 방으로 1인 전광판 프리셋을 연동해 이동합니다.'}
+                          </p>
+                        </div>
+
+                        <div className="space-y-2 mt-auto">
+                          <button
+                            type="button"
+                            onClick={() => handleStartImportRoom('free')}
+                            className="w-full py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:bg-white/5 font-bold text-xs transition-all cursor-pointer text-center active:scale-95"
+                          >
+                            {{
+                              ko: '일반 무료 연동 (일부 제한)',
+                              en: 'Free Sync (Limited)',
+                              ja: '一般無料連동 (一部制限)',
+                              es: 'Sincronización Gratis (Limitada)',
+                              'zh-TW': '一般免費連動 (部分限制)',
+                              'zh-HK': '一般免費連動 (部分限制)',
+                            }[activeLocale] || '일반 무료 연동 (일부 제한)'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleStartImportRoom('premium')}
+                            className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs transition-all cursor-pointer text-center active:scale-95"
+                          >
+                            {{
+                              ko: '프리미엄 연동 (무손실)',
+                              en: 'Premium Sync (Lossless)',
+                              ja: 'プレミアム連동 (無損失)',
+                              es: 'Sincronización Premium (Sin Pérdida)',
+                              'zh-TW': '尊榮付費連動 (無損轉移)',
+                              'zh-HK': '尊榮付費連動 (無損轉移)',
+                            }[activeLocale] || '프리미엄 연동 (무손실)'}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Option C: Store Signage Subscription */}
+                      <div className="rounded-2xl p-5 border border-indigo-500/20 bg-indigo-500/[0.02] hover:bg-indigo-500/[0.04] transition-all flex flex-col justify-between text-left relative overflow-hidden group shadow-lg shadow-white/5 active:scale-[0.99] min-h-[250px]">
                         <div>
                           <span className="text-[10px] font-mono text-indigo-400 font-extrabold block tracking-wider mb-2">STORE SIGNAGE PLAN</span>
                           <h3 className="text-base font-black text-white mb-2">{syncOptionBTitle}</h3>
@@ -3349,7 +3407,7 @@ function LocalSignboardContent() {
                         <button
                           type="button"
                           onClick={() => handleStartImportRoom('premium', 'store')}
-                          className="w-full py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-extrabold text-xs transition-all cursor-pointer text-center active:scale-95"
+                          className="w-full py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-extrabold text-xs transition-all cursor-pointer text-center active:scale-95 mt-auto"
                         >
                           {syncOptionBBtn}
                         </button>
