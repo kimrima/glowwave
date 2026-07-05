@@ -232,16 +232,57 @@ export default function HostSetup() {
         throw new Error(data.error || webhookFailedMsg);
       }
 
-      // Save default presets and authorization to LocalStorage
-      localStorage.setItem(`glowwave_presets_${createdRoomInfo.room_id}`, JSON.stringify(defaultPresets));
+      // Check for staged presets from 1-person dashboard import path
+      const staged = localStorage.getItem('glowwave_temp_import_presets');
+      let presetsToSave = defaultPresets;
+      if (staged) {
+        try {
+          const parsed = JSON.parse(staged);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            presetsToSave = parsed;
+          }
+        } catch (e) {}
+      }
+
+      // Save default or imported presets and authorization to LocalStorage
+      localStorage.setItem(`glowwave_presets_${createdRoomInfo.room_id}`, JSON.stringify(presetsToSave));
       localStorage.setItem(`glowwave_token_${createdRoomInfo.room_id}`, createdRoomInfo.host_session_token);
       localStorage.setItem('glowwave_active_host_room_id', createdRoomInfo.room_id);
 
-      setTimeout(() => {
-        setIsProcessing(false);
-        setIsCheckoutOpen(false);
-        router.push(`/host/dashboard/${createdRoomInfo.room_id}`);
-      }, 1500);
+      // If imported from 1-person sync dashboard, configure local sync settings and return back to /local
+      if (importStatus) {
+        localStorage.setItem('glowwave_local_sync_room_id', createdRoomInfo.room_id);
+        localStorage.setItem('glowwave_local_sync_host_token', createdRoomInfo.host_session_token);
+        localStorage.setItem('glowwave_local_sync_room_created_at', new Date().toISOString());
+
+        // Broadcast current active local preset if exists
+        const activeLocalPreset = localStorage.getItem('glowwave_local_active_preset');
+        if (activeLocalPreset) {
+          try {
+            const parsedActive = JSON.parse(activeLocalPreset);
+            await fetch(`/api/room/${createdRoomInfo.room_id}/broadcast`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                host_session_token: createdRoomInfo.host_session_token,
+                preset: parsedActive
+              })
+            });
+          } catch (e) {}
+        }
+
+        setTimeout(() => {
+          setIsProcessing(false);
+          setIsCheckoutOpen(false);
+          router.push('/local');
+        }, 1500);
+      } else {
+        setTimeout(() => {
+          setIsProcessing(false);
+          setIsCheckoutOpen(false);
+          router.push(`/host/dashboard/${createdRoomInfo.room_id}`);
+        }, 1500);
+      }
     } catch (err: any) {
       console.error(err);
       const paymentErr = {

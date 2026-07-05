@@ -888,23 +888,13 @@ export default function HostDashboard() {
   const getUpgradableTiers = () => {
     const currentTier = room?.tier || 'free';
     
-    if (upgradePlanType === 'store') {
-      if (currentTier === 'store_annual') {
-        return [] as TierType[];
-      }
-      if (currentTier === 'store') {
-        return ['store_annual'] as TierType[];
-      }
-      return ['store', 'store_annual'] as TierType[];
-    } else {
-      if (currentTier === 'store' || currentTier === 'store_annual') {
-        return [] as TierType[];
-      }
-      const currentOrder = TIER_ORDER[currentTier] ?? 0;
-      return Object.keys(TIER_CONFIGS).filter(
-        (key) => TIER_ORDER[key] > currentOrder && key !== 'max' && key !== 'store' && key !== 'store_annual'
-      ) as TierType[];
+    if (currentTier === 'store' || currentTier === 'store_annual' || currentTier === 'max') {
+      return [] as TierType[];
     }
+    const currentOrder = TIER_ORDER[currentTier] ?? 0;
+    return ['lite', 'pro', 'max'].filter(
+      (key) => TIER_ORDER[key] > currentOrder
+    ) as TierType[];
   };
 
   const handleExtendRoom = async () => {
@@ -4714,61 +4704,10 @@ export default function HostDashboard() {
                 capacity: '동시 화면 동기화 대수: 무제한',
               };
 
-              const currentBenefits = upgradePlanType === 'store' ? storeBenefits : benefits;
-
-              const tabEventLabel = {
-                ko: '이벤트/행사용 (단기)',
-                en: 'Event / Party (Short-term)',
-                ja: 'イベント/パーティー (短期)',
-                es: 'Evento / Fiesta (Corto plazo)',
-                'zh-TW': '活動 / 派對 (短期)',
-                'zh-HK': '活動 / 派對 (短期)'
-              }[activeLocale] || '이벤트/행사용 (단기)';
-
-              const tabStoreLabel = {
-                ko: '매장 전광판용 (장기)',
-                en: 'Store Signage (Long-term)',
-                ja: '店舗看板/サイネージ (長期)',
-                es: 'Letrero de Tienda (Largo plazo)',
-                'zh-TW': '店家廣告看板 (長期)',
-                'zh-HK': '店家廣告看板 (長期)'
-              }[activeLocale] || '매장 전광판용 (장기)';
+              const currentBenefits = benefits;
 
               return (
                 <div className="flex flex-col gap-5 text-left">
-                  {/* Category Tabs (only show if current tier is not store-related) */}
-                  {room?.tier !== 'store' && room?.tier !== 'store_annual' && (
-                    <div className="flex bg-white/5 p-1 rounded-xl border border-white/5 mb-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUpgradePlanType('event');
-                          setSelectedUpgradeTier(null);
-                        }}
-                        className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                          upgradePlanType === 'event'
-                            ? 'bg-white/10 text-white shadow-sm'
-                            : 'text-zinc-400 hover:text-zinc-200'
-                        }`}
-                      >
-                        {tabEventLabel}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUpgradePlanType('store');
-                          setSelectedUpgradeTier(null);
-                        }}
-                        className={`flex-1 py-2 text-center text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                          upgradePlanType === 'store'
-                            ? 'bg-white/10 text-white shadow-sm'
-                            : 'text-zinc-400 hover:text-zinc-200'
-                        }`}
-                      >
-                        {tabStoreLabel}
-                      </button>
-                    </div>
-                  )}
 
                   {room?.tier === 'free' ? (
                     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent p-5 flex flex-col gap-3.5">

@@ -1239,6 +1239,30 @@ function LocalSignboardContent() {
             <button
               type="button"
               onClick={() => {
+                setVaultTab('sync');
+                setIsVaultOpen(true);
+              }}
+              className="flex items-center gap-1.5 bg-indigo-600/95 hover:bg-indigo-500 border border-indigo-500/35 p-2 sm:px-4 sm:py-2 rounded-xl text-xs font-extrabold text-white cursor-pointer shadow-md select-none transition-all hover:scale-[1.02]"
+              title={activeLocale === 'ko' ? '화면 연동 (모바일/TV)' : 'Sync Screen'}
+            >
+              <Smartphone className="w-4 h-4 text-indigo-200" />
+              <span className="hidden sm:inline">
+                {
+                  {
+                    ko: '화면 연동 (모바일/TV)',
+                    en: 'Sync Screen (Mobile/TV)',
+                    ja: '画面同期 (モバイル/TV)',
+                    es: 'Sincronizar Pantalla',
+                    'zh-TW': '螢幕同步連動',
+                    'zh-HK': '螢幕同步連動'
+                  }[activeLocale] || '화면 연동 (모바일/TV)'
+                }
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
                 setVaultTab('slots');
                 setIsVaultOpen(true);
               }}
