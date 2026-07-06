@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { localDb } from '@/lib/localDb';
 import { Preset } from '@/lib/types';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export async function POST(
   request: Request,
@@ -39,9 +40,36 @@ export async function POST(
       payload: preset,
     });
 
+    // Forward to Supabase Realtime channel if configured
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const client = supabase;
+        const channel = client.channel(`room_${roomId}`);
+        await new Promise<void>((resolve) => {
+          channel.subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+              await channel.send({
+                type: 'broadcast',
+                event: 'render',
+                payload: preset,
+              });
+              client.removeChannel(channel);
+              resolve();
+            } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+              resolve();
+            }
+          });
+          setTimeout(resolve, 800);
+        });
+      } catch (supaErr) {
+        console.error('[Broadcast API] Failed to forward broadcast to Supabase:', supaErr);
+      }
+    }
+
     return NextResponse.json({ success: true, state: preset });
   } catch (error) {
     console.error('Broadcast error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+

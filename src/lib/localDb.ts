@@ -139,13 +139,13 @@ export const localDb = {
 
   async cleanupExpiredRooms(): Promise<void> {
     if (isSupabaseConfigured() && supabase) {
-      const eighteenHoursAgo = new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString();
+      const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
       
-      // Perform delete on free rooms older than 18 hours
-      const { error: freeErr } = await supabase.from('rooms').delete().eq('tier', 'free').lt('created_at', eighteenHoursAgo);
+      // Perform delete on free rooms older than 6 hours
+      const { error: freeErr } = await supabase.from('rooms').delete().eq('tier', 'free').lt('created_at', sixHoursAgo);
       if (freeErr) {
         console.error('[localDb] Supabase cleanup free rooms error:', freeErr);
       }
@@ -181,7 +181,7 @@ export const localDb = {
         const createdAt = new Date(room.created_at);
         let expiryPeriodMs = 24 * 60 * 60 * 1000; // Event tiers default: 24h
         if (room.tier === 'free') {
-          expiryPeriodMs = 18 * 60 * 60 * 1000; // Free sync trial: 18h
+          expiryPeriodMs = 6 * 60 * 60 * 1000; // Free sync trial: 6h
         } else if (room.tier === 'store') {
           expiryPeriodMs = 30 * 24 * 60 * 60 * 1000; // Store monthly: 30 days
         } else if (room.tier === 'store_annual') {
@@ -215,7 +215,7 @@ export const localDb = {
     }
   },
 
-  async createRoom(roomId: string, email: string, tier: TierType, hostSessionToken: string, passcode?: string): Promise<Room> {
+  async createRoom(roomId: string, email: string, tier: TierType, hostSessionToken: string, passcode?: string, createdAt?: string): Promise<Room> {
     await this.cleanupExpiredRooms();
     const config = TIER_CONFIGS[tier];
     const newRoom: Room = {
@@ -225,7 +225,7 @@ export const localDb = {
       tier,
       status: tier === 'free' ? 'active' : 'inactive',
       max_participants: config.maxParticipants,
-      created_at: new Date().toISOString(),
+      created_at: createdAt || new Date().toISOString(),
       passcode,
     };
 
@@ -279,7 +279,7 @@ export const localDb = {
       const createdAt = new Date(room.created_at);
       let expiryPeriodMs = 24 * 60 * 60 * 1000;
       if (room.tier === 'free') {
-        expiryPeriodMs = 18 * 60 * 60 * 1000;
+        expiryPeriodMs = 6 * 60 * 60 * 1000;
       } else if (room.tier === 'store') {
         expiryPeriodMs = 30 * 24 * 60 * 60 * 1000;
       } else if (room.tier === 'store_annual') {
@@ -321,7 +321,7 @@ export const localDb = {
       const createdAt = new Date(room.created_at);
       let expiryPeriodMs = 24 * 60 * 60 * 1000;
       if (room.tier === 'free') {
-        expiryPeriodMs = 18 * 60 * 60 * 1000;
+        expiryPeriodMs = 6 * 60 * 60 * 1000;
       } else if (room.tier === 'store') {
         expiryPeriodMs = 30 * 24 * 60 * 60 * 1000;
       } else if (room.tier === 'store_annual') {

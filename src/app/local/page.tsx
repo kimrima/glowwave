@@ -24,6 +24,7 @@ import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import { LOCALIZED_TEMPLATES, getDefaultsByLocale } from '@/lib/templates';
 import { t, Locale, getLocalizedFonts } from '@/lib/translations';
 import useFitText from '@/hooks/useFitText';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 const LOCAL_SYNC_TRANSLATIONS: Record<Locale, {
   start_sync: string;
@@ -722,7 +723,7 @@ function LocalSignboardContent() {
 
     const updateTimer = () => {
       const created = new Date(syncRoomCreatedAt).getTime();
-      const limit = 18 * 60 * 60 * 1000; // 18 hours
+      const limit = syncRoomTier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
       const now = Date.now();
       const diff = created + limit - now;
 
@@ -841,30 +842,40 @@ function LocalSignboardContent() {
     }
   };
 
-  const handleStartMobileSync = async () => {
+  const handleStartMobileSync = async (isRegenerate = false) => {
     if (isSyncCreating) return;
     setIsSyncCreating(true);
     try {
+      const bodyPayload = {
+        email: 'anonymous-local@glowwave.app',
+        tier: 'free',
+        passcode: ''
+      };
+      if (isRegenerate && syncRoomCreatedAt) {
+        bodyPayload.created_at = syncRoomCreatedAt;
+      }
+
       const res = await fetch('/api/room/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'anonymous-local@glowwave.app',
-          tier: 'free',
-          passcode: ''
-        })
+        body: JSON.stringify(bodyPayload)
       });
       if (!res.ok) throw new Error('Failed to create sync room');
       const data = await res.json();
       setSyncRoomId(data.room_id);
       setSyncHostToken(data.host_session_token);
       setSyncRoomTier('free');
-      setSyncRoomCreatedAt(new Date().toISOString());
+      
+      const createdAtToSave = isRegenerate && syncRoomCreatedAt ? syncRoomCreatedAt : new Date().toISOString();
+      setSyncRoomCreatedAt(createdAtToSave);
       
       // Save sync room and token to localStorage
       localStorage.setItem('glowwave_local_sync_room_id', data.room_id);
       localStorage.setItem('glowwave_local_sync_host_token', data.host_session_token);
-      localStorage.setItem('glowwave_local_sync_room_created_at', new Date().toISOString());
+      localStorage.setItem('glowwave_local_sync_room_created_at', createdAtToSave);
+      
+      // Close vault modal on successful sync start
+      setIsVaultOpen(false);
       
       // Initialize room broadcast with the current preset
       await fetch(`/api/room/${data.room_id}/broadcast`, {
@@ -950,6 +961,9 @@ function LocalSignboardContent() {
     setSyncRoomTier(room.tier);
     setSyncRoomCreatedAt(room.created_at);
     setSyncRoomActiveParticipants(0);
+    
+    // Close vault modal on successful recovery
+    setIsVaultOpen(false);
     
     localStorage.setItem('glowwave_local_sync_room_id', room.room_id);
     localStorage.setItem('glowwave_local_sync_host_token', room.host_session_token);
@@ -1408,47 +1422,89 @@ function LocalSignboardContent() {
       </header>
 
       {/* Unified HUD Status Bar */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 w-full relative z-10">
-        <div className="glass-effect rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 bg-[#12121a] border border-white/5">
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 w-full relative z-10">
+        <div className={`glass-effect rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 bg-[#12121a] border transition-colors duration-300 ${syncRoomId ? 'border-violet-500/20' : 'border-white/5'}`}>
           <div className="flex flex-wrap items-center gap-6">
             <div>
               <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{t('room_mode', activeLocale)}</span>
-              <span className="text-sm font-mono font-black text-white">{t('solo_offline', activeLocale)}</span>
+              <span className="text-sm font-mono font-black text-white">
+                {syncRoomId 
+                  ? (activeLocale === 'ko' ? '실시간 연동 모드 (온라인)' : 'Real-time Sync Mode') 
+                  : t('solo_offline', activeLocale)}
+              </span>
             </div>
             
             <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
             
             <div>
               <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{t('data_storage', activeLocale)}</span>
-              <span className="text-sm font-black text-white">{t('browser_storage_unlimited', activeLocale)}</span>
+              <span className="text-sm font-black text-white">
+                {syncRoomId 
+                  ? (['store', 'store_annual'].includes(syncRoomTier) 
+                    ? (activeLocale === 'ko' ? '영구 보존 (구독 중)' : 'Permanent (Subscribed)') 
+                    : (activeLocale === 'ko' ? '서버 임시 보존 (6시간)' : 'Temp Server (6h)'))
+                  : t('browser_storage_unlimited', activeLocale)}
+              </span>
             </div>
 
             <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
 
             <div>
               <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{t('subscription_plan', activeLocale)}</span>
-              <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-white/5 uppercase border border-white/5">
-                {t('forever_free', activeLocale)}
-              </span>
+              {syncRoomId ? (
+                <span className={`text-xs font-black text-white px-2 py-0.5 rounded-md uppercase border ${
+                  ['store', 'store_annual'].includes(syncRoomTier)
+                    ? 'bg-violet-500/10 border-violet-500/20 text-violet-400'
+                    : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                }`}>
+                  {['store', 'store_annual'].includes(syncRoomTier)
+                    ? (activeLocale === 'ko' ? '매장 전용 24/7 플랜' : 'Store Signage Plan')
+                    : (activeLocale === 'ko' ? '일일 무료 체험 (6시간)' : 'Free Trial (6 Hours)')}
+                </span>
+              ) : (
+                <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-white/5 uppercase border border-white/5">
+                  {t('forever_free', activeLocale)}
+                </span>
+              )}
             </div>
 
             <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
 
             <div>
               <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{t('time_remaining', activeLocale)}</span>
-              <span className="text-sm font-black text-zinc-300">{t('unlimited', activeLocale)}</span>
+              <span className="text-sm font-black text-zinc-300">
+                {syncRoomId 
+                  ? (['store', 'store_annual'].includes(syncRoomTier) 
+                    ? (activeLocale === 'ko' ? '무제한 (24/7)' : 'Unlimited (24/7)') 
+                    : (syncTimeRemaining || '--:--:--'))
+                  : t('unlimited', activeLocale)}
+              </span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{t('system_connection', activeLocale)}</span>
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/30 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)]">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span>{t('local_standalone', activeLocale)}</span>
-            </div>
+            {syncRoomId ? (
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-950/30 border border-violet-500/30 text-violet-400 text-xs font-bold tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(139,92,246,0.15)] transition-all duration-300">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
+                </span>
+                <span>
+                  {activeLocale === 'ko' 
+                    ? `연동 중: ${syncRoomId} (${syncRoomActiveParticipants}명 연결)` 
+                    : `Synced: ${syncRoomId} (${syncRoomActiveParticipants} Connected)`}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/30 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all duration-300">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>{t('local_standalone', activeLocale)}</span>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -1456,8 +1512,10 @@ function LocalSignboardContent() {
       {/* Main Grid */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col lg:grid lg:grid-cols-12 lg:items-start gap-8 w-full relative z-10">
         
-        {/* Item 1: Templates (원터치 연출 보드) */}
-        <div className="order-1 lg:col-span-8 flex flex-col w-full min-w-0">
+        {/* Left Column Wrapper (Templates, Instant Live, Guide) */}
+        <div className="lg:col-span-8 flex flex-col gap-8 w-full min-w-0">
+          {/* Item 1: Templates (원터치 연출 보드) */}
+        <div className="flex flex-col w-full min-w-0">
           <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a] border border-white/5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/5">
               <h2 className="text-sm font-bold text-white font-outfit">{t('quick_preset_board', activeLocale)}</h2>
@@ -1620,65 +1678,8 @@ function LocalSignboardContent() {
             </div>
           </div>
         </div>
-
-        {/* Item 2: LIVE ON AIR Preview Card */}
-        <div className="order-2 lg:col-span-4 flex flex-col w-full min-w-0">
-          <div className="glass-effect rounded-2xl p-4 sm:p-6 flex flex-col items-center bg-[#12121a] border border-white/5">
-            <div className="flex items-center gap-2 mb-2 self-start">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider">LIVE ON AIR</h2>
-            </div>
-            <p className="text-[11px] text-zinc-500 mb-4 self-start">
-              {
-                {
-                  ko: '현재 전광판으로 내보내고 있는 실시간 화면 미리보기입니다.',
-                  en: 'This is a real-time preview of the current signboard screen.',
-                  ja: '現在電光掲示板に表示されているリアルタイムプレビューです。',
-                  es: 'Esta es una vista previa en tiempo real del letrero actual.',
-                  'zh-TW': '這是目前電子看板的即時預覽。',
-                  'zh-HK': '這是目前電子看板的即時預覽。',
-                }[activeLocale] || '현재 전광판으로 내보내고 있는 실시간 화면 미리보기입니다.'
-              }
-            </p>
-            
-            <div className="w-full max-w-[420px] flex flex-col items-center">
-              <div className="w-full flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl relative group overflow-hidden">
-                <LandscapePhoneMockup preset={currentBroadcastPreset} />
-                
-                <button
-                  type="button"
-                  onClick={() => setIsStandaloneFullscreen(true)}
-                  className="hidden lg:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center text-white font-bold text-xs cursor-pointer"
-                >
-                  {t('fullscreen_my_screen', activeLocale)}
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsStandaloneFullscreen(true)}
-                className="mt-3 w-full py-2 px-4 rounded-xl bg-white/5 hover:bg-white/10 active:scale-[0.99] text-white font-bold text-xs tracking-wider flex items-center justify-center transition-all cursor-pointer border border-white/10 hover:border-white/20 shadow-md"
-              >
-                {t('use_device_signboard', activeLocale)}
-              </button>
-            </div>
-
-            {currentBroadcastPreset.effect === 'luckydraw_wait' && (
-              <div className="w-full mt-4 flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={handleDrawWinner}
-                  className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black text-xs tracking-wider flex items-center justify-center transition-all shadow-xl shadow-amber-500/20 cursor-pointer border border-amber-300"
-                >
-                  {t('publish_draw_result', activeLocale)}
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Item 3: 즉석 라이브 메시지 전송 */}
-        <div className="order-3 lg:col-span-8 flex flex-col w-full min-w-0">
+          {/* Item 3: 즉석 라이브 메시지 전송 */}
+        <div className="flex flex-col w-full min-w-0">
           <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a] border border-white/5">
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
               <h2 className="text-sm font-bold text-white">{t('instant_live_broadcast', activeLocale)}</h2>
@@ -2155,8 +2156,7 @@ function LocalSignboardContent() {
             </div>
           </div>
         </div>
-
-        {/* Item 4: 1인 모드 이용 가이드 & 보관 안내 (Short impact text card) */}
+          {/* Item 4: 1인 모드 이용 가이드 & 보관 안내 (Short impact text card) */}
         <div className="order-4 lg:col-span-4 flex flex-col gap-6 w-full min-w-0">
           <div className="glass-effect rounded-2xl p-6 text-xs text-zinc-400 leading-relaxed flex flex-col gap-4 bg-[#12121a] border border-white/5">
             <h3 className="font-bold text-white text-sm">
@@ -2256,8 +2256,152 @@ function LocalSignboardContent() {
             </div>
           </div>
         </div>
+        </div>
 
-      </main>
+        {/* Right Column Wrapper (LIVE ON AIR Mockup, Sync Control Panel) */}
+        <div className="lg:col-span-4 flex flex-col gap-6 w-full min-w-0 order-first lg:order-none">
+          {/* Item 2: LIVE ON AIR Preview Card */}
+        <div className="flex flex-col w-full min-w-0">
+          <div className="glass-effect rounded-2xl p-4 sm:p-6 flex flex-col items-center bg-[#12121a] border border-white/5">
+            <div className="flex items-center gap-2 mb-2 self-start">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider">LIVE ON AIR</h2>
+            </div>
+            <p className="text-[11px] text-zinc-500 mb-4 self-start">
+              {
+                {
+                  ko: '현재 전광판으로 내보내고 있는 실시간 화면 미리보기입니다.',
+                  en: 'This is a real-time preview of the current signboard screen.',
+                  ja: '現在電光掲示板に表示されているリアルタイムプレビューです。',
+                  es: 'Esta es una vista previa en tiempo real del letrero actual.',
+                  'zh-TW': '這是目前電子看板的即時預覽。',
+                  'zh-HK': '這是目前電子看板的即時預覽。',
+                }[activeLocale] || '현재 전광판으로 내보내고 있는 실시간 화면 미리보기입니다.'
+              }
+            </p>
+            
+            <div className="w-full max-w-[420px] flex flex-col items-center">
+              <div className="w-full flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl relative group overflow-hidden">
+                <LandscapePhoneMockup preset={currentBroadcastPreset} />
+                
+                <button
+                  type="button"
+                  onClick={() => setIsStandaloneFullscreen(true)}
+                  className="hidden lg:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center text-white font-bold text-xs cursor-pointer"
+                >
+                  {t('fullscreen_my_screen', activeLocale)}
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsStandaloneFullscreen(true)}
+                className="mt-3 w-full py-2 px-4 rounded-xl bg-white/5 hover:bg-white/10 active:scale-[0.99] text-white font-bold text-xs tracking-wider flex items-center justify-center transition-all cursor-pointer border border-white/10 hover:border-white/20 shadow-md"
+              >
+                {t('use_device_signboard', activeLocale)}
+              </button>
+            </div>
+
+            {currentBroadcastPreset.effect === 'luckydraw_wait' && (
+              <div className="w-full mt-4 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleDrawWinner}
+                  className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black text-xs tracking-wider flex items-center justify-center transition-all shadow-xl shadow-amber-500/20 cursor-pointer border border-amber-300"
+                >
+                  {t('publish_draw_result', activeLocale)}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Real-time Sync Control Panel */}
+          {syncRoomId && (
+            <div className="glass-effect rounded-2xl p-5 mt-6 flex flex-col bg-[#12121a] border border-violet-500/20 shadow-xl shadow-violet-950/5 relative overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 text-center">
+              
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
+                <h3 className="text-xs font-black text-violet-400 uppercase tracking-widest font-mono">
+                  {activeLocale === 'ko' ? '기기 연결 QR 코드' : 'Device Connection QR'}
+                </h3>
+              </div>
+
+              {/* QR Code Container */}
+              <div className="bg-white p-3 rounded-2xl shadow-xl flex flex-col items-center shrink-0 w-[144px] mx-auto mb-4">
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/room/${syncRoomId}`)}`} 
+                  alt="Sync Room QR" 
+                  className="w-28 h-28 rounded-lg"
+                />
+                <span className="text-[10px] font-black text-black tracking-widest mt-2 font-mono">${syncRoomId}</span>
+              </div>
+
+              {/* Connection URL with Copy Button */}
+              <div className="w-full space-y-4">
+                <div className="space-y-1.5 text-left">
+                  <label className="text-[9px] font-mono text-zinc-500 font-bold block">
+                    {activeLocale === 'ko' ? '접속 코드 주소' : 'Spectator Link'}
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${window.location.origin}/room/${syncRoomId}`}
+                      className="flex-1 bg-[#09090D] border border-white/10 rounded-xl px-3 py-2 text-[10px] text-zinc-400 font-mono focus:outline-none"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/room/${syncRoomId}`);
+                        alert(activeLocale === 'ko' ? '링크가 클립보드에 복사되었습니다.' : 'Link copied to clipboard.');
+                      }}
+                      className="px-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-zinc-300 hover:text-white transition-all text-[10px] font-bold shrink-0 cursor-pointer"
+                    >
+                      {activeLocale === 'ko' ? '복사' : 'Copy'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Upgrade Banner for Free Trial */}
+                {!['store', 'store_annual'].includes(syncRoomTier) && (
+                  <div className="p-3.5 bg-violet-500/5 border border-violet-500/10 rounded-xl space-y-2 mt-2 text-left">
+                    <div className="text-[10px] font-extrabold text-violet-300">
+                      {activeLocale === 'ko' ? '매장 전용 24/7 무중단 플랜' : 'Store Signage 24/7 Plan'}
+                    </div>
+                    <p className="text-[9px] text-zinc-500 font-medium leading-relaxed">
+                      {activeLocale === 'ko' 
+                        ? '연중무휴 24시간 끊김 없이 작동하며, 최대 3대 연결 및 입장 비밀번호 설정이 가능합니다.'
+                        : 'Runs 24/7 without disconnects, supports up to 3 screens, and locks with passcode.'}
+                    </p>
+                    <button
+                      onClick={() => handleStartImportRoom('premium', 'store')}
+                      className="w-full py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-[10px] transition-all text-center tracking-wide cursor-pointer active:scale-95"
+                    >
+                      {activeLocale === 'ko' ? '매장 전용 24/7 플랜으로 업그레이드' : 'Upgrade to Store 24/7 Plan'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Control Buttons */}
+              <div className="flex flex-col gap-2 border-t border-white/5 pt-4 mt-4">
+                <button
+                  onClick={() => handleStartMobileSync(true)}
+                  className="w-full py-2 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-400 hover:text-white transition-all text-[10px] font-bold text-center cursor-pointer active:scale-95"
+                >
+                  {activeLocale === 'ko' ? '새 연동용 큐알 재생성' : 'Regenerate QR'}
+                </button>
+                <button
+                  onClick={handleStopMobileSync}
+                  className="w-full py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 transition-all text-[10px] font-bold text-center cursor-pointer active:scale-95"
+                >
+                  {activeLocale === 'ko' ? '실시간 연동 해제' : 'Disconnect Sync'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+        </div>
+            </main>
 
       {/* Footer */}
       <footer className="border-t border-white/5 bg-zinc-950 py-4 text-center text-[10px] text-zinc-600 font-mono">
@@ -3241,22 +3385,22 @@ function LocalSignboardContent() {
             {/* Tab 3: Create Sync Room */}
             {vaultTab === 'sync' && (() => {
               const syncOptionATitle = {
-                ko: '일일 무료 체험 (18시간)',
-                en: 'Free Daily Trial (18 Hours)',
-                ja: '一日無料体験 (18時間)',
-                es: 'Prueba Diaria Gratis (18 Horas)',
-                'zh-TW': '一日免費體驗 (18 小時)',
-                'zh-HK': '一日免費體驗 (18 小時)',
-              }[activeLocale] || '일일 무료 체험 (18시간)';
+                ko: '일일 무료 체험 (6시간)',
+                en: 'Free Daily Trial (6 Hours)',
+                ja: '一日無料体験 (6時間)',
+                es: 'Prueba Diaria Gratis (6 Horas)',
+                'zh-TW': '一日免費體驗 (6 小時)',
+                'zh-HK': '一日免費體驗 (6 小時)',
+              }[activeLocale] || '일일 무료 체험 (6시간)';
 
               const syncOptionADesc = {
-                ko: '별도의 가입이나 결제 없이 3초 만에 즉시 큐알을 생성하여 18시간 동안 전광판 원격 무선 조종을 체험합니다.',
-                en: 'Generate a QR code instantly in 3 seconds with no signup or payment to try remote signage control for 18 hours.',
-                ja: '登録や決済なしで3秒でQRコードを生成し、18時間電光掲示板のワイヤレス制御を体験できます。',
-                es: 'Genere un código QR al instante en 3 segundos sin registro ni pago para probar el control inalámbrico del letrero por 18 horas.',
-                'zh-TW': '無需註冊或付款即可在 3 秒內快速生成 QR Code，體驗實時無線操控看板 18 小時。',
-                'zh-HK': '無需註冊或付款即可在 3 秒內快速生成 QR Code，體驗實時無線操控看板 18 小時。',
-              }[activeLocale] || '별도의 가입이나 결제 없이 3초 만에 즉시 큐알을 생성하여 18시간 동안 전광판 원격 무선 조종을 체험합니다.';
+                ko: 'PC에서 대시보드 조작 시 스마트폰/태블릿 등 외부 기기의 실제 연출 화면을 테스트해볼 수 있게 1대 기기 한정으로 6시간 동안 연동 QR을 열어주는 무료 체험용 기능입니다. (모바일 기기에서 대시보드를 직접 사용 중이시라면 필요 없는 기능입니다.)',
+                en: 'Generates a private link for 6 hours to test and preview your settings on a real phone/tablet while editing on PC. Connects 1 device only. (Not needed if you are already using the dashboard on a mobile device.)',
+                ja: 'PCで操作する際、スマホやタブレット等の実機でどのように演出されるかをテストできるよう、1台限定で6時間連動QRを開く無料体験機能です。（モバイル実機で直接ダッシュボードを使用中の場合は不要な機能です。）',
+                es: 'Genera un enlace privado por 6 horas para probar su diseño en un teléfono/tableta real mientras edita en PC. Conecta 1 dispositivo. (No es necesario si ya usa el panel en un dispositivo móvil.)',
+                'zh-TW': '當在 PC 上操作控制板時，可生成 6 小時專屬 QR Code 供單台手機/平板連線，即時測試看板效果。（若已在行動裝置上使用控制板，則不nx功能。）',
+                'zh-HK': '當在 PC 上操作控制板時，可生成 6 小時專屬 QR Code 供單台手機/平板連線，即時測試看板效果。（若已在行動裝置上使用控制板，則不需此功能。）',
+              }[activeLocale] || 'PC에서 대시보드 조작 시 스마트폰/태블릿 등 외부 기기의 실제 연출 화면을 테스트해볼 수 있게 1대 기기 한정으로 6시간 동안 연동 QR을 열어주는 무료 체험용 기능입니다.';
 
               const syncOptionBTitle = {
                 ko: '매장 전용 24/7 플랜',
@@ -3268,12 +3412,12 @@ function LocalSignboardContent() {
               }[activeLocale] || '매장 전용 24/7 플랜';
 
               const syncOptionBDesc = {
-                ko: '카페, 주점, 매장 홍보용. 연중무휴 24시간 끊김 없이 연속 작동하며, 입장 비밀번호 잠금 설정을 지원합니다.',
-                en: 'Ideal for cafés, pubs, and retail. Runs continuously 24/7 without disconnects, and supports secure passcode entry.',
-                ja: 'カフェ、居酒屋、店舗プロモーション用。接続切れなしで24時間連続稼働、入場用パスコードロックもサポートします。',
-                es: 'Ideal para cafés, pubs y tiendas. Funciona las 24 horas sin desconexiones y permite configurar contraseña de entrada.',
-                'zh-TW': '適用於咖啡廳、餐酒館及店家宣傳。全年無休 24 小時不斷線連續運作，並支援設定入場密碼鎖定。',
-                'zh-HK': '適用於咖啡廳、餐酒館及店家宣傳。全年無休 24 小時不斷線連續運作，並支援設定入場密碼鎖定。',
+                ko: '카페, 주점, 매장 홍보용. 연중무휴 24시간 끊김 없이 연속 작동하며, 최대 3대 기기 제한 해제 및 모든 프리미엄 유료 기능을 무제한으로 사용 가능한 매장 전용 구독형 플랜입니다. (입장 비밀번호 설정 가능)',
+                en: 'Ideal for cafés, pubs, and retail. Runs continuously 24/7 without disconnects, supports up to 3 screens, and unlocks all premium features. Supports secure passcode entry.',
+                ja: 'カフェ、居酒屋、店舗プロモーション用。接続切れなしで24時間連続稼働, 最大3대의 デバイス制限解除, すべてのプレミアム機能が制限なしで利用可能な店舗専用サブスクプランです。（入場用パスコードロック対応）',
+                es: 'Ideal para cafés, pubs y tiendas. Funciona las 24 horas sin desconexiones, admite hasta 3 pantallas y desbloquea todas las funciones premium con contraseña.',
+                'zh-TW': '適用於咖啡廳、餐酒館及店家宣傳。全年無休 24 小時不斷線運작, 支援最多 3 台螢幕連線並解鎖所有付費功能。（支援設定入場密碼）',
+                'zh-HK': '適用於咖啡廳、餐酒館及店家宣傳。全年無休 24 小時不斷線連續運作, 支援最多 3 台螢幕連線並解鎖所有付費功能。（支援設定入場密碼）',
               }[activeLocale] || '카페, 주점, 매장 홍보용. 연중무휴 24시간 끊김 없이 연속 작동하며, 입장 비밀번호 잠금 설정을 지원합니다.';
 
               const syncOptionABtn = {
@@ -3304,96 +3448,79 @@ function LocalSignboardContent() {
                   </div>
 
                   {syncRoomId ? (
-                    /* Active Sync Connection Panel */
-                    <div className="glass-effect rounded-2xl p-6 border border-white/10 bg-white/[0.02] flex flex-col gap-6 text-left">
-                      <div className="flex flex-col sm:flex-row items-center gap-6">
-                        {/* Left Side: QR Code Card */}
-                        <div className="bg-white p-3 rounded-2xl shadow-xl flex flex-col items-center">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img 
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`${window.location.origin}/room/${syncRoomId}`)}`} 
-                            alt="Sync Room QR" 
-                            className="w-36 h-36 rounded-lg"
-                          />
-                          <span className="text-[10px] font-black text-black tracking-widest mt-2">{syncRoomId}</span>
-                        </div>
-
-                        {/* Right Side: Status Details */}
-                        <div className="flex-1 space-y-4 w-full">
-                          <div>
-                            <span className="text-[10px] font-mono text-zinc-400 font-extrabold block tracking-wider mb-1">
-                              {t('sync_status_title', activeLocale)}
-                            </span>
-                            <div className="flex flex-wrap gap-2 items-center">
-                              {['store', 'store_annual'].includes(syncRoomTier) ? (
-                                <span className="px-2.5 py-1 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-400 text-[10px] font-black tracking-wide flex items-center gap-1 shadow-sm">
-                                  👑 {t('sync_unlimited_active', activeLocale)}
-                                </span>
-                              ) : (
-                                <span className="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-[10px] font-black tracking-wide flex items-center gap-1 shadow-sm">
-                                  ⏳ {t('sync_free_trial_remaining', activeLocale)}: {syncTimeRemaining || '--:--:--'}
-                                </span>
-                              )}
-                              <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[10px] font-black tracking-wide flex items-center gap-1 shadow-sm">
-                                🟢 {syncRoomActiveParticipants} {t('present_user_unit', activeLocale)}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-mono text-zinc-400 font-bold block">{t('copy_code', activeLocale)}</label>
-                            <div className="flex gap-2">
-                              <input
-                                type="text"
-                                readOnly
-                                value={`${window.location.origin}/room/${syncRoomId}`}
-                                className="flex-1 bg-[#09090D] border border-white/10 rounded-lg px-3 py-1.5 text-[11px] text-zinc-300 font-mono focus:outline-none"
-                              />
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(`${window.location.origin}/room/${syncRoomId}`);
-                                  alert(activeLocale === 'ko' ? '링크가 클립보드에 복사되었습니다.' : 'Link copied to clipboard.');
-                                }}
-                                className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/15 text-zinc-300 hover:text-white transition-all text-xs font-bold shrink-0"
-                              >
-                                {t('copy_code', activeLocale)}
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Upgrade Prompts for Free Trial */}
-                          {!['store', 'store_annual'].includes(syncRoomTier) && (
-                            <div className="p-3.5 bg-violet-500/5 border border-violet-500/20 rounded-xl space-y-2">
-                              <div className="text-[11px] font-extrabold text-violet-300 flex items-center gap-1">
-                                🚀 {t('store_signage_upgrade_title', activeLocale)}
-                              </div>
-                              <p className="text-[10px] text-zinc-400 font-medium leading-relaxed">
-                                {t('store_signage_upgrade_desc', activeLocale)}
-                              </p>
-                              <button
-                                onClick={() => handleStartImportRoom('premium', 'store')}
-                                className="w-full py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-[10px] transition-all text-center tracking-wide flex items-center justify-center gap-1 shadow-md shadow-violet-900/20 active:scale-95 animate-pulse"
-                              >
-                                💎 {t('sync_upgrade_prompt', activeLocale)}
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                    /* Active Sync Connection Panel (Simplified without redundant info & emojis) */
+                    <div className="glass-effect rounded-2xl p-5 border border-white/10 bg-[#12121a] flex flex-col items-center gap-5 text-center">
+                      <div className="text-xs font-black text-violet-400 uppercase tracking-widest font-mono">
+                        {activeLocale === 'ko' ? '기기 연결 QR 코드' : 'Device Connection QR'}
+                      </div>
+                      
+                      <div className="bg-white p-3 rounded-2xl shadow-xl flex flex-col items-center">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/room/${syncRoomId}`)}`} 
+                          alt="Sync Room QR" 
+                          className="w-28 h-28 rounded-lg"
+                        />
+                        <span className="text-[10px] font-black text-black tracking-widest mt-2 font-mono">{syncRoomId}</span>
                       </div>
 
-                      <div className="flex gap-2 border-t border-white/5 pt-4 mt-2">
+                      <div className="w-full space-y-4">
+                        <div className="space-y-1.5 text-left">
+                          <label className="text-[9px] font-mono text-zinc-500 font-bold block">
+                            {activeLocale === 'ko' ? '접속 코드 주소' : 'Spectator Link'}
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              readOnly
+                              value={`${window.location.origin}/room/${syncRoomId}`}
+                              className="flex-1 bg-[#09090D] border border-white/10 rounded-xl px-3 py-2 text-[10px] text-zinc-400 font-mono focus:outline-none"
+                            />
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(`${window.location.origin}/room/${syncRoomId}`);
+                                alert(activeLocale === 'ko' ? '링크가 클립보드에 복사되었습니다.' : 'Link copied to clipboard.');
+                              }}
+                              className="px-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-zinc-300 hover:text-white transition-all text-[10px] font-bold shrink-0 cursor-pointer"
+                            >
+                              {activeLocale === 'ko' ? '복사' : 'Copy'}
+                            </button>
+                          </div>
+                        </div>
+
+                        {!['store', 'store_annual'].includes(syncRoomTier) && (
+                          <div className="p-3.5 bg-violet-500/5 border border-violet-500/10 rounded-xl space-y-2 text-left">
+                            <div className="text-[10px] font-extrabold text-violet-300">
+                              {activeLocale === 'ko' ? '매장 전용 24/7 무중단 플랜' : 'Store Signage 24/7 Plan'}
+                            </div>
+                            <p className="text-[9px] text-zinc-500 font-medium leading-relaxed">
+                              {activeLocale === 'ko' 
+                                ? '연중무휴 24시간 끊김 없이 작동하며, 최대 3대 연결 및 입장 비밀번호 설정이 가능합니다.'
+                                : 'Runs 24/7 without disconnects, supports up to 3 screens, and locks with passcode.'}
+                            </p>
+                            <button
+                              onClick={() => handleStartImportRoom('premium', 'store')}
+                              className="w-full py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-[10px] transition-all text-center tracking-wide cursor-pointer active:scale-95"
+                            >
+                              {activeLocale === 'ko' ? '매장 전용 24/7 플랜으로 업그레이드' : 'Upgrade to Store 24/7 Plan'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="w-full flex flex-col gap-2 border-t border-white/5 pt-4 mt-2">
                         <button
-                          onClick={handleStartMobileSync}
+                          onClick={() => handleStartMobileSync(true)}
                           disabled={isSyncCreating}
-                          className="flex-1 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-400 hover:text-white transition-all text-[11px] font-bold text-center active:scale-95"
+                          className="w-full py-2 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-400 hover:text-white transition-all text-[10px] font-bold text-center cursor-pointer active:scale-95"
                         >
-                          🔄 {t('sync_regenerate_btn', activeLocale)}
+                          {activeLocale === 'ko' ? '새 연동용 큐알 재생성' : 'Regenerate QR'}
                         </button>
                         <button
                           onClick={handleStopMobileSync}
-                          className="flex-1 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 transition-all text-[11px] font-bold text-center active:scale-95"
+                          className="w-full py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 transition-all text-[10px] font-bold text-center cursor-pointer active:scale-95"
                         >
-                          ❌ {t('sync_disconnect_btn', activeLocale)}
+                          {activeLocale === 'ko' ? '실시간 연동 해제' : 'Disconnect Sync'}
                         </button>
                       </div>
                     </div>
@@ -3404,7 +3531,7 @@ function LocalSignboardContent() {
                       {/* Option A: Free Trial */}
                       <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left active:scale-[0.99] min-h-[250px]">
                         <div>
-                          <span className="text-[10px] font-mono text-amber-400 font-extrabold uppercase block tracking-wider mb-2">18H FREE TRIAL</span>
+                          <span className="text-[10px] font-mono text-amber-400 font-extrabold uppercase block tracking-wider mb-2">6H FREE TRIAL</span>
                           <h3 className="text-base font-black text-white mb-2">{syncOptionATitle}</h3>
                           <p className="text-xs text-zinc-400 leading-relaxed mb-4">
                             {syncOptionADesc}

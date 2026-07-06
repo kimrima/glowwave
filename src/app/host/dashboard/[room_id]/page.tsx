@@ -301,13 +301,13 @@ export default function HostDashboard() {
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
 
-    // 2. Room expiration ticker (18-hour for free, 24-hour for event paid, 365-day for store paid)
+    // 2. Room expiration ticker (6-hour for free, 24-hour for event paid, 365-day for store paid)
     if (!room?.created_at) return;
     const calculateTime = () => {
       const createdTime = new Date(room.created_at).getTime();
       let limitMs = 24 * 60 * 60 * 1000;
       if (room.tier === 'free') {
-        limitMs = 18 * 60 * 60 * 1000;
+        limitMs = 6 * 60 * 60 * 1000;
       } else if (room.tier === 'store' || room.tier === 'store_annual') {
         limitMs = 365 * 24 * 60 * 60 * 1000;
       }

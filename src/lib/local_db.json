@@ -1,49 +1,132 @@
 {
   "rooms": {
-    "2OQKIK": {
-      "id": "2OQKIK",
-      "host_session_token": "16ce8fb6-755b-4545-827a-abbb06aa8285",
-      "email": "test@example.com",
+    "9YHGWH": {
+      "id": "9YHGWH",
+      "host_session_token": "63e6311c-7ffa-4258-abc4-75556a88e361",
+      "email": "verify@glowwave.com",
       "tier": "free",
       "status": "active",
       "max_participants": 15,
-      "created_at": "2026-06-26T15:34:55.426Z"
+      "created_at": "2026-07-06T09:09:39.784Z"
     },
-    "0M9ECW": {
-      "id": "0M9ECW",
-      "host_session_token": "93e96f68-854f-41bf-bd16-ea96b5f52837",
-      "email": "test@example.com",
+    "NF0YE2": {
+      "id": "NF0YE2",
+      "host_session_token": "a4fb6ac0-00ee-4934-bc9a-f6fcb91adab9",
+      "email": "anonymous-local@glowwave.app",
       "tier": "free",
       "status": "active",
       "max_participants": 15,
-      "created_at": "2026-06-26T15:46:14.817Z"
+      "created_at": "2026-07-06T09:31:01.849Z",
+      "passcode": ""
     },
-    "TRRB8I": {
-      "id": "TRRB8I",
-      "host_session_token": "55b5819e-74c3-4677-93c3-31aa6ecb3075",
-      "email": "test@glowwave.com",
+    "RBBJPG": {
+      "id": "RBBJPG",
+      "host_session_token": "f949c369-16f9-4e5a-81c2-bc427e2ddb41",
+      "email": "anonymous-local@glowwave.app",
       "tier": "free",
       "status": "active",
       "max_participants": 15,
-      "created_at": "2026-06-26T15:49:46.930Z"
+      "created_at": "2026-07-06T09:38:18.191Z",
+      "passcode": ""
     },
-    "6QGE6W": {
-      "id": "6QGE6W",
-      "host_session_token": "b86028ab-298b-475d-b94d-4e9116a6aca3",
-      "email": "test@glowwave.com",
-      "tier": "free",
+    "KUHX0U": {
+      "id": "KUHX0U",
+      "host_session_token": "23591066-de81-4ed9-8497-73927ef90b23",
+      "email": "verify@glowwave.com",
+      "tier": "store",
       "status": "active",
-      "max_participants": 15,
-      "created_at": "2026-06-26T15:55:03.992Z"
+      "max_participants": 3,
+      "created_at": "2026-07-06T09:38:22.708Z"
     },
-    "AFUKBR": {
-      "id": "AFUKBR",
-      "host_session_token": "0ce5efe4-49ea-495c-8636-ea2346d5129c",
-      "email": "verify2@glowwave.com",
+    "Z3XHYR": {
+      "id": "Z3XHYR",
+      "host_session_token": "a1e685de-5097-4de0-a27a-5d3068de68e6",
+      "email": "anonymous-local@glowwave.app",
       "tier": "free",
       "status": "active",
       "max_participants": 15,
-      "created_at": "2026-06-26T15:59:07.548Z"
+      "created_at": "2026-07-06T09:40:42.364Z",
+      "passcode": ""
+    },
+    "O9PRDM": {
+      "id": "O9PRDM",
+      "host_session_token": "6f8336a2-40f4-4ae9-b59f-224ffa516251",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "created_at": "2026-07-06T09:40:43.611Z",
+      "passcode": ""
+    },
+    "HOLAFE": {
+      "id": "HOLAFE",
+      "host_session_token": "31bd98b6-6039-469f-a4c5-2076687f7920",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "created_at": "2026-07-06T09:40:44.530Z",
+      "passcode": ""
+    },
+    "LFND5C": {
+      "id": "LFND5C",
+      "host_session_token": "6d016ae1-9681-4f53-bae0-5c1c797a7423",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "created_at": "2026-07-06T09:40:46.921Z",
+      "passcode": ""
+    },
+    "6AB6VM": {
+      "id": "6AB6VM",
+      "host_session_token": "f5a50a1f-3a3c-4f85-8a5d-40189bb9228a",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "created_at": "2026-07-06T09:41:02.428Z",
+      "passcode": ""
+    },
+    "K1E9D1": {
+      "id": "K1E9D1",
+      "host_session_token": "438c212d-7f50-45ab-b7b1-9a56faa7f47b",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "created_at": "2026-07-06T09:41:03.350Z",
+      "passcode": ""
+    },
+    "QDP8KF": {
+      "id": "QDP8KF",
+      "host_session_token": "59b56069-5049-4bf6-a9fc-2cef51ec80f5",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "created_at": "2026-07-06T09:43:45.450Z",
+      "passcode": ""
+    },
+    "2QFUUP": {
+      "id": "2QFUUP",
+      "host_session_token": "0b1af91f-e3c6-45d0-b531-14d53a47cae3",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "created_at": "2026-07-06T09:57:17.473Z",
+      "passcode": ""
+    },
+    "1KKTLT": {
+      "id": "1KKTLT",
+      "host_session_token": "716090ea-4cf1-4a2a-b131-482d32d87a50",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "created_at": "2026-07-06T09:57:17.473Z",
+      "passcode": ""
     }
   },
   "payments": [
@@ -66,54 +149,166 @@
       "amount": 5000,
       "payment_status": "completed",
       "created_at": "2026-06-12T10:53:47.051Z"
+    },
+    {
+      "id": "7febdafa-b646-437f-9759-fd31efcca3cf",
+      "email": "verify@glowwave.com",
+      "host_session_token": "23591066-de81-4ed9-8497-73927ef90b23",
+      "room_id": "KUHX0U",
+      "tier": "store",
+      "amount": 4900,
+      "payment_status": "completed",
+      "created_at": "2026-07-06T09:38:22.709Z"
     }
   ],
   "currentStates": {
-    "2OQKIK": {
-      "bg_color": "#FFFFFF",
-      "text": "사이키",
-      "text_color": "#EF4444",
-      "effect": "blink",
-      "speed": 1527,
-      "bg_color_secondary": "#0B0B0F",
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "trigger_id": "1782488137949"
-    },
-    "0M9ECW": {
-      "bg_color": "#F97316",
-      "text": "스크롤",
-      "text_color": "#FFFFFF",
-      "effect": "marquee",
-      "speed": 30061,
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "trigger_id": "1782488878571"
-    },
-    "TRRB8I": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000,
-      "trigger_id": "1782489017235"
-    },
-    "6QGE6W": {
+    "9YHGWH": {
       "bg_color": "#0B0B0F",
       "text": "GlowWave",
       "text_color": "#FFFFFF",
       "effect": "none",
       "speed": 1000
     },
-    "AFUKBR": {
-      "bg_color": "#10B981",
-      "text": "NEW WORK",
-      "text_color": "#FFD700",
+    "NF0YE2": {
+      "bg_color": "#B91C1C",
+      "text": "끝까지 포기하지 마! 🔥",
+      "text_color": "#FFFFFF",
       "effect": "none",
       "speed": 1000,
-      "font_family": "sans-thin",
+      "font_family": "sans-thick",
       "font_size": 100,
-      "trigger_id": "1782490033962"
+      "special_effect": "stars",
+      "locale": "ko",
+      "trigger_id": "1783330677524"
+    },
+    "RBBJPG": {
+      "bg_color": "#B91C1C",
+      "text": "끝까지 포기하지 마! 🔥",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thick",
+      "font_size": 100,
+      "special_effect": "stars",
+      "locale": "ko",
+      "trigger_id": "1783330677524"
+    },
+    "KUHX0U": {
+      "bg_color": "#B91C1C",
+      "text": "끝까지 포기하지 마! 🔥",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thick",
+      "font_size": 100,
+      "special_effect": "stars",
+      "locale": "ko",
+      "trigger_id": "1783330677524"
+    },
+    "Z3XHYR": {
+      "bg_color": "#B91C1C",
+      "text": "끝까지 포기하지 마! 🔥",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thick",
+      "font_size": 100,
+      "special_effect": "stars",
+      "locale": "ko",
+      "trigger_id": "1783330677524"
+    },
+    "O9PRDM": {
+      "bg_color": "#B91C1C",
+      "text": "끝까지 포기하지 마! 🔥",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thick",
+      "font_size": 100,
+      "special_effect": "stars",
+      "locale": "ko",
+      "trigger_id": "1783330677524"
+    },
+    "HOLAFE": {
+      "bg_color": "#B91C1C",
+      "text": "끝까지 포기하지 마! 🔥",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thick",
+      "font_size": 100,
+      "special_effect": "stars",
+      "locale": "ko",
+      "trigger_id": "1783330677524"
+    },
+    "LFND5C": {
+      "bg_color": "#B91C1C",
+      "text": "끝까지 포기하지 마! 🔥",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thick",
+      "font_size": 100,
+      "special_effect": "stars",
+      "locale": "ko",
+      "trigger_id": "1783330677524"
+    },
+    "6AB6VM": {
+      "bg_color": "#B91C1C",
+      "text": "끝까지 포기하지 마! 🔥",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thick",
+      "font_size": 100,
+      "special_effect": "stars",
+      "locale": "ko",
+      "trigger_id": "1783330677524"
+    },
+    "K1E9D1": {
+      "bg_color": "#B91C1C",
+      "text": "끝까지 포기하지 마! 🔥",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thick",
+      "font_size": 100,
+      "special_effect": "stars",
+      "locale": "ko",
+      "trigger_id": "1783330677524"
+    },
+    "QDP8KF": {
+      "bg_color": "#F97316",
+      "text": "DAEBAK!",
+      "text_color": "#FFFFFF",
+      "effect": "marquee",
+      "speed": 11606,
+      "font_size": 100,
+      "font_family": "sans-thin",
+      "special_effect": "none",
+      "trigger_id": "1783331202951"
+    },
+    "2QFUUP": {
+      "bg_color": "#F97316",
+      "text": "DAEBAK!",
+      "text_color": "#FFFFFF",
+      "effect": "marquee",
+      "speed": 11606,
+      "font_size": 100,
+      "font_family": "sans-thin",
+      "special_effect": "none",
+      "trigger_id": "1783331202951"
+    },
+    "1KKTLT": {
+      "bg_color": "#F97316",
+      "text": "DAEBAK!",
+      "text_color": "#FFFFFF",
+      "effect": "marquee",
+      "speed": 11606,
+      "font_size": 100,
+      "font_family": "sans-thin",
+      "special_effect": "none",
+      "trigger_id": "1783331202951"
     }
   }
 }

@@ -174,15 +174,71 @@ export default function HostSetup() {
       // Save email in localStorage for future convenience
       localStorage.setItem('glowwave_host_email', hostEmail);
 
-      // Save default presets and authorization to LocalStorage
-      localStorage.setItem(`glowwave_presets_${data.room_id}`, JSON.stringify(defaultPresets));
+      // Check for staged presets from 1-person dashboard import path
+      const staged = localStorage.getItem('glowwave_temp_import_presets');
+      let presetsToSave = defaultPresets;
+      if (staged) {
+        try {
+          let parsed = JSON.parse(staged);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            if (selectedTier === 'free') {
+              // 무료 티어의 경우 일반 무료 연동 (상위 6개 제한 + 유료 폰트 및 파티클 제외)
+              parsed = parsed.slice(0, 6).map(p => {
+                const updatedPreset = { ...p };
+                if (updatedPreset.font_family && !['sans-thin', 'sans-thick'].includes(updatedPreset.font_family)) {
+                  updatedPreset.font_family = 'sans-thin';
+                }
+                if (updatedPreset.special_effect && updatedPreset.special_effect !== 'none') {
+                  updatedPreset.special_effect = 'none';
+                }
+                return updatedPreset;
+              });
+            }
+            presetsToSave = parsed;
+          }
+        } catch (e) {}
+      }
+
+      // Save presets and authorization to LocalStorage
+      localStorage.setItem(`glowwave_presets_${data.room_id}`, JSON.stringify(presetsToSave));
       localStorage.setItem(`glowwave_token_${data.room_id}`, data.host_session_token);
       localStorage.setItem('glowwave_active_host_room_id', data.room_id);
 
       if (selectedTier === 'free') {
-        // Free tier goes directly to dashboard without intermediate step
-        setIsProcessing(false);
-        router.push(`/host/dashboard/${data.room_id}`);
+        // 1인용 연동 진입인 경우 로컬 동기화 정보 설정 후 /local로 복귀
+        if (importStatus) {
+          localStorage.setItem('glowwave_local_sync_room_id', data.room_id);
+          localStorage.setItem('glowwave_local_sync_host_token', data.host_session_token);
+          localStorage.setItem('glowwave_local_sync_room_created_at', new Date().toISOString());
+
+          // 1인 대시보드 활성 프리셋 동기화 브로드캐스트
+          const activeLocalPreset = localStorage.getItem('glowwave_local_active_preset');
+          if (activeLocalPreset) {
+            try {
+              let parsedActive = JSON.parse(activeLocalPreset);
+              if (parsedActive.font_family && !['sans-thin', 'sans-thick'].includes(parsedActive.font_family)) {
+                parsedActive.font_family = 'sans-thin';
+              }
+              if (parsedActive.special_effect && parsedActive.special_effect !== 'none') {
+                parsedActive.special_effect = 'none';
+              }
+              await fetch(`/api/room/${data.room_id}/broadcast`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  host_session_token: data.host_session_token,
+                  preset: parsedActive
+                })
+              });
+            } catch (e) {}
+          }
+          setIsProcessing(false);
+          router.push('/local');
+        } else {
+          // 일반적인 프리 무료 방 생성은 기존대로 호스트 대시보드로 이동
+          setIsProcessing(false);
+          router.push(`/host/dashboard/${data.room_id}`);
+        }
       } else {
         // Paid tier opens PG checkout input directly
         setCheckoutStep('input');
