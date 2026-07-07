@@ -41,11 +41,12 @@ export async function POST(
     });
 
     // Forward to Supabase Realtime channel if configured
-    if (isSupabaseConfigured() && supabase) {
-      try {
-        const client = supabase;
-        const channel = client.channel(`room_${roomId}`);
-        await new Promise<void>((resolve) => {
+    const client = supabase;
+    if (isSupabaseConfigured() && client) {
+      // Fire-and-forget background execution to avoid blocking the API response
+      new Promise<void>((resolve) => {
+        try {
+          const channel = client.channel(`room_${roomId}`);
           channel.subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
               await channel.send({
@@ -60,10 +61,11 @@ export async function POST(
             }
           });
           setTimeout(resolve, 800);
-        });
-      } catch (supaErr) {
-        console.error('[Broadcast API] Failed to forward broadcast to Supabase:', supaErr);
-      }
+        } catch (supaErr) {
+          console.error('[Broadcast API] Failed to forward broadcast to Supabase:', supaErr);
+          resolve();
+        }
+      });
     }
 
     return NextResponse.json({ success: true, state: preset });

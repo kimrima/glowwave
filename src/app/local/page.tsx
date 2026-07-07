@@ -853,7 +853,7 @@ function LocalSignboardContent() {
         created_at?: string;
       } = {
         email: 'anonymous-local@glowwave.app',
-        tier: 'free',
+        tier: isRegenerate && syncRoomTier ? syncRoomTier : 'free',
         passcode: ''
       };
       if (isRegenerate && syncRoomCreatedAt) {
@@ -869,7 +869,7 @@ function LocalSignboardContent() {
       const data = await res.json();
       setSyncRoomId(data.room_id);
       setSyncHostToken(data.host_session_token);
-      setSyncRoomTier('free');
+      setSyncRoomTier(data.tier || (isRegenerate && syncRoomTier ? syncRoomTier : 'free'));
       
       const createdAtToSave = isRegenerate && syncRoomCreatedAt ? syncRoomCreatedAt : new Date().toISOString();
       setSyncRoomCreatedAt(createdAtToSave);
