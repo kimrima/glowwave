@@ -846,7 +846,12 @@ function LocalSignboardContent() {
     if (isSyncCreating) return;
     setIsSyncCreating(true);
     try {
-      const bodyPayload = {
+      const bodyPayload: {
+        email: string;
+        tier: string;
+        passcode: string;
+        created_at?: string;
+      } = {
         email: 'anonymous-local@glowwave.app',
         tier: 'free',
         passcode: ''
@@ -3540,7 +3545,7 @@ function LocalSignboardContent() {
 
                         <button
                           type="button"
-                          onClick={handleStartMobileSync}
+                          onClick={() => handleStartMobileSync(false)}
                           disabled={isSyncCreating}
                           className="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 font-bold text-xs transition-all cursor-pointer text-center active:scale-95 mt-auto"
                         >
