@@ -1,7 +1,13 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { Room, Payment, Preset, TierType, TIER_CONFIGS } from './types';
 import { isSupabaseConfigured, supabase } from './supabase';
+
+function hashPasscode(passcode?: string): string | undefined {
+  if (!passcode) return undefined;
+  return crypto.createHash('sha256').update(passcode).digest('hex');
+}
 
 interface SSEClient {
   id: string;
@@ -218,6 +224,7 @@ export const localDb = {
   async createRoom(roomId: string, email: string, tier: TierType, hostSessionToken: string, passcode?: string, createdAt?: string): Promise<Room> {
     await this.cleanupExpiredRooms();
     const config = TIER_CONFIGS[tier];
+    const hashedPasscode = hashPasscode(passcode);
     const newRoom: Room = {
       id: roomId,
       host_session_token: hostSessionToken,
@@ -226,7 +233,7 @@ export const localDb = {
       status: tier === 'free' ? 'active' : 'inactive',
       max_participants: config.maxParticipants,
       created_at: createdAt || new Date().toISOString(),
-      passcode,
+      passcode: hashedPasscode,
     };
 
     if (isSupabaseConfigured() && supabase) {
@@ -238,7 +245,7 @@ export const localDb = {
         status: newRoom.status,
         max_participants: config.maxParticipants,
         created_at: newRoom.created_at,
-        passcode,
+        passcode: hashedPasscode,
       });
       if (error) {
         console.error('[localDb] Supabase createRoom error:', error);
@@ -606,10 +613,11 @@ export const localDb = {
   },
 
   async updateRoomPasscode(roomId: string, passcode?: string): Promise<boolean> {
+    const hashedPasscode = hashPasscode(passcode);
     if (isSupabaseConfigured() && supabase) {
       const { error } = await supabase
         .from('rooms')
-        .update({ passcode })
+        .update({ passcode: hashedPasscode })
         .eq('id', roomId);
       if (error) {
         console.error('[localDb] Supabase updateRoomPasscode error:', error);
@@ -620,7 +628,7 @@ export const localDb = {
       this.loadFromDisk();
       const room = this.rooms.get(roomId);
       if (room) {
-        room.passcode = passcode;
+        room.passcode = hashedPasscode;
         this.saveToDisk();
         return true;
       }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { localDb } from '@/lib/localDb';
 
 export async function POST(
@@ -27,7 +28,9 @@ export async function POST(
       return NextResponse.json({ success: true });
     }
 
-    if (room.passcode === passcode) {
+    const hashedInput = crypto.createHash('sha256').update(passcode || '').digest('hex');
+
+    if (room.passcode === hashedInput) {
       return NextResponse.json({ success: true });
     } else {
       return NextResponse.json({ success: false, error: '비밀번호가 올바르지 않습니다.' }, { status: 400 });

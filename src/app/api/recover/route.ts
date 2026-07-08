@@ -41,7 +41,6 @@ export async function POST(request: Request) {
         room_id: r.id,
         tier: r.tier,
         created_at: r.created_at,
-        host_session_token: r.host_session_token,
       })),
     });
   } catch (error) {

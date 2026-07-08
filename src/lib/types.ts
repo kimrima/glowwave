@@ -61,14 +61,14 @@ export const TIER_CONFIGS: Record<TierType, TierConfig> = {
   },
   store: {
     name: '매장 전용 요금제 (월간)',
-    maxParticipants: 3,
+    maxParticipants: 8,
     priceKrw: 4900,
     priceUsd: 3.99,
     description: '1인 매장용 실시간 원격 전광판 (월간 구독)',
   },
   store_annual: {
     name: '매장 전용 요금제 (연간)',
-    maxParticipants: 3,
+    maxParticipants: 8,
     priceKrw: 39000,
     priceUsd: 29.99,
     description: '1인 매장용 실시간 원격 전광판 (연간 38% 할인)',

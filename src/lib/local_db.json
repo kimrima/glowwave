@@ -9,26 +9,6 @@
       "max_participants": 3,
       "created_at": "2026-07-06T09:38:22.708Z"
     },
-    "5YYQCZ": {
-      "id": "5YYQCZ",
-      "host_session_token": "04d5e333-34e1-4c79-b688-27289e24cfdc",
-      "email": "anonymous-local@glowwave.app",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 15,
-      "created_at": "2026-07-07T16:28:55.497Z",
-      "passcode": ""
-    },
-    "2DTNFR": {
-      "id": "2DTNFR",
-      "host_session_token": "7dcdfaf0-5baf-4488-99b2-3a736bcb4b36",
-      "email": "anonymous-local@glowwave.app",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 15,
-      "created_at": "2026-07-07T16:41:11.930Z",
-      "passcode": ""
-    },
     "QBW77L": {
       "id": "QBW77L",
       "host_session_token": "61ded483-8321-4821-9bf6-7b0e3df0c525",
@@ -137,6 +117,16 @@
       "status": "active",
       "max_participants": 3,
       "created_at": "2026-07-07T16:53:34.592Z"
+    },
+    "E0LPEE": {
+      "id": "E0LPEE",
+      "host_session_token": "cd31bed1-a002-4de2-801d-3abe965d26bf",
+      "email": "test-store-hash@glowwave.com",
+      "tier": "store",
+      "status": "active",
+      "max_participants": 8,
+      "created_at": "2026-07-08T00:58:48.525Z",
+      "passcode": "888df25ae35772424a560c7152a1de794440e0ea5cfee62828333a456a506e05"
     }
   },
   "payments": [
@@ -289,6 +279,16 @@
       "amount": 4900,
       "payment_status": "completed",
       "created_at": "2026-07-07T16:53:34.593Z"
+    },
+    {
+      "id": "37baffa8-dc46-47e9-abde-7b4699fe7342",
+      "email": "test-store-hash@glowwave.com",
+      "host_session_token": "cd31bed1-a002-4de2-801d-3abe965d26bf",
+      "room_id": "E0LPEE",
+      "tier": "store",
+      "amount": 4900,
+      "payment_status": "completed",
+      "created_at": "2026-07-08T00:58:48.526Z"
     }
   ],
   "currentStates": {
@@ -303,27 +303,6 @@
       "special_effect": "stars",
       "locale": "ko",
       "trigger_id": "1783330677524"
-    },
-    "5YYQCZ": {
-      "bg_color": "#0B0B0F",
-      "text": "단색",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000,
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "trigger_id": "1783332579918"
-    },
-    "2DTNFR": {
-      "bg_color": "#FFFFFF",
-      "text": "사이키",
-      "text_color": "#EF4444",
-      "effect": "blink",
-      "speed": 1527,
-      "bg_color_secondary": "#0B0B0F",
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "trigger_id": "1783442492304"
     },
     "QBW77L": {
       "bg_color": "#FFFFFF",
@@ -420,6 +399,16 @@
       "font_family": "sans-thin",
       "font_size": 100,
       "trigger_id": "1783442492304"
+    },
+    "E0LPEE": {
+      "bg_color": "#3B82F6",
+      "text": "부드러운 깜빡이",
+      "text_color": "#FFFFFF",
+      "effect": "blink",
+      "speed": 1000,
+      "font_family": "sans-thin",
+      "font_size": 100,
+      "trigger_id": "1783473226379"
     }
   }
 }

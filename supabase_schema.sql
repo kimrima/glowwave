@@ -48,9 +48,18 @@ CREATE POLICY "Allow read of own payments" ON public.payments
     FOR SELECT USING (true);
 
 -- 6. Setup TTL Clean Up Mechanism (Daily at 4 AM UTC)
--- This query deletes rooms and payments older than 24 hours.
+-- This query cleans up expired rooms based on their tiers and payments older than 24 hours.
+-- - free: expires after 6 hours
+-- - lite, pro, max: expires after 24 hours
+-- - store: expires after 30 days
+-- - store_annual: expires after 365 days
 -- If using pg_cron (available on Supabase):
 -- SELECT cron.schedule('glowwave-db-cleanup', '0 4 * * *', $$
---     DELETE FROM public.rooms WHERE created_at < NOW() - INTERVAL '24 hours';
+--     DELETE FROM public.rooms 
+--     WHERE 
+--         (tier = 'free' AND created_at < NOW() - INTERVAL '6 hours') OR
+--         (tier IN ('lite', 'pro', 'max') AND created_at < NOW() - INTERVAL '24 hours') OR
+--         (tier = 'store' AND created_at < NOW() - INTERVAL '30 days') OR
+--         (tier = 'store_annual' AND created_at < NOW() - INTERVAL '365 days');
 --     DELETE FROM public.payments WHERE created_at < NOW() - INTERVAL '24 hours';
 -- $$);

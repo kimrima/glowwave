@@ -315,6 +315,10 @@ function LocalSignboardContent() {
   const [syncRoomActiveParticipants, setSyncRoomActiveParticipants] = useState<number>(0);
   const [syncTimeRemaining, setSyncTimeRemaining] = useState<string>('');
 
+  // Real-time mobile sync refs for persistent connection
+  const supabaseChannelRef = useRef<any>(null);
+  const localSseRef = useRef<EventSource | null>(null);
+
   // Sync Room Recovery states
   const [syncRecoveryEmail, setSyncRecoveryEmail] = useState('');
   const [isSyncRecoveryLoading, setIsSyncRecoveryLoading] = useState(false);
@@ -685,9 +689,20 @@ function LocalSignboardContent() {
     }
   }, []);
 
-  // Poll sync room status
+  // Poll sync room status & Maintain real-time socket/SSE connection for participants and zero-latency preset pushes
   useEffect(() => {
-    if (!syncRoomId) return;
+    if (!syncRoomId) {
+      // Cleanup on disconnect
+      if (supabaseChannelRef.current && supabase) {
+        supabase.removeChannel(supabaseChannelRef.current);
+        supabaseChannelRef.current = null;
+      }
+      if (localSseRef.current) {
+        localSseRef.current.close();
+        localSseRef.current = null;
+      }
+      return;
+    }
 
     const checkStatus = async () => {
       try {
@@ -701,7 +716,10 @@ function LocalSignboardContent() {
           } else {
             setSyncRoomTier(roomInfo.tier);
             setSyncRoomCreatedAt(roomInfo.created_at);
-            setSyncRoomActiveParticipants(roomInfo.current_participants || 0);
+            // If local SSE mode, we fallback to polling for participants count if SSE doesn't push it
+            if (!isSupabaseConfigured()) {
+              setSyncRoomActiveParticipants(roomInfo.current_participants || 0);
+            }
           }
         }
       } catch (e) {
@@ -711,7 +729,72 @@ function LocalSignboardContent() {
 
     checkStatus();
     const interval = setInterval(checkStatus, 5000);
-    return () => clearInterval(interval);
+
+    // Setup persistent real-time channel
+    if (isSupabaseConfigured() && supabase) {
+      console.log('[Local Sync] Establishing persistent Supabase Realtime channel for room:', syncRoomId);
+      const channel = supabase.channel(`room_${syncRoomId}`, {
+        config: {
+          broadcast: { ack: false }
+        }
+      });
+
+      channel
+        .on('presence', { event: 'sync' }, () => {
+          const presenceState = channel.presenceState();
+          let count = 0;
+          Object.keys(presenceState).forEach((key) => {
+            const presences = presenceState[key] as any[];
+            presences.forEach((p) => {
+              if (p.role !== 'host') count++;
+            });
+          });
+          console.log('[Local Sync] Supabase Realtime presence count updated:', count);
+          setSyncRoomActiveParticipants(count);
+        })
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('[Local Sync] Subscribed to Supabase Realtime channel');
+            // Track dashboard presence as host
+            channel.track({ role: 'host', joined_at: new Date().toISOString() });
+          }
+        });
+
+      supabaseChannelRef.current = channel;
+    } else {
+      // Setup Local SSE Stream connection for zero-latency sync in mock database mode
+      console.log('[Local Sync] Establishing persistent Local SSE Stream for room:', syncRoomId);
+      const sse = new EventSource(`/api/room/${syncRoomId}/stream?role=host`);
+      localSseRef.current = sse;
+
+      sse.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.event === 'presence') {
+            console.log('[Local Sync] SSE presence count updated:', data.count);
+            setSyncRoomActiveParticipants(data.count || 0);
+          }
+        } catch (err) {
+          console.error('[Local Sync] Failed to parse SSE event:', err);
+        }
+      };
+
+      sse.onerror = (err) => {
+        console.error('[Local Sync] Local SSE connection error:', err);
+      };
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (supabaseChannelRef.current && supabase) {
+        supabase.removeChannel(supabaseChannelRef.current);
+        supabaseChannelRef.current = null;
+      }
+      if (localSseRef.current) {
+        localSseRef.current.close();
+        localSseRef.current = null;
+      }
+    };
   }, [syncRoomId]);
 
   // Calculate trial countdown timer
@@ -786,14 +869,28 @@ function LocalSignboardContent() {
 
     // Real-time mobile sync broadcast
     if (syncRoomId && syncHostToken) {
-      fetch(`/api/room/${syncRoomId}/broadcast`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          host_session_token: syncHostToken,
-          preset: presetWithTrigger
-        })
-      }).catch((err) => console.error('[Local Sync] Failed to broadcast:', err));
+      if (isSupabaseConfigured() && supabaseChannelRef.current && supabase) {
+        // Zero-latency instant WebSocket push (takes ~0.1s)
+        supabaseChannelRef.current.send({
+          type: 'broadcast',
+          event: 'render',
+          payload: presetWithTrigger
+        });
+        // Also persist state asynchronously in background
+        supabase.from('rooms').update({ current_state: presetWithTrigger }).eq('id', syncRoomId).then(({ error }) => {
+          if (error) console.error('[Local Sync] Failed to persist state in Supabase DB:', error);
+        });
+      } else {
+        // Fallback: POST to Broadcast Route (for Local SSE mode)
+        fetch(`/api/room/${syncRoomId}/broadcast`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            host_session_token: syncHostToken,
+            preset: presetWithTrigger
+          })
+        }).catch((err) => console.error('[Local Sync] Failed to broadcast:', err));
+      }
     }
   };
 
@@ -810,14 +907,27 @@ function LocalSignboardContent() {
 
     // Real-time mobile sync broadcast
     if (syncRoomId && syncHostToken) {
-      fetch(`/api/room/${syncRoomId}/broadcast`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          host_session_token: syncHostToken,
-          preset: drawResultPreset
-        })
-      }).catch((err) => console.error('[Local Sync] Failed to draw winner:', err));
+      if (isSupabaseConfigured() && supabaseChannelRef.current && supabase) {
+        // Zero-latency instant WebSocket push (takes ~0.1s)
+        supabaseChannelRef.current.send({
+          type: 'broadcast',
+          event: 'render',
+          payload: drawResultPreset
+        });
+        // Also persist state asynchronously in background
+        supabase.from('rooms').update({ current_state: drawResultPreset }).eq('id', syncRoomId).then(({ error }) => {
+          if (error) console.error('[Local Sync] Failed to persist winner state in Supabase DB:', error);
+        });
+      } else {
+        fetch(`/api/room/${syncRoomId}/broadcast`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            host_session_token: syncHostToken,
+            preset: drawResultPreset
+          })
+        }).catch((err) => console.error('[Local Sync] Failed to draw winner:', err));
+      }
     }
   };
 
