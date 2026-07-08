@@ -127,6 +127,15 @@
       "max_participants": 8,
       "created_at": "2026-07-08T00:58:48.525Z",
       "passcode": "888df25ae35772424a560c7152a1de794440e0ea5cfee62828333a456a506e05"
+    },
+    "59L26H": {
+      "id": "59L26H",
+      "host_session_token": "72b65981-aaf0-4faf-808e-29dc6a5f6e97",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 1,
+      "created_at": "2026-07-08T15:31:21.721Z"
     }
   },
   "payments": [
@@ -401,6 +410,16 @@
       "trigger_id": "1783442492304"
     },
     "E0LPEE": {
+      "bg_color": "#3B82F6",
+      "text": "부드러운 깜빡이",
+      "text_color": "#FFFFFF",
+      "effect": "blink",
+      "speed": 1000,
+      "font_family": "sans-thin",
+      "font_size": 100,
+      "trigger_id": "1783473226379"
+    },
+    "59L26H": {
       "bg_color": "#3B82F6",
       "text": "부드러운 깜빡이",
       "text_color": "#FFFFFF",

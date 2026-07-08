@@ -204,6 +204,22 @@ export default function HostSetup() {
       localStorage.setItem(`glowwave_token_${data.room_id}`, data.host_session_token);
       localStorage.setItem('glowwave_active_host_room_id', data.room_id);
 
+      // Add to recent rooms list so it shows on home page
+      try {
+        const recentRaw = localStorage.getItem('glowwave_recent_rooms');
+        let recents = recentRaw ? JSON.parse(recentRaw) : [];
+        recents = recents.filter((r: any) => r.roomId !== data.room_id);
+        recents.unshift({
+          roomId: data.room_id,
+          role: 'host',
+          tier: selectedTier,
+          createdAt: new Date().toISOString()
+        });
+        localStorage.setItem('glowwave_recent_rooms', JSON.stringify(recents.slice(0, 50)));
+      } catch (e) {
+        console.error('[setup] Failed to update glowwave_recent_rooms for free room:', e);
+      }
+
       if (selectedTier === 'free') {
         // 1인용 연동 진입인 경우 로컬 동기화 정보 설정 후 /local로 복귀
         if (importStatus) {
@@ -304,6 +320,22 @@ export default function HostSetup() {
       localStorage.setItem(`glowwave_presets_${createdRoomInfo.room_id}`, JSON.stringify(presetsToSave));
       localStorage.setItem(`glowwave_token_${createdRoomInfo.room_id}`, createdRoomInfo.host_session_token);
       localStorage.setItem('glowwave_active_host_room_id', createdRoomInfo.room_id);
+
+      // Add to recent rooms list so it shows on home page
+      try {
+        const recentRaw = localStorage.getItem('glowwave_recent_rooms');
+        let recents = recentRaw ? JSON.parse(recentRaw) : [];
+        recents = recents.filter((r: any) => r.roomId !== createdRoomInfo.room_id);
+        recents.unshift({
+          roomId: createdRoomInfo.room_id,
+          role: 'host',
+          tier: selectedTier,
+          createdAt: new Date().toISOString()
+        });
+        localStorage.setItem('glowwave_recent_rooms', JSON.stringify(recents.slice(0, 50)));
+      } catch (e) {
+        console.error('[setup] Failed to update glowwave_recent_rooms:', e);
+      }
 
       // If imported from 1-person sync dashboard, configure local sync settings and return back to /local
       if (importStatus) {

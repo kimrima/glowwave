@@ -20,6 +20,8 @@ const globalForRoomStore = global as unknown as {
   payments: Payment[];
   clients: Map<string, SSEClient[]>;
   currentStates: Map<string, Preset>;
+  supabaseChannels?: Map<string, any>;
+  supabasePresenceCounts?: Map<string, number>;
 };
 
 if (!globalForRoomStore.rooms) {
@@ -33,6 +35,12 @@ if (!globalForRoomStore.clients) {
 }
 if (!globalForRoomStore.currentStates) {
   globalForRoomStore.currentStates = new Map();
+}
+if (!globalForRoomStore.supabaseChannels) {
+  globalForRoomStore.supabaseChannels = new Map();
+}
+if (!globalForRoomStore.supabasePresenceCounts) {
+  globalForRoomStore.supabasePresenceCounts = new Map();
 }
 
 // Robust workspace root resolver to handle cases where Next.js infers a parent directory (like C:\Users\김강산) as the root
@@ -121,6 +129,8 @@ export const localDb = {
   payments: globalForRoomStore.payments,
   clients: globalForRoomStore.clients,
   currentStates: globalForRoomStore.currentStates,
+  supabaseChannels: globalForRoomStore.supabaseChannels!,
+  supabasePresenceCounts: globalForRoomStore.supabasePresenceCounts!,
 
   loadFromDisk(): void {
     const data = readDb();
@@ -591,7 +601,46 @@ export const localDb = {
   },
 
   getClientCount(roomId: string): number {
+    if (isSupabaseConfigured() && supabase) {
+      this.trackSupabasePresence(roomId);
+      return this.supabasePresenceCounts.get(roomId) || 0;
+    }
     return this.clients.get(roomId)?.filter((c) => c.role !== 'host').length || 0;
+  },
+
+  trackSupabasePresence(roomId: string): void {
+    if (!isSupabaseConfigured() || !supabase) return;
+    if (this.supabaseChannels.has(roomId)) return; // Already tracking
+
+    console.log(`[localDb] Server tracking presence channel for room: ${roomId}`);
+    const channel = supabase.channel(`presence_track_${roomId}`, {
+      config: {
+        presence: { key: roomId }
+      }
+    });
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        let count = 0;
+        Object.keys(state).forEach((key) => {
+          const presences = state[key] as any[];
+          presences.forEach((p) => {
+            if (p.role === 'audience') {
+              count++;
+            }
+          });
+        });
+        console.log(`[localDb] Supabase presence synced for ${roomId}: count = ${count}`);
+        this.supabasePresenceCounts.set(roomId, count);
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          channel.track({ role: 'server_watcher' });
+        }
+      });
+
+    this.supabaseChannels.set(roomId, channel);
   },
 
   getAudienceIds(roomId: string): string[] {

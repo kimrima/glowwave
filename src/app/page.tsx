@@ -35,6 +35,34 @@ const getSpeedMs = (factor: number, effect: string) => {
   return 1000;
 };
 
+const getTierBadgeText = (tier: string, locale: string) => {
+  const normalized = (tier || '').toLowerCase();
+  if (normalized === 'free') {
+    return locale === 'ko' ? '일일체험' : 'Free';
+  }
+  if (normalized === 'lite') return 'Lite';
+  if (normalized === 'pro') return 'Pro';
+  if (normalized === 'max') return 'Max';
+  if (normalized === 'store') {
+    return locale === 'ko' ? '매장 월간' : 'Store Monthly';
+  }
+  if (normalized === 'store_annual') {
+    return locale === 'ko' ? '매장 연간' : 'Store Annual';
+  }
+  return (tier || '').toUpperCase();
+};
+
+const getTierBadgeClass = (tier: string) => {
+  const normalized = (tier || '').toLowerCase();
+  if (normalized === 'free') {
+    return 'bg-zinc-800 text-zinc-400 border border-zinc-700/50';
+  }
+  if (normalized === 'store' || normalized === 'store_annual') {
+    return 'bg-pink-500/10 text-pink-400 border border-pink-500/20';
+  }
+  return 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+};
+
 export default function Home() {
   const router = useRouter();
 
@@ -540,12 +568,12 @@ export default function Home() {
                                     {item.roomId}
                                   </h4>
                                   {details ? (
-                                    <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize bg-zinc-800 text-zinc-400">
-                                      {item.tier === 'free' ? t('free', activeLocale) : item.tier === 'lite' ? 'Lite' : 'Pro'}
+                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold capitalize ${getTierBadgeClass(details.tier)}`}>
+                                      {getTierBadgeText(details.tier, activeLocale)}
                                     </span>
                                   ) : item.tier ? (
-                                    <span className="text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize bg-zinc-800 text-zinc-400">
-                                      {item.tier === 'free' ? t('free', activeLocale) : item.tier === 'lite' ? 'Lite' : 'Pro'}
+                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold capitalize ${getTierBadgeClass(item.tier)}`}>
+                                      {getTierBadgeText(item.tier, activeLocale)}
                                     </span>
                                   ) : null}
                                 </div>
@@ -615,14 +643,8 @@ export default function Home() {
                                   {item.roomId}
                                 </h4>
                                 {details && (
-                                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold capitalize ${
-                                    details.tier === 'free' 
-                                      ? 'bg-zinc-800 text-zinc-400' 
-                                      : details.tier === 'lite'
-                                        ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                        : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                                  }`}>
-                                    {details.tier === 'free' ? t('free', activeLocale) : details.tier === 'lite' ? 'Lite' : 'Pro'}
+                                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold capitalize ${getTierBadgeClass(details.tier)}`}>
+                                    {getTierBadgeText(details.tier, activeLocale)}
                                   </span>
                                 )}
                               </div>

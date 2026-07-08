@@ -988,6 +988,22 @@ function LocalSignboardContent() {
       localStorage.setItem('glowwave_local_sync_room_id', data.room_id);
       localStorage.setItem('glowwave_local_sync_host_token', data.host_session_token);
       localStorage.setItem('glowwave_local_sync_room_created_at', createdAtToSave);
+
+      // Add to recent rooms list so it shows on home page
+      try {
+        const recentRaw = localStorage.getItem('glowwave_recent_rooms');
+        let recents = recentRaw ? JSON.parse(recentRaw) : [];
+        recents = recents.filter((r: any) => r.roomId !== data.room_id);
+        recents.unshift({
+          roomId: data.room_id,
+          role: 'host',
+          tier: data.tier || (isRegenerate && syncRoomTier ? syncRoomTier : 'free'),
+          createdAt: createdAtToSave
+        });
+        localStorage.setItem('glowwave_recent_rooms', JSON.stringify(recents.slice(0, 50)));
+      } catch (e) {
+        console.error('[local] Failed to update glowwave_recent_rooms:', e);
+      }
       
       // Close vault modal on successful sync start
       setIsVaultOpen(false);
@@ -1083,6 +1099,22 @@ function LocalSignboardContent() {
     localStorage.setItem('glowwave_local_sync_room_id', room.room_id);
     localStorage.setItem('glowwave_local_sync_host_token', room.host_session_token);
     localStorage.setItem('glowwave_local_sync_room_created_at', room.created_at);
+
+    // Add to recent rooms list so it shows on home page
+    try {
+      const recentRaw = localStorage.getItem('glowwave_recent_rooms');
+      let recents = recentRaw ? JSON.parse(recentRaw) : [];
+      recents = recents.filter((r: any) => r.roomId !== room.room_id);
+      recents.unshift({
+        roomId: room.room_id,
+        role: 'host',
+        tier: room.tier,
+        createdAt: room.created_at
+      });
+      localStorage.setItem('glowwave_recent_rooms', JSON.stringify(recents.slice(0, 50)));
+    } catch (e) {
+      console.error('[local] Failed to update glowwave_recent_rooms on recovery:', e);
+    }
     
     // Initialize room broadcast with the current preset
     await fetch(`/api/room/${room.room_id}/broadcast`, {
