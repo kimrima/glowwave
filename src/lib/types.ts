@@ -198,6 +198,7 @@ export interface Room {
   tier: TierType;
   status: 'active' | 'inactive';
   max_participants: number;
+  current_participants?: number;
   created_at: string;
   passcode?: string;
   active_clients?: number;

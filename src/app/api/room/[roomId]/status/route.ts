@@ -46,7 +46,7 @@ export async function GET(
       tier: room.tier,
       status: room.status,
       max_participants: room.max_participants,
-      current_participants: localDb.getClientCount(roomId),
+      current_participants: isSupabaseConfigured() ? (room.current_participants || 0) : localDb.getClientCount(roomId),
       created_at: room.created_at,
       current_state: await localDb.getCurrentState(roomId),
       has_passcode: !!room.passcode,

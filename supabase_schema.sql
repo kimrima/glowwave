@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS public.rooms (
     tier VARCHAR(50) NOT NULL DEFAULT 'free',  -- 'free', 'lite', 'pro', 'max'
     status VARCHAR(50) NOT NULL DEFAULT 'active', -- 'active', 'inactive'
     max_participants INTEGER NOT NULL DEFAULT 20, -- Cap based on Tier
+    current_participants INTEGER NOT NULL DEFAULT 0, -- Active websocket spectator connections
     passcode TEXT,                             -- Room access passcode (hashed/plain 4-6 digits)
     current_state JSONB NOT NULL DEFAULT '{"bg_color": "#0B0B0F", "text": "GlowWave 🌊", "text_color": "#FFFFFF", "effect": "none", "speed": 1000}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL

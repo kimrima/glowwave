@@ -136,6 +136,17 @@
       "status": "active",
       "max_participants": 1,
       "created_at": "2026-07-08T15:31:21.721Z"
+    },
+    "C1BKUU": {
+      "id": "C1BKUU",
+      "host_session_token": "77365a39-c8a5-4f23-8152-7a6d143bee38",
+      "email": "test-store-serverless@glowwave.com",
+      "tier": "store",
+      "status": "active",
+      "max_participants": 3,
+      "current_participants": 0,
+      "created_at": "2026-07-08T15:53:11.733Z",
+      "passcode": "888df25ae35772424a560c7152a1de794440e0ea5cfee62828333a456a506e05"
     }
   },
   "payments": [
@@ -298,6 +309,16 @@
       "amount": 4900,
       "payment_status": "completed",
       "created_at": "2026-07-08T00:58:48.526Z"
+    },
+    {
+      "id": "36c62674-424b-4207-afb3-f2817c8dd022",
+      "email": "test-store-serverless@glowwave.com",
+      "host_session_token": "77365a39-c8a5-4f23-8152-7a6d143bee38",
+      "room_id": "C1BKUU",
+      "tier": "store",
+      "amount": 4900,
+      "payment_status": "completed",
+      "created_at": "2026-07-08T15:53:11.734Z"
     }
   ],
   "currentStates": {
@@ -428,6 +449,16 @@
       "font_family": "sans-thin",
       "font_size": 100,
       "trigger_id": "1783473226379"
+    },
+    "C1BKUU": {
+      "bg_color": "#0B0B0F",
+      "text": "단색",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thin",
+      "font_size": 100,
+      "trigger_id": "1783526141835"
     }
   }
 }

@@ -751,6 +751,12 @@ function LocalSignboardContent() {
           });
           console.log('[Local Sync] Supabase Realtime presence count updated:', count);
           setSyncRoomActiveParticipants(count);
+          // Sync real-time count to Supabase Database for serverless cap verification
+          if (supabase) {
+            supabase.from('rooms').update({ current_participants: count }).eq('id', syncRoomId).then(({ error }) => {
+              if (error) console.error('[Local Sync] Failed to sync current_participants to DB:', error);
+            });
+          }
         })
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {

@@ -28,7 +28,7 @@ export async function GET(request: Request) {
             tier: room.tier,
             status: room.status,
             max_participants: room.max_participants,
-            current_participants: localDb.getClientCount(roomId),
+            current_participants: dbConfigured ? (room.current_participants || 0) : localDb.getClientCount(roomId),
             created_at: room.created_at,
             has_passcode: !!room.passcode,
           };

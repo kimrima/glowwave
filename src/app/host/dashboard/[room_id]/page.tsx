@@ -308,7 +308,9 @@ export default function HostDashboard() {
       let limitMs = 24 * 60 * 60 * 1000;
       if (room.tier === 'free') {
         limitMs = 6 * 60 * 60 * 1000;
-      } else if (room.tier === 'store' || room.tier === 'store_annual') {
+      } else if (room.tier === 'store') {
+        limitMs = 30 * 24 * 60 * 60 * 1000;
+      } else if (room.tier === 'store_annual') {
         limitMs = 365 * 24 * 60 * 60 * 1000;
       }
       const expireTime = createdTime + limitMs;
@@ -434,6 +436,12 @@ export default function HostDashboard() {
             });
           });
           setActiveParticipants(count);
+          // Sync real-time count to Supabase Database for serverless cap verification
+          if (supabase) {
+            supabase.from('rooms').update({ current_participants: count }).eq('id', roomCode).then(({ error }) => {
+              if (error) console.error('[Dashboard] Failed to sync current_participants to DB:', error);
+            });
+          }
         })
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') {
@@ -1998,7 +2006,12 @@ export default function HostDashboard() {
               </span>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-white/5 uppercase border border-white/5">
-                  {room?.tier}
+                  {
+                    room?.tier === 'free' ? (activeLocale === 'ko' ? '일일체험' : 'FREE') :
+                    room?.tier === 'store' ? (activeLocale === 'ko' ? '매장 월간' : 'STORE') :
+                    room?.tier === 'store_annual' ? (activeLocale === 'ko' ? '매장 연간' : 'STORE ANNUAL') :
+                    room?.tier?.toUpperCase()
+                  }
                 </span>
                 {room?.tier !== 'max' && (
                   <button

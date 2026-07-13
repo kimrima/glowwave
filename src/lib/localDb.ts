@@ -242,6 +242,7 @@ export const localDb = {
       tier,
       status: tier === 'free' ? 'active' : 'inactive',
       max_participants: config.maxParticipants,
+      current_participants: 0,
       created_at: createdAt || new Date().toISOString(),
       passcode: hashedPasscode,
     };
@@ -254,6 +255,7 @@ export const localDb = {
         tier,
         status: newRoom.status,
         max_participants: config.maxParticipants,
+        current_participants: 0,
         created_at: newRoom.created_at,
         passcode: hashedPasscode,
       });
