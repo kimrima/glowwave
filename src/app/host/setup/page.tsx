@@ -253,7 +253,7 @@ export default function HostSetup() {
             } catch (e) {}
           }
           setIsProcessing(false);
-          router.push('/local');
+          router.push(`/host/dashboard/${data.room_id}?token=${data.host_session_token}`);
         } else {
           // 일반적인 프리 무료 방 생성은 기존대로 호스트 대시보드로 이동
           setIsProcessing(false);
@@ -366,7 +366,7 @@ export default function HostSetup() {
         setTimeout(() => {
           setIsProcessing(false);
           setIsCheckoutOpen(false);
-          router.push('/local');
+          router.push(`/host/dashboard/${createdRoomInfo.room_id}?token=${createdRoomInfo.host_session_token}`);
         }, 1500);
       } else {
         setTimeout(() => {
