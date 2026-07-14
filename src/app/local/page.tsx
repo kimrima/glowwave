@@ -19,7 +19,7 @@ import {
   QrCode
 } from 'lucide-react';
 import jsQR from 'jsqr';
-import { Preset, EffectType } from '@/lib/types';
+import { Preset, EffectType, TierType, TIER_CONFIGS } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import { LOCALIZED_TEMPLATES, getDefaultsByLocale } from '@/lib/templates';
 import { t, Locale, getLocalizedFonts } from '@/lib/translations';
@@ -1654,8 +1654,8 @@ function LocalSignboardContent() {
                 </span>
                 <span>
                   {activeLocale === 'ko' 
-                    ? `연동 중: ${syncRoomId} (${syncRoomActiveParticipants}명 연결)` 
-                    : `Synced: ${syncRoomId} (${syncRoomActiveParticipants} Connected)`}
+                    ? `연동 중: ${syncRoomId} (${syncRoomActiveParticipants} / ${TIER_CONFIGS[syncRoomTier as TierType]?.maxParticipants || 1}명 연결)` 
+                    : `Synced: ${syncRoomId} (${syncRoomActiveParticipants} / ${TIER_CONFIGS[syncRoomTier as TierType]?.maxParticipants || 1} Connected)`}
                 </span>
               </div>
             ) : (
