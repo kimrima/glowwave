@@ -1636,9 +1636,7 @@ function LocalSignboardContent() {
               <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{t('time_remaining', activeLocale)}</span>
               <span className="text-sm font-black text-zinc-300">
                 {syncRoomId 
-                  ? (['store', 'store_annual'].includes(syncRoomTier) 
-                    ? (activeLocale === 'ko' ? '무제한 (24/7)' : 'Unlimited (24/7)') 
-                    : (syncTimeRemaining || '--:--:--'))
+                  ? (syncTimeRemaining || '--:--:--')
                   : t('unlimited', activeLocale)}
               </span>
             </div>
