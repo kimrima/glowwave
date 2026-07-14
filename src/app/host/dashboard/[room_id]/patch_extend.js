@@ -4,237 +4,205 @@ const path = require('path');
 const targetFile = path.join(__dirname, 'page.tsx');
 let content = fs.readFileSync(targetFile, 'utf8');
 
-// 0. Patch state declarations to declare selectedExtendHours state using regex
-const stateRegex = /const \[isExtendModalOpen, setIsExtendModalOpen\] = useState\(false\);\s*const \[extendStep, setExtendStep\] = useState<[^>]+>\('info'\);\s*const \[isExtending, setIsExtending\] = useState\(false\);/;
-const stateReplace = `const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
-  const [extendStep, setExtendStep] = useState<'info' | 'payment' | 'success'>('info');
-  const [isExtending, setIsExtending] = useState(false);
-  const [selectedExtendHours, setSelectedExtendHours] = useState<number>(24);`;
-
-if (stateRegex.test(content)) {
-  content = content.replace(stateRegex, stateReplace);
-  console.log('Successfully patched state declarations for selectedExtendHours!');
-} else {
-  console.log('State declarations already patched or regex mismatch.');
-}
-
-// 0-B. Patch handleExtendRoom function to pass extra_hours payload using regex
-const handleExtendRegex = /const handleExtendRoom = async \(\) => \{\s*if \(!roomId \|\| !token\) return;\s*setIsExtending\(true\);\s*try \{\s*const res = await fetch\(\`\/api\/room\/extend\`,\s*\{\s*method: 'POST',\s*headers: \{\s*'Content-Type': 'application\/json'\s*\},\s*body: JSON\.stringify\(\{\s*room_id: roomId,\s*host_session_token: token\s*\}\)\s*\}\);/;
-const handleExtendReplace = `const handleExtendRoom = async () => {
-    if (!roomId || !token) return;
-    setIsExtending(true);
-    try {
-      const res = await fetch(\`/api/room/extend\`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          room_id: roomId,
-          host_session_token: token,
-          extra_hours: selectedExtendHours
-        })
-      });`;
-
-if (handleExtendRegex.test(content)) {
-  content = content.replace(handleExtendRegex, handleExtendReplace);
-  console.log('Successfully patched handleExtendRoom fetch payload!');
-} else {
-  console.log('handleExtendRoom payload already patched or regex mismatch.');
-}
-
-// 1. Patch active tier badge label in header to translate store/store_annual
-const badgeSearch = `<span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-white/5 uppercase border border-white/5">
-                  {room?.tier}
-                </span>`;
-const badgeReplace = `<span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-white/5 uppercase border border-white/5">
-                  {
-                    room?.tier === 'free' ? (activeLocale === 'ko' ? '일일체험' : 'FREE') :
-                    room?.tier === 'store' ? (activeLocale === 'ko' ? '매장 월간' : 'STORE') :
-                    room?.tier === 'store_annual' ? (activeLocale === 'ko' ? '매장 연간' : 'STORE ANNUAL') :
-                    room?.tier?.toUpperCase()
+// 1. Patch the "시간 연장" button onClick handler to dynamically initialize selectedExtendHours
+const onClickSearch = `                onClick={() => {
+                  if (room?.tier === 'free') {
+                    setSelectedUpgradeTier(null);
+                    setUpgradeStep('select');
+                    setIsUpgradeModalOpen(true);
+                  } else {
+                    setExtendStep('info');
+                    setIsExtendModalOpen(true);
                   }
-                </span>`;
-if (content.includes(badgeSearch)) {
-  content = content.replace(badgeSearch, badgeReplace);
-  console.log('Successfully patched active tier badge translations!');
-} else {
-  console.log('Badge markup already modified or not found.');
-}
+                }}`;
 
-// 2. Patch room expiration duration limit branch (store/store_annual 30d/365d duration math)
-const durationSearch = `      } else if (room.tier === 'store' || room.tier === 'store_annual') {
-        limitMs = 365 * 24 * 60 * 60 * 1000;
-      }`;
-const durationReplace = `      } else if (room.tier === 'store') {
-        limitMs = 30 * 24 * 60 * 60 * 1000;
-      } else if (room.tier === 'store_annual') {
-        limitMs = 365 * 24 * 60 * 60 * 1000;
-      }`;
-if (content.includes(durationSearch)) {
-  content = content.replace(durationSearch, durationReplace);
-  console.log('Successfully patched duration calculations split!');
-} else {
-  console.log('Duration calculations already patched.');
-}
+const onClickReplace = `                onClick={() => {
+                  if (room?.tier === 'free') {
+                    setSelectedUpgradeTier(null);
+                    setUpgradeStep('select');
+                    setIsUpgradeModalOpen(true);
+                  } else {
+                    // If store/store_annual, default to 30 days (720 hours) and restrict day extensions
+                    if (room?.tier === 'store' || room?.tier === 'store_annual') {
+                      setSelectedExtendHours(720);
+                    } else {
+                      setSelectedExtendHours(24);
+                    }
+                    setExtendStep('info');
+                    setIsExtendModalOpen(true);
+                  }
+                }}`;
 
-// 3. Patch extendStep === 'info' layout using dynamic regex
-const infoRegex = /\{extendStep === 'info' && \(\s*<div className="flex flex-col gap-5 text-left">[\s\S]+?<\/div>\s*\)\}/;
+// 2. Patch the extendInfoDesc translation inside modal header to dynamically show duration text (Step: 'info')
+const infoDescSearch = `        const extendInfoDesc = {
+          ko: <>방의 활성 시간을 <strong className="text-white">24시간 연장</strong>합니다.<br />연장 후에도 기존에 접속해 있던 관객들의 링크 및 QR 코드는 변경 없이 그대로 유지됩니다.</>,
+          en: <>Extends the active room session by <strong className="text-white">24 hours</strong>.<br />The existing entry links and QR codes remain unchanged and work seamlessly.</>,
+          ja: <>ルームの有効時間を <strong className="text-white">24시간延長</strong> します。<br />延長後도 기존의 観客用링크나 QR코드는 변경없이 그대로 유지됩니다.</>,
+          es: <>Extiende la duración activa de la sala por <strong className="text-white">24 horas</strong>.<br />El enlace de acceso y código QR se mantendrán sin cambios.</>,
+          'zh-TW': <>延長房間有效時間 <strong className="text-white">24 小時</strong>。<br />延長後觀眾原本使用的連結與 QR Code 均維持不變，可繼續使用。</>,
+          'zh-HK': <>延長房間有效時間 <strong className="text-white">24 小時</strong>。<br />延長後觀眾原本使用的連結與 QR Code 均維持不變，可繼續使用。</>,
+        }[activeLocale] || <>방의 활성 시간을 <strong className="text-white">24시간 연장</strong>합니다.<br />연장 후에도 기존에 접속해 있던 관객들의 링크 및 QR 코드는 변경 없이 그대로 유지됩니다.</>;`;
 
-const infoReplace = `{extendStep === 'info' && (() => {
-                let tierDurationMs = 24 * 60 * 60 * 1000;
-                if (room.tier === 'free') {
-                  tierDurationMs = 6 * 60 * 60 * 1000;
-                } else if (room.tier === 'store') {
-                  tierDurationMs = 30 * 24 * 60 * 60 * 1000;
-                } else if (room.tier === 'store_annual') {
-                  tierDurationMs = 365 * 24 * 60 * 60 * 1000;
-                }
+const infoDescReplace = `        const isStoreTier = room.tier === 'store' || room.tier === 'store_annual';
+        const durationTextKo = isStoreTier 
+          ? (selectedExtendHours === 8760 ? '365일(1년)' : '30일(1달)') 
+          : '24시간';
+        const durationTextEn = isStoreTier 
+          ? (selectedExtendHours === 8760 ? '365 days (1 year)' : '30 days (1 month)') 
+          : '24 hours';
+        const durationTextJa = isStoreTier 
+          ? (selectedExtendHours === 8760 ? '365日(1年)' : '30日(1ヶ月)') 
+          : '24時間';
+        const durationTextEs = isStoreTier 
+          ? (selectedExtendHours === 8760 ? '365 días (1 año)' : '30 días (1 mes)') 
+          : '24 horas';
+        const durationTextZh = isStoreTier 
+          ? (selectedExtendHours === 8760 ? '365 天 (1 年)' : '30 天 (1 個月)') 
+          : '24 小時';
+
+        const extendInfoDesc = {
+          ko: <>방의 활성 시간을 <strong className="text-white">{durationTextKo} 연장</strong>합니다.<br />연장 후에도 기존에 접속해 있던 관객들의 링크 및 QR 코드는 변경 없이 그대로 유지됩니다.</>,
+          en: <>Extends the active room session by <strong className="text-white">{durationTextEn}</strong>.<br />The existing entry links and QR codes remain unchanged and work seamlessly.</>,
+          ja: <>ルームの有効時間を <strong className="text-white">{durationTextJa}延長</strong> します。<br />延長後も既存の観客用リンクやQRコードは変更なくそのまま維持されます。</>,
+          es: <>Extiende la duración activa de la sala por <strong className="text-white">{durationTextEs}</strong>.<br />El enlace de acceso y código QR se mantendrán sin cambios.</>,
+          'zh-TW': <>延長房間有效時間 <strong className="text-white">{durationTextZh}</strong>。<br />延長後觀眾原本使用的連結與 QR Code 均維持不變，可繼續使用。</>,
+          'zh-HK': <>延長房間有效時間 <strong className="text-white">{durationTextZh}</strong>。<br />延長後觀眾原本使用的連結與 QR Code 均維持不變，可繼續使用。</>,
+        }[activeLocale] || <>방의 활성 시간을 <strong className="text-white">{durationTextKo} 연장</strong>합니다.<br />연장 후에도 기존에 접속해 있던 관객들의 링크 및 QR 코드는 변경 없이 그대로 유지됩니다.</>;`;
+
+// 3. Patch the payment details to load correct regular and final price tier keys dynamically (Step: 'payment')
+const payDescSearch = `              {extendStep === 'payment' && (() => {
+                const extendPayDesc = {
+                  ko: <>방 연장 24시간 이용권을 결제합니다.<br />기존 이용 요금 대비 <strong className="text-indigo-300">20% 할인된 장기 고객 혜택가</strong>가 자동 적용됩니다.</>,
+                  en: <>Process payment for a 24-hour session extension.<br />A <strong className="text-indigo-300">20% loyalty discount</strong> is automatically applied.</>,
+                  ja: <>ルーム24時間延長チケットの決済を行います。<br />通常の利用料金から <strong className="text-indigo-300">20%割引された延長特別価格</strong> が自動適用されます。</>,
+                  es: <>Se procesará el pago del pase de extensión de 24 horas.<br />Se aplica un <strong className="text-indigo-300">20% de descuento automático</strong> por fidelidad.</>,
+                  'zh-TW': <>付款購買 24 小時延長時間。<br />系統已自動套用 <strong className="text-indigo-300">8 折의續用優惠價</strong>。</>,
+                  'zh-HK': <>付款購買 24 小時延長時間。<br />系統已自動套用 <strong className="text-indigo-300">8 折의續用優惠價</strong>。</>,
+                }[activeLocale] || <>방 연장 24시간 이용권을 결제합니다.<br />기존 이용 요금 대비 <strong className="text-indigo-300">20% 할인된 장기 고객 혜택가</strong>가 자동 적용됩니다.</>;`;
+
+const payDescReplace = `              {extendStep === 'payment' && (() => {
                 const isStoreTier = room.tier === 'store' || room.tier === 'store_annual';
+                const durationTextKo = isStoreTier 
+                  ? (selectedExtendHours === 8760 ? '365일(1년)' : '30일(1달)') 
+                  : '24시간';
+                const durationTextEn = isStoreTier 
+                  ? (selectedExtendHours === 8760 ? '365-day' : '30-day') 
+                  : '24-hour';
+                const durationTextJa = isStoreTier 
+                  ? (selectedExtendHours === 8760 ? '365日(1年)' : '30일(1ヶ月)') 
+                  : '24時間';
+                const durationTextEs = isStoreTier 
+                  ? (selectedExtendHours === 8760 ? '365 días' : '30 días') 
+                  : '24 horas';
+                const durationTextZh = isStoreTier 
+                  ? (selectedExtendHours === 8760 ? '365 天' : '30 天') 
+                  : '24 小時';
 
-                return (
-                  <div className="flex flex-col gap-5 text-left">
-                    <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl">
-                      <span className="font-extrabold text-indigo-300 block mb-1">{noticeTitle}</span>
-                      {extendInfoDesc}
-                    </div>
+                const extendPayDesc = {
+                  ko: <>방 연장 {durationTextKo} 이용권을 결제합니다.<br />기존 이용 요금 대비 <strong className="text-indigo-300">20% 할인된 장기 고객 혜택가</strong>가 자동 적용됩니다.</>,
+                  en: <>Process payment for a {durationTextEn} session extension.<br />A <strong className="text-indigo-300">20% loyalty discount</strong> is automatically applied.</>,
+                  ja: <>ルーム{durationTextJa}延長チケットの決済を行います。<br />通常の利用料金から <strong className="text-indigo-300">20%割引された延長特別価格</strong> が自動適用されます。</>,
+                  es: <>Se procesará el pago del pase de extensión de {durationTextEs}.<br />Se aplica un <strong className="text-indigo-300">20% de descuento automático</strong> por fidelidad.</>,
+                  'zh-TW': <>付款購買 {durationTextZh} 延長時間。<br />系統已自動套用 <strong className="text-indigo-300">8 折의續用優惠價</strong>。</>,
+                  'zh-HK': <>付款購買 {durationTextZh} 延長時間。<br />系統已自動套用 <strong className="text-indigo-300">8 折의續用優惠價</strong>。</>,
+                }[activeLocale] || <>방 연장 {durationTextKo} 이용권을 결제합니다.<br />기존 이용 요금 대비 <strong className="text-indigo-300">20% 할인된 장기 고객 혜택가</strong>가 자동 적용됩니다.</>;`;
 
-                    {isStoreTier && (
-                      <div className="flex flex-col gap-2 bg-black/40 border border-white/5 p-3 rounded-2xl">
-                        <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">
-                          {activeLocale === 'ko' ? '연장 플랜 선택' : 'Select Extension Duration'}
-                        </span>
-                        <div className="flex gap-2 p-1 rounded-xl bg-black/30 border border-white/5">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedExtendHours(720)}
-                            className={\`flex-1 py-2 text-center rounded-lg text-xs font-bold transition-all cursor-pointer select-none \${
-                              selectedExtendHours === 720
-                                ? 'bg-white text-black shadow font-black'
-                                : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                            }\`}
-                          >
-                            {activeLocale === 'ko' ? '30일 연장 (월간)' : '30-Day (Monthly)'}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedExtendHours(8760)}
-                            className={\`flex-1 py-2 text-center rounded-lg text-xs font-bold transition-all cursor-pointer select-none \${
-                              selectedExtendHours === 8760
-                                ? 'bg-white text-black shadow font-black'
-                                : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                            }\`}
-                          >
-                            {activeLocale === 'ko' ? '365일 연장 (연간)' : '365-Day (Annual)'}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-2.5 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-zinc-500">{currentPlanLabel}</span>
-                        <span className="text-white font-extrabold uppercase">
-                          {
-                            room.tier === 'store' ? (activeLocale === 'ko' ? '매장 월간 플랜' : 'STORE MONTHLY') :
-                            room.tier === 'store_annual' ? (activeLocale === 'ko' ? '매장 연간 플랜' : 'STORE ANNUAL') :
-                            \`\${room.tier.toUpperCase()} Plan\`
-                          }
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-zinc-500">{currentExpiryLabel}</span>
-                        <span className="text-zinc-300 font-mono">
-                          {new Date(new Date(room.created_at).getTime() + tierDurationMs).toLocaleString(activeLocale === 'zh-TW' ? 'zh-TW' : (activeLocale === 'zh-HK' ? 'zh-HK' : activeLocale))}
-                        </span>
-                      </div>
-                      <div className="flex justify-between border-t border-white/5 pt-2">
-                        <span className="text-indigo-400 font-bold">{extendedExpiryLabel}</span>
-                        <span className="text-indigo-300 font-mono font-bold">
-                          {new Date(Math.max(Date.now(), new Date(room.created_at).getTime() + tierDurationMs) + selectedExtendHours * 60 * 60 * 1000).toLocaleString(activeLocale === 'zh-TW' ? 'zh-TW' : (activeLocale === 'zh-HK' ? 'zh-HK' : activeLocale))}
-                        </span>
-                      </div>
-                    </div>
+// 4. Patch refund warning text details to support flexible duration
+const refundSearch = `                const refundWarningBody = {
+                  ko: '방 시간 연장은 결제 완료 즉시 예약 리소스가 즉시 할당되어 24시간 연장 처리가 실행되므로, 단순 변심으로 인한 환불 및 결제 취소가 엄격히 불가능합니다. 이에 동의하시는 경우에만 결제를 진행해 주세요.',`;
 
-                    <button
-                      onClick={() => setExtendStep('payment')}
-                      className="w-full py-4 rounded-2xl bg-white text-black hover:bg-zinc-200 font-extrabold text-sm transition-all duration-200 cursor-pointer shadow-lg shadow-white/5"
-                    >
-                      {proceedToPaymentLabel}
-                    </button>
-                  </div>
-                );
-              })()}`;
+const refundReplace = `                const refundWarningBody = {
+                  ko: '방 시간 연장은 결제 완료 즉시 예약 리소스가 즉시 할당되어 선택한 기간의 연장 처리가 실행되므로, 단순 변심으로 인한 환불 및 결제 취소가 엄격히 불가능합니다. 이에 동의하시는 경우에만 결제를 진행해 주세요.',`;
 
-if (infoRegex.test(content)) {
-  content = content.replace(infoRegex, infoReplace);
-  console.log('Successfully patched infoStep modal selections using regex!');
-} else {
-  console.log('infoStep modal selections already modified or regex mismatch.');
-}
-
-// 4. Patch pricing references
-const pricingSearch = `                const regularPriceStr = getFormattedLocalPrice(room.tier, activeLocale, 1);
+// 5. Patch price formatting calls to feed correct targetTierForPrice
+const priceStrSearch = `                const regularPriceStr = getFormattedLocalPrice(room.tier, activeLocale, 1);
                 const discountStr = getFormattedLocalPrice(room.tier, activeLocale, 0.2);
                 const finalAmtStr = getFormattedLocalPrice(room.tier, activeLocale, 0.8);`;
-const pricingReplace = `                let targetTierForPrice = room.tier;
-                if (room.tier === 'store' || room.tier === 'store_annual') {
-                  targetTierForPrice = selectedExtendHours === 8760 ? 'store_annual' : 'store';
-                }
+
+const priceStrReplace = `                const targetTierForPrice = (room.tier === 'store' || room.tier === 'store_annual')
+                  ? (selectedExtendHours === 8760 ? 'store_annual' : 'store')
+                  : room.tier;
                 const regularPriceStr = getFormattedLocalPrice(targetTierForPrice, activeLocale, 1);
                 const discountStr = getFormattedLocalPrice(targetTierForPrice, activeLocale, 0.2);
                 const finalAmtStr = getFormattedLocalPrice(targetTierForPrice, activeLocale, 0.8);`;
-if (content.includes(pricingSearch)) {
-  content = content.replace(pricingSearch, pricingReplace);
-  console.log('Successfully patched pricing references!');
-} else {
-  console.log('Pricing references already patched.');
+
+let modified = false;
+
+if (content.includes(onClickSearch)) {
+  content = content.replace(onClickSearch, onClickReplace);
+  modified = true;
+  console.log('1. Patched button onClick handler successfully!');
 }
 
-// 5. Patch productVal inside payment step to be dynamic (lines around 5230)
-const productSearch = `                const productVal = {
-                  ko: '24시간 시간 연장 이용권',
-                  en: '24-Hour Session Extension Pass',
-                  ja: '24시간룸연장티켓',
-                  es: 'Pase de Extensión de 24 Horas',
-                  'zh-TW': '24 小時延長使用券',
-                  'zh-HK': '24 小時延長使用券',
-                }[activeLocale] || '24시간 시간 연장 이용권';`;
+if (content.includes(infoDescSearch)) {
+  content = content.replace(infoDescSearch, infoDescReplace);
+  modified = true;
+  console.log('2. Patched info duration labels successfully!');
+}
 
-const productReplace = `const isStoreTier = room.tier === 'store' || room.tier === 'store_annual';
-                const productVal = {
-                  ko: isStoreTier 
-                    ? (selectedExtendHours === 8760 ? '매장 전용 365일(1년) 시간 연장 이용권' : '매장 전용 30일(1달) 시간 연장 이용권')
-                    : '24시간 시간 연장 이용권',
-                  en: isStoreTier
-                    ? (selectedExtendHours === 8760 ? 'Store 365-Day Session Extension Pass' : 'Store 30-Day Session Extension Pass')
-                    : '24-Hour Session Extension Pass',
-                  ja: isStoreTier
-                    ? (selectedExtendHours === 8760 ? '店舗365일룸延長チケット' : '店舗30일룸延長チケット')
-                    : '24시간룸연장티켓',
-                  es: isStoreTier
-                    ? (selectedExtendHours === 8760 ? 'Pase de Extensión de 365 Días' : 'Pase de Extensión de 30 Días')
-                    : 'Pase de Extensión de 24 Horas',
-                  'zh-TW': isStoreTier
-                    ? (selectedExtendHours === 8760 ? '商戶 365 天延長使用券' : '商戶 30 天延長使用券')
-                    : '24 小時延長使用券',
-                  'zh-HK': isStoreTier
-                    ? (selectedExtendHours === 8760 ? '商戶 365 天延長使用券' : '商戶 30 天延長使用券')
-                    : '24 小時延長使用券',
-                }[activeLocale] || '시간 연장 이용권';`;
+if (content.includes(payDescSearch)) {
+  content = content.replace(payDescSearch, payDescReplace);
+  modified = true;
+  console.log('3. Patched payment duration labels successfully!');
+}
 
-// Simple includes check
-if (content.includes(productSearch)) {
-  content = content.replace(productSearch, productReplace);
-  console.log('Successfully patched productVal dynamically!');
+if (content.includes(refundSearch)) {
+  content = content.replace(refundSearch, refundReplace);
+  modified = true;
+  console.log('4. Patched refund warnings successfully!');
+}
+
+if (content.includes(priceStrSearch)) {
+  content = content.replace(priceStrSearch, priceStrReplace);
+  modified = true;
+  console.log('5. Patched target price mappings successfully!');
+}
+
+if (modified) {
+  fs.writeFileSync(targetFile, content, 'utf8');
+  console.log('ALL patches applied successfully to page.tsx!');
 } else {
-  // Try regex in case of slight spacing differences
-  const regex = /const productVal = \{\s+ko: '24시간 시간 연장 이용권',[\s\S]+?\}\[activeLocale\] \|\| '24시간 시간 연장 이용권';/;
-  if (regex.test(content)) {
-    content = content.replace(regex, productReplace);
-    console.log('Successfully patched productVal dynamically using regex!');
+  console.log('Search strings mismatch. Using fallback regex matching.');
+  
+  // Try regex for L2131 onClick
+  const regexOnClick = /onClick=\{\(\)\s*=>\s*\{\s*if\s*\(room\?\.tier === 'free'\)\s*\{\s*setSelectedUpgradeTier\(null\);\s*setUpgradeStep\('select'\);\s*setIsUpgradeModalOpen\(true\);\s*\}\s*else\s*\{\s*setExtendStep\('info'\);\s*setIsExtendModalOpen\(true\);\s*\}\s*\}\}/;
+  if (regexOnClick.test(content)) {
+    content = content.replace(regexOnClick, `onClick={() => {
+                  if (room?.tier === 'free') {
+                    setSelectedUpgradeTier(null);
+                    setUpgradeStep('select');
+                    setIsUpgradeModalOpen(true);
+                  } else {
+                    if (room?.tier === 'store' || room?.tier === 'store_annual') {
+                      setSelectedExtendHours(720);
+                    } else {
+                      setSelectedExtendHours(24);
+                    }
+                    setExtendStep('info');
+                    setIsExtendModalOpen(true);
+                  }
+                }}`);
+    console.log('Regex 1 onClick match applied!');
+    modified = true;
+  }
+
+  // Try regex for priceStr
+  const regexPrice = /const\s*regularPriceStr\s*=\s*getFormattedLocalPrice\(room\.tier,\s*activeLocale,\s*1\);\s*const\s*discountStr\s*=\s*getFormattedLocalPrice\(room\.tier,\s*activeLocale,\s*0\.2\);\s*const\s*finalAmtStr\s*=\s*getFormattedLocalPrice\(room\.tier,\s*activeLocale,\s*0\.8\);/;
+  if (regexPrice.test(content)) {
+    content = content.replace(regexPrice, `const targetTierForPrice = (room.tier === 'store' || room.tier === 'store_annual')
+                  ? (selectedExtendHours === 8760 ? 'store_annual' : 'store')
+                  : room.tier;
+                const regularPriceStr = getFormattedLocalPrice(targetTierForPrice, activeLocale, 1);
+                const discountStr = getFormattedLocalPrice(targetTierForPrice, activeLocale, 0.2);
+                const finalAmtStr = getFormattedLocalPrice(targetTierForPrice, activeLocale, 0.8);`);
+    console.log('Regex 5 prices match applied!');
+    modified = true;
+  }
+
+  if (modified) {
+    fs.writeFileSync(targetFile, content, 'utf8');
+    console.log('Successfully completed regex-based fallback patches!');
   } else {
-    console.log('productVal declaration already patched or layout mismatch.');
+    console.log('Regex fallback matching failed.');
   }
 }
-
-fs.writeFileSync(targetFile, content, 'utf8');
-console.log('Finished patch_extend execution!');
