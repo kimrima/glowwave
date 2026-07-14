@@ -258,6 +258,7 @@ function LocalSignboardContent() {
 
   // Active Locale State
   const [activeLocale, setActiveLocale] = useState<Locale>('ko');
+  const maxTextLength = (activeLocale === 'en' || activeLocale === 'es') ? 20 : 15;
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -1853,7 +1854,7 @@ function LocalSignboardContent() {
                   <input
                     type="text"
                     value={customText}
-                    onChange={(e) => setCustomText(e.target.value.slice(0, 15))}
+                    onChange={(e) => setCustomText(e.target.value.slice(0, maxTextLength))}
                     placeholder={
                       {
                         ko: '즉석 구호 입력 (예: 소리질러!)',
@@ -1865,10 +1866,10 @@ function LocalSignboardContent() {
                       }[activeLocale] || '즉석 구호 입력 (예: 소리질러!)'
                     }
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-white text-sm font-semibold"
-                    maxLength={15}
+                    maxLength={maxTextLength}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold font-mono text-zinc-600">
-                    {customText.length}/15
+                    {customText.length}/{maxTextLength}
                   </span>
                 </div>
                 
@@ -2193,10 +2194,10 @@ function LocalSignboardContent() {
                     <input
                       type="text"
                       value={customResultText}
-                      onChange={(e) => setCustomResultText(e.target.value.slice(0, 15))}
+                      onChange={(e) => setCustomResultText(e.target.value.slice(0, maxTextLength))}
                       placeholder="START"
                       className="w-full bg-black/45 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white text-xs md:text-sm font-semibold h-12"
-                      maxLength={15}
+                      maxLength={maxTextLength}
                     />
                   </div>
                 </div>
@@ -2238,7 +2239,7 @@ function LocalSignboardContent() {
                     <input
                       type="text"
                       value={customResultText}
-                      onChange={(e) => setCustomResultText(e.target.value.slice(0, 15))}
+                      onChange={(e) => setCustomResultText(e.target.value.slice(0, maxTextLength))}
                       placeholder={
                         {
                           ko: '아쉽네요! 다음 기회에..',
@@ -2250,7 +2251,7 @@ function LocalSignboardContent() {
                         }[activeLocale] || '아쉽네요! 다음 기회에..'
                       }
                       className="w-full bg-black/45 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white text-xs md:text-sm font-semibold h-12"
-                      maxLength={15}
+                      maxLength={maxTextLength}
                     />
                   </div>
                 </div>
@@ -2643,9 +2644,9 @@ function LocalSignboardContent() {
                   <input
                     type="text"
                     value={editingPreset.text || ''}
-                    onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, 15) }))}
+                    onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, maxTextLength) }))}
                     className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-sm font-semibold"
-                    maxLength={15}
+                    maxLength={maxTextLength}
                   />
                 </div>
 
@@ -2916,9 +2917,9 @@ function LocalSignboardContent() {
                       <input
                         type="text"
                         value={editingPreset.result_text || ''}
-                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, 15) }))}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, maxTextLength) }))}
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
-                        maxLength={15}
+                        maxLength={maxTextLength}
                         placeholder="START"
                       />
                     </div>
@@ -2933,9 +2934,9 @@ function LocalSignboardContent() {
                       <input
                         type="text"
                         value={editingPreset.text || ''}
-                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, 15) }))}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, maxTextLength) }))}
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
-                        maxLength={15}
+                        maxLength={maxTextLength}
                         placeholder={t('raffle_win_default', activeLocale) || '당첨!'}
                       />
                     </div>
@@ -2945,9 +2946,9 @@ function LocalSignboardContent() {
                       <input
                         type="text"
                         value={editingPreset.result_text || ''}
-                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, 15) }))}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, maxTextLength) }))}
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
-                        maxLength={15}
+                        maxLength={maxTextLength}
                         placeholder={t('lucky_draw_vibe', activeLocale) || '아쉽네요! 다음 기회에..'}
                       />
                     </div>
@@ -3318,10 +3319,10 @@ function LocalSignboardContent() {
                   <input
                     type="text"
                     value={newSlotName}
-                    onChange={(e) => setNewSlotName(e.target.value.slice(0, 15))}
+                    onChange={(e) => setNewSlotName(e.target.value.slice(0, maxTextLength))}
                     placeholder={t('input_theme_placeholder', activeLocale)}
                     className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/40 focus:bg-black/60 text-sm font-semibold transition-colors"
-                    maxLength={15}
+                    maxLength={maxTextLength}
                   />
                   <button
                     onClick={handleSaveSlotPackage}

@@ -232,9 +232,9 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#065F46', text: 'Sing Along! 🎤', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
         { bg_color: '#000000', text: 'Keep Rocking! 🤘', text_color: '#EF4444', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
         { bg_color: '#F59E0B', text: 'Absolute Masterpiece 🏆', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
-        { bg_color: '#1E1B4B', text: 'Debut Single Out Now! 🎧', text_color: '#00FFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#1E1B4B', text: 'Debut Single Out! 🎧', text_color: '#00FFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
         { bg_color: '#4F46E5', text: 'You are a Superstar! ⭐', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
-        { bg_color: '#065F46', text: 'Tip Jar: scan to support 💰', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' }
+        { bg_color: '#065F46', text: 'Tip Jar 💰', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' }
       ]
     },
     {
@@ -252,10 +252,10 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#1E1B4B', text: 'Underdogs Win! 🐕', text_color: '#00FFFF', effect: 'none', speed: 1000, font_family: 'serif', font_size: 100, special_effect: 'stars', locale: 'en' },
         { bg_color: '#F59E0B', text: 'Number One! 🥇', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
         { bg_color: '#000000', text: 'Ref is Blind! 🦓', text_color: '#EF4444', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
-        { bg_color: '#1E3A8A', text: 'Let\'s Go Bulldogs! 🐶', text_color: '#FDE047', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#1E3A8A', text: 'Go Bulldogs! 🐶', text_color: '#FDE047', effect: 'blink', speed: 1921, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
         { bg_color: '#7C3AED', text: 'Unstoppable! ⚡', text_color: '#00FFCC', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'en' },
         { bg_color: '#A30027', text: 'Walk-off Hit!! ⚾', text_color: '#FFC72C', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'en' },
-        { bg_color: '#15803D', text: 'Defense wins championships! 🛡️', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
+        { bg_color: '#15803D', text: 'Defense Wins! 🛡️', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' },
         { bg_color: '#1E3A8A', text: 'The 12th Man ⚽', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'stars', locale: 'en' }
       ]
     },
@@ -277,7 +277,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#0B0B0F', text: 'DJ Drop the Beat 🎧', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'plump', font_size: 100, special_effect: 'stars', locale: 'en' },
         { bg_color: '#3B82F6', text: 'Summer Rave 🏖️', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'sans-thin', font_size: 100, special_effect: 'stars', locale: 'en' },
         { bg_color: '#7C3AED', text: 'Shake It Baby! 🕺', text_color: '#00FFCC', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'en' },
-        { bg_color: '#DB2777', text: 'Birthday VIP Guest 👑', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'en' },
+        { bg_color: '#DB2777', text: 'Birthday VIP 👑', text_color: '#FFFFFF', effect: 'blink', speed: 1921, font_family: 'plump', font_size: 100, special_effect: 'confetti', locale: 'en' },
         { bg_color: '#0B0B0F', text: 'Sober is Over 🍻', text_color: '#FDE047', effect: 'marquee', speed: 30061, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' }
       ]
     },
@@ -299,7 +299,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         { bg_color: '#1E2937', text: 'Be Right Back ⏳', text_color: '#F59E0B', effect: 'none', speed: 1000, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'en' },
         { bg_color: '#1E2937', text: 'Today\'s Special 🍽️', text_color: '#F59E0B', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'en' },
         { bg_color: '#0D9488', text: 'New Menu Out! 🌟', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' },
-        { bg_color: '#1E2937', text: 'Ask for parking validation 🚗', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'en' },
+        { bg_color: '#1E2937', text: 'Free Parking! 🚗', text_color: '#FFFFFF', effect: 'marquee', speed: 30061, font_family: 'sans-thin', font_size: 100, special_effect: 'none', locale: 'en' },
         { bg_color: '#7F1D1D', text: 'Order via QR code 📱', text_color: '#FFFFFF', effect: 'none', speed: 1000, font_family: 'sans-thick', font_size: 100, special_effect: 'none', locale: 'en' }
       ]
     }
