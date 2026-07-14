@@ -17,11 +17,26 @@ export async function GET(request: NextRequest) {
     const fontUsage: Record<string, number> = {};
     const effectUsage: Record<string, number> = {};
     const textSamples: { text: string; bg: string; color: string; tier: string; time: string }[] = [];
+    
+    // Advanced PO/PM BI metrics
+    const liveHotRooms: { id: string; text: string; active_clients: number; tier: string; time: string; bg: string; color: string }[] = [];
+    const themeCombos: Record<string, number> = {};
+    let b2cCount = 0; // Local standalone sync rooms
+    let b2bCount = 0; // Multilingual store/event host rooms
+    let luckyDrawCount = 0;
+    let countdownCount = 0;
 
     for (const room of rooms) {
       const activeClients = localDb.getClientCount(room.id);
       const state = await localDb.getCurrentState(room.id);
       
+      // Determine segment type
+      if (room.email === 'sync-local@glowwave.app') {
+        b2cCount++;
+      } else {
+        b2bCount++;
+      }
+
       if (state) {
         // Collect font statistics
         const font = state.font_family || 'sans-thin';
@@ -31,15 +46,41 @@ export async function GET(request: NextRequest) {
         const effect = state.effect || 'none';
         effectUsage[effect] = (effectUsage[effect] || 0) + 1;
 
+        if (effect === 'luckydraw_wait' || effect === 'luckydraw') {
+          luckyDrawCount++;
+        } else if (effect === 'countdown') {
+          countdownCount++;
+        }
+
+        // Collect theme color combos
+        const bg = state.bg_color || '#000000';
+        const color = state.text_color || '#FFFFFF';
+        const comboKey = `${bg}|${color}`;
+        themeCombos[comboKey] = (themeCombos[comboKey] || 0) + 1;
+
         // Mask PII and collect non-empty text values
         if (state.text && state.text.trim()) {
-          textSamples.push({
+          const sample = {
             text: state.text,
-            bg: state.bg_color || '#000000',
-            color: state.text_color || '#FFFFFF',
+            bg,
+            color,
             tier: room.tier,
             time: room.created_at
-          });
+          };
+          textSamples.push(sample);
+
+          // Add to Hot Rooms if there are active client viewers
+          if (activeClients > 0) {
+            liveHotRooms.push({
+              id: room.id,
+              text: state.text,
+              active_clients: activeClients,
+              tier: room.tier,
+              time: room.created_at,
+              bg,
+              color
+            });
+          }
         }
       }
 
@@ -55,6 +96,18 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Sort live hot rooms by client count descending
+    liveHotRooms.sort((a, b) => b.active_clients - a.active_clients);
+
+    // Format top color combos
+    const topThemeCombos = Object.entries(themeCombos)
+      .map(([combo, count]) => {
+        const [bg, color] = combo.split('|');
+        return { bg, color, count };
+      })
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
     return NextResponse.json({
       success: true,
       rooms: activeRoomsWithStates,
@@ -62,7 +115,19 @@ export async function GET(request: NextRequest) {
       stats: {
         fontUsage,
         effectUsage,
-        textSamples: textSamples.slice(0, 50) // Limit to top 50 recent samples
+        textSamples: textSamples.slice(0, 50), // Limit to top 50 recent samples
+        liveHotRooms: liveHotRooms.slice(0, 10), // Top 10 highly engaging active signs
+        segmentation: {
+          b2cCount,
+          b2bCount,
+          total: rooms.length
+        },
+        visualThemes: topThemeCombos,
+        featuresAdoption: {
+          luckyDrawCount,
+          countdownCount,
+          totalActiveStates: Object.keys(themeCombos).length
+        }
       }
     });
   } catch (error) {
@@ -70,4 +135,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
 

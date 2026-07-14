@@ -53,14 +53,14 @@ export default function AdminPage() {
   const [tierFilter, setTierFilter] = useState<string>('all');
 
   // Real-time custom preset trends state
-  const [trendsStats, setTrendsStats] = useState<{
-    fontUsage: Record<string, number>;
-    effectUsage: Record<string, number>;
-    textSamples: { text: string; bg: string; color: string; tier: string; time: string }[];
-  }>({
+  const [trendsStats, setTrendsStats] = useState<any>({
     fontUsage: {},
     effectUsage: {},
-    textSamples: []
+    textSamples: [],
+    liveHotRooms: [],
+    segmentation: { b2cCount: 0, b2bCount: 0, total: 0 },
+    visualThemes: [],
+    featuresAdoption: { luckyDrawCount: 0, countdownCount: 0, totalActiveStates: 0 }
   });
 
   // Localized templates CRUD states
@@ -1200,6 +1200,22 @@ export default function AdminPage() {
                               </button>
                             );
                           })}
+                          <div
+                            className="h-6 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center"
+                            style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                            title="배경 커스텀 색상 선택"
+                          >
+                            <input
+                              type="color"
+                              value={editingPreset.bg_color || '#000000'}
+                              onChange={(e) => setEditingPreset((prev: any) => ({ ...prev, bg_color: e.target.value }))}
+                              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+                            />
+                            {editingPreset.bg_color && !['#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6',
+                              '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'].includes(editingPreset.bg_color) && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -1228,8 +1244,85 @@ export default function AdminPage() {
                               </button>
                             );
                           })}
+                          <div
+                            className="h-6 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center"
+                            style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                            title="글자 커스텀 색상 선택"
+                          >
+                            <input
+                              type="color"
+                              value={editingPreset.text_color || '#FFFFFF'}
+                              onChange={(e) => setEditingPreset((prev: any) => ({ ...prev, text_color: e.target.value }))}
+                              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+                            />
+                            {editingPreset.text_color && !['#FFFFFF', '#000000', '#FFD700', '#EF4444', '#10B981', '#3B82F6',
+                              '#D946EF', '#00FFFF', '#EC4899', '#8B5CF6', '#F97316', '#F59E0B'].includes(editingPreset.text_color) && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                            )}
+                          </div>
                         </div>
                       </div>
+
+                      {/* bg_color_secondary */}
+                      {(editingPreset.effect === 'blink' || editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw') && (
+                        <div className="pt-3 border-t border-white/5 animate-in fade-in duration-200">
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider">보조 배경 색상</label>
+                            {editingPreset.bg_color_secondary && (
+                              <button
+                                type="button"
+                                onClick={() => setEditingPreset((prev: any) => {
+                                  const copy = { ...prev };
+                                  delete copy.bg_color_secondary;
+                                  return copy;
+                                })}
+                                className="text-[9px] text-red-400 font-bold hover:underline cursor-pointer"
+                              >
+                                보조색 해제 (단색 전환)
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-6 gap-1 bg-black/40 p-1.5 rounded-xl border border-white/5">
+                            {[
+                              '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 
+                              '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'
+                            ].map((hex) => {
+                              const isSelected = editingPreset.bg_color_secondary === hex;
+                              return (
+                                <button
+                                  key={hex}
+                                  type="button"
+                                  onClick={() => setEditingPreset((prev: any) => ({ ...prev, bg_color_secondary: hex }))}
+                                  className={`h-6 rounded-lg border cursor-pointer relative transition-all flex items-center justify-center ${
+                                    isSelected ? 'border-white scale-105 shadow-md' : 'border-white/5 hover:border-white/20'
+                                  }`}
+                                  style={{ backgroundColor: hex }}
+                                >
+                                  {isSelected && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                                  )}
+                                </button>
+                              );
+                            })}
+                            <div
+                              className="h-6 rounded-lg overflow-hidden border border-white/10 hover:scale-105 transition-all shadow-md cursor-pointer relative flex items-center justify-center"
+                              style={{ background: 'linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)' }}
+                              title="보조 커스텀 색상 선택"
+                            >
+                              <input
+                                type="color"
+                                value={editingPreset.bg_color_secondary || '#000000'}
+                                onChange={(e) => setEditingPreset((prev: any) => ({ ...prev, bg_color_secondary: e.target.value }))}
+                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+                              />
+                              {editingPreset.bg_color_secondary && !['#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6',
+                                '#6366F1', '#8B5CF6', '#D946EF', '#EC4899', '#FFFFFF', '#0B0B0F'].includes(editingPreset.bg_color_secondary) && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-white shadow-sm" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Motion Effect */}
                       <div>
@@ -1242,8 +1335,80 @@ export default function AdminPage() {
                           <option value="none">단색 고정 (None)</option>
                           <option value="blink">전면 부드러운 깜빡이 (Blink)</option>
                           <option value="marquee">가로 스크롤 흘러가기 (Scroll)</option>
+                          <option value="countdown">카운트다운 타이머 (Timer)</option>
+                          <option value="luckydraw_wait">럭키드로우 추첨 대기 (Raffle Wait)</option>
                         </select>
                       </div>
+
+                      {/* countdown specific inputs */}
+                      {editingPreset.effect === 'countdown' && (
+                        <div className="pt-3 border-t border-white/5 space-y-4 animate-in fade-in duration-200">
+                          <div>
+                            <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">카운트다운 초 설정</label>
+                            <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-full border border-white/5">
+                              {[3, 5, 10, 30, 60].map((sec) => (
+                                <button
+                                  type="button"
+                                  key={sec}
+                                  onClick={() => setEditingPreset((prev: any) => ({ ...prev, countdown_seconds: sec }))}
+                                  className={`py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                                    (editingPreset.countdown_seconds || 10) === sec
+                                      ? 'bg-white text-black font-extrabold shadow-sm'
+                                      : 'text-zinc-400 hover:text-white'
+                                  }`}
+                                >
+                                  {sec}초
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">종료 시 출력 문구 (Result Text)</label>
+                            <input
+                              type="text"
+                              value={editingPreset.result_text || ''}
+                              onChange={(e) => setEditingPreset((prev: any) => ({ ...prev, result_text: e.target.value.slice(0, 15) }))}
+                              placeholder="START"
+                              className="w-full bg-[#030305] border border-white/10 rounded-xl px-4 py-2 text-xs font-semibold text-white focus:outline-none focus:border-violet-500 transition-colors"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* luckydraw specific inputs */}
+                      {(editingPreset.effect === 'luckydraw_wait' || editingPreset.effect === 'luckydraw') && (
+                        <div className="pt-3 border-t border-white/5 space-y-4 animate-in fade-in duration-200">
+                          <div>
+                            <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">낙첨 시 출력 문구 (Loser Text)</label>
+                            <input
+                              type="text"
+                              value={editingPreset.result_text || ''}
+                              onChange={(e) => setEditingPreset((prev: any) => ({ ...prev, result_text: e.target.value.slice(0, 15) }))}
+                              placeholder="아쉽네요! 다음 기회에.."
+                              className="w-full bg-[#030305] border border-white/10 rounded-xl px-4 py-2 text-xs font-semibold text-white focus:outline-none focus:border-violet-500 transition-colors"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">추첨 당첨자 수</label>
+                            <div className="grid grid-cols-5 gap-1 bg-black/40 p-1 rounded-full border border-white/5">
+                              {[1, 2, 3, 5, 10].map((num) => (
+                                <button
+                                  type="button"
+                                  key={num}
+                                  onClick={() => setEditingPreset((prev: any) => ({ ...prev, lucky_draw_count: num }))}
+                                  className={`py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                                    (editingPreset.lucky_draw_count || 1) === num
+                                      ? 'bg-white text-black font-extrabold shadow-sm'
+                                      : 'text-zinc-400 hover:text-white'
+                                  }`}
+                                >
+                                  {num}명
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Font selection */}
                       <div>
@@ -1257,6 +1422,22 @@ export default function AdminPage() {
                           <option value="sans-thick">볼드 고딕 (Sans Thick)</option>
                           <option value="serif">클래식 명조 (Serif)</option>
                           <option value="plump">통통한 자이언트 (Plump)</option>
+                        </select>
+                      </div>
+
+                      {/* special_effect */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">화면 특수 장식 효과 (Special Effect)</label>
+                        <select
+                          value={editingPreset.special_effect || 'none'}
+                          onChange={(e) => setEditingPreset((prev: any) => ({ ...prev, special_effect: e.target.value }))}
+                          className="w-full bg-[#030305] border border-white/10 rounded-xl px-4 py-2 text-xs font-semibold text-white focus:outline-none focus:border-violet-500 transition-colors cursor-pointer"
+                        >
+                          <option value="none">효과 없음 (None)</option>
+                          <option value="stars">반짝이는 별빛 (Stars)</option>
+                          <option value="hearts">두근두근 하트 (Hearts)</option>
+                          <option value="snow">살포시 내리는 눈 (Snow)</option>
+                          <option value="confetti">축하 꽃가루 폭죽 (Confetti)</option>
                         </select>
                       </div>
                     </div>
@@ -1325,7 +1506,7 @@ export default function AdminPage() {
                   <TrendingUp className="w-4 h-4 text-emerald-400" /> 실시간 커스텀 프리셋 트렌드 통계 보드
                 </h2>
                 <p className="text-[10px] text-zinc-500 mt-1 font-medium">
-                  사용자들이 전광판에 세팅해 송출 중인 실시간 디자인 메트릭을 집계하여 SaaS 마케팅 및 테마 개발의 근거 자료로 활용합니다.
+                  PO/PM 의사결정용 데이터 전문 센터: 참관 몰입도, 유통 세그먼트 비율 및 AI 성장 조언 피드를 표출합니다.
                 </p>
               </div>
               <button
@@ -1337,15 +1518,188 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* Statistics Widgets */}
+            {/* AI PO/PM Actionable Insights Briefing Card */}
+            <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-violet-500/20 p-6 rounded-2xl shadow-xl shadow-violet-950/5 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-violet-600/10 rounded-full blur-2xl" />
+              <h3 className="text-xs font-black text-violet-400 uppercase tracking-widest mb-3 flex items-center gap-2 font-outfit">
+                <ShieldAlert className="w-4 h-4 text-violet-400 animate-pulse" /> AI PO/PM ACTIONABLE INSIGHT REPORT (수익 성장 피드)
+              </h3>
+              <p className="text-[10px] text-zinc-300 leading-relaxed">
+                {(() => {
+                  const seg = trendsStats.segmentation || { b2cCount: 0, b2bCount: 0, total: 1 };
+                  const b2cRatio = (seg.b2cCount / Math.max(1, seg.total)) * 100;
+                  const b2bRatio = (seg.b2bCount / Math.max(1, seg.total)) * 100;
+                  const luckyAdoption = trendsStats.featuresAdoption?.luckyDrawCount || 0;
+
+                  if (b2cRatio > 60) {
+                    return `현재 1인 Stand-alone용 모바일 연동 트래픽(B2C) 점유율이 ${b2cRatio.toFixed(0)}%로 제품의 전체 트래픽을 주도하고 있습니다. 틱톡/인스타그램 릴스 인증샷에 최적화된 세로형 네온 효과 템플릿과 '글꼴 스타일팩'을 인앱 유료 애드온(Add-on)으로 판매하여 매출전환(ARPU) 극대화를 시도하는 전략을 추천합니다.`;
+                  }
+                  if (b2bRatio > 50) {
+                    return `현재 매장 정보 안내 및 상업 이벤트 목적의 호스트 세션(B2B) 점유율이 ${b2bRatio.toFixed(0)}%로 안정적입니다. 식당 메뉴판 템플릿, 매장 대기 순번 및 주문 알림 연동 API 모듈을 'B2B 프리미엄 구독 플랜'으로 패키징하여 월간 반복 매출(MRR)의 폭발적 성장을 견인할 가치가 매우 큽니다.`;
+                  }
+                  if (luckyAdoption > 0) {
+                    return `실시간 관객 소통용 추첨기(Lucky Draw) 채택 건수가 ${luckyAdoption}건 감지되었습니다. 축하 페스티벌 및 기업 네트워킹 이벤트 주최자를 위한 '기업 로고 워터마크 노출' 및 '관객 당첨 결과 CSV 엑셀 다운로드' 등 고부가가치 플러그인을 기업 전용 단기 패키지(Event Plan)로 묶어 유료 요금제 결제를 적극 유도하십시오.`;
+                  }
+                  return "현재 유저 사용 유형이 분산되어 균형을 이루고 있습니다. 사용자들이 가장 오랜 시간 켜두는 '인기 테마 컬러 조합'을 기본 프리셋 템플릿 상단에 자동 배치하여, 대시보드 이탈율(Churn)을 낮추고 장기 리텐션을 유지하십시오.";
+                })()}
+              </p>
+            </div>
+
+            {/* 1단: BI Segmentation Metrics & Feature Adoption Rates */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Font Popularity Share */}
+              {/* Segmentation Card (B2B vs B2C Gauge) */}
               <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-2xl">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Users className="w-3.5 h-3.5 text-zinc-400" /> B2B vs B2C 고객 점유율 세그멘테이션
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-[10px] font-bold">
+                    <span className="text-violet-400">B2B (호스트/매장 세션)</span>
+                    <span className="text-emerald-400">B2C (1인용 싱크 세션)</span>
+                  </div>
+                  {/* Gauge Bar */}
+                  {(() => {
+                    const seg = trendsStats.segmentation || { b2cCount: 0, b2bCount: 0, total: 0 };
+                    const b2bPct = seg.total > 0 ? (seg.b2bCount / seg.total) * 100 : 50;
+                    const b2cPct = seg.total > 0 ? (seg.b2cCount / seg.total) * 100 : 50;
+                    return (
+                      <div className="space-y-2">
+                        <div className="w-full h-4 bg-black/40 rounded-full overflow-hidden border border-white/5 flex">
+                          <div className="h-full bg-violet-600 transition-all" style={{ width: `${b2bPct}%` }} title={`B2B: ${b2bPct.toFixed(0)}%`} />
+                          <div className="h-full bg-emerald-500 transition-all" style={{ width: `${b2cPct}%` }} title={`B2C: ${b2cPct.toFixed(0)}%`} />
+                        </div>
+                        <div className="flex justify-between text-[9px] text-zinc-500 font-bold font-mono">
+                          <span>${seg.b2bCount} Rooms (${b2bPct.toFixed(0)}%)</span>
+                          <span>${seg.b2cCount} Rooms (${b2cPct.toFixed(0)}%)</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Feature Adoption Card */}
+              <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-2xl flex flex-col justify-between">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Layers className="w-3.5 h-3.5 text-zinc-400" /> 유료 기능 채택률 (Features Adoption)
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-black/35 p-3 rounded-xl border border-white/5 text-center">
+                    <span className="text-[9px] text-zinc-500 font-bold block uppercase">추첨 연출 채택</span>
+                    <span className="text-base font-black text-violet-400 block mt-1 font-outfit">
+                      {trendsStats.featuresAdoption?.luckyDrawCount || 0} Rooms
+                    </span>
+                  </div>
+                  <div className="bg-black/35 p-3 rounded-xl border border-white/5 text-center">
+                    <span className="text-[9px] text-zinc-500 font-bold block uppercase">타이머 연출 채택</span>
+                    <span className="text-base font-black text-emerald-400 block mt-1 font-outfit">
+                      {trendsStats.featuresAdoption?.countdownCount || 0} Rooms
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2단: Live Event Engagement Tracker (Highly engaging rooms) */}
+            <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-2xl">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <TrendingUp className="w-3.5 h-3.5 text-violet-400 animate-pulse" /> 실시간 참관 흥행 랭킹 (Live Event Tracker)
+                </h3>
+                <span className="text-[8px] px-2 py-0.5 rounded border border-red-500/20 bg-red-500/10 text-red-400 font-black animate-pulse uppercase tracking-widest">
+                  Live Event On Air
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-zinc-300 border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/5 text-[9px] font-black text-zinc-500 uppercase tracking-widest">
+                      <th className="py-2.5">Room ID</th>
+                      <th>현재 연출 화면 (Masked)</th>
+                      <th>참관 관객수 (Engagement)</th>
+                      <th>요금제 Tier</th>
+                      <th>개설 시간</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-xs font-medium">
+                    {(trendsStats.liveHotRooms || []).map((room: any) => (
+                      <tr key={room.id} className="hover:bg-white/[0.01]">
+                        <td className="py-3 font-extrabold text-zinc-400 font-mono">{room.id}</td>
+                        <td>
+                          <div 
+                            className="inline-flex px-3 py-1.5 rounded-lg font-black border border-black/40 text-[10px] tracking-wider font-mono max-w-[150px] truncate"
+                            style={{ backgroundColor: room.bg, color: room.color }}
+                          >
+                            {room.text}
+                          </div>
+                        </td>
+                        <td>
+                          <span className="inline-flex items-center gap-1 text-indigo-400 font-black font-outfit">
+                            <Users className="w-3 h-3 text-indigo-500" /> {room.active_clients}명 접속중
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`px-2 py-0.5 rounded text-[8px] border font-black uppercase \${
+                            room.tier !== 'free'
+                              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                              : 'bg-white/5 text-zinc-400 border-white/5'
+                          }`}>
+                            {room.tier}
+                          </span>
+                        </td>
+                        <td className="text-zinc-500 text-[10px] font-mono">
+                          {new Date(room.time).toLocaleTimeString()}
+                        </td>
+                      </tr>
+                    ))}
+                    {(!trendsStats.liveHotRooms || trendsStats.liveHotRooms.length === 0) && (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-zinc-500 text-[10px] font-bold">
+                          현재 다수 참관중(Active Spectating)이 발생한 대형 룸 세션이 확인되지 않습니다.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 3단: Design System & Color Combinations Rankings */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Popular Color Combos */}
+              <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-2xl md:col-span-1">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Layers className="w-3.5 h-3.5 text-zinc-400" /> 인기 비주얼 테마 조합 (Top Color Combos)
+                </h3>
+                <div className="space-y-3">
+                  {(trendsStats.visualThemes || []).map((combo: any, idx: number) => (
+                    <div key={idx} className="flex items-center justify-between bg-black/25 p-2 rounded-xl border border-white/5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-black text-zinc-500 w-4">#{idx+1}</span>
+                        {/* Compact Visual Preview Block */}
+                        <div 
+                          className="w-12 h-6 rounded border border-black/20 text-[7px] font-black flex items-center justify-center font-mono select-none"
+                          style={{ backgroundColor: combo.bg, color: combo.color }}
+                        >
+                          SIGN
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-zinc-400 font-extrabold font-mono">{combo.count}회 채택</span>
+                    </div>
+                  ))}
+                  {(!trendsStats.visualThemes || trendsStats.visualThemes.length === 0) && (
+                    <p className="text-[10px] text-zinc-600 text-center py-6">수집된 컬러 콤보 통계가 없습니다.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Font Popularity Share */}
+              <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-2xl md:col-span-1">
                 <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Globe className="w-3.5 h-3.5 text-violet-400" /> 글꼴 스타일 선호도 (Font Usage)
                 </h3>
                 <div className="space-y-4">
-                  {Object.entries(trendsStats.fontUsage || {}).sort((a,b)=>b[1]-a[1]).map(([font, count]) => (
+                  {Object.entries(trendsStats.fontUsage || {}).sort((a: any, b: any) => b[1] - a[1]).map(([font, count]: any) => (
                     <div key={font} className="space-y-1.5">
                       <div className="flex justify-between text-[10px] font-bold">
                         <span className="text-zinc-300 font-mono">
@@ -1372,12 +1726,12 @@ export default function AdminPage() {
               </div>
 
               {/* Motion Effect Share */}
-              <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-2xl">
+              <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-2xl md:col-span-1">
                 <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Layers className="w-3.5 h-3.5 text-emerald-400" /> 인기 애니메이션 모션 선호도 (Motion Usage)
                 </h3>
                 <div className="space-y-4">
-                  {Object.entries(trendsStats.effectUsage || {}).sort((a,b)=>b[1]-a[1]).map(([effect, count]) => (
+                  {Object.entries(trendsStats.effectUsage || {}).sort((a: any, b: any) => b[1] - a[1]).map(([effect, count]: any) => (
                     <div key={effect} className="space-y-1.5">
                       <div className="flex justify-between text-[10px] font-bold">
                         <span className="text-zinc-300 font-mono">
@@ -1406,13 +1760,13 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Real-time masked custom texts stream feed board */}
+            {/* 4단: Real-time masked custom texts stream feed board */}
             <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-2xl">
               <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Search className="w-3.5 h-3.5 text-zinc-400" /> 실시간 송출 텍스트 피드 (Masked Text Stream)
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {(trendsStats.textSamples || []).map((sample, idx) => (
+                {(trendsStats.textSamples || []).map((sample: any, idx: number) => (
                   <div 
                     key={idx}
                     className="border border-white/5 bg-[#030305]/60 rounded-xl p-3.5 flex flex-col justify-between hover:border-white/10 transition-all"
@@ -1447,7 +1801,6 @@ export default function AdminPage() {
             </div>
           </div>
         )}
-
       </main>
 
       {/* Footer */}
