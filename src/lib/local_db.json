@@ -18,87 +18,6 @@
       "max_participants": 3,
       "created_at": "2026-07-07T16:42:53.541Z"
     },
-    "8ZRH5X": {
-      "id": "8ZRH5X",
-      "host_session_token": "773d441d-a665-473a-87f8-317288f000fb",
-      "email": "test-event@glowwave.com",
-      "tier": "lite",
-      "status": "inactive",
-      "max_participants": 60,
-      "created_at": "2026-07-07T16:43:36.281Z"
-    },
-    "ST8U6C": {
-      "id": "ST8U6C",
-      "host_session_token": "2fb162bd-37cd-4b12-96f2-56546c5b4f23",
-      "email": "test-event@glowwave.com",
-      "tier": "lite",
-      "status": "inactive",
-      "max_participants": 60,
-      "created_at": "2026-07-07T16:44:14.380Z"
-    },
-    "B4G5NE": {
-      "id": "B4G5NE",
-      "host_session_token": "95704079-ce1a-4ba3-8ce4-c5f152c76b6e",
-      "email": "test-event@glowwave.com",
-      "tier": "lite",
-      "status": "inactive",
-      "max_participants": 60,
-      "created_at": "2026-07-07T16:44:40.185Z"
-    },
-    "G597P7": {
-      "id": "G597P7",
-      "host_session_token": "827afdda-1e52-46ad-84b4-74d86ea07e36",
-      "email": "test-event@glowwave.com",
-      "tier": "lite",
-      "status": "inactive",
-      "max_participants": 60,
-      "created_at": "2026-07-07T16:45:12.315Z"
-    },
-    "701N5J": {
-      "id": "701N5J",
-      "host_session_token": "0f898a6e-d235-47fa-bd58-9c87963e40a9",
-      "email": "test-event@glowwave.com",
-      "tier": "lite",
-      "status": "inactive",
-      "max_participants": 60,
-      "created_at": "2026-07-07T16:45:43.593Z"
-    },
-    "430IQE": {
-      "id": "430IQE",
-      "host_session_token": "6c9dc0e0-d33d-4d06-8a9c-371b465e766b",
-      "email": "test-event@glowwave.com",
-      "tier": "lite",
-      "status": "inactive",
-      "max_participants": 60,
-      "created_at": "2026-07-07T16:48:13.234Z"
-    },
-    "PI8QHW": {
-      "id": "PI8QHW",
-      "host_session_token": "0ac052e1-61a0-4f5e-820b-93874dd7bd25",
-      "email": "test-event@glowwave.com",
-      "tier": "lite",
-      "status": "inactive",
-      "max_participants": 60,
-      "created_at": "2026-07-07T16:48:53.112Z"
-    },
-    "9XCZIN": {
-      "id": "9XCZIN",
-      "host_session_token": "3ba6a3ab-ddc9-4694-85f3-d094020eead6",
-      "email": "test-event@glowwave.com",
-      "tier": "lite",
-      "status": "inactive",
-      "max_participants": 60,
-      "created_at": "2026-07-07T16:49:45.665Z"
-    },
-    "QH9T3F": {
-      "id": "QH9T3F",
-      "host_session_token": "412fd6e3-7b15-4dba-9908-35dbe5818542",
-      "email": "test-event@glowwave.com",
-      "tier": "lite",
-      "status": "inactive",
-      "max_participants": 60,
-      "created_at": "2026-07-07T16:51:15.248Z"
-    },
     "NVUK3G": {
       "id": "NVUK3G",
       "host_session_token": "372e63d3-8504-46e6-a0ea-c2f510bbce1d",
@@ -128,15 +47,6 @@
       "created_at": "2026-07-08T00:58:48.525Z",
       "passcode": "888df25ae35772424a560c7152a1de794440e0ea5cfee62828333a456a506e05"
     },
-    "59L26H": {
-      "id": "59L26H",
-      "host_session_token": "72b65981-aaf0-4faf-808e-29dc6a5f6e97",
-      "email": "anonymous-local@glowwave.app",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 1,
-      "created_at": "2026-07-08T15:31:21.721Z"
-    },
     "C1BKUU": {
       "id": "C1BKUU",
       "host_session_token": "77365a39-c8a5-4f23-8152-7a6d143bee38",
@@ -147,6 +57,66 @@
       "current_participants": 0,
       "created_at": "2026-07-08T15:53:11.733Z",
       "passcode": "888df25ae35772424a560c7152a1de794440e0ea5cfee62828333a456a506e05"
+    },
+    "T5X87F": {
+      "id": "T5X87F",
+      "host_session_token": "b25f6478-ba47-4e8a-b6eb-e426ad348ef0",
+      "email": "test@example.com",
+      "tier": "store",
+      "status": "active",
+      "max_participants": 3,
+      "current_participants": 0,
+      "created_at": "2026-07-14T04:13:05.536Z"
+    },
+    "53X2CE": {
+      "id": "53X2CE",
+      "host_session_token": "7729458e-4bf2-4bef-a194-f0713ff3ac8f",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 1,
+      "current_participants": 0,
+      "created_at": "2026-07-14T04:16:06.174Z"
+    },
+    "70P1JG": {
+      "id": "70P1JG",
+      "host_session_token": "58a985ac-8bed-41e1-bd11-329e8407cb89",
+      "email": "free@example.com",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 1,
+      "current_participants": 0,
+      "created_at": "2026-07-14T04:17:03.017Z"
+    },
+    "RCM9WA": {
+      "id": "RCM9WA",
+      "host_session_token": "63f10be0-7d4b-43a8-b625-bb2c9a2e4399",
+      "email": "free@example.com",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 1,
+      "current_participants": 0,
+      "created_at": "2026-07-14T04:18:19.566Z"
+    },
+    "B8E20H": {
+      "id": "B8E20H",
+      "host_session_token": "7a18181c-7f78-48a5-95c5-927c82f45fa7",
+      "email": "free@example.com",
+      "tier": "lite",
+      "status": "inactive",
+      "max_participants": 60,
+      "current_participants": 0,
+      "created_at": "2026-07-14T04:19:45.460Z"
+    },
+    "5BYKZD": {
+      "id": "5BYKZD",
+      "host_session_token": "7a3e6edc-e450-4225-8574-6827507d2f0c",
+      "email": "free@example.com",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 1,
+      "current_participants": 0,
+      "created_at": "2026-07-14T04:20:30.894Z"
     }
   },
   "payments": [
@@ -319,6 +289,26 @@
       "amount": 4900,
       "payment_status": "completed",
       "created_at": "2026-07-08T15:53:11.734Z"
+    },
+    {
+      "id": "6493ab51-bad9-4394-aa11-662fd2a9d4d4",
+      "email": "test@example.com",
+      "host_session_token": "b25f6478-ba47-4e8a-b6eb-e426ad348ef0",
+      "room_id": "T5X87F",
+      "tier": "store",
+      "amount": 4900,
+      "payment_status": "completed",
+      "created_at": "2026-07-14T04:13:05.537Z"
+    },
+    {
+      "id": "21ecf833-38e7-450a-9e44-75a61d269f6a",
+      "email": "free@example.com",
+      "host_session_token": "7a18181c-7f78-48a5-95c5-927c82f45fa7",
+      "room_id": "B8E20H",
+      "tier": "lite",
+      "amount": 5000,
+      "payment_status": "pending",
+      "created_at": "2026-07-14T04:19:45.462Z"
     }
   ],
   "currentStates": {
@@ -344,69 +334,6 @@
       "font_family": "sans-thin",
       "font_size": 100,
       "trigger_id": "1783442492304"
-    },
-    "8ZRH5X": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
-    },
-    "ST8U6C": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
-    },
-    "B4G5NE": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
-    },
-    "G597P7": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
-    },
-    "701N5J": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
-    },
-    "430IQE": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
-    },
-    "PI8QHW": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
-    },
-    "9XCZIN": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
-    },
-    "QH9T3F": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
     },
     "NVUK3G": {
       "bg_color": "#FFFFFF",
@@ -440,16 +367,6 @@
       "font_size": 100,
       "trigger_id": "1783473226379"
     },
-    "59L26H": {
-      "bg_color": "#3B82F6",
-      "text": "부드러운 깜빡이",
-      "text_color": "#FFFFFF",
-      "effect": "blink",
-      "speed": 1000,
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "trigger_id": "1783473226379"
-    },
     "C1BKUU": {
       "bg_color": "#0B0B0F",
       "text": "단색",
@@ -459,6 +376,61 @@
       "font_family": "sans-thin",
       "font_size": 100,
       "trigger_id": "1783526141835"
+    },
+    "T5X87F": {
+      "bg_color": "#0B0B0F",
+      "text": "단색",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thin",
+      "font_size": 100,
+      "trigger_id": "1783526141835"
+    },
+    "53X2CE": {
+      "bg_color": "#0B0B0F",
+      "text": "단색",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thin",
+      "font_size": 100,
+      "trigger_id": "1783526141835"
+    },
+    "70P1JG": {
+      "bg_color": "#0B0B0F",
+      "text": "단색",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thin",
+      "font_size": 100,
+      "trigger_id": "1783526141835"
+    },
+    "RCM9WA": {
+      "bg_color": "#0B0B0F",
+      "text": "GlowWave",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000
+    },
+    "B8E20H": {
+      "bg_color": "#0B0B0F",
+      "text": "GlowWave",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000
+    },
+    "5BYKZD": {
+      "bg_color": "#0B0B0F",
+      "text": "단색",
+      "text_color": "#FFFFFF",
+      "effect": "none",
+      "speed": 1000,
+      "font_family": "sans-thin",
+      "font_size": 100,
+      "locale": "ko",
+      "trigger_id": "1784003048236"
     }
   }
 }

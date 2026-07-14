@@ -522,9 +522,20 @@ export const localDb = {
       // 2. Calculate new created_at timestamp to add duration
       const now = Date.now();
       const currentCreatedTime = new Date(room.created_at).getTime();
-      const currentExpirationTime = currentCreatedTime + 24 * 60 * 60 * 1000;
+      
+      // Determine the base duration of the current room's tier
+      let tierDurationMs = 24 * 60 * 60 * 1000; // default 24 hours
+      if (room.tier === 'free') {
+        tierDurationMs = 6 * 60 * 60 * 1000;
+      } else if (room.tier === 'store') {
+        tierDurationMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+      } else if (room.tier === 'store_annual') {
+        tierDurationMs = 365 * 24 * 60 * 60 * 1000; // 365 days
+      }
+
+      const currentExpirationTime = currentCreatedTime + tierDurationMs;
       const newExpirationTime = Math.max(now, currentExpirationTime) + extraHours * 60 * 60 * 1000;
-      const newCreatedAtISO = new Date(newExpirationTime - 24 * 60 * 60 * 1000).toISOString();
+      const newCreatedAtISO = new Date(newExpirationTime - tierDurationMs).toISOString();
 
       // 3. Update room's created_at field
       const { error: updateErr } = await supabase
@@ -557,9 +568,20 @@ export const localDb = {
         // Calculate new created_at timestamp to add duration
         const now = Date.now();
         const currentCreatedTime = new Date(room.created_at).getTime();
-        const currentExpirationTime = currentCreatedTime + 24 * 60 * 60 * 1000;
+        
+        // Determine the base duration of the current room's tier
+        let tierDurationMs = 24 * 60 * 60 * 1000; // default 24 hours
+        if (room.tier === 'free') {
+          tierDurationMs = 6 * 60 * 60 * 1000;
+        } else if (room.tier === 'store') {
+          tierDurationMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+        } else if (room.tier === 'store_annual') {
+          tierDurationMs = 365 * 24 * 60 * 60 * 1000; // 365 days
+        }
+
+        const currentExpirationTime = currentCreatedTime + tierDurationMs;
         const newExpirationTime = Math.max(now, currentExpirationTime) + extraHours * 60 * 60 * 1000;
-        const newCreatedAtISO = new Date(newExpirationTime - 24 * 60 * 60 * 1000).toISOString();
+        const newCreatedAtISO = new Date(newExpirationTime - tierDurationMs).toISOString();
 
         room.created_at = newCreatedAtISO;
         this.saveToDisk();

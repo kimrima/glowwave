@@ -19,6 +19,10 @@ export default function HostSetup() {
   const defaultPresets = getDefaultsByLocale(activeLocale);
 
   const [selectedTier, setSelectedTier] = useState<TierType>('free');
+  const [customAlert, setCustomAlert] = useState<{ isOpen: boolean; message: string; title?: string } | null>(null);
+  const showAlert = (message: string, title?: string) => {
+    setCustomAlert({ isOpen: true, message, title });
+  };
   const [planType, setPlanType] = useState<'event' | 'store'>('event');
   const [hostEmail, setHostEmail] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -271,7 +275,7 @@ export default function HostSetup() {
         'zh-TW': '建立房間時發生錯誤。',
         'zh-HK': '建立房間時發生錯誤。'
       }[activeLocale] || '방 생성 중 오류가 발생했습니다.';
-      alert(err.message || roomCreateErr);
+      showAlert(err.message || roomCreateErr);
       setIsProcessing(false);
     }
   };
@@ -381,7 +385,7 @@ export default function HostSetup() {
         'zh-TW': '付款處理時發生錯誤。',
         'zh-HK': '付款處理時發生錯誤。'
       }[activeLocale] || '결제 처리 중 오류가 발생했습니다.';
-      alert(err.message || paymentErr);
+      showAlert(err.message || paymentErr);
       setIsProcessing(false);
     }
   };

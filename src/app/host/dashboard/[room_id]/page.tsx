@@ -171,8 +171,17 @@ export default function HostDashboard() {
 
   // Time Extension Modal States
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
+  const [customAlert, setCustomAlert] = useState<{ isOpen: boolean; message: string; title?: string } | null>(null);
+  const [customConfirm, setCustomConfirm] = useState<{ isOpen: boolean; message: string; title?: string; onConfirm: () => void } | null>(null);
+  const showAlert = (message: string, title?: string) => {
+    setCustomAlert({ isOpen: true, message, title });
+  };
+  const showConfirm = (message: string, onConfirm: () => void, title?: string) => {
+    setCustomConfirm({ isOpen: true, message, onConfirm, title });
+  };
   const [extendStep, setExtendStep] = useState<'info' | 'payment' | 'success'>('info');
   const [isExtending, setIsExtending] = useState(false);
+  const [selectedExtendHours, setSelectedExtendHours] = useState<number>(24);
 
   // Passcode Settings States
   const [isPasscodeDrawerOpen, setIsPasscodeDrawerOpen] = useState(false);
@@ -914,7 +923,8 @@ export default function HostDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           room_id: roomId,
-          host_session_token: token
+          host_session_token: token,
+          extra_hours: selectedExtendHours
         })
       });
 
@@ -941,7 +951,7 @@ export default function HostDashboard() {
         'zh-TW': '錯誤',
         'zh-HK': '錯誤',
       }[activeLocale] || '오류';
-      alert(`${errPrefix}: ${err.message}`);
+      showAlert(`${errPrefix}: ${err.message}`);
     } finally {
       setIsExtending(false);
     }
@@ -993,7 +1003,7 @@ export default function HostDashboard() {
         'zh-TW': '錯誤',
         'zh-HK': '錯誤',
       }[activeLocale] || '오류';
-      alert(`${errPrefix}: ${err.message}`);
+      showAlert(`${errPrefix}: ${err.message}`);
     } finally {
       setIsUpgrading(false);
     }
@@ -1110,7 +1120,7 @@ export default function HostDashboard() {
       'zh-TW': '目前設定已新增至我的預設！',
       'zh-HK': '目前設定已新增至我的預設！'
     }[activeLocale] || '현재 즉석 라이브 설정이 내 프리셋에 추가되었습니다!';
-    alert(successMsg);
+    showAlert(successMsg);
   };
 
   // Slots Vault Handlers for Host
@@ -1145,7 +1155,7 @@ export default function HostDashboard() {
           'zh-TW': '免費方案房間最多只能有 6 個預設卡片。已僅載入前 6 個預設卡片。',
           'zh-HK': '免費方案房間最多只能有 6 個預設卡片。已僅載入前 6 個預設卡片。',
         }[activeLocale] || '무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 슬롯에서 상위 6개 프리셋만 불러왔습니다.';
-        alert(freeLimitAlert);
+        showAlert(freeLimitAlert);
         presetsToLoad = presetsToLoad.slice(0, 6);
       }
       setPresets(presetsToLoad);
@@ -1196,7 +1206,7 @@ export default function HostDashboard() {
         supabase.from('rooms').update({ current_state: loadedPresets[0] }).eq('id', roomId);
       }
       
-      alert(t('reset_success', activeLocale));
+      showAlert(t('reset_success', activeLocale));
       setIsVaultOpen(false);
     }
   };
@@ -1272,7 +1282,7 @@ export default function HostDashboard() {
         'zh-TW': '生成分享密碼失敗。',
         'zh-HK': '生成分享密碼失敗。',
       }[activeLocale] || '공유 코드 생성에 실패했습니다.';
-      alert(shareGenFailMsg);
+      showAlert(shareGenFailMsg);
     } finally {
       setIsSharingLoading(false);
     }
@@ -1289,7 +1299,7 @@ export default function HostDashboard() {
         'zh-TW': '請輸入有效的 6 位數分享密碼。',
         'zh-HK': '請輸入有效的 6 位數分享密碼。',
       }[activeLocale] || '올바른 6자리 공유 코드를 입력하세요.';
-      alert(invalidCodeMsg);
+      showAlert(invalidCodeMsg);
       return;
     }
 
@@ -1313,7 +1323,7 @@ export default function HostDashboard() {
             'zh-TW': '免費方案房間最多只能有 6 個預設卡片。已僅載入共享包中前 6 個預設卡片。',
             'zh-HK': '免費方案房間最多只能有 6 個預設卡片。已僅載入共享包中前 6 個預設卡片。',
           }[activeLocale] || '무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 공유받은 팩에서 상위 6개 프리셋만 가져왔습니다.';
-          alert(freeLimitShareMsg);
+          showAlert(freeLimitShareMsg);
           presetsToImport = presetsToImport.slice(0, 6);
         }
         
@@ -1333,7 +1343,7 @@ export default function HostDashboard() {
           'zh-TW': '已成功同步共享的預設卡片！🎉',
           'zh-HK': '已成功同步共享的預設卡片！🎉',
         }[activeLocale] || '공유받은 프리셋을 정상적으로 동기화했습니다! 🎉';
-        alert(syncSuccessMsg);
+        showAlert(syncSuccessMsg);
       } else {
         throw new Error('올바르지 않은 프리셋 형식입니다.');
       }
@@ -1347,7 +1357,7 @@ export default function HostDashboard() {
         'zh-TW': '載入失敗。請檢查密碼是否已過期。',
         'zh-HK': '載入失敗。請檢查密碼是否已過期。',
       }[activeLocale] || '가져오기에 실패했습니다. 만료된 코드인지 확인해 보세요.';
-      alert(e.message || importFailFallback);
+      showAlert(e.message || importFailFallback);
     } finally {
       setIsSharingLoading(false);
     }
@@ -1384,7 +1394,7 @@ export default function HostDashboard() {
         'zh-TW': '需要相機存取權限。請在瀏覽器設定中允許使用相機。',
         'zh-HK': '需要相機存取權限。請在瀏覽器設定中允許使用相機。',
       }[activeLocale] || '카메라 접근 권한이 필요합니다. 브라우저 설정에서 카메라 권한을 허용해 주세요.';
-      alert(camPermissionMsg);
+      showAlert(camPermissionMsg);
       setIsScanning(false);
     }
   };
@@ -1459,7 +1469,7 @@ export default function HostDashboard() {
                   'zh-TW': '免費方案房間最多只能有 6 個預設卡片。已僅載入共享包中前 6 個預設卡片。',
                   'zh-HK': '免費方案房間最多只能有 6 個預設卡片。已僅載入共享包中前 6 個預設卡片。',
                 }[activeLocale] || '무료 요금제 방은 최대 6개의 프리셋만 가질 수 있습니다. 공유받은 팩에서 상위 6개 프리셋만 가져왔습니다.';
-                alert(freeLimitShareMsg);
+                showAlert(freeLimitShareMsg);
                 presetsToImport = presetsToImport.slice(0, 6);
               }
               setPresets(presetsToImport);
@@ -1477,7 +1487,7 @@ export default function HostDashboard() {
                 'zh-TW': '已成功同步共享的預設卡片！🎉',
                 'zh-HK': '已成功同步共享的預設卡片！🎉',
               }[activeLocale] || '공유받은 프리셋을 정상적으로 동기화했습니다! 🎉';
-              alert(syncSuccessMsg);
+              showAlert(syncSuccessMsg);
             }
           })
           .catch(err => {
@@ -1490,7 +1500,7 @@ export default function HostDashboard() {
               'zh-TW': '載入失敗。密碼可能已過期或發生網路錯誤。',
               'zh-HK': '載入失敗。密碼可能已過期或發生網路錯誤。',
             }[activeLocale] || '가져오기에 실패했습니다. 만료된 코드이거나 네트워크 오류입니다.';
-            alert(qrImportFailMsg);
+            showAlert(qrImportFailMsg);
           })
           .finally(() => {
             setIsSharingLoading(false);
@@ -1593,7 +1603,7 @@ export default function HostDashboard() {
           'zh-TW': '傳送錯誤',
           'zh-HK': '傳送錯誤',
         }[activeLocale] || '전송 오류';
-        alert(`${txErrorPrefix}: ${err.message}`);
+        showAlert(`${txErrorPrefix}: ${err.message}`);
       }
     }
   };
@@ -5110,40 +5120,90 @@ export default function HostDashboard() {
               </div>
 
               {/* Content Switcher */}
-              {extendStep === 'info' && (
-                <div className="flex flex-col gap-5 text-left">
-                  <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl">
-                    <span className="font-extrabold text-indigo-300 block mb-1">{noticeTitle}</span>
-                    {extendInfoDesc}
-                  </div>
-                  
-                  <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-2.5 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">{currentPlanLabel}</span>
-                      <span className="text-white font-extrabold uppercase">{room.tier} Plan</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-zinc-500">{currentExpiryLabel}</span>
-                      <span className="text-zinc-300 font-mono">
-                        {new Date(new Date(room.created_at).getTime() + 24 * 60 * 60 * 1000).toLocaleString(activeLocale === 'zh-TW' ? 'zh-TW' : (activeLocale === 'zh-HK' ? 'zh-HK' : activeLocale))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between border-t border-white/5 pt-2">
-                      <span className="text-indigo-400 font-bold">{extendedExpiryLabel}</span>
-                      <span className="text-indigo-300 font-mono font-bold">
-                        {new Date(Math.max(Date.now(), new Date(room.created_at).getTime() + 24 * 60 * 60 * 1000) + 24 * 60 * 60 * 1000).toLocaleString(activeLocale === 'zh-TW' ? 'zh-TW' : (activeLocale === 'zh-HK' ? 'zh-HK' : activeLocale))}
-                      </span>
-                    </div>
-                  </div>
+              {extendStep === 'info' && (() => {
+                let tierDurationMs = 24 * 60 * 60 * 1000;
+                if (room.tier === 'free') {
+                  tierDurationMs = 6 * 60 * 60 * 1000;
+                } else if (room.tier === 'store') {
+                  tierDurationMs = 30 * 24 * 60 * 60 * 1000;
+                } else if (room.tier === 'store_annual') {
+                  tierDurationMs = 365 * 24 * 60 * 60 * 1000;
+                }
+                const isStoreTier = room.tier === 'store' || room.tier === 'store_annual';
 
-                  <button
-                    onClick={() => setExtendStep('payment')}
-                    className="w-full py-4 rounded-2xl bg-white text-black hover:bg-zinc-200 font-extrabold text-sm transition-all duration-200 cursor-pointer shadow-lg shadow-white/5"
-                  >
-                    {proceedToPaymentLabel}
-                  </button>
-                </div>
-              )}
+                return (
+                  <div className="flex flex-col gap-5 text-left">
+                    <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed bg-indigo-500/10 border border-indigo-500/20 p-4 rounded-2xl">
+                      <span className="font-extrabold text-indigo-300 block mb-1">{noticeTitle}</span>
+                      {extendInfoDesc}
+                    </div>
+
+                    {isStoreTier && (
+                      <div className="flex flex-col gap-2 bg-black/40 border border-white/5 p-3 rounded-2xl">
+                        <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block mb-1">
+                          {activeLocale === 'ko' ? '연장 플랜 선택' : 'Select Extension Duration'}
+                        </span>
+                        <div className="flex gap-2 p-1 rounded-xl bg-black/30 border border-white/5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedExtendHours(720)}
+                            className={`flex-1 py-2 text-center rounded-lg text-xs font-bold transition-all cursor-pointer select-none ${
+                              selectedExtendHours === 720
+                                ? 'bg-white text-black shadow font-black'
+                                : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                            }`}
+                          >
+                            {activeLocale === 'ko' ? '30일 연장 (월간)' : '30-Day (Monthly)'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedExtendHours(8760)}
+                            className={`flex-1 py-2 text-center rounded-lg text-xs font-bold transition-all cursor-pointer select-none ${
+                              selectedExtendHours === 8760
+                                ? 'bg-white text-black shadow font-black'
+                                : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                            }`}
+                          >
+                            {activeLocale === 'ko' ? '365일 연장 (연간)' : '365-Day (Annual)'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex flex-col gap-2.5 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-zinc-500">{currentPlanLabel}</span>
+                        <span className="text-white font-extrabold uppercase">
+                          {
+                            room.tier === 'store' ? (activeLocale === 'ko' ? '매장 월간 플랜' : 'STORE MONTHLY') :
+                            room.tier === 'store_annual' ? (activeLocale === 'ko' ? '매장 연간 플랜' : 'STORE ANNUAL') :
+                            `${room.tier.toUpperCase()} Plan`
+                          }
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-zinc-500">{currentExpiryLabel}</span>
+                        <span className="text-zinc-300 font-mono">
+                          {new Date(new Date(room.created_at).getTime() + tierDurationMs).toLocaleString(activeLocale === 'zh-TW' ? 'zh-TW' : (activeLocale === 'zh-HK' ? 'zh-HK' : activeLocale))}
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t border-white/5 pt-2">
+                        <span className="text-indigo-400 font-bold">{extendedExpiryLabel}</span>
+                        <span className="text-indigo-300 font-mono font-bold">
+                          {new Date(Math.max(Date.now(), new Date(room.created_at).getTime() + tierDurationMs) + selectedExtendHours * 60 * 60 * 1000).toLocaleString(activeLocale === 'zh-TW' ? 'zh-TW' : (activeLocale === 'zh-HK' ? 'zh-HK' : activeLocale))}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setExtendStep('payment')}
+                      className="w-full py-4 rounded-2xl bg-white text-black hover:bg-zinc-200 font-extrabold text-sm transition-all duration-200 cursor-pointer shadow-lg shadow-white/5"
+                    >
+                      {proceedToPaymentLabel}
+                    </button>
+                  </div>
+                );
+              })()}
 
               {extendStep === 'payment' && (() => {
                 const extendPayDesc = {
@@ -5173,14 +5233,27 @@ export default function HostDashboard() {
                   'zh-HK': '購買項目',
                 }[activeLocale] || '결제 대상 상품';
 
+                const isStoreTier = room.tier === 'store' || room.tier === 'store_annual';
                 const productVal = {
-                  ko: '24시간 시간 연장 이용권',
-                  en: '24-Hour Session Extension Pass',
-                  ja: '24時間ルーム延長チケット',
-                  es: 'Pase de Extensión de 24 Horas',
-                  'zh-TW': '24 小時延長使用券',
-                  'zh-HK': '24 小時延長使用券',
-                }[activeLocale] || '24시간 시간 연장 이용권';
+                  ko: isStoreTier 
+                    ? (selectedExtendHours === 8760 ? '매장 전용 365일(1년) 시간 연장 이용권' : '매장 전용 30일(1달) 시간 연장 이용권')
+                    : '24시간 시간 연장 이용권',
+                  en: isStoreTier
+                    ? (selectedExtendHours === 8760 ? 'Store 365-Day Session Extension Pass' : 'Store 30-Day Session Extension Pass')
+                    : '24-Hour Session Extension Pass',
+                  ja: isStoreTier
+                    ? (selectedExtendHours === 8760 ? '店舗365일룸延長チケット' : '店舗30일룸延長チケット')
+                    : '24시간룸연장티켓',
+                  es: isStoreTier
+                    ? (selectedExtendHours === 8760 ? 'Pase de Extensión de 365 Días' : 'Pase de Extensión de 30 Días')
+                    : 'Pase de Extensión de 24 Horas',
+                  'zh-TW': isStoreTier
+                    ? (selectedExtendHours === 8760 ? '商戶 365 天延長使用券' : '商戶 30 天延長使用券')
+                    : '24 小時延長使用券',
+                  'zh-HK': isStoreTier
+                    ? (selectedExtendHours === 8760 ? '商戶 365 天延長使用券' : '商戶 30 天延長使用券')
+                    : '24 小時延長使用券',
+                }[activeLocale] || '시간 연장 이용권';
 
                 const originalPriceLabel = {
                   ko: '정가',

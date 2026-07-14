@@ -25,6 +25,7 @@ import { LOCALIZED_TEMPLATES, getDefaultsByLocale } from '@/lib/templates';
 import { t, Locale, getLocalizedFonts } from '@/lib/translations';
 import useFitText from '@/hooks/useFitText';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { CustomAlertModal, CustomConfirmModal } from '@/components/CustomModal';
 
 const LOCAL_SYNC_TRANSLATIONS: Record<Locale, {
   start_sync: string;
@@ -306,6 +307,14 @@ function LocalSignboardContent() {
 
   // Real-time mobile sync state
   const [syncRoomId, setSyncRoomId] = useState<string>('');
+  const [customAlert, setCustomAlert] = useState<{ isOpen: boolean; message: string; title?: string } | null>(null);
+  const [customConfirm, setCustomConfirm] = useState<{ isOpen: boolean; message: string; title?: string; onConfirm: () => void } | null>(null);
+  const showAlert = (message: string, title?: string) => {
+    setCustomAlert({ isOpen: true, message, title });
+  };
+  const showConfirm = (message: string, onConfirm: () => void, title?: string) => {
+    setCustomConfirm({ isOpen: true, message, onConfirm, title });
+  };
   const [syncHostToken, setSyncHostToken] = useState<string>('');
   const [isSyncCreating, setIsSyncCreating] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
@@ -487,7 +496,7 @@ function LocalSignboardContent() {
       }
     } catch (err) {
       console.error('Camera access error:', err);
-      alert(
+      showAlert(
         {
           ko: '카메라 접근 권한이 필요합니다. 브라우저 설정에서 카메라 권한을 허용해 주세요.',
           en: 'Camera access is required. Please allow camera permissions in your browser settings.',
@@ -953,7 +962,7 @@ function LocalSignboardContent() {
       localStorage.setItem('glowwave_local_presets', JSON.stringify(defaultList));
       localStorage.setItem('glowwave_local_active_preset', JSON.stringify(defaultList[0]));
       localStorage.setItem('glowwave_local_slots', JSON.stringify([]));
-      alert(t('reset_success', activeLocale));
+      showAlert(t('reset_success', activeLocale));
       setIsVaultOpen(false);
     }
   };
@@ -1024,7 +1033,7 @@ function LocalSignboardContent() {
         })
       });
     } catch (err: any) {
-      alert(
+      showAlert(
         activeLocale === 'ko' 
           ? `실시간 연동 시작 실패: ${err.message}` 
           : `Failed to start real-time sync: ${err.message}`
@@ -1136,7 +1145,7 @@ function LocalSignboardContent() {
     setSyncRecoveryEmail('');
     setSyncRecoveryMessage('');
 
-    alert(
+    showAlert(
       activeLocale === 'ko'
         ? '성공적으로 전광판이 복구 및 동기화되었습니다! 🎉'
         : 'Room successfully recovered and synced! 🎉'
@@ -1299,7 +1308,7 @@ function LocalSignboardContent() {
       setShareQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`);
     } catch (e) {
       console.error(e);
-      alert(
+      showAlert(
         {
           ko: '공유 코드 생성에 실패했습니다.',
           en: 'Failed to generate share code.',
@@ -1317,7 +1326,7 @@ function LocalSignboardContent() {
   const handleImportShareCode = async () => {
     const code = shareCodeInput.trim().toUpperCase();
     if (!code || code.length !== 6) {
-      alert(
+      showAlert(
         {
           ko: '올바른 6자리 공유 코드를 입력하세요.',
           en: 'Please enter a valid 6-digit share code.',
@@ -1358,7 +1367,7 @@ function LocalSignboardContent() {
         
         setIsVaultOpen(false);
         setShareCodeInput('');
-        alert(
+        showAlert(
           {
             ko: '공유받은 프리셋을 정상적으로 동기화했습니다! 🎉',
             en: 'Shared presets successfully synchronized! 🎉',
@@ -1382,7 +1391,7 @@ function LocalSignboardContent() {
       }
     } catch (e: any) {
       console.error(e);
-      alert(
+      showAlert(
         {
           ko: e.message || '가져오기에 실패했습니다. 만료된 코드인지 확인해 보세요.',
           en: e.message || 'Import failed. Please check if the code has expired.',
@@ -2505,7 +2514,7 @@ function LocalSignboardContent() {
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(`${window.location.origin}/room/${syncRoomId}`);
-                        alert(activeLocale === 'ko' ? '링크가 클립보드에 복사되었습니다.' : 'Link copied to clipboard.');
+                        showAlert(activeLocale === 'ko' ? '링크가 클립보드에 복사되었습니다.' : 'Link copied to clipboard.');
                       }}
                       className="px-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-zinc-300 hover:text-white transition-all text-[10px] font-bold shrink-0 cursor-pointer"
                     >
@@ -3632,7 +3641,7 @@ function LocalSignboardContent() {
                             <button
                               onClick={() => {
                                 navigator.clipboard.writeText(`${window.location.origin}/room/${syncRoomId}`);
-                                alert(activeLocale === 'ko' ? '링크가 클립보드에 복사되었습니다.' : 'Link copied to clipboard.');
+                                showAlert(activeLocale === 'ko' ? '링크가 클립보드에 복사되었습니다.' : 'Link copied to clipboard.');
                               }}
                               className="px-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-zinc-300 hover:text-white transition-all text-[10px] font-bold shrink-0 cursor-pointer"
                             >

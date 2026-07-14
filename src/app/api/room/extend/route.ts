@@ -4,9 +4,10 @@ import { localDb } from '@/lib/localDb';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { room_id, host_session_token } = body as {
+    const { room_id, host_session_token, extra_hours } = body as {
       room_id: string;
       host_session_token: string;
+      extra_hours?: number;
     };
 
     if (!room_id || !host_session_token) {
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized host session token' }, { status: 401 });
     }
 
-    const success = await localDb.extendRoom(roomId, 24);
+    const success = await localDb.extendRoom(roomId, extra_hours || 24);
     if (!success) {
       return NextResponse.json({ error: 'Failed to extend room' }, { status: 500 });
     }
