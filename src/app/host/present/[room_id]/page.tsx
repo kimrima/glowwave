@@ -53,6 +53,8 @@ export default function PresentationView() {
   useEffect(() => {
     if (!roomId) return;
 
+    let statusPoller: any = null;
+
     const verifyRoomAndConnect = async () => {
       try {
         const queryToken = new URLSearchParams(window.location.search).get('token');
@@ -75,6 +77,19 @@ export default function PresentationView() {
         // Connect real-time counter
         connectRealtime(roomId);
 
+        // Periodically verify administrative status (lockout)
+        statusPoller = setInterval(async () => {
+          try {
+            const checkRes = await fetch(`/api/room/${roomId}/status?token=${token}`);
+            if (checkRes.ok) {
+              const checkData = await checkRes.json();
+              setRoomStatus(checkData.status || 'active');
+            }
+          } catch (pollErr) {
+            console.warn('[Status Poller] Present check failed:', pollErr);
+          }
+        }, 8000);
+
       } catch (err) {
         console.error('Failed to verify room:', err);
         setIsValidRoom(false);
@@ -85,6 +100,9 @@ export default function PresentationView() {
     verifyRoomAndConnect();
 
     return () => {
+      if (statusPoller) {
+        clearInterval(statusPoller);
+      }
       if (supabaseChannelRef.current && supabase) {
         supabase.removeChannel(supabaseChannelRef.current);
       }

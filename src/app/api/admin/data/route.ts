@@ -125,8 +125,23 @@ export async function GET(request: NextRequest) {
         }
       }
 
+      // Fallback calculation for expires_at if it is missing
+      let roomExpiresAt = room.expires_at;
+      if (!roomExpiresAt) {
+        let durationMs = 24 * 60 * 60 * 1000; // default 24 hours
+        if (room.tier === 'free') {
+          durationMs = 6 * 60 * 60 * 1000;
+        } else if (room.tier === 'store') {
+          durationMs = 30 * 24 * 60 * 60 * 1000; // 30 days
+        } else if (room.tier === 'store_annual') {
+          durationMs = 365 * 24 * 60 * 60 * 1000; // 365 days
+        }
+        roomExpiresAt = new Date(new Date(room.created_at).getTime() + durationMs).toISOString();
+      }
+
       activeRoomsWithStates.push({
         ...room,
+        expires_at: roomExpiresAt,
         active_clients: activeClients,
         current_state: state ? {
           effect: state.effect,

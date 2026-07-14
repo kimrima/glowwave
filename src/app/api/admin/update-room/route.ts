@@ -11,10 +11,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { roomId, tier, status } = body as {
+    const { roomId, tier, status, max_participants } = body as {
       roomId: string;
       tier?: TierType;
       status?: 'active' | 'inactive';
+      max_participants?: number;
     };
 
     if (!roomId) {
@@ -30,14 +31,26 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
       }
       updates.tier = tier;
-      updates.max_participants = TIER_CONFIGS[tier].maxParticipants;
+      
+      // Allow overriding max participants (e.g. Free 15) or default to config
+      const maxParts = max_participants !== undefined ? max_participants : TIER_CONFIGS[tier].maxParticipants;
+      updates.max_participants = maxParts;
+
+      // Auto-recalculate expires_at when administrator changes the tier
+      let durationMs = 24 * 60 * 60 * 1000;
+      if (tier === 'free') durationMs = 6 * 60 * 60 * 1000;
+      else if (tier === 'store') durationMs = 30 * 24 * 60 * 60 * 1000;
+      else if (tier === 'store_annual') durationMs = 365 * 24 * 60 * 60 * 1000;
+      updates.expires_at = new Date(Date.now() + durationMs).toISOString();
 
       // Broadcast update event to active spectator client streams
       localDb.broadcastEvent(roomId, {
         event: 'capacity_updated',
         tier,
-        max_participants: TIER_CONFIGS[tier].maxParticipants,
+        max_participants: maxParts,
       });
+    } else if (max_participants !== undefined) {
+      updates.max_participants = max_participants;
     }
 
     const success = await localDb.updateRoom(roomId, updates);

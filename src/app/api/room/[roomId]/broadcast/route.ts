@@ -22,6 +22,14 @@ export async function POST(
       return NextResponse.json({ error: 'Room not found' }, { status: 404 });
     }
 
+    // Guard against inactive (blocked) signboards
+    if (room.status === 'inactive') {
+      return NextResponse.json(
+        { error: 'This room has been deactivated or blocked by the administrator.' },
+        { status: 403 }
+      );
+    }
+
     // Secure token matching to authenticate host authorization
     if (room.host_session_token !== host_session_token) {
       return NextResponse.json({ error: 'Unauthorized host token' }, { status: 401 });

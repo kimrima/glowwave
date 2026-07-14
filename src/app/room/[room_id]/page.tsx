@@ -787,6 +787,25 @@ export default function AudienceRoom() {
       validateAndConnect();
     }
 
+    // 8-second interval polling for administrative status check (inactive lockout)
+    const statusPoller = setInterval(async () => {
+      if (!roomId) return;
+      try {
+        const response = await fetch(`/api/room/${roomId}/status`);
+        if (response.ok) {
+          const roomData = await response.json();
+          setRoomStatus(roomData.status || 'active');
+          if (roomData.status === 'pending') {
+            setIsRoomInactive(true);
+          } else {
+            setIsRoomInactive(false);
+          }
+        }
+      } catch (err) {
+        console.warn('[Status Poller] Failed check:', err);
+      }
+    }, 8000);
+
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible') {
         await requestWakeLock();
@@ -806,6 +825,7 @@ export default function AudienceRoom() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      clearInterval(statusPoller);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       releaseWakeLock();
       if (eventSourceRef.current) eventSourceRef.current.close();

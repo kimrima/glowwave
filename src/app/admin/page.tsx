@@ -204,17 +204,38 @@ export default function AdminPage() {
   }, [isAuthenticated]);
 
   // Admin Actions
-  const handleUpdateRoom = async (roomId: string, tier?: TierType, status?: 'active' | 'inactive') => {
+  const handleUpdateRoom = async (roomId: string, tier?: TierType, status?: 'active' | 'inactive', maxParticipants?: number) => {
     setActionLoading(`room-update-${roomId}`);
     try {
       const res = await fetch('/api/admin/update-room', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId, tier, status })
+        body: JSON.stringify({ roomId, tier, status, max_participants: maxParticipants })
       });
       if (res.ok) {
-        await fetchData();
-        await fetchAnalytics();
+        // Optimistic local state update to prevent flashing or scrolling jitter
+        setRooms(prevRooms => 
+          prevRooms.map(room => {
+            if (room.id === roomId) {
+              const updatedRoom = { ...room };
+              if (tier !== undefined) {
+                updatedRoom.tier = tier;
+                // Update expires_at locally based on tier changes for countdown calculations
+                let durationMs = 24 * 60 * 60 * 1000;
+                if (tier === 'free') durationMs = 6 * 60 * 60 * 1000;
+                else if (tier === 'store') durationMs = 30 * 24 * 60 * 60 * 1000;
+                else if (tier === 'store_annual') durationMs = 365 * 24 * 60 * 60 * 1000;
+                updatedRoom.expires_at = new Date(Date.now() + durationMs).toISOString();
+              }
+              if (status !== undefined) updatedRoom.status = status;
+              if (maxParticipants !== undefined) updatedRoom.max_participants = maxParticipants;
+              return updatedRoom;
+            }
+            return room;
+          })
+        );
+        // Soft refresh analytics in background without refetching room list
+        fetchAnalytics();
       }
     } catch (err) {
       console.error('Update room error:', err);
@@ -887,13 +908,33 @@ export default function AdminPage() {
                             <select
                               value={room.tier}
                               disabled={isMutating}
-                              onChange={(e) => handleUpdateRoom(room.id, e.target.value as TierType, undefined)}
+                              onChange={(e) => {
+                                const newTier = e.target.value as TierType;
+                                let newMaxParts = room.max_participants;
+                                if (newTier === 'free') newMaxParts = 15;
+                                else if (newTier === 'lite') newMaxParts = 60;
+                                else if (newTier === 'pro') newMaxParts = 250;
+                                else if (newTier === 'max') newMaxParts = 800;
+                                else if (newTier === 'store') newMaxParts = 3;
+                                else if (newTier === 'store_annual') newMaxParts = 3;
+                                
+                                handleUpdateRoom(room.id, newTier, undefined, newMaxParts);
+                              }}
                               className="bg-[#030305] border border-white/10 rounded-lg px-2.5 py-1 text-xs font-bold text-zinc-300 focus:outline-none cursor-pointer focus:border-violet-500"
                             >
-                              <option value="free">Free (15명)</option>
-                              <option value="lite">Lite (60명)</option>
-                              <option value="pro">Pro (250명)</option>
-                              <option value="max">Max (800명)</option>
+                              {(room.tier === 'store' || room.tier === 'store_annual') ? (
+                                <>
+                                  <option value="store">매장용 월간 (3명)</option>
+                                  <option value="store_annual">매장용 연간 (3명)</option>
+                                </>
+                              ) : (
+                                <>
+                                  <option value="free">Free (15명)</option>
+                                  <option value="lite">Lite (60명)</option>
+                                  <option value="pro">Pro (250명)</option>
+                                  <option value="max">Max (800명)</option>
+                                </>
+                              )}
                             </select>
                           </td>
                           <td className="px-6 py-4">

@@ -826,7 +826,29 @@ export default function HostDashboard() {
   useEffect(() => {
     initDashboard();
 
+    // 8-second interval polling for administrative status check (inactive lockout)
+    const statusPoller = setInterval(async () => {
+      if (!roomId || !token) return;
+      try {
+        const response = await fetch(`/api/room/${roomId}/status?token=${token}`);
+        if (response.ok) {
+          const roomData = await response.json();
+          // Update room status in real-time to trigger lockout overlay if inactive
+          setRoom(prev => {
+            if (!prev) return prev;
+            if (prev.status !== roomData.status) {
+              return { ...prev, status: roomData.status };
+            }
+            return prev;
+          });
+        }
+      } catch (err) {
+        console.warn('[Status Poller] Failed check:', err);
+      }
+    }, 8000);
+
     return () => {
+      clearInterval(statusPoller);
       // Cleanup SSE or Supabase
       if (supabaseChannelRef.current && supabase) {
         supabase.removeChannel(supabaseChannelRef.current);
