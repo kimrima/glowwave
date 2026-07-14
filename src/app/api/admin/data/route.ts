@@ -27,10 +27,12 @@ export async function GET(request: NextRequest) {
     // 1. Locale Distribution Stats
     const localeUsage: Record<string, number> = {};
 
-    // 2. Tier Breakdown Stats (Free trial, event, store monthly, store annual)
+    // 2. Tier Breakdown Stats (Free, Lite, Pro, Max, Store, Store Annual)
     const tierCounts = {
       free: 0,
-      event: 0,
+      lite: 0,
+      pro: 0,
+      max: 0,
       store: 0,
       store_annual: 0
     };
@@ -61,6 +63,9 @@ export async function GET(request: NextRequest) {
         // Fallback or mapping
         if (room.tier === 'store') tierCounts.store++;
         else if (room.tier === 'store_annual') tierCounts.store_annual++;
+        else if (room.tier === 'lite') tierCounts.lite++;
+        else if (room.tier === 'pro') tierCounts.pro++;
+        else if (room.tier === 'max') tierCounts.max++;
         else tierCounts.free++;
       }
 

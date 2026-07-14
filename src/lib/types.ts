@@ -203,6 +203,7 @@ export interface Room {
   passcode?: string;
   active_clients?: number;
   locale?: string;
+  expires_at?: string;
 }
 
 export interface Payment {

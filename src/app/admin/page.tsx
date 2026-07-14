@@ -601,7 +601,9 @@ export default function AdminPage() {
                 <div className="space-y-4">
                   {[
                     { key: 'free', label: '무료 일일 체험 (Free Trial)', color: 'bg-zinc-600', text: 'text-zinc-400' },
-                    { key: 'event', label: '다인용 이벤트 플랜 (Event Plan)', color: 'bg-sky-500', text: 'text-sky-400' },
+                    { key: 'lite', label: '다인용 라이트형 (Lite Event)', color: 'bg-cyan-500', text: 'text-cyan-400' },
+                    { key: 'pro', label: '다인용 프로형 (Pro Event)', color: 'bg-sky-500', text: 'text-sky-400' },
+                    { key: 'max', label: '다인용 맥스형 (Max Event)', color: 'bg-blue-600', text: 'text-blue-400' },
                     { key: 'store', label: '매장 월간 플랜 (Store Monthly)', color: 'bg-violet-500', text: 'text-violet-400' },
                     { key: 'store_annual', label: '매장 연간 플랜 (Store Annual)', color: 'bg-emerald-500', text: 'text-emerald-400' }
                   ].map(plan => {
@@ -836,6 +838,7 @@ export default function AdminPage() {
                       <th className="px-6 py-4">방 ID / 생성 일시</th>
                       <th className="px-6 py-4">이메일</th>
                       <th className="px-6 py-4">구독 등급</th>
+                      <th className="px-6 py-4">만료 일시 (남은 시간)</th>
                       <th className="px-6 py-4">참관인</th>
                       <th className="px-6 py-4">송출 상태</th>
                       <th className="px-6 py-4 text-right">제어</th>
@@ -844,6 +847,31 @@ export default function AdminPage() {
                   <tbody className="divide-y divide-white/5">
                     {filteredRooms.map((room) => {
                       const isMutating = actionLoading?.includes(room.id);
+                      
+                      // Calculate countdown for remaining time
+                      const getRemainingTimeText = (expiresAtStr?: string) => {
+                        if (!expiresAtStr) return 'N/A';
+                        const expiresAt = new Date(expiresAtStr);
+                        const now = new Date();
+                        const diffMs = expiresAt.getTime() - now.getTime();
+                        
+                        if (diffMs <= 0) {
+                          return <span className="text-red-500 font-extrabold text-[9px] bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20">만료됨 (Expired)</span>;
+                        }
+                        
+                        const diffMins = Math.floor(diffMs / 1000 / 60);
+                        const diffHours = Math.floor(diffMins / 60);
+                        const diffDays = Math.floor(diffHours / 24);
+                        
+                        if (diffDays > 0) {
+                          return <span className="text-emerald-400 font-bold">{diffDays}일 {diffHours % 24}시간 남음</span>;
+                        } else if (diffHours > 0) {
+                          return <span className="text-sky-400 font-bold">{diffHours}시간 {diffMins % 60}분 남음</span>;
+                        } else {
+                          return <span className="text-amber-500 font-bold animate-pulse">{diffMins}분 남음</span>;
+                        }
+                      };
+
                       return (
                         <tr key={room.id} className="hover:bg-white/[0.02] transition-colors">
                           <td className="px-6 py-4">
@@ -867,6 +895,14 @@ export default function AdminPage() {
                               <option value="pro">Pro (250명)</option>
                               <option value="max">Max (800명)</option>
                             </select>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="font-bold text-zinc-300">
+                              {room.expires_at ? new Date(room.expires_at).toLocaleString() : 'N/A'}
+                            </div>
+                            <div className="text-[10px] mt-1 font-extrabold">
+                              {getRemainingTimeText(room.expires_at)}
+                            </div>
                           </td>
                           <td className="px-6 py-4 font-bold text-zinc-400">
                             {room.active_clients || 0}명 / {room.max_participants}명

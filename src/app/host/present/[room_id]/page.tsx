@@ -15,6 +15,7 @@ export default function PresentationView() {
   const [activeLocale, setActiveLocale] = useState<Locale>('ko');
   const [loading, setLoading] = useState(true);
   const [isValidRoom, setIsValidRoom] = useState<boolean | null>(null);
+  const [roomStatus, setRoomStatus] = useState<string>('active');
   const [activeParticipants, setActiveParticipants] = useState<number>(0);
   const [channelStatus, setChannelStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
   const [originUrl, setOriginUrl] = useState('');
@@ -67,6 +68,7 @@ export default function PresentationView() {
 
         const roomData = await response.json();
         setIsValidRoom(true);
+        setRoomStatus(roomData.status || 'active');
         setPasscode(roomData.passcode || null);
         setLoading(false);
 
@@ -193,6 +195,31 @@ export default function PresentationView() {
 
   const audienceUrl = `${originUrl}/room/${roomId}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(audienceUrl)}`;
+
+  if (roomStatus === 'inactive') {
+    return (
+      <div className="fixed inset-0 z-[9999] bg-[#030305] flex flex-col items-center justify-center p-6 text-center select-none text-white">
+        <div className="absolute top-[10%] left-[-10%] w-[40vw] h-[40vw] bg-red-600/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[20%] right-[-10%] w-[45vw] h-[45vw] bg-amber-600/5 rounded-full blur-[140px] pointer-events-none" />
+        <div className="max-w-md w-full bg-[#0c0c14]/90 border border-red-500/20 backdrop-blur-2xl p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-6 relative z-10 animate-in zoom-in-95 duration-300">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 animate-pulse">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-lg font-black uppercase tracking-wider">송출 차단된 전광판 (Present)</h2>
+            <p className="text-xs text-zinc-400 font-bold font-mono">ROOM ID: {roomId}</p>
+          </div>
+          <div className="p-4 bg-black/40 border border-white/5 rounded-2xl text-[11px] text-zinc-400 font-bold leading-relaxed text-left space-y-2.5">
+            <p>🚨 본 전광판 방은 관리자 통제 정책에 의해 실시간 송출 및 제어가 **일시적으로 차단/정지**되었습니다.</p>
+            <p>만료일이 초과되었거나 비정상 서비스 활동이 감지되었을 수 있습니다. 복구 및 재이용 문의는 아래 이메일로 접수해 주시기 바랍니다.</p>
+          </div>
+          <div className="text-[10px] text-zinc-500 font-black tracking-widest uppercase">
+            SUPPORT EMAIL: support@glowwave.app
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0B0B0F] text-white flex flex-col justify-between p-6 relative overflow-hidden">

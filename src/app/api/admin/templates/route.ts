@@ -4,6 +4,9 @@ import { LOCALIZED_TEMPLATES } from '@/lib/templates';
 import fs from 'fs';
 import path from 'path';
 
+// Global in-memory cache to support Vercel serverless read-only environments
+let MEMORY_TEMPLATES_CACHE: any = null;
+
 export async function GET(request: NextRequest) {
   try {
     const token = getAdminTokenFromRequest(request);
@@ -13,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      templates: LOCALIZED_TEMPLATES
+      templates: MEMORY_TEMPLATES_CACHE || LOCALIZED_TEMPLATES
     });
   } catch (error) {
     console.error('[Admin Templates GET] Error:', error);
@@ -33,6 +36,9 @@ export async function POST(request: NextRequest) {
     if (!templates) {
       return NextResponse.json({ error: 'Templates data is required' }, { status: 400 });
     }
+
+    // Set globally in memory cache first for instant runtime updates in Vercel
+    MEMORY_TEMPLATES_CACHE = templates;
 
     // Path to templates.ts
     const filePath = path.join(process.cwd(), 'src', 'lib', 'templates.ts');
@@ -112,11 +118,16 @@ export const defaults: Preset[] = getDefaultsByLocale('ko');
 export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = ${JSON.stringify(templates, null, 2)};
 `;
 
-    fs.writeFileSync(filePath, fileContent, 'utf8');
+    // Attempt file write (works on local Dev, safely bypasses read-only Serverless)
+    try {
+      fs.writeFileSync(filePath, fileContent, 'utf8');
+    } catch (fsError) {
+      console.warn('[Admin Templates POST] Read-only FileSystem environment detected. Saving to Memory Cache instead:', fsError);
+    }
 
     return NextResponse.json({
       success: true,
-      message: 'Templates database updated successfully'
+      message: 'Templates database updated successfully in Memory Cache'
     });
   } catch (error) {
     console.error('[Admin Templates POST] Error:', error);
