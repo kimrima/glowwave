@@ -683,8 +683,8 @@ function LocalSignboardContent() {
       const savedSyncRoomId = localStorage.getItem('glowwave_local_sync_room_id');
       const savedSyncHostToken = localStorage.getItem('glowwave_local_sync_host_token');
       if (savedSyncRoomId && savedSyncHostToken) {
-        setSyncRoomId(savedSyncRoomId);
-        setSyncHostToken(savedSyncHostToken);
+        router.replace(`/host/dashboard/${savedSyncRoomId}?token=${savedSyncHostToken}`);
+        return;
       }
 
       // Check import search query
