@@ -405,7 +405,10 @@ export const localDb = {
       if (status === 'completed') {
         const { error: roomError } = await supabase
           .from('rooms')
-          .update({ status: 'active' })
+          .update({ 
+            status: 'active',
+            created_at: new Date().toISOString()
+          })
           .eq('id', roomId);
         if (roomError) {
           console.error('[localDb] Supabase update room status error:', roomError);
@@ -422,6 +425,7 @@ export const localDb = {
           const room = this.rooms.get(roomId);
           if (room) {
             room.status = 'active';
+            room.created_at = new Date().toISOString();
           }
         }
         this.saveToDisk();
