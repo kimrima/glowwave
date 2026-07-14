@@ -1676,10 +1676,8 @@ function LocalSignboardContent() {
       {/* Main Grid */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col lg:grid lg:grid-cols-12 lg:items-start gap-8 w-full relative z-10">
         
-        {/* Left Column Wrapper (Templates, Instant Live, Guide) */}
-        <div className="lg:col-span-8 flex flex-col gap-8 w-full min-w-0">
-          {/* Item 1: Templates (원터치 연출 보드) */}
-        <div className="flex flex-col w-full min-w-0">
+        {/* Item 1: Templates (원터치 연출 보드) */}
+        <div className="order-1 lg:col-span-8 flex flex-col w-full min-w-0">
           <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a] border border-white/5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/5">
               <h2 className="text-sm font-bold text-white font-outfit">{t('quick_preset_board', activeLocale)}</h2>
@@ -1843,7 +1841,7 @@ function LocalSignboardContent() {
           </div>
         </div>
           {/* Item 3: 즉석 라이브 메시지 전송 */}
-        <div className="flex flex-col w-full min-w-0">
+        <div className="order-3 lg:col-span-8 flex flex-col w-full min-w-0">
           <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a] border border-white/5">
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
               <h2 className="text-sm font-bold text-white">{t('instant_live_broadcast', activeLocale)}</h2>
@@ -2420,12 +2418,9 @@ function LocalSignboardContent() {
             </div>
           </div>
         </div>
-        </div>
 
-        {/* Right Column Wrapper (LIVE ON AIR Mockup, Sync Control Panel) */}
-        <div className="lg:col-span-4 flex flex-col gap-6 w-full min-w-0 order-first lg:order-none">
-          {/* Item 2: LIVE ON AIR Preview Card */}
-        <div className="flex flex-col w-full min-w-0">
+        {/* Item 2: LIVE ON AIR Preview Card */}
+        <div className="order-2 lg:col-span-4 flex flex-col w-full min-w-0">
           <div className="glass-effect rounded-2xl p-4 sm:p-6 flex flex-col items-center bg-[#12121a] border border-white/5">
             <div className="flex items-center gap-2 mb-2 self-start">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
@@ -2563,7 +2558,6 @@ function LocalSignboardContent() {
               </div>
             </div>
           )}
-        </div>
         </div>
             </main>
 
