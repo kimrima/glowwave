@@ -202,6 +202,7 @@ export interface Room {
   created_at: string;
   passcode?: string;
   active_clients?: number;
+  locale?: string;
 }
 
 export interface Payment {

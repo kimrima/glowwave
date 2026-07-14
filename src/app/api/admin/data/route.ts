@@ -23,8 +23,20 @@ export async function GET(request: NextRequest) {
     const themeCombos: Record<string, number> = {};
     let b2cCount = 0; // Local standalone sync rooms
     let b2bCount = 0; // Multilingual store/event host rooms
-    let luckyDrawCount = 0;
-    let countdownCount = 0;
+
+    // 1. Locale Distribution Stats
+    const localeUsage: Record<string, number> = {};
+
+    // 2. Tier Breakdown Stats (Free trial, event, store monthly, store annual)
+    const tierCounts = {
+      free: 0,
+      event: 0,
+      store: 0,
+      store_annual: 0
+    };
+
+    // 3. User Registry & Retention calculation based on emails
+    const userRoomsMap: Record<string, { rooms: string[]; paidCount: number; lastActive: string }> = {};
 
     for (const room of rooms) {
       const activeClients = localDb.getClientCount(room.id);
@@ -37,6 +49,36 @@ export async function GET(request: NextRequest) {
         b2bCount++;
       }
 
+      // Locale tracking
+      const locale = room.locale || 'ko';
+      localeUsage[locale] = (localeUsage[locale] || 0) + 1;
+
+      // Tier breakdown
+      const tier = room.tier as keyof typeof tierCounts;
+      if (tier in tierCounts) {
+        tierCounts[tier]++;
+      } else {
+        // Fallback or mapping
+        if (room.tier === 'store') tierCounts.store++;
+        else if (room.tier === 'store_annual') tierCounts.store_annual++;
+        else tierCounts.free++;
+      }
+
+      // User email registry mapper (Skip anonymous local sync account)
+      const userEmail = room.email || 'anonymous';
+      if (userEmail !== 'sync-local@glowwave.app') {
+        if (!userRoomsMap[userEmail]) {
+          userRoomsMap[userEmail] = { rooms: [], paidCount: 0, lastActive: room.created_at };
+        }
+        userRoomsMap[userEmail].rooms.push(room.id);
+        if (room.tier !== 'free') {
+          userRoomsMap[userEmail].paidCount++;
+        }
+        if (new Date(room.created_at) > new Date(userRoomsMap[userEmail].lastActive)) {
+          userRoomsMap[userEmail].lastActive = room.created_at;
+        }
+      }
+
       if (state) {
         // Collect font statistics
         const font = state.font_family || 'sans-thin';
@@ -45,12 +87,6 @@ export async function GET(request: NextRequest) {
         // Collect animation effect statistics
         const effect = state.effect || 'none';
         effectUsage[effect] = (effectUsage[effect] || 0) + 1;
-
-        if (effect === 'luckydraw_wait' || effect === 'luckydraw') {
-          luckyDrawCount++;
-        } else if (effect === 'countdown') {
-          countdownCount++;
-        }
 
         // Collect theme color combos
         const bg = state.bg_color || '#000000';
@@ -108,6 +144,18 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
+    // Format User Registry List & calculate retention
+    const userRegistry = Object.entries(userRoomsMap).map(([email, info]) => ({
+      email,
+      room_count: info.rooms.length,
+      paid_count: info.paidCount,
+      last_active: info.lastActive
+    })).sort((a, b) => b.room_count - a.room_count);
+
+    const totalUsers = userRegistry.length;
+    const retainedUsers = userRegistry.filter(u => u.room_count >= 2 || u.paid_count > 0).length;
+    const userRetentionRate = totalUsers > 0 ? Math.round((retainedUsers / totalUsers) * 100) : 0;
+
     return NextResponse.json({
       success: true,
       rooms: activeRoomsWithStates,
@@ -123,11 +171,14 @@ export async function GET(request: NextRequest) {
           total: rooms.length
         },
         visualThemes: topThemeCombos,
-        featuresAdoption: {
-          luckyDrawCount,
-          countdownCount,
-          totalActiveStates: Object.keys(themeCombos).length
-        }
+        localeUsage,
+        tierCounts,
+        retention: {
+          totalUsers,
+          retainedUsers,
+          retentionRate: userRetentionRate
+        },
+        userRegistry: userRegistry.slice(0, 100) // Top 100 active users list
       }
     });
   } catch (error) {
@@ -135,5 +186,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
+
 
 

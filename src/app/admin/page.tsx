@@ -593,27 +593,26 @@ export default function AdminPage() {
             {/* Visual Analytics Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
-              {/* Product Plan Distribution */}
+              {/* Product Plan Distribution (Free trial, event, monthly, annual) */}
               <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl">
                 <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-5 flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-violet-400" /> 등급별 전광판 분포 (총 {analytics.conversions.totalRooms}개)
+                  <Layers className="w-3.5 h-3.5 text-violet-400" /> 등급별 전광판 분포 (실물 집계)
                 </h3>
                 <div className="space-y-4">
                   {[
-                    { key: 'free', label: '무료 플랜 (Free)', color: 'bg-zinc-600', text: 'text-zinc-400' },
-                    { key: 'lite', label: '기본형 (Lite)', color: 'bg-sky-500', text: 'text-sky-400' },
-                    { key: 'pro', label: '프리미엄 (Pro)', color: 'bg-violet-500', text: 'text-violet-400' },
-                    { key: 'max', label: '맥스형 (Max)', color: 'bg-emerald-500', text: 'text-emerald-400' }
+                    { key: 'free', label: '무료 일일 체험 (Free Trial)', color: 'bg-zinc-600', text: 'text-zinc-400' },
+                    { key: 'event', label: '다인용 이벤트 플랜 (Event Plan)', color: 'bg-sky-500', text: 'text-sky-400' },
+                    { key: 'store', label: '매장 월간 플랜 (Store Monthly)', color: 'bg-violet-500', text: 'text-violet-400' },
+                    { key: 'store_annual', label: '매장 연간 플랜 (Store Annual)', color: 'bg-emerald-500', text: 'text-emerald-400' }
                   ].map(plan => {
-                    const count = analytics.conversions.planDistribution[plan.key] || 0;
-                    const percent = analytics.conversions.totalRooms > 0 
-                      ? Math.round((count / analytics.conversions.totalRooms) * 100) 
-                      : 0;
+                    const count = (trendsStats.tierCounts && trendsStats.tierCounts[plan.key]) || 0;
+                    const total = (trendsStats.segmentation?.total) || rooms.length;
+                    const percent = total > 0 ? Math.round((count / total) * 100) : 0;
                     return (
                       <div key={plan.key} className="space-y-1.5">
                         <div className="flex justify-between text-xs font-bold">
                           <span className={plan.text}>{plan.label}</span>
-                          <span>{count}개 ({percent}%)</span>
+                          <span className="font-mono">{count}개 ({percent}%)</span>
                         </div>
                         <div className="h-2 bg-white/5 rounded-full overflow-hidden">
                           <div className={`h-full ${plan.color}`} style={{ width: `${percent}%` }} />
@@ -624,29 +623,31 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Product Market Fit (Category Popularity) */}
+              {/* Locale Language Distribution */}
               <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl">
                 <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-5 flex items-center gap-1.5">
-                  <BarChart3 className="w-3.5 h-3.5 text-emerald-400" /> 카테고리 프리셋 점유율 (PMF)
+                  <Globe className="w-3.5 h-3.5 text-emerald-400" /> 접속 언어권 분포 (User Locale Share)
                 </h3>
                 <div className="space-y-3.5">
                   {[
-                    { key: 'anniversary', label: '💍 婚禮/紀念日', color: 'bg-pink-500/20 text-pink-400 border-pink-500/30' },
-                    { key: 'busking', label: '🎤 演唱會/祭典', color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30' },
-                    { key: 'sports', label: '⚽ 體育/応援', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
-                    { key: 'party', label: '🎉 派對/慶祝', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
-                    { key: 'store', label: '🏪 商家/廣告', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
-                    { key: 'custom', label: '⚙️ 사용자 커스텀', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' }
-                  ].map(cat => {
-                    const percent = analytics.productUsage.categoryShares[cat.key] || 0;
+                    { key: 'ko', label: '🇰🇷 한국어 (Korean)' },
+                    { key: 'en', label: '🇺🇸 영어 (English)' },
+                    { key: 'ja', label: '🇯🇵 일본어 (Japanese)' },
+                    { key: 'es', label: '🇪🇸 스페인어 (Spanish)' },
+                    { key: 'zh-TW', label: '🇹🇼 대만 번체 (Traditional)' },
+                    { key: 'zh-HK', label: '🇭🇰 홍콩 광둥어 (Cantonese)' }
+                  ].map(lang => {
+                    const count = (trendsStats.localeUsage && trendsStats.localeUsage[lang.key]) || 0;
+                    const total = (trendsStats.segmentation?.total) || rooms.length;
+                    const percent = total > 0 ? Math.round((count / total) * 100) : 0;
                     return (
-                      <div key={cat.key} className="flex items-center justify-between text-xs font-bold">
-                        <span className="text-zinc-300">{cat.label}</span>
+                      <div key={lang.key} className="flex items-center justify-between text-xs font-bold">
+                        <span className="text-zinc-300">{lang.label}</span>
                         <div className="flex items-center gap-3">
                           <div className="w-24 bg-white/5 h-1.5 rounded-full overflow-hidden">
-                            <div className="h-full bg-violet-600" style={{ width: `${percent}%` }} />
+                            <div className="h-full bg-emerald-500" style={{ width: `${percent}%` }} />
                           </div>
-                          <span className="w-10 text-right">{percent}%</span>
+                          <span className="w-12 text-right font-mono">{percent}%</span>
                         </div>
                       </div>
                     );
@@ -654,31 +655,35 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Loyalty & Customer Retention */}
+              {/* Loyalty & Sync Retention */}
               <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl flex flex-col justify-between">
                 <div>
                   <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-5 flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-zinc-400" /> 리텐션 및 재방문 고객 비율
+                    <Users className="w-3.5 h-3.5 text-zinc-400" /> 동기화 재사용 리텐션 (User Retention)
                   </h3>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center bg-[#06060c] p-3 rounded-xl border border-white/5">
-                      <span className="text-xs text-zinc-400 font-bold">총 고유 고객수 (이메일 기준)</span>
-                      <span className="text-sm font-extrabold text-white">{analytics.retention.uniqueEmailCount}명</span>
+                      <span className="text-xs text-zinc-400 font-bold">총 고유 사용자 (메일 기준)</span>
+                      <span className="text-sm font-extrabold text-white font-mono">
+                        {trendsStats.retention?.totalUsers || 0}명
+                      </span>
                     </div>
                     <div className="flex justify-between items-center bg-[#06060c] p-3 rounded-xl border border-white/5">
-                      <span className="text-xs text-zinc-400 font-bold">2회 이상 방 개설 고객</span>
-                      <span className="text-sm font-extrabold text-emerald-400">{analytics.retention.repeatEmailCount}명</span>
+                      <span className="text-xs text-zinc-400 font-bold">재사용 및 결제 고객</span>
+                      <span className="text-sm font-extrabold text-emerald-400 font-mono">
+                        {trendsStats.retention?.retainedUsers || 0}명
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-white/5 flex items-center gap-5">
                   <div className="w-16 h-16 rounded-full border-4 border-violet-600 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-black font-outfit">{analytics.retention.repeatCustomerRate}%</span>
+                    <span className="text-xs font-black font-outfit">{trendsStats.retention?.retentionRate || 0}%</span>
                   </div>
                   <div>
-                    <h4 className="text-xs font-extrabold text-white">단골 고객 재개설율</h4>
-                    <p className="text-[10px] text-zinc-500 mt-1 font-bold">이메일 매칭을 통해 재방문 결제 및 무료 테스트 유저의 비율을 계산한 리텐션 수치입니다.</p>
+                    <h4 className="text-xs font-extrabold text-white">동기화 재방문율</h4>
+                    <p className="text-[10px] text-zinc-500 mt-1 font-bold">이메일 복구 동기화 기능을 거쳐 동일 메일로 2회 이상 방을 개설하거나 결제한 단골 비율입니다.</p>
                   </div>
                 </div>
               </div>
@@ -688,8 +693,8 @@ export default function AdminPage() {
             {/* Quick Actions Panel */}
             <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h3 className="text-sm font-black text-white">데이터 내보내기 및 정산</h3>
-                <p className="text-xs text-zinc-500 mt-1 font-bold">세무 신고, 사업 지표 분석, 마케팅 조사를 위한 엑셀 호환 CSV 자료를 출력합니다.</p>
+                <h3 className="text-sm font-black text-white">데이터 내보내기 및 백업</h3>
+                <p className="text-xs text-zinc-500 mt-1 font-bold">세무 정산 및 마케팅 조사를 위한 엑셀 호환 CSV 리포트를 내보냅니다.</p>
               </div>
               <div className="flex gap-2">
                 <button
@@ -697,7 +702,7 @@ export default function AdminPage() {
                   className="bg-white/5 hover:bg-white/10 border border-white/10 px-3.5 py-2 rounded-xl text-xs font-bold text-zinc-300 hover:text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  방 목록 백업 (.csv)
+                  전광판 개설 목록 (.csv)
                 </button>
                 <button
                   onClick={handleExportPaymentsCSV}
@@ -709,10 +714,55 @@ export default function AdminPage() {
               </div>
             </div>
 
+            {/* 4단: User Registry Table - PO/PM Master View */}
+            <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl">
+              <h3 className="text-xs font-black text-white uppercase tracking-widest mb-4 flex items-center gap-2 font-mono">
+                <Users className="w-4 h-4 text-violet-400" /> 고유 사용자 식별 명부 및 활동 기여도 (User Registry)
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-zinc-300 border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/5 text-[9px] font-black text-zinc-500 uppercase tracking-widest">
+                      <th className="py-2.5">사용자 이메일</th>
+                      <th>전체 방 개설 수</th>
+                      <th>유료 결제 건수</th>
+                      <th>최종 활동 기록</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-xs font-medium">
+                    {(trendsStats.userRegistry || []).map((user: any, idx: number) => (
+                      <tr key={idx} className="hover:bg-white/[0.01]">
+                        <td className="py-3 font-extrabold text-zinc-300 font-mono">{user.email}</td>
+                        <td className="font-mono text-zinc-400 font-extrabold">{user.room_count}개 개설</td>
+                        <td>
+                          <span className={`px-2 py-0.5 rounded text-[8px] border font-black ${
+                            user.paid_count > 0 
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              : 'bg-white/5 text-zinc-400 border-white/5'
+                          }`}>
+                            {user.paid_count > 0 ? `유료 충전 ${user.paid_count}회` : '무료 체험'}
+                          </span>
+                        </td>
+                        <td className="text-zinc-500 text-[10px] font-mono">
+                          {new Date(user.last_active).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                    {(!trendsStats.userRegistry || trendsStats.userRegistry.length === 0) && (
+                      <tr>
+                        <td colSpan={4} className="py-8 text-center text-zinc-500 text-[10px] font-bold">
+                          확인 가능한 사용자 가입 메일 내역이 없습니다.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         )}
-
-        {/* Search Bar (Only shown on Tab 2 and Tab 3) */}
+                {/* Search Bar (Only shown on Tab 2 and Tab 3) */}
         {activeTab !== 'analytics' && (
           <div className="mb-6 flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
             <div className="relative flex-1 max-w-md">
@@ -822,19 +872,25 @@ export default function AdminPage() {
                             {room.active_clients || 0}명 / {room.max_participants}명
                           </td>
                           <td className="px-6 py-4">
-                            <span 
-                              onClick={() => {
-                                const newStatus = room.status === 'active' ? 'inactive' : 'active';
-                                handleUpdateRoom(room.id, undefined, newStatus);
-                              }}
-                              className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase cursor-pointer select-none border transition-all ${
-                                room.status === 'active'
-                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                                  : 'bg-zinc-800 text-zinc-400 border-white/5 hover:bg-zinc-700'
-                              }`}
-                            >
-                              {room.status === 'active' ? 'Active' : 'Inactive'}
-                            </span>
+                            <div className="flex flex-col gap-1 select-none">
+                              <span 
+                                onClick={() => {
+                                  const newStatus = room.status === 'active' ? 'inactive' : 'active';
+                                  handleUpdateRoom(room.id, undefined, newStatus);
+                                }}
+                                className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase cursor-pointer border transition-all text-center block w-32 ${
+                                  room.status === 'active'
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+                                    : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
+                                }`}
+                                title="클릭 시 송출 상태를 차단하거나 정상화합니다."
+                              >
+                                {room.status === 'active' ? '● 송출 활성화' : '○ 송출 임시차단'}
+                              </span>
+                              <span className="text-[8px] text-zinc-500 font-bold block">
+                                {room.status === 'active' ? '정상 브로드캐스팅 중' : '사용자 화면 차단됨'}
+                              </span>
+                            </div>
                           </td>
                           <td className="px-6 py-4 text-right">
                             <button
@@ -908,22 +964,27 @@ export default function AdminPage() {
                             {pay.amount.toLocaleString()}원
                           </td>
                           <td className="px-6 py-4">
-                            <select
-                              value={pay.payment_status}
-                              disabled={isMutating}
-                              onChange={(e) => handleUpdatePayment(pay.id, e.target.value as any)}
-                              className={`px-2 py-1 rounded-lg text-[10px] font-black border bg-[#030305] focus:outline-none cursor-pointer ${
-                                pay.payment_status === 'completed'
-                                  ? 'text-emerald-400 border-emerald-500/20'
-                                  : pay.payment_status === 'failed'
-                                  ? 'text-red-400 border-red-500/20'
-                                  : 'text-amber-400 border-amber-500/20'
-                              }`}
-                            >
-                              <option value="pending" className="text-amber-400">Pending</option>
-                              <option value="completed" className="text-emerald-400">Completed (승인)</option>
-                              <option value="failed" className="text-red-400">Failed</option>
-                            </select>
+                            <div className="flex flex-col gap-1">
+                              <select
+                                value={pay.payment_status}
+                                disabled={isMutating}
+                                onChange={(e) => handleUpdatePayment(pay.id, e.target.value as any)}
+                                className={`px-2 py-1 rounded-lg text-[9px] font-black border bg-[#030305] focus:outline-none cursor-pointer ${
+                                  pay.payment_status === 'completed'
+                                    ? 'text-emerald-400 border-emerald-500/20'
+                                    : pay.payment_status === 'failed'
+                                    ? 'text-red-400 border-red-500/20'
+                                    : 'text-amber-400 border-amber-500/20'
+                                }`}
+                              >
+                                <option value="pending" className="text-amber-400">🕒 입금 대기 (Pending)</option>
+                                <option value="completed" className="text-emerald-400">✅ 결제 완료 승인 (Completed)</option>
+                                <option value="failed" className="text-red-400">❌ 결제 실패 거절 (Failed)</option>
+                              </select>
+                              <span className="text-[8px] text-zinc-500 font-bold block">
+                                {pay.payment_status === 'completed' ? '정상 등급 활성화' : (pay.payment_status === 'failed' ? '입금 거절/주문 취소' : '대기 상태')}
+                              </span>
+                            </div>
                           </td>
                           <td className="px-6 py-4 text-right">
                             <button
@@ -1578,24 +1639,42 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Feature Adoption Card */}
+              {/* Revenue Contribution Share Card */}
               <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-2xl flex flex-col justify-between">
                 <h3 className="text-xs font-black text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Layers className="w-3.5 h-3.5 text-zinc-400" /> 유료 기능 채택률 (Features Adoption)
+                  <DollarSign className="w-3.5 h-3.5 text-amber-400" /> 플랜별 매출 기여도 (Revenue Contribution Share)
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-black/35 p-3 rounded-xl border border-white/5 text-center">
-                    <span className="text-[9px] text-zinc-500 font-bold block uppercase">추첨 연출 채택</span>
-                    <span className="text-base font-black text-violet-400 block mt-1 font-outfit">
-                      {trendsStats.featuresAdoption?.luckyDrawCount || 0} Rooms
-                    </span>
-                  </div>
-                  <div className="bg-black/35 p-3 rounded-xl border border-white/5 text-center">
-                    <span className="text-[9px] text-zinc-500 font-bold block uppercase">타이머 연출 채택</span>
-                    <span className="text-base font-black text-emerald-400 block mt-1 font-outfit">
-                      {trendsStats.featuresAdoption?.countdownCount || 0} Rooms
-                    </span>
-                  </div>
+                <div className="space-y-3.5">
+                  {(() => {
+                    const breakdown: Record<string, number> = { event: 0, store: 0, store_annual: 0 };
+                    let totalPaidAmt = 0;
+                    (payments || []).forEach(p => {
+                      if (p.payment_status === 'completed') {
+                        breakdown[p.tier] = (breakdown[p.tier] || 0) + p.amount;
+                        totalPaidAmt += p.amount;
+                      }
+                    });
+
+                    return [
+                      { key: 'event', label: '다인용 이벤트 플랜 (Event)', color: 'bg-sky-500' },
+                      { key: 'store', label: '매장 월간 플랜 (Store Monthly)', color: 'bg-violet-500' },
+                      { key: 'store_annual', label: '매장 연간 플랜 (Store Annual)', color: 'bg-emerald-500' }
+                    ].map(plan => {
+                      const amt = breakdown[plan.key] || 0;
+                      const pct = totalPaidAmt > 0 ? Math.round((amt / totalPaidAmt) * 100) : 0;
+                      return (
+                        <div key={plan.key} className="space-y-1">
+                          <div className="flex justify-between text-[10px] font-bold">
+                            <span className="text-zinc-400">{plan.label}</span>
+                            <span className="text-white font-mono">{amt.toLocaleString()}원 ({pct}%)</span>
+                          </div>
+                          <div className="h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                            <div className={`h-full ${plan.color}`} style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               </div>
             </div>
