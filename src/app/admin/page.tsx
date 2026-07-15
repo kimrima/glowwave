@@ -212,13 +212,13 @@ export default function AdminPage() {
     }
   };
 
-  const handleToggleCoupon = async (id: string, currentActive: boolean) => {
-    setActionLoading(`coupon-toggle-${id}`);
+  const handleToggleCoupon = async (code: string, currentActive: boolean) => {
+    setActionLoading(`coupon-toggle-${code}`);
     try {
       const res = await fetch('/api/admin/coupons', {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, active: !currentActive })
+        body: JSON.stringify({ action: 'toggle', code })
       });
       if (res.ok) {
         fetchData();
@@ -232,12 +232,14 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeleteCoupon = async (id: string) => {
+  const handleDeleteCoupon = async (code: string) => {
     if (!confirm('정말로 이 쿠폰을 영구 삭제하시겠습니까?')) return;
-    setActionLoading(`coupon-delete-${id}`);
+    setActionLoading(`coupon-delete-${code}`);
     try {
-      const res = await fetch(`/api/admin/coupons?id=${encodeURIComponent(id)}`, {
-        method: 'DELETE'
+      const res = await fetch('/api/admin/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete', code })
       });
       if (res.ok) {
         fetchData();
@@ -2190,13 +2192,13 @@ export default function AdminPage() {
                   </thead>
                   <tbody className="divide-y divide-white/5 text-xs font-medium font-mono">
                     {coupons.map((c: any) => {
-                      const isExhausted = c.used_count >= c.max_usages;
+                      const isExhausted = c.used_count >= c.max_uses;
                       return (
-                        <tr key={c.id} className="hover:bg-white/[0.01]">
+                        <tr key={c.code} className="hover:bg-white/[0.01]">
                           <td className="py-3.5 font-black text-white text-sm">{c.code}</td>
                           <td className="text-emerald-400 font-extrabold text-sm">{c.discount_pct}%</td>
                           <td className="text-zinc-300 font-bold">{c.used_count}회 사용됨</td>
-                          <td className="text-zinc-500">{c.max_usages}회</td>
+                          <td className="text-zinc-500">{c.max_uses}회</td>
                           <td>
                             <span className={`px-2 py-0.5 rounded text-[8px] font-black border uppercase ${
                               isExhausted
@@ -2211,8 +2213,8 @@ export default function AdminPage() {
                           <td className="text-right py-3.5 font-sans">
                             <div className="inline-flex gap-2">
                               <button
-                                onClick={() => handleToggleCoupon(c.id, c.is_active)}
-                                disabled={actionLoading === `coupon-toggle-${c.id}` || isExhausted}
+                                onClick={() => handleToggleCoupon(c.code, c.is_active)}
+                                disabled={actionLoading === `coupon-toggle-${c.code}` || isExhausted}
                                 className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
                                   c.is_active
                                     ? 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
@@ -2222,8 +2224,8 @@ export default function AdminPage() {
                                 {c.is_active ? '비활성화' : '활성화'}
                               </button>
                               <button
-                                onClick={() => handleDeleteCoupon(c.id)}
-                                disabled={actionLoading === `coupon-delete-${c.id}`}
+                                onClick={() => handleDeleteCoupon(c.code)}
+                                disabled={actionLoading === `coupon-delete-${c.code}`}
                                 className="px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 text-[10px] font-bold border border-red-500/20 transition-all cursor-pointer"
                               >
                                 삭제

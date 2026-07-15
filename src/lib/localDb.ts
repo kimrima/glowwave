@@ -783,9 +783,12 @@ export const localDb = {
 
   async updateRoom(roomId: string, updates: Partial<Room>): Promise<boolean> {
     if (isSupabaseConfigured() && supabase) {
+      const supabaseUpdates = { ...updates } as any;
+      delete supabaseUpdates.expires_at;
+      
       const { error } = await supabase
         .from('rooms')
-        .update(updates)
+        .update(supabaseUpdates)
         .eq('id', roomId);
       if (error) {
         console.error('[localDb] Supabase updateRoom error:', error);
