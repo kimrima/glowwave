@@ -26,7 +26,8 @@ import {
   Trash,
   Eye,
   Lock,
-  Activity
+  Activity,
+  HelpCircle
 } from 'lucide-react';
 import { Room, Payment, TierType, TIER_CONFIGS } from '@/lib/types';
 
@@ -387,6 +388,42 @@ export default function AdminPage() {
     }
   };
 
+  const handleSendBatchCSWarningEmails = async () => {
+    const targets = rooms.filter(room => 
+      room.expires_at && 
+      (new Date(room.expires_at).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000) && 
+      (new Date(room.expires_at).getTime() - Date.now() > 0) && 
+      !room.mail_sent_at
+    );
+
+    if (targets.length === 0) {
+      alert('현재 일괄 발송 대상자(만료 3일 이내 & 경고 미발송)가 없습니다.');
+      return;
+    }
+
+    if (!confirm(`만료 임박인 총 ${targets.length}개의 방 세션 호스트에게 경고 메일을 일괄 발송하시겠습니까?`)) return;
+
+    setActionLoading('mail-remind-batch');
+    try {
+      let successCount = 0;
+      for (const room of targets) {
+        const res = await fetch('/api/admin/mail-remind', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ roomId: room.id })
+        });
+        if (res.ok) successCount++;
+      }
+      alert(`일괄 발송 완료! 대상 방 ${targets.length}개 중 ${successCount}개 메일 전송 성공.`);
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      alert('일괄 발송 도중 오류가 발생했습니다.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleDeleteRoom = async (roomId: string) => {
     if (!confirm('정말 이 방을 영구적으로 삭제하시겠습니까? 연결된 화면이 즉시 만료됩니다.')) return;
     setActionLoading(`room-delete-${roomId}`);
@@ -397,8 +434,8 @@ export default function AdminPage() {
         body: JSON.stringify({ roomId })
       });
       if (res.ok) {
-        await fetchData();
-        await fetchAnalytics();
+        setRooms(prev => prev.filter(r => r.id !== roomId));
+        fetchAnalytics();
       }
     } catch (err) {
       console.error('Delete room error:', err);
@@ -1106,7 +1143,18 @@ export default function AdminPage() {
                   <option value="lite">Lite (기본형)</option>
                   <option value="pro">Pro (프리미엄)</option>
                   <option value="max">Max (맥스형)</option>
+                  <option value="store">Store (매장용 월간)</option>
+                  <option value="store_annual">Store Annual (매장용 연간)</option>
                 </select>
+
+                <button
+                  onClick={handleSendBatchCSWarningEmails}
+                  disabled={actionLoading === 'mail-remind-batch'}
+                  className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 border border-amber-500/20 px-3.5 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-40"
+                >
+                  <Activity className="w-3.5 h-3.5 animate-pulse" />
+                  경고 메일 일괄 발송
+                </button>
               </div>
             )}
 
@@ -1233,9 +1281,6 @@ export default function AdminPage() {
                                 if (!isUnder3Days) return null;
                                 return (
                                   <div className="flex flex-col gap-1 mt-0.5">
-                                    <span className="inline-block text-[8px] font-black text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20 w-fit">
-                                      ⚠️ 만료 임박 (3일 이내)
-                                    </span>
                                     {room.mail_sent_at ? (
                                       <span className="text-[8px] font-bold text-zinc-500">
                                         ✉️ 경고 메일 발송됨 ({new Date(room.mail_sent_at).toLocaleDateString()})
@@ -2436,7 +2481,14 @@ export default function AdminPage() {
               {/* CPU Usage Card */}
               <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl flex flex-col justify-between min-h-[200px]">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">CPU 점유율</span>
+                  <div className="flex items-center gap-1.5 relative group">
+                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">CPU 점유율</span>
+                    <HelpCircle className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-300 transition-colors cursor-help" />
+                    <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#141421] border border-white/10 p-3.5 rounded-2xl shadow-2xl text-[10px] leading-relaxed text-zinc-300 font-bold hidden group-hover:block pointer-events-none z-30 animate-in fade-in slide-in-from-bottom-1 duration-100 whitespace-normal">
+                      <div className="text-white font-extrabold mb-1">💻 CPU 점유율 (두뇌 가동률)</div>
+                      서버(일꾼)가 현재 전체 업무 중 몇 %만큼 머리를 쓰고 있는지입니다. 평소에는 10~30%가 건강하며, 80%를 넘어서면 손님이 동시에 너무 많이 들어와 서버 두뇌가 지친 상태이므로 서버 증설을 검토해야 합니다.
+                    </div>
+                  </div>
                   <span className="text-emerald-400 font-black text-xs font-mono">가상 분산형</span>
                 </div>
                 <div className="my-6">
@@ -2458,8 +2510,15 @@ export default function AdminPage() {
               {/* Memory Usage Card */}
               <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl flex flex-col justify-between min-h-[200px]">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">메모리 점유 (Heap Used)</span>
-                  <span className="text-sky-400 font-black text-xs font-mono">RSS Limit 512MB</span>
+                  <div className="flex items-center gap-1.5 relative group">
+                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">메모리 점유 (Heap)</span>
+                    <HelpCircle className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-300 transition-colors cursor-help" />
+                    <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#141421] border border-white/10 p-3.5 rounded-2xl shadow-2xl text-[10px] leading-relaxed text-zinc-300 font-bold hidden group-hover:block pointer-events-none z-30 animate-in fade-in slide-in-from-bottom-1 duration-100 whitespace-normal">
+                      <div className="text-white font-extrabold mb-1">🧠 메모리 점유 (작업 책상 공간)</div>
+                      일꾼이 현재 손님들의 전광판 방 정보들을 올려두고 쓰기 위해 차지하는 임시 기억력(책상 크기)입니다. 최대 제한선(512MB)에 근접하면 책상이 꽉 찬 상태이므로, 불필요한 방 세션을 청소해 주는 신호가 됩니다.
+                    </div>
+                  </div>
+                  <span className="text-sky-400 font-black text-xs font-mono">Limit 512MB</span>
                 </div>
                 <div className="my-6">
                   <div className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
@@ -2480,7 +2539,14 @@ export default function AdminPage() {
               {/* DB Query Response Latency Card */}
               <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl flex flex-col justify-between min-h-[200px]">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Supabase DB 응답 지연 (Latency)</span>
+                  <div className="flex items-center gap-1.5 relative group">
+                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">DB 응답 지연</span>
+                    <HelpCircle className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-300 transition-colors cursor-help" />
+                    <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#141421] border border-white/10 p-3.5 rounded-2xl shadow-2xl text-[10px] leading-relaxed text-zinc-300 font-bold hidden group-hover:block pointer-events-none z-30 animate-in fade-in slide-in-from-bottom-1 duration-100 whitespace-normal">
+                      <div className="text-white font-extrabold mb-1">🗄️ DB 응답 지연 (창고 배달 시간)</div>
+                      본사 영구 공책(Supabase)에 데이터를 읽고 쓰는 데 걸리는 왕복 배달 속도(0.001초 단위)입니다. 150ms 이하는 총알배송급으로 쾌적하며, 300ms 이상으로 빨간불이 켜지면 손님이 렉을 느낄 수 있어 점검이 필요한 신호입니다.
+                    </div>
+                  </div>
                   <span className={`px-2 py-0.5 rounded text-[8px] font-black border uppercase ${
                     (healthStats?.db?.latency_ms ?? 0) < 150 
                       ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
