@@ -44,6 +44,12 @@ if (!globalForRoomStore.coupons) {
 if (!globalForRoomStore.funnelLogs) {
   globalForRoomStore.funnelLogs = [];
 }
+if (!globalForRoomStore.supabaseChannels) {
+  globalForRoomStore.supabaseChannels = new Map();
+}
+if (!globalForRoomStore.supabasePresenceCounts) {
+  globalForRoomStore.supabasePresenceCounts = new Map();
+}
 
 // Robust workspace root resolver to handle cases where Next.js infers a parent directory (like C:\Users\김강산) as the root
 function findWorkspaceRoot(): string {
