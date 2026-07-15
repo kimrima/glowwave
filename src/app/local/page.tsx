@@ -717,7 +717,12 @@ function LocalSignboardContent() {
     const checkStatus = async () => {
       try {
         const res = await fetch(`/api/room/status?ids=${syncRoomId}`);
-        if (!res.ok) return;
+        if (!res.ok) {
+          if (res.status === 404) {
+            handleStopMobileSync();
+          }
+          return;
+        }
         const data = await res.json();
         const roomInfo = data.rooms?.[0];
         if (roomInfo) {
@@ -731,6 +736,9 @@ function LocalSignboardContent() {
               setSyncRoomActiveParticipants(roomInfo.current_participants || 0);
             }
           }
+        } else {
+          // Room was likely deleted by the administrator, reset to local standalone
+          handleStopMobileSync();
         }
       } catch (e) {
         console.error('Failed to fetch sync room status:', e);

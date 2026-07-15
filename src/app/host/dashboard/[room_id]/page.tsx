@@ -533,9 +533,17 @@ export default function HostDashboard() {
             localStorage.removeItem('glowwave_active_host_room_id');
             localStorage.removeItem(`glowwave_presets_${roomId}`);
             localStorage.removeItem(`glowwave_token_${roomId}`);
+            localStorage.removeItem('glowwave_local_sync_room_id');
+            localStorage.removeItem('glowwave_local_sync_host_token');
+            localStorage.removeItem('glowwave_local_sync_room_created_at');
+            localStorage.removeItem('glowwave_last_joined_room_id');
           }
           setAuthErrorMessage(errorMsg);
           setIsAuthorized(false);
+          
+          // Instantly redirect to the standalone local signboard remote
+          router.replace('/local');
+          return;
         } else {
           // It's a 500 or other server/database error
           setAuthErrorMessage(errorMsg);
