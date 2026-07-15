@@ -5,10 +5,11 @@ import { TierType, TIER_CONFIGS } from '@/lib/types';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { room_id, host_session_token, new_tier } = body as {
+    const { room_id, host_session_token, new_tier, promo_code } = body as {
       room_id: string;
       host_session_token: string;
       new_tier: TierType;
+      promo_code?: string;
     };
 
     if (!room_id || !host_session_token || !new_tier || !TIER_CONFIGS[new_tier]) {
@@ -31,14 +32,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Failed to upgrade room tier' }, { status: 500 });
     }
 
-    // Add payment log (upgrades are simulated completed immediately)
+    // Add payment log with potential coupon discounts applied
     const config = TIER_CONFIGS[new_tier];
+    let finalPrice = config.priceKrw;
+    if (promo_code) {
+      const coupon = await localDb.verifyCoupon(promo_code);
+      if (coupon) {
+        finalPrice = Math.round(config.priceKrw * (1 - coupon.discount_pct / 100));
+        await localDb.useCoupon(promo_code);
+      }
+    }
+
     await localDb.addPayment(
       room.email,
       host_session_token,
       room_id,
       new_tier,
-      config.priceKrw,
+      finalPrice,
       'completed'
     );
 

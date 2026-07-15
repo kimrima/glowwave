@@ -47,10 +47,13 @@ export default function AdminPage() {
   const [cleanupMessage, setCleanupMessage] = useState('');
 
   // UI state
-  const [activeTab, setActiveTab] = useState<'analytics' | 'rooms' | 'payments' | 'templates' | 'trends'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'rooms' | 'payments' | 'templates' | 'trends' | 'coupons'>('analytics');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [tierFilter, setTierFilter] = useState<string>('all');
+
+  // Coupons Manager State
+  const [coupons, setCoupons] = useState<any[]>([]);
 
   // Real-time custom preset trends state
   const [trendsStats, setTrendsStats] = useState<any>({
@@ -60,7 +63,8 @@ export default function AdminPage() {
     liveHotRooms: [],
     segmentation: { b2cCount: 0, b2bCount: 0, total: 0 },
     visualThemes: [],
-    featuresAdoption: { luckyDrawCount: 0, countdownCount: 0, totalActiveStates: 0 }
+    featuresAdoption: { luckyDrawCount: 0, countdownCount: 0, totalActiveStates: 0 },
+    funnel: { step1_landing: 0, step2_create: 0, step3_view_upgrade: 0, step4_payment_success: 0 }
   });
 
   // Localized templates CRUD states
@@ -70,6 +74,11 @@ export default function AdminPage() {
   const [editingPresetIndex, setEditingPresetIndex] = useState<number | null>(null);
   const [editingPreset, setEditingPreset] = useState<any>(null);
   const [isAddingPreset, setIsAddingPreset] = useState<boolean>(false);
+
+  // Coupon Creator Inputs
+  const [newCouponCode, setNewCouponCode] = useState('');
+  const [newCouponDiscount, setNewCouponDiscount] = useState<number>(10);
+  const [newCouponLimit, setNewCouponLimit] = useState<number>(50);
 
   // Check auth on mount
   useEffect(() => {
@@ -139,6 +148,7 @@ export default function AdminPage() {
         const data = await res.json();
         setRooms(data.rooms || []);
         setPayments(data.payments || []);
+        setCoupons(data.coupons || []);
         if (data.stats) {
           setTrendsStats(data.stats);
         }
@@ -159,6 +169,76 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error('Fetch analytics error:', err);
+    }
+  };
+
+  const handleCreateCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCouponCode.trim()) return;
+    setActionLoading('coupon-create');
+    try {
+      const res = await fetch('/api/admin/coupons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: newCouponCode.trim().toUpperCase(),
+          discount_pct: Number(newCouponDiscount),
+          max_usages: Number(newCouponLimit)
+        })
+      });
+      if (res.ok) {
+        setNewCouponCode('');
+        setNewCouponDiscount(10);
+        setNewCouponLimit(50);
+        fetchData();
+      } else {
+        const err = await res.json();
+        alert(err.error || '쿠폰 생성 실패');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('쿠폰 생성 중 오류가 발생했습니다.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleToggleCoupon = async (id: string, currentActive: boolean) => {
+    setActionLoading(`coupon-toggle-${id}`);
+    try {
+      const res = await fetch('/api/admin/coupons', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, active: !currentActive })
+      });
+      if (res.ok) {
+        fetchData();
+      } else {
+        alert('쿠폰 상태 변경 실패');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteCoupon = async (id: string) => {
+    if (!confirm('정말로 이 쿠폰을 영구 삭제하시겠습니까?')) return;
+    setActionLoading(`coupon-delete-${id}`);
+    try {
+      const res = await fetch(`/api/admin/coupons?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchData();
+      } else {
+        alert('쿠폰 삭제 실패');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -559,11 +639,76 @@ export default function AdminPage() {
             <TrendingUp className="w-3.5 h-3.5" />
             사용 트렌드 분석
           </button>
+          <button
+            onClick={() => { setActiveTab('coupons'); setSearchQuery(''); }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
+              activeTab === 'coupons' 
+                ? 'bg-violet-600 text-white font-extrabold shadow-md' 
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Percent className="w-3.5 h-3.5" />
+            할인 쿠폰 관리
+          </button>
         </div>
 
         {/* Tab 1: Business Intelligence Analytics */}
         {activeTab === 'analytics' && analytics && (
           <div className="space-y-8 animate-in fade-in duration-200">
+            {/* SaaS Conversion Funnel Analysis */}
+            <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 sm:p-8 rounded-3xl animate-in fade-in duration-200">
+              <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-6 flex items-center gap-1.5">
+                <BarChart3 className="w-4 h-4 text-indigo-400" /> SaaS 전환 깔때기 (Funnel Analysis)
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 relative">
+                {(() => {
+                  const funnel = trendsStats.funnel || { step1_landing: 0, step2_create: 0, step3_view_upgrade: 0, step4_payment_success: 0 };
+                  const steps = [
+                    { key: 'step1_landing', label: '1. 랜딩 홈 접속 (Landing)', count: funnel.step1_landing, color: 'from-blue-600 to-indigo-500' },
+                    { key: 'step2_create', label: '2. 로컬 전광판 시작 (Creation)', count: funnel.step2_create, color: 'from-indigo-500 to-purple-500' },
+                    { key: 'step3_view_upgrade', label: '3. 결제창 조회 (Checkout View)', count: funnel.step3_view_upgrade, color: 'from-purple-500 to-pink-500' },
+                    { key: 'step4_payment_success', label: '4. 결제 완료 (Payment Success)', count: funnel.step4_payment_success, color: 'from-pink-500 to-emerald-500' }
+                  ];
+
+                  const maxCount = Math.max(...steps.map(s => s.count), 1);
+
+                  return steps.map((step, idx) => {
+                    const prevStep = idx > 0 ? steps[idx - 1] : null;
+                    const conversionRate = prevStep && prevStep.count > 0 
+                      ? Math.round((step.count / prevStep.count) * 100) 
+                      : 100;
+                    
+                    const barWidth = Math.max(Math.round((step.count / maxCount) * 100), 5);
+
+                    return (
+                      <div key={step.key} className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl flex flex-col justify-between gap-4 relative">
+                        {idx > 0 && (
+                          <div className="absolute left-1/2 -translate-x-1/2 -top-3.5 bg-zinc-900 border border-white/10 px-2 py-0.5 rounded-full text-[9px] font-bold text-zinc-400 z-10">
+                            이전 단계 대비 {conversionRate}%
+                          </div>
+                        )}
+                        <div className="flex justify-between items-start">
+                          <span className="text-[11px] font-extrabold text-zinc-300 leading-tight">{step.label}</span>
+                          <span className="text-sm font-black font-mono text-white">{step.count.toLocaleString()}회</span>
+                        </div>
+                        <div className="space-y-1.5 mt-2">
+                          <div className="h-3 bg-white/5 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full bg-gradient-to-r ${step.color} transition-all duration-500`}
+                              style={{ width: `${barWidth}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-[10px] text-zinc-500 font-bold">
+                            <span>전체 비율: {Math.round((step.count / maxCount) * 100)}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+
             {/* KPI Cards Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-5 rounded-2xl flex flex-col justify-between">
@@ -1953,6 +2098,137 @@ export default function AdminPage() {
                     현재 활성화되어 송출되고 있는 텍스트 샘플이 없습니다.
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 5: Discount Coupons Management */}
+        {activeTab === 'coupons' && (
+          <div className="space-y-8 animate-in fade-in duration-200 text-left">
+            {/* Create Coupon Card */}
+            <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 sm:p-8 rounded-3xl">
+              <h3 className="text-sm font-black text-white uppercase tracking-wider mb-6 flex items-center gap-1.5">
+                <Plus className="w-4 h-4 text-violet-400" /> 신규 프로모션 할인 쿠폰 발행
+              </h3>
+              
+              <form onSubmit={handleCreateCoupon} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">쿠폰 코드명</label>
+                  <input
+                    type="text"
+                    required
+                    value={newCouponCode}
+                    onChange={(e) => setNewCouponCode(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))}
+                    placeholder="예: SPECIAL30"
+                    className="w-full bg-[#030305]/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-violet-500 font-mono uppercase"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">할인율 (%)</label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    max={100}
+                    value={newCouponDiscount}
+                    onChange={(e) => setNewCouponDiscount(Math.max(1, Math.min(100, Number(e.target.value))))}
+                    className="w-full bg-[#030305]/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-violet-500 font-mono"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">최대 사용 가능 횟수</label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    value={newCouponLimit}
+                    onChange={(e) => setNewCouponLimit(Math.max(1, Number(e.target.value)))}
+                    className="w-full bg-[#030305]/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-violet-500 font-mono"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={actionLoading === 'coupon-create'}
+                  className="w-full py-3 bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-violet-600/10 cursor-pointer transition-all disabled:opacity-40"
+                >
+                  {actionLoading === 'coupon-create' ? '발행 처리중...' : '쿠폰 발행하기'}
+                </button>
+              </form>
+            </div>
+
+            {/* Coupons List Table */}
+            <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl">
+              <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-5 flex items-center gap-1.5">
+                <Percent className="w-3.5 h-3.5 text-violet-400" /> 발행된 프로모션 쿠폰 장부 ({coupons.length}개)
+              </h3>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-zinc-300 border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/5 text-[9px] font-black text-zinc-500 uppercase tracking-widest">
+                      <th className="py-3">쿠폰 코드</th>
+                      <th>할인율 (%)</th>
+                      <th>현재 사용량 (Used)</th>
+                      <th>최대 한도 (Limit)</th>
+                      <th>상태</th>
+                      <th className="text-right">관리 작업</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-xs font-medium font-mono">
+                    {coupons.map((c: any) => {
+                      const isExhausted = c.used_count >= c.max_usages;
+                      return (
+                        <tr key={c.id} className="hover:bg-white/[0.01]">
+                          <td className="py-3.5 font-black text-white text-sm">{c.code}</td>
+                          <td className="text-emerald-400 font-extrabold text-sm">{c.discount_pct}%</td>
+                          <td className="text-zinc-300 font-bold">{c.used_count}회 사용됨</td>
+                          <td className="text-zinc-500">{c.max_usages}회</td>
+                          <td>
+                            <span className={`px-2 py-0.5 rounded text-[8px] font-black border uppercase ${
+                              isExhausted
+                                ? 'bg-red-500/10 text-red-400 border-red-500/20'
+                                : c.is_active
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                  : 'bg-zinc-800 text-zinc-500 border-zinc-700'
+                            }`}>
+                              {isExhausted ? '소모 완료' : c.is_active ? '활성' : '비활성'}
+                            </span>
+                          </td>
+                          <td className="text-right py-3.5 font-sans">
+                            <div className="inline-flex gap-2">
+                              <button
+                                onClick={() => handleToggleCoupon(c.id, c.is_active)}
+                                disabled={actionLoading === `coupon-toggle-${c.id}` || isExhausted}
+                                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                                  c.is_active
+                                    ? 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
+                                    : 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400 hover:bg-emerald-500/20'
+                                }`}
+                              >
+                                {c.is_active ? '비활성화' : '활성화'}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCoupon(c.id)}
+                                disabled={actionLoading === `coupon-delete-${c.id}`}
+                                className="px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 text-[10px] font-bold border border-red-500/20 transition-all cursor-pointer"
+                              >
+                                삭제
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {coupons.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="py-12 text-center text-zinc-500 text-xs font-bold font-sans">
+                          현재 발행되어 운영 중인 프로모션 할인 코드가 존재하지 않습니다. 상단 폼을 이용하여 신규 코드를 즉시 배포할 수 있습니다.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

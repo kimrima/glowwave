@@ -176,10 +176,27 @@ export async function GET(request: NextRequest) {
     const retainedUsers = userRegistry.filter(u => u.room_count >= 2 || u.paid_count > 0).length;
     const userRetentionRate = totalUsers > 0 ? Math.round((retainedUsers / totalUsers) * 100) : 0;
 
+    // Funnel Statistics Aggregation
+    const funnelLogs = await localDb.getFunnelLogs();
+    const funnelCounts = {
+      step1_landing: 0,
+      step2_create: 0,
+      step3_view_upgrade: 0,
+      step4_payment_success: 0
+    };
+    for (const log of funnelLogs) {
+      if (log.step in funnelCounts) {
+        funnelCounts[log.step as keyof typeof funnelCounts] += 1;
+      }
+    }
+
+    const coupons = await localDb.getCoupons();
+
     return NextResponse.json({
       success: true,
       rooms: activeRoomsWithStates,
       payments,
+      coupons,
       stats: {
         fontUsage,
         effectUsage,
@@ -198,7 +215,8 @@ export async function GET(request: NextRequest) {
           retainedUsers,
           retentionRate: userRetentionRate
         },
-        userRegistry: userRegistry.slice(0, 100) // Top 100 active users list
+        userRegistry: userRegistry.slice(0, 100), // Top 100 active users list
+        funnel: funnelCounts
       }
     });
   } catch (error) {

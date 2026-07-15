@@ -221,3 +221,17 @@ export interface SignalPayload {
   event: 'render';
   payload: Preset;
 }
+
+export interface Coupon {
+  code: string;
+  discount_pct: number;
+  is_active: boolean;
+  max_uses: number;
+  used_count: number;
+  created_at: string;
+}
+
+export interface FunnelLog {
+  step: 'step1_landing' | 'step2_create' | 'step3_view_upgrade' | 'step4_payment_success';
+  created_at: string;
+}

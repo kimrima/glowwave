@@ -695,6 +695,13 @@ function LocalSignboardContent() {
         handleImportByScannedKey(importKey);
         window.history.replaceState({}, document.title, window.location.pathname);
       }
+      // Log local dashboard loaded funnel step (step2_create)
+      fetch('/api/funnel/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step: 'step2_create' })
+      }).catch(() => {});
+
       setIsHydrated(true);
     }
   }, []);

@@ -184,6 +184,50 @@ export default function HostDashboard() {
   const [isExtending, setIsExtending] = useState(false);
   const [selectedExtendHours, setSelectedExtendHours] = useState<number>(24);
 
+  // Promo Code States
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [verifiedCoupon, setVerifiedCoupon] = useState<any>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
+
+  const handleApplyPromoCode = async () => {
+    if (!promoCodeInput.trim()) return;
+    setIsVerifyingCoupon(true);
+    setCouponError(null);
+    try {
+      const res = await fetch(`/api/coupon/verify?code=${encodeURIComponent(promoCodeInput.trim())}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.valid) {
+          setVerifiedCoupon({
+            code: data.code,
+            discount_pct: data.discount_pct
+          });
+          setPromoCodeInput('');
+        } else {
+          const defaultErr = {
+            ko: '유효하지 않거나 만료된 프로모션 코드입니다.',
+            en: 'Invalid or expired promo code.',
+            ja: '無効または期限切れのプロモーションコードです。',
+            es: 'Código de descuento inválido o vencido.',
+            'zh-TW': '無效或已過期的優惠代碼。',
+            'zh-HK': '無效或已過期的優惠代碼。'
+          }[activeLocale] || '유효하지 않거나 만료된 프로모션 코드입니다.';
+          setCouponError(data.message?.[activeLocale] || defaultErr);
+          setVerifiedCoupon(null);
+        }
+      } else {
+        setCouponError('서버 연결 실패');
+        setVerifiedCoupon(null);
+      }
+    } catch (err) {
+      setCouponError('서버 연결 실패');
+      setVerifiedCoupon(null);
+    } finally {
+      setIsVerifyingCoupon(false);
+    }
+  };
+
   // Passcode Settings States
   const [isPasscodeDrawerOpen, setIsPasscodeDrawerOpen] = useState(false);
   const [passcodeVal, setPasscodeVal] = useState('');
@@ -301,6 +345,37 @@ export default function HostDashboard() {
 
   // Expiration countdown state
   const [timeRemaining, setTimeRemaining] = useState<string>('');
+
+  // Reset coupon state when modals are closed
+  useEffect(() => {
+    if (!isUpgradeModalOpen && !isExtendModalOpen) {
+      setVerifiedCoupon(null);
+      setPromoCodeInput('');
+      setCouponError(null);
+    }
+  }, [isUpgradeModalOpen, isExtendModalOpen]);
+
+  // Log Funnel logs for view_upgrade (Step 3) when modals open
+  useEffect(() => {
+    if (isUpgradeModalOpen || isExtendModalOpen) {
+      fetch('/api/funnel/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step: 'step3_view_upgrade' })
+      }).catch(() => {});
+    }
+  }, [isUpgradeModalOpen, isExtendModalOpen]);
+
+  // Log Funnel logs for payment_success (Step 4)
+  useEffect(() => {
+    if (upgradeStep === 'success' || extendStep === 'success') {
+      fetch('/api/funnel/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step: 'step4_payment_success' })
+      }).catch(() => {});
+    }
+  }, [upgradeStep, extendStep]);
 
   // Accidental Navigation Warning & Expiration Countdown Timer
   useEffect(() => {
@@ -955,7 +1030,8 @@ export default function HostDashboard() {
         body: JSON.stringify({
           room_id: roomId,
           host_session_token: token,
-          extra_hours: selectedExtendHours
+          extra_hours: selectedExtendHours,
+          promo_code: verifiedCoupon ? verifiedCoupon.code : undefined
         })
       });
 
@@ -998,7 +1074,8 @@ export default function HostDashboard() {
         body: JSON.stringify({
           room_id: roomId,
           host_session_token: token,
-          new_tier: selectedUpgradeTier
+          new_tier: selectedUpgradeTier,
+          promo_code: verifiedCoupon ? verifiedCoupon.code : undefined
         })
       });
 
@@ -4988,6 +5065,54 @@ export default function HostDashboard() {
                     {paymentDesc}
                   </div>
 
+                  {/* Promo Code Input Form */}
+                  <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                        {activeLocale === 'ko' ? '프로모션 코드' : 'Promo Code'}
+                      </span>
+                      {verifiedCoupon && (
+                        <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                          {verifiedCoupon.code} {verifiedCoupon.discount_pct}% 할인 적용됨
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCodeInput}
+                        onChange={(e) => setPromoCodeInput(e.target.value)}
+                        placeholder={activeLocale === 'ko' ? '예: WELCOME20' : 'e.g. WELCOME20'}
+                        disabled={isVerifyingCoupon || verifiedCoupon}
+                        className="flex-1 bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono uppercase"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyPromoCode}
+                        disabled={isVerifyingCoupon || verifiedCoupon || !promoCodeInput.trim()}
+                        className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-40 disabled:hover:bg-zinc-800"
+                      >
+                        {isVerifyingCoupon ? '...' : activeLocale === 'ko' ? '적용' : 'Apply'}
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="text-[10px] text-red-400 font-bold mt-0.5">{couponError}</p>
+                    )}
+                    {verifiedCoupon && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVerifiedCoupon(null);
+                          setPromoCodeInput('');
+                          setCouponError(null);
+                        }}
+                        className="text-[9px] text-zinc-500 hover:text-zinc-300 font-semibold self-start underline cursor-pointer"
+                      >
+                        {activeLocale === 'ko' ? '코드 취소하기' : 'Remove promo code'}
+                      </button>
+                    )}
+                  </div>
+
                   {/* PG Checkout Simulator Card */}
                   <div className="bg-black/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3.5">
                     <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">{simulatorTitle}</span>
@@ -5004,7 +5129,30 @@ export default function HostDashboard() {
                     
                     <div className="flex justify-between items-center text-xs sm:text-sm">
                       <span className="text-zinc-400">{paymentAmtLabel}</span>
-                      <span className="text-indigo-300 font-black font-mono">{formattedPrice}</span>
+                      <div className="flex flex-col items-end">
+                        {verifiedCoupon ? (
+                          <>
+                            <span className="text-zinc-500 text-[10px] line-through font-mono">
+                              {formattedPrice}
+                            </span>
+                            <span className="text-emerald-400 font-extrabold text-sm font-mono animate-pulse">
+                              {(() => {
+                                const basePrice = TIER_CONFIGS[selectedUpgradeTier].priceKrw;
+                                const discounted = Math.round(basePrice * (1 - verifiedCoupon.discount_pct / 100));
+                                if (activeLocale === 'ko') {
+                                  return `${discounted.toLocaleString()}원`;
+                                } else {
+                                  const usdBase = TIER_CONFIGS[selectedUpgradeTier].priceUsd;
+                                  const discountedUsd = usdBase * (1 - verifiedCoupon.discount_pct / 100);
+                                  return `$${discountedUsd.toFixed(1)} USD`;
+                                }
+                              })()}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-indigo-300 font-black font-mono">{formattedPrice}</span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -5492,35 +5640,108 @@ export default function HostDashboard() {
                       {extendPayDesc}
                     </div>
 
-                    <div className="bg-black/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3.5">
-                      <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">{simulatorTitle}</span>
-                      
-                      <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
-                        <span className="text-zinc-400">{productLabel}</span>
-                        <span className="text-white font-extrabold">{productVal}</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
-                        <span className="text-zinc-400">{originalPriceLabel}</span>
-                        <span className="text-zinc-500 line-through font-mono">
-                          {regularPriceStr}
+                  {/* Promo Code Input Form */}
+                  <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                        {activeLocale === 'ko' ? '프로모션 코드' : 'Promo Code'}
+                      </span>
+                      {verifiedCoupon && (
+                        <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                          {verifiedCoupon.code} {verifiedCoupon.discount_pct}% 할인 적용됨
                         </span>
-                      </div>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCodeInput}
+                        onChange={(e) => setPromoCodeInput(e.target.value)}
+                        placeholder={activeLocale === 'ko' ? '예: WELCOME20' : 'e.g. WELCOME20'}
+                        disabled={isVerifyingCoupon || verifiedCoupon}
+                        className="flex-1 bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono uppercase"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleApplyPromoCode}
+                        disabled={isVerifyingCoupon || verifiedCoupon || !promoCodeInput.trim()}
+                        className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-40 disabled:hover:bg-zinc-800"
+                      >
+                        {isVerifyingCoupon ? '...' : activeLocale === 'ko' ? '적용' : 'Apply'}
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="text-[10px] text-red-400 font-bold mt-0.5">{couponError}</p>
+                    )}
+                    {verifiedCoupon && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setVerifiedCoupon(null);
+                          setPromoCodeInput('');
+                          setCouponError(null);
+                        }}
+                        className="text-[9px] text-zinc-500 hover:text-zinc-300 font-semibold self-start underline cursor-pointer"
+                      >
+                        {activeLocale === 'ko' ? '코드 취소하기' : 'Remove promo code'}
+                      </button>
+                    )}
+                  </div>
 
-                      <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
-                        <span className="text-zinc-400">{discountLabel}</span>
-                        <span className="text-red-400 font-bold">
-                          {discountStr}
-                        </span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center text-xs sm:text-sm">
-                        <span className="text-zinc-400">{finalAmtLabel}</span>
-                        <span className="text-indigo-300 font-black font-mono">
-                          {finalAmtStr}
-                        </span>
+                  <div className="bg-black/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3.5">
+                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">{simulatorTitle}</span>
+                    
+                    <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
+                      <span className="text-zinc-400">{productLabel}</span>
+                      <span className="text-white font-extrabold">{productVal}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
+                      <span className="text-zinc-400">{originalPriceLabel}</span>
+                      <span className="text-zinc-500 line-through font-mono">
+                        {regularPriceStr}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center text-xs sm:text-sm border-b border-white/5 pb-2.5">
+                      <span className="text-zinc-400">{discountLabel}</span>
+                      <span className="text-red-400 font-bold">
+                        {discountStr}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center text-xs sm:text-sm">
+                      <span className="text-zinc-400">{finalAmtLabel}</span>
+                      <div className="flex flex-col items-end">
+                        {verifiedCoupon ? (
+                          <>
+                            <span className="text-zinc-500 text-[10px] line-through font-mono">
+                              {finalAmtStr}
+                            </span>
+                            <span className="text-emerald-400 font-extrabold text-sm font-mono animate-pulse">
+                              {(() => {
+                                const config = TIER_CONFIGS[targetTierForPrice];
+                                if (!config) return '';
+                                const baseExt = Math.round(config.priceKrw * 0.8);
+                                const discounted = Math.round(baseExt * (1 - verifiedCoupon.discount_pct / 100));
+                                if (activeLocale === 'ko') {
+                                  return `${discounted.toLocaleString()}원`;
+                                } else {
+                                  const usdBase = config.priceUsd * 0.8;
+                                  const discountedUsd = usdBase * (1 - verifiedCoupon.discount_pct / 100);
+                                  return `$${discountedUsd.toFixed(1)} USD`;
+                                }
+                              })()}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-indigo-300 font-black font-mono">
+                            {finalAmtStr}
+                          </span>
+                        )}
                       </div>
                     </div>
+                  </div>
 
                     {/* 환불 취소 불가 고지 */}
                     <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl text-xs text-red-400 leading-relaxed">

@@ -72,6 +72,12 @@ export default function Home() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      fetch('/api/funnel/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ step: 'step1_landing' })
+      }).catch(() => {});
+
       const savedLocale = (localStorage.getItem('glowwave_home_locale') || 
                            localStorage.getItem('glowwave_host_locale') || 
                            localStorage.getItem('glowwave_local_locale')) as Locale;

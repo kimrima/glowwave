@@ -5,7 +5,11 @@ import { localDb } from '@/lib/localDb';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { room_id, status } = body as { room_id: string; status: 'success' | 'failed' };
+    const { room_id, status, promo_code } = body as { 
+      room_id: string; 
+      status: 'success' | 'failed';
+      promo_code?: string;
+    };
 
     if (!room_id) {
       return NextResponse.json({ error: 'Missing room_id' }, { status: 400 });
@@ -17,6 +21,19 @@ export async function POST(request: Request) {
     }
 
     if (status === 'success') {
+      // Update payment record amount if coupon promo_code is provided
+      const payments = await localDb.getAllPayments();
+      const payment = payments.find(p => p.room_id === room_id && p.payment_status === 'pending');
+      
+      if (payment && promo_code) {
+        const coupon = await localDb.verifyCoupon(promo_code);
+        if (coupon) {
+          const discountedPrice = Math.round(payment.amount * (1 - coupon.discount_pct / 100));
+          await localDb.updatePayment(payment.id, { amount: discountedPrice });
+          await localDb.useCoupon(promo_code);
+        }
+      }
+
       await localDb.updatePaymentStatus(room_id, 'completed');
       
       // SSE broadcast to active client connections notifying room activation

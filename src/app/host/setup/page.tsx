@@ -40,6 +40,50 @@ export default function HostSetup() {
   const [importStatus, setImportStatus] = useState<'free' | 'premium' | null>(null);
   const [importedPresetCount, setImportedPresetCount] = useState<number>(0);
 
+  // Promo Code States
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [verifiedCoupon, setVerifiedCoupon] = useState<any>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [isVerifyingCoupon, setIsVerifyingCoupon] = useState(false);
+
+  const handleApplyPromoCode = async () => {
+    if (!promoCodeInput.trim()) return;
+    setIsVerifyingCoupon(true);
+    setCouponError(null);
+    try {
+      const res = await fetch(`/api/coupon/verify?code=${encodeURIComponent(promoCodeInput.trim())}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.valid) {
+          setVerifiedCoupon({
+            code: data.code,
+            discount_pct: data.discount_pct
+          });
+          setPromoCodeInput('');
+        } else {
+          const defaultErr = {
+            ko: '유효하지 않거나 만료된 프로모션 코드입니다.',
+            en: 'Invalid or expired promo code.',
+            ja: '無効または期限切れのプロモーションコードです。',
+            es: 'Código de descuento inválido o vencido.',
+            'zh-TW': '無效或已過期的優惠代碼。',
+            'zh-HK': '無效或已過期的優惠代碼。'
+          }[activeLocale] || '유효하지 않거나 만료된 프로모션 코드입니다.';
+          setCouponError(data.message?.[activeLocale] || defaultErr);
+          setVerifiedCoupon(null);
+        }
+      } else {
+        setCouponError('서버 연결 실패');
+        setVerifiedCoupon(null);
+      }
+    } catch (err) {
+      setCouponError('서버 연결 실패');
+      setVerifiedCoupon(null);
+    } finally {
+      setIsVerifyingCoupon(false);
+    }
+  };
+
   // 1. Initial State Hydration
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -61,6 +105,25 @@ export default function HostSetup() {
       }
     }
   }, []);
+
+  // Log Funnel logs for checkout (Step 3 & Step 4)
+  useEffect(() => {
+    if (isCheckoutOpen) {
+      if (checkoutStep === 'input') {
+        fetch('/api/funnel/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ step: 'step3_view_upgrade' })
+        }).catch(() => {});
+      } else if (checkoutStep === 'done') {
+        fetch('/api/funnel/log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ step: 'step4_payment_success' })
+        }).catch(() => {});
+      }
+    }
+  }, [isCheckoutOpen, checkoutStep]);
 
   // Check URL parameters for preset importing
   useEffect(() => {
@@ -292,6 +355,7 @@ export default function HostSetup() {
         body: JSON.stringify({
           room_id: createdRoomInfo.room_id,
           status: 'success',
+          promo_code: verifiedCoupon ? verifiedCoupon.code : undefined,
         }),
       });
 
@@ -800,6 +864,54 @@ export default function HostSetup() {
                   </button>
                 </div>
 
+                {/* Promo Code Input Form */}
+                <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      {activeLocale === 'ko' ? '프로모션 코드' : 'Promo Code'}
+                    </span>
+                    {verifiedCoupon && (
+                      <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                        {verifiedCoupon.code} {verifiedCoupon.discount_pct}% 할인 적용됨
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={promoCodeInput}
+                      onChange={(e) => setPromoCodeInput(e.target.value)}
+                      placeholder={activeLocale === 'ko' ? '예: WELCOME20' : 'e.g. WELCOME20'}
+                      disabled={isVerifyingCoupon || verifiedCoupon}
+                      className="flex-1 bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono uppercase"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyPromoCode}
+                      disabled={isVerifyingCoupon || verifiedCoupon || !promoCodeInput.trim()}
+                      className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-40 disabled:hover:bg-zinc-800"
+                    >
+                      {isVerifyingCoupon ? '...' : activeLocale === 'ko' ? '적용' : 'Apply'}
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-[10px] text-red-400 font-bold mt-0.5">{couponError}</p>
+                  )}
+                  {verifiedCoupon && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVerifiedCoupon(null);
+                        setPromoCodeInput('');
+                        setCouponError(null);
+                      }}
+                      className="text-[9px] text-zinc-500 hover:text-zinc-300 font-semibold self-start underline cursor-pointer"
+                    >
+                      {activeLocale === 'ko' ? '코드 취소하기' : 'Remove promo code'}
+                    </button>
+                  )}
+                </div>
+
                 {/* PG Checkout Simulator Card */}
                 <div className="bg-black/50 border border-white/5 rounded-xl p-4 flex flex-col gap-3">
                   <div className="text-xs text-zinc-400 flex justify-between">
@@ -812,11 +924,38 @@ export default function HostSetup() {
                   </div>
                   <div className="text-xs text-zinc-400 flex justify-between border-t border-white/5 pt-3 mt-1">
                     <span>{t('setup_checkout_total', activeLocale)}</span>
-                    <span className="text-indigo-400 font-extrabold text-sm">
-                      {paymentMethod === 'toss' 
-                        ? getLocalizedPrice(selectedTier, 'ko') 
-                        : getLocalizedPrice(selectedTier, activeLocale)}
-                    </span>
+                    <div className="flex flex-col items-end">
+                      {verifiedCoupon ? (
+                        <>
+                          <span className="text-zinc-500 text-[10px] line-through font-mono">
+                            {paymentMethod === 'toss' 
+                              ? getLocalizedPrice(selectedTier, 'ko') 
+                              : getLocalizedPrice(selectedTier, activeLocale)}
+                          </span>
+                          <span className="text-emerald-400 font-extrabold text-sm font-mono animate-pulse">
+                            {(() => {
+                              const config = TIER_CONFIGS[selectedTier];
+                              if (!config) return '';
+                              const basePrice = config.priceKrw;
+                              const discounted = Math.round(basePrice * (1 - verifiedCoupon.discount_pct / 100));
+                              if (paymentMethod === 'toss') {
+                                return discounted === 0 ? '무료 (Free)' : `₩${discounted.toLocaleString()}원`;
+                              } else {
+                                const usdBase = selectedTier === 'free' ? 0 : selectedTier === 'lite' ? 9.9 : selectedTier === 'pro' ? 29.0 : selectedTier === 'max' ? 79.0 : selectedTier === 'store' ? 12.0 : 110.0;
+                                const discountedUsd = usdBase * (1 - verifiedCoupon.discount_pct / 100);
+                                return `$${discountedUsd.toFixed(1)} USD`;
+                              }
+                            })()}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-indigo-400 font-extrabold text-sm font-mono">
+                          {paymentMethod === 'toss' 
+                            ? getLocalizedPrice(selectedTier, 'ko') 
+                            : getLocalizedPrice(selectedTier, activeLocale)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 

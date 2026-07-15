@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import { Room, Payment, Preset, TierType, TIER_CONFIGS } from './types';
+import { Room, Payment, Preset, TierType, TIER_CONFIGS, Coupon, FunnelLog } from './types';
 import { isSupabaseConfigured, supabase } from './supabase';
 
 function hashPasscode(passcode?: string): string | undefined {
@@ -20,6 +20,8 @@ const globalForRoomStore = global as unknown as {
   payments: Payment[];
   clients: Map<string, SSEClient[]>;
   currentStates: Map<string, Preset>;
+  coupons: Coupon[];
+  funnelLogs: FunnelLog[];
   supabaseChannels?: Map<string, any>;
   supabasePresenceCounts?: Map<string, number>;
 };
@@ -36,11 +38,11 @@ if (!globalForRoomStore.clients) {
 if (!globalForRoomStore.currentStates) {
   globalForRoomStore.currentStates = new Map();
 }
-if (!globalForRoomStore.supabaseChannels) {
-  globalForRoomStore.supabaseChannels = new Map();
+if (!globalForRoomStore.coupons) {
+  globalForRoomStore.coupons = [];
 }
-if (!globalForRoomStore.supabasePresenceCounts) {
-  globalForRoomStore.supabasePresenceCounts = new Map();
+if (!globalForRoomStore.funnelLogs) {
+  globalForRoomStore.funnelLogs = [];
 }
 
 // Robust workspace root resolver to handle cases where Next.js infers a parent directory (like C:\Users\김강산) as the root
@@ -94,7 +96,9 @@ function readDb() {
       return {
         rooms: new Map<string, Room>(Object.entries(parsed.rooms || {})),
         payments: (parsed.payments || []) as Payment[],
-        currentStates: new Map<string, Preset>(Object.entries(parsed.currentStates || {}))
+        currentStates: new Map<string, Preset>(Object.entries(parsed.currentStates || {})),
+        coupons: (parsed.coupons || []) as Coupon[],
+        funnelLogs: (parsed.funnelLogs || []) as FunnelLog[]
       };
     }
   } catch (err) {
@@ -103,11 +107,19 @@ function readDb() {
   return {
     rooms: new Map<string, Room>(),
     payments: [] as Payment[],
-    currentStates: new Map<string, Preset>()
+    currentStates: new Map<string, Preset>(),
+    coupons: [] as Coupon[],
+    funnelLogs: [] as FunnelLog[]
   };
 }
 
-function writeDb(rooms: Map<string, Room>, payments: Payment[], currentStates: Map<string, Preset>) {
+function writeDb(
+  rooms: Map<string, Room>,
+  payments: Payment[],
+  currentStates: Map<string, Preset>,
+  coupons: Coupon[],
+  funnelLogs: FunnelLog[]
+) {
   try {
     const dir = path.dirname(DB_FILE);
     if (!fs.existsSync(dir)) {
@@ -116,7 +128,9 @@ function writeDb(rooms: Map<string, Room>, payments: Payment[], currentStates: M
     const data = {
       rooms: Object.fromEntries(rooms.entries()),
       payments: payments,
-      currentStates: Object.fromEntries(currentStates.entries())
+      currentStates: Object.fromEntries(currentStates.entries()),
+      coupons: coupons,
+      funnelLogs: funnelLogs
     };
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
   } catch (err) {
@@ -129,6 +143,8 @@ export const localDb = {
   payments: globalForRoomStore.payments,
   clients: globalForRoomStore.clients,
   currentStates: globalForRoomStore.currentStates,
+  coupons: globalForRoomStore.coupons,
+  funnelLogs: globalForRoomStore.funnelLogs,
   supabaseChannels: globalForRoomStore.supabaseChannels!,
   supabasePresenceCounts: globalForRoomStore.supabasePresenceCounts!,
 
@@ -147,10 +163,16 @@ export const localDb = {
     for (const [k, v] of data.currentStates.entries()) {
       this.currentStates.set(k, v);
     }
+
+    this.coupons.length = 0;
+    this.coupons.push(...data.coupons);
+
+    this.funnelLogs.length = 0;
+    this.funnelLogs.push(...data.funnelLogs);
   },
 
   saveToDisk(): void {
-    writeDb(this.rooms, this.payments, this.currentStates);
+    writeDb(this.rooms, this.payments, this.currentStates, this.coupons, this.funnelLogs);
   },
 
   async cleanupExpiredRooms(): Promise<void> {
@@ -509,7 +531,7 @@ export const localDb = {
     }
   },
 
-  async extendRoom(roomId: string, extraHours: number = 24): Promise<boolean> {
+  async extendRoom(roomId: string, extraHours: number = 24, promoCode?: string): Promise<boolean> {
     if (isSupabaseConfigured() && supabase) {
       // 1. Fetch current room details
       const { data: room, error: fetchErr } = await supabase
@@ -552,9 +574,16 @@ export const localDb = {
         return false;
       }
 
-      // 4. Log the extended payment (20% discount applied)
+      // 4. Log the extended payment (20% discount applied + optional promo code discount)
       const config = TIER_CONFIGS[room.tier as TierType];
-      const discountedPrice = Math.round(config.priceKrw * 0.8);
+      let discountedPrice = Math.round(config.priceKrw * 0.8);
+      if (promoCode) {
+        const coupon = await this.verifyCoupon(promoCode);
+        if (coupon) {
+          discountedPrice = Math.round(discountedPrice * (1 - coupon.discount_pct / 100));
+          await this.useCoupon(promoCode);
+        }
+      }
       await this.addPayment(
         room.email,
         room.host_session_token,
@@ -590,9 +619,16 @@ export const localDb = {
         room.created_at = newCreatedAtISO;
         this.saveToDisk();
 
-        // Log the extended payment (20% discount applied)
+        // Log the extended payment (20% discount applied + optional promo code discount)
         const config = TIER_CONFIGS[room.tier];
-        const discountedPrice = Math.round(config.priceKrw * 0.8);
+        let discountedPrice = Math.round(config.priceKrw * 0.8);
+        if (promoCode) {
+          const coupon = await this.verifyCoupon(promoCode);
+          if (coupon) {
+            discountedPrice = Math.round(discountedPrice * (1 - coupon.discount_pct / 100));
+            await this.useCoupon(promoCode);
+          }
+        }
         await this.addPayment(
           room.email,
           room.host_session_token,
@@ -841,5 +877,84 @@ export const localDb = {
       }
       return false;
     }
+  },
+
+  // Coupon Helpers
+  async getCoupons(): Promise<Coupon[]> {
+    this.loadFromDisk();
+    return this.coupons;
+  },
+
+  async addCoupon(coupon: Coupon): Promise<boolean> {
+    this.loadFromDisk();
+    const cleanCode = coupon.code.toUpperCase().trim();
+    if (this.coupons.some(c => c.code === cleanCode)) return false;
+    this.coupons.push({
+      ...coupon,
+      code: cleanCode
+    });
+    this.saveToDisk();
+    return true;
+  },
+
+  async toggleCoupon(code: string): Promise<boolean> {
+    this.loadFromDisk();
+    const cleanCode = code.toUpperCase().trim();
+    const coupon = this.coupons.find(c => c.code === cleanCode);
+    if (coupon) {
+      coupon.is_active = !coupon.is_active;
+      this.saveToDisk();
+      return true;
+    }
+    return false;
+  },
+
+  async deleteCoupon(code: string): Promise<boolean> {
+    this.loadFromDisk();
+    const cleanCode = code.toUpperCase().trim();
+    const index = this.coupons.findIndex(c => c.code === cleanCode);
+    if (index > -1) {
+      this.coupons.splice(index, 1);
+      this.saveToDisk();
+      return true;
+    }
+    return false;
+  },
+
+  async verifyCoupon(code: string): Promise<Coupon | null> {
+    this.loadFromDisk();
+    const cleanCode = code.toUpperCase().trim();
+    const coupon = this.coupons.find(c => c.code === cleanCode);
+    if (coupon && coupon.is_active && coupon.used_count < coupon.max_uses) {
+      return coupon;
+    }
+    return null;
+  },
+
+  async useCoupon(code: string): Promise<boolean> {
+    this.loadFromDisk();
+    const cleanCode = code.toUpperCase().trim();
+    const coupon = this.coupons.find(c => c.code === cleanCode);
+    if (coupon && coupon.is_active && coupon.used_count < coupon.max_uses) {
+      coupon.used_count += 1;
+      this.saveToDisk();
+      return true;
+    }
+    return false;
+  },
+
+  // Funnel Helpers
+  async logFunnelEvent(step: FunnelLog['step']): Promise<void> {
+    this.loadFromDisk();
+    this.funnelLogs.push({
+      step,
+      created_at: new Date().toISOString()
+    });
+    this.saveToDisk();
+  },
+
+  async getFunnelLogs(): Promise<FunnelLog[]> {
+    this.loadFromDisk();
+    return this.funnelLogs;
   }
 };
