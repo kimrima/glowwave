@@ -14,8 +14,12 @@ CREATE TABLE IF NOT EXISTS public.rooms (
     current_participants INTEGER NOT NULL DEFAULT 0, -- Active websocket spectator connections
     passcode TEXT,                             -- Room access passcode (hashed/plain 4-6 digits)
     current_state JSONB NOT NULL DEFAULT '{"bg_color": "#0B0B0F", "text": "GlowWave 🌊", "text_color": "#FFFFFF", "effect": "none", "speed": 1000}'::jsonb,
+    mail_sent_at TIMESTAMP WITH TIME ZONE,     -- CS Alert Email Timestamp
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
+
+-- Migration script to alter existing tables
+ALTER TABLE public.rooms ADD COLUMN IF NOT EXISTS mail_sent_at TIMESTAMP WITH TIME ZONE;
 
 -- 3. Create Payments Table
 CREATE TABLE IF NOT EXISTS public.payments (

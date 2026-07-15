@@ -114,6 +114,72 @@ export async function GET(request: NextRequest) {
       activeSpectatorsCount += localDb.getClientCount(room.id);
     });
 
+    // 6. Cohort Retention Matrix (5x5 Weeks)
+    const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+    const nowMs = Date.now();
+
+    const userRooms: Record<string, Room[]> = {};
+    rooms.forEach(r => {
+      if (r.email) {
+        if (!userRooms[r.email]) userRooms[r.email] = [];
+        userRooms[r.email].push(r);
+      }
+    });
+
+    const userCohortStarts: Record<string, number> = {};
+    Object.entries(userRooms).forEach(([email, rList]) => {
+      const minTime = Math.min(...rList.map(r => new Date(r.created_at).getTime()));
+      userCohortStarts[email] = minTime;
+    });
+
+    const cohortLabels = [
+      '5주 전',
+      '4주 전',
+      '3주 전',
+      '2주 전',
+      '이번 주'
+    ];
+
+    const cohortData = cohortLabels.map((label, cIndex) => {
+      const cohortStart = nowMs - (5 - cIndex) * ONE_WEEK_MS;
+      const cohortEnd = cohortStart + ONE_WEEK_MS;
+
+      const cohortUsers = Object.keys(userCohortStarts).filter(email => {
+        const start = userCohortStarts[email];
+        return start >= cohortStart && start < cohortEnd;
+      });
+
+      const cohortSize = cohortUsers.length;
+      const retentionPct: number[] = [];
+
+      for (let w = 0; w < 5 - cIndex; w++) {
+        if (cohortSize === 0) {
+          retentionPct.push(0);
+          continue;
+        }
+
+        const targetStart = cohortStart + w * ONE_WEEK_MS;
+        const targetEnd = targetStart + ONE_WEEK_MS;
+
+        const activeUsersCount = cohortUsers.filter(email => {
+          const uRooms = userRooms[email] || [];
+          return uRooms.some(r => {
+            const rTime = new Date(r.created_at).getTime();
+            return rTime >= targetStart && rTime < targetEnd;
+          });
+        }).length;
+
+        const pct = Math.round((activeUsersCount / cohortSize) * 100);
+        retentionPct.push(pct);
+      }
+
+      return {
+        cohort: label,
+        size: cohortSize,
+        retention: retentionPct
+      };
+    });
+
     return NextResponse.json({
       success: true,
       analytics: {
@@ -135,7 +201,8 @@ export async function GET(request: NextRequest) {
         retention: {
           uniqueEmailCount,
           repeatEmailCount,
-          repeatCustomerRate
+          repeatCustomerRate,
+          cohort: cohortData
         },
         liveMetrics: {
           activeRoomsCount,

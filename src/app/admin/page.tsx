@@ -25,7 +25,8 @@ import {
   Plus,
   Trash,
   Eye,
-  Lock
+  Lock,
+  Activity
 } from 'lucide-react';
 import { Room, Payment, TierType, TIER_CONFIGS } from '@/lib/types';
 
@@ -47,7 +48,7 @@ export default function AdminPage() {
   const [cleanupMessage, setCleanupMessage] = useState('');
 
   // UI state
-  const [activeTab, setActiveTab] = useState<'analytics' | 'rooms' | 'payments' | 'templates' | 'trends' | 'coupons'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'rooms' | 'payments' | 'templates' | 'trends' | 'coupons' | 'health'>('analytics');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [tierFilter, setTierFilter] = useState<string>('all');
@@ -74,6 +75,30 @@ export default function AdminPage() {
   const [editingPresetIndex, setEditingPresetIndex] = useState<number | null>(null);
   const [editingPreset, setEditingPreset] = useState<any>(null);
   const [isAddingPreset, setIsAddingPreset] = useState<boolean>(false);
+
+  // Real-time server health stats
+  const [healthStats, setHealthStats] = useState<any>(null);
+
+  // Poll health data when activeTab is 'health'
+  useEffect(() => {
+    if (activeTab !== 'health' || !isAuthenticated) return;
+    
+    const fetchHealth = async () => {
+      try {
+        const res = await fetch('/api/admin/health');
+        if (res.ok) {
+          const data = await res.json();
+          setHealthStats(data);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchHealth();
+    const interval = setInterval(fetchHealth, 5000);
+    return () => clearInterval(interval);
+  }, [activeTab, isAuthenticated]);
 
   // Coupon Creator Inputs
   const [newCouponCode, setNewCouponCode] = useState('');
@@ -334,6 +359,29 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error('Update room error:', err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleSendCSWarningEmail = async (roomId: string) => {
+    setActionLoading(`mail-remind-${roomId}`);
+    try {
+      const res = await fetch('/api/admin/mail-remind', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomId })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        alert(data.message || 'CS 경고 메일이 성공적으로 전송되었습니다.');
+        fetchData();
+      } else {
+        alert('이메일 발송에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('이메일 발송 처리 중 오류가 발생했습니다.');
     } finally {
       setActionLoading(null);
     }
@@ -665,6 +713,17 @@ export default function AdminPage() {
             <Percent className="w-3.5 h-3.5" />
             할인 쿠폰 관리
           </button>
+          <button
+            onClick={() => { setActiveTab('health'); setSearchQuery(''); }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
+              activeTab === 'health' 
+                ? 'bg-violet-600 text-white font-extrabold shadow-md' 
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5" />
+            시스템 헬스
+          </button>
         </div>
 
         {/* Tab 1: Business Intelligence Analytics */}
@@ -943,6 +1002,70 @@ export default function AdminPage() {
               </div>
             </div>
 
+            {/* 5단: Weekly Cohort Retention Heatmap Analysis */}
+            <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2 font-mono">
+                  <TrendingUp className="w-4 h-4 text-violet-400" /> 주간 코호트 리텐션 분석 (Weekly Cohort Retention Heatmap)
+                </h3>
+                <span className="text-[9px] font-bold text-zinc-500 bg-white/5 px-2 py-0.5 rounded uppercase tracking-wider">최근 5주</span>
+              </div>
+              <p className="text-[10px] text-zinc-500 mb-6 font-bold">최초 방 생성일(Cohort Week) 기준 각 주차별로 재방문하여 방을 개설하거나 활동한 고유 사용자(이메일 기준) 재사용률입니다.</p>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-center text-zinc-300 border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/5 text-[9px] font-black text-zinc-500 uppercase tracking-widest">
+                      <th className="py-3 text-left pl-4 w-32">코호트 그룹</th>
+                      <th className="w-24">모수 (Users)</th>
+                      <th className="w-20">Week 0</th>
+                      <th className="w-20">Week 1</th>
+                      <th className="w-20">Week 2</th>
+                      <th className="w-20">Week 3</th>
+                      <th className="w-20">Week 4</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-xs font-bold font-mono">
+                    {(analytics?.retention?.cohort || []).map((row: any, rIdx: number) => (
+                      <tr key={rIdx} className="hover:bg-white/[0.01]">
+                        <td className="py-4 text-left font-black text-zinc-300 pl-4">{row.cohort}</td>
+                        <td className="text-zinc-500 font-extrabold">{row.size}명</td>
+                        {row.retention.map((pct: number, cIdx: number) => {
+                          let colorClass = 'bg-white/[0.01] text-zinc-600';
+                          if (pct > 0 && pct <= 20) colorClass = 'bg-indigo-500/10 text-indigo-300 border border-indigo-500/10';
+                          else if (pct > 20 && pct <= 40) colorClass = 'bg-indigo-500/20 text-indigo-200 border border-indigo-500/15';
+                          else if (pct > 40 && pct <= 60) colorClass = 'bg-indigo-500/40 text-indigo-100 border border-indigo-500/20';
+                          else if (pct > 60 && pct <= 80) colorClass = 'bg-indigo-500/65 text-white border border-indigo-500/30';
+                          else if (pct > 80) colorClass = 'bg-indigo-600 text-white font-extrabold shadow-inner shadow-black/20';
+                          
+                          return (
+                            <td key={cIdx} className="p-1">
+                              <div className={`py-3 rounded-lg text-center ${colorClass}`}>
+                                {pct}%
+                              </div>
+                            </td>
+                          );
+                        })}
+                        {/* Fill trailing empty weeks */}
+                        {Array.from({ length: 5 - row.retention.length }).map((_, padIdx) => (
+                          <td key={`pad-${padIdx}`} className="p-1">
+                            <div className="py-3 rounded-lg text-center bg-white/[0.01] text-zinc-700/30 font-light">-</div>
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                    {(!analytics?.retention?.cohort || analytics.retention.cohort.length === 0) && (
+                      <tr>
+                        <td colSpan={7} className="py-12 text-center text-zinc-500 text-xs font-bold font-sans">
+                          코호트 산출을 위한 사용자 방 개설 이력이 존재하지 않습니다.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         )}
                 {/* Search Bar (Only shown on Tab 2 and Tab 3) */}
@@ -1101,8 +1224,34 @@ export default function AdminPage() {
                             <div className="font-bold text-zinc-300">
                               {room.expires_at ? new Date(room.expires_at).toLocaleString() : 'N/A'}
                             </div>
-                            <div className="text-[10px] mt-1 font-extrabold">
-                              {getRemainingTimeText(room.expires_at)}
+                            <div className="flex flex-col gap-1.5 mt-1">
+                              <div className="text-[10px] font-extrabold">
+                                {getRemainingTimeText(room.expires_at)}
+                              </div>
+                              {(() => {
+                                const isUnder3Days = room.expires_at && (new Date(room.expires_at).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000) && (new Date(room.expires_at).getTime() - Date.now() > 0);
+                                if (!isUnder3Days) return null;
+                                return (
+                                  <div className="flex flex-col gap-1 mt-0.5">
+                                    <span className="inline-block text-[8px] font-black text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20 w-fit">
+                                      ⚠️ 만료 임박 (3일 이내)
+                                    </span>
+                                    {room.mail_sent_at ? (
+                                      <span className="text-[8px] font-bold text-zinc-500">
+                                        ✉️ 경고 메일 발송됨 ({new Date(room.mail_sent_at).toLocaleDateString()})
+                                      </span>
+                                    ) : (
+                                      <button
+                                        onClick={() => handleSendCSWarningEmail(room.id)}
+                                        disabled={actionLoading === `mail-remind-${room.id}`}
+                                        className="text-[9px] font-black text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 px-2 py-1 rounded-lg w-fit cursor-pointer transition-all disabled:opacity-40"
+                                      >
+                                        {actionLoading === `mail-remind-${room.id}` ? '전송 중...' : 'CS 경고 메일 발송'}
+                                      </button>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </td>
                           <td className="px-6 py-4 font-bold text-zinc-400">
@@ -2245,6 +2394,125 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 6: Real-time System Health Monitoring */}
+        {activeTab === 'health' && (
+          <div className="space-y-8 animate-in fade-in duration-200 text-left">
+            {/* System Status Summary */}
+            <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 sm:p-8 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <div className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">글로우웨이브 엔진 상태</div>
+                <div className="flex items-center gap-2.5 mt-1.5">
+                  <span className={`w-3.5 h-3.5 rounded-full ${
+                    healthStats?.status === 'UP' ? 'bg-emerald-500 shadow-lg shadow-emerald-500/50 animate-pulse' : 'bg-red-500 animate-pulse'
+                  }`} />
+                  <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                    {healthStats?.status === 'UP' ? '정상 작동 중 (HEALTHY)' : '점검 필요 (DEGRADED)'}
+                  </h2>
+                </div>
+              </div>
+              <div className="bg-white/[0.02] border border-white/5 px-4 py-3 rounded-2xl text-right">
+                <div className="text-zinc-500 text-[9px] font-bold uppercase tracking-wider">서버 가동 시간 (UPTIME)</div>
+                <div className="text-sm font-extrabold text-indigo-300 font-mono mt-0.5">
+                  {(() => {
+                    const sec = healthStats?.uptime_seconds;
+                    if (sec === undefined) return '연결 중...';
+                    const d = Math.floor(sec / (24 * 3600));
+                    const h = Math.floor((sec % (24 * 3600)) / 3600);
+                    const m = Math.floor((sec % 3600) / 60);
+                    const s = sec % 60;
+                    return `${d > 0 ? `${d}일 ` : ''}${h}시간 ${m}분 ${s}초`;
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* Core Resource Metrics Gauges */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              {/* CPU Usage Card */}
+              <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl flex flex-col justify-between min-h-[200px]">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">CPU 점유율</span>
+                  <span className="text-emerald-400 font-black text-xs font-mono">가상 분산형</span>
+                </div>
+                <div className="my-6">
+                  <div className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
+                    {healthStats?.resources?.cpu_usage_pct ?? '--'}%
+                  </div>
+                  <div className="w-full bg-white/5 h-2 rounded-full mt-3.5 overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-emerald-500 to-indigo-500 h-full rounded-full transition-all duration-500" 
+                      style={{ width: `${healthStats?.resources?.cpu_usage_pct ?? 0}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="text-[10px] text-zinc-500 font-medium">
+                  실시간 서버리스 처리 분배율 안정권 유지 중
+                </div>
+              </div>
+
+              {/* Memory Usage Card */}
+              <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl flex flex-col justify-between min-h-[200px]">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">메모리 점유 (Heap Used)</span>
+                  <span className="text-sky-400 font-black text-xs font-mono">RSS Limit 512MB</span>
+                </div>
+                <div className="my-6">
+                  <div className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
+                    {healthStats?.resources?.memory_heap_used_mb ?? '--'} <span className="text-xs text-zinc-500 font-bold">MB</span>
+                  </div>
+                  <div className="w-full bg-white/5 h-2 rounded-full mt-3.5 overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-sky-400 to-violet-500 h-full rounded-full transition-all duration-500" 
+                      style={{ width: `${Math.min(100, Math.round(((healthStats?.resources?.memory_heap_used_mb ?? 0) / 256) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="text-[10px] text-zinc-500 font-medium">
+                  RSS 물리 메모리 전체: {healthStats?.resources?.memory_rss_mb ?? '--'}MB
+                </div>
+              </div>
+
+              {/* DB Query Response Latency Card */}
+              <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl flex flex-col justify-between min-h-[200px]">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Supabase DB 응답 지연 (Latency)</span>
+                  <span className={`px-2 py-0.5 rounded text-[8px] font-black border uppercase ${
+                    (healthStats?.db?.latency_ms ?? 0) < 150 
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                      : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                  }`}>
+                    {healthStats?.db?.status ?? '연결 확인중'}
+                  </span>
+                </div>
+                <div className="my-6">
+                  <div className="text-3xl sm:text-4xl font-black font-mono text-white tracking-tight">
+                    {healthStats?.db?.latency_ms ?? '--'} <span className="text-xs text-zinc-500 font-bold">ms</span>
+                  </div>
+                  <div className="w-full bg-white/5 h-2 rounded-full mt-3.5 overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        (healthStats?.db?.latency_ms ?? 0) < 150 ? 'bg-emerald-500' : 'bg-amber-500'
+                      }`} 
+                      style={{ width: `${Math.min(100, Math.round(((healthStats?.db?.latency_ms ?? 0) / 300) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="text-[10px] text-zinc-500 font-medium">
+                  데이터베이스 지연율 150ms 미만 (Excellent)
+                </div>
+              </div>
+
+            </div>
+
+            {/* Metrics Live Ticker Guide */}
+            <div className="text-right text-[10px] text-zinc-600 font-bold flex items-center justify-end gap-1.5">
+              <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-ping" />
+              시스템 헬스는 5초마다 실시간으로 자동 갱신됩니다.
             </div>
           </div>
         )}

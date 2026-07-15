@@ -204,6 +204,7 @@ export interface Room {
   active_clients?: number;
   locale?: string;
   expires_at?: string;
+  mail_sent_at?: string;
 }
 
 export interface Payment {

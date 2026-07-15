@@ -346,6 +346,14 @@ export default function HostDashboard() {
   // Expiration countdown state
   const [timeRemaining, setTimeRemaining] = useState<string>('');
 
+  // Reset upgrade modal states on close
+  useEffect(() => {
+    if (!isUpgradeModalOpen) {
+      setUpgradeStep('select');
+      setSelectedUpgradeTier(null);
+    }
+  }, [isUpgradeModalOpen]);
+
   // Reset coupon state when modals are closed
   useEffect(() => {
     if (!isUpgradeModalOpen && !isExtendModalOpen) {
@@ -376,6 +384,21 @@ export default function HostDashboard() {
       }).catch(() => {});
     }
   }, [upgradeStep, extendStep]);
+
+  // ESC key listener to close modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (!isUpgrading && upgradeStep !== 'success') {
+          setIsUpgradeModalOpen(false);
+        }
+        setIsExtendModalOpen(false);
+        setIsPasscodeDrawerOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isUpgradeModalOpen, isExtendModalOpen, isUpgrading, upgradeStep]);
 
   // Accidental Navigation Warning & Expiration Countdown Timer
   useEffect(() => {
@@ -4597,8 +4620,18 @@ export default function HostDashboard() {
 
       {/* 12. Upgrade Plan Modal Dialog */}
       {isUpgradeModalOpen && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass-effect border border-white/10 rounded-3xl w-full max-w-md p-7 relative z-10 animate-in fade-in zoom-in-95 duration-150 text-left flex flex-col gap-6 text-white bg-[#12121a]">
+        <div 
+          onClick={() => {
+            if (!isUpgrading && upgradeStep !== 'success') {
+              setIsUpgradeModalOpen(false);
+            }
+          }}
+          className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="glass-effect border border-white/10 rounded-3xl w-full max-w-md p-7 relative z-10 animate-in fade-in zoom-in-95 duration-150 text-left flex flex-col gap-6 text-white bg-[#12121a]"
+          >
             
             {/* Header */}
             <div className="flex justify-between items-center pb-4 border-b border-white/10">
