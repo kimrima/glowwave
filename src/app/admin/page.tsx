@@ -189,9 +189,10 @@ export default function AdminPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          action: 'add',
           code: newCouponCode.trim().toUpperCase(),
           discount_pct: Number(newCouponDiscount),
-          max_usages: Number(newCouponLimit)
+          max_uses: Number(newCouponLimit)
         })
       });
       if (res.ok) {
