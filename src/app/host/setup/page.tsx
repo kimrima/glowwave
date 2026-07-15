@@ -238,6 +238,10 @@ export default function HostSetup() {
         host_session_token: data.host_session_token,
       });
 
+      if (selectedTier !== 'free' && passcode) {
+        localStorage.setItem(`glowwave_passcode_${data.room_id}`, passcode);
+      }
+
       // Save email in localStorage for future convenience
       localStorage.setItem('glowwave_host_email', hostEmail);
 

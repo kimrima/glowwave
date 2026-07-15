@@ -64,3 +64,33 @@ CREATE POLICY "Allow read of own payments" ON public.payments
 --         (tier = 'store_annual' AND created_at < NOW() - INTERVAL '365 days');
 --     DELETE FROM public.payments WHERE created_at < NOW() - INTERVAL '24 hours';
 -- $$);
+
+-- 7. Create Coupons Table
+CREATE TABLE IF NOT EXISTS public.coupons (
+    code VARCHAR(100) PRIMARY KEY,
+    discount_pct INTEGER NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    max_uses INTEGER NOT NULL DEFAULT 50,
+    used_count INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- 8. Create Funnel Logs Table
+CREATE TABLE IF NOT EXISTS public.funnel_logs (
+    id BIGSERIAL PRIMARY KEY,
+    step VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- 9. Enable RLS and Create Policies
+ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.funnel_logs ENABLE ROW LEVEL SECURITY;
+
+-- Allow public selectors
+CREATE POLICY "Allow public select on coupons" ON public.coupons FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on funnel_logs" ON public.funnel_logs FOR INSERT WITH CHECK (true);
+
+-- Allow master admin access
+CREATE POLICY "Allow admin full access on coupons" ON public.coupons FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow admin full access on funnel_logs" ON public.funnel_logs FOR ALL USING (true) WITH CHECK (true);
+

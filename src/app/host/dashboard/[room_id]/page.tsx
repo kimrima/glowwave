@@ -1144,6 +1144,11 @@ export default function HostDashboard() {
           passcode: newPasscode || undefined
         });
       }
+      if (newPasscode) {
+        localStorage.setItem(`glowwave_passcode_${roomId}`, newPasscode);
+      } else {
+        localStorage.removeItem(`glowwave_passcode_${roomId}`);
+      }
       setIsPasscodeDrawerOpen(false);
     } catch (err: any) {
       console.error(err);
@@ -2204,7 +2209,7 @@ export default function HostDashboard() {
                   </span>
                   <div className="flex items-center gap-2 mt-0.5">
                     <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-[#ffffff]/[0.03] border border-white/5 font-mono">
-                      {room.passcode ? room.passcode : (
+                      {room.passcode ? (typeof window !== 'undefined' ? (localStorage.getItem(`glowwave_passcode_${room.id}`) || '🔒 설정됨') : '🔒 설정됨') : (
                         {
                           ko: '설정 없음',
                           en: 'Not Set',
