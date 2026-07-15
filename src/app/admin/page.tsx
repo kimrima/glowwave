@@ -144,6 +144,10 @@ export default function AdminPage() {
     setLoading(true);
     try {
       const res = await fetch('/api/admin/data');
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setRooms(data.rooms || []);
@@ -163,6 +167,10 @@ export default function AdminPage() {
   const fetchAnalytics = async () => {
     try {
       const res = await fetch('/api/admin/analytics');
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setAnalytics(data.analytics);
@@ -245,6 +253,10 @@ export default function AdminPage() {
   const fetchTemplates = async () => {
     try {
       const res = await fetch('/api/admin/templates');
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setLocalizedTemplates(data.templates);

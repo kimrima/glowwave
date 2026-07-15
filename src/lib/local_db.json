@@ -67,56 +67,6 @@
       "max_participants": 3,
       "current_participants": 0,
       "created_at": "2026-07-14T04:13:05.536Z"
-    },
-    "53X2CE": {
-      "id": "53X2CE",
-      "host_session_token": "7729458e-4bf2-4bef-a194-f0713ff3ac8f",
-      "email": "anonymous-local@glowwave.app",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 1,
-      "current_participants": 0,
-      "created_at": "2026-07-14T04:16:06.174Z"
-    },
-    "70P1JG": {
-      "id": "70P1JG",
-      "host_session_token": "58a985ac-8bed-41e1-bd11-329e8407cb89",
-      "email": "free@example.com",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 1,
-      "current_participants": 0,
-      "created_at": "2026-07-14T04:17:03.017Z"
-    },
-    "RCM9WA": {
-      "id": "RCM9WA",
-      "host_session_token": "63f10be0-7d4b-43a8-b625-bb2c9a2e4399",
-      "email": "free@example.com",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 1,
-      "current_participants": 0,
-      "created_at": "2026-07-14T04:18:19.566Z"
-    },
-    "B8E20H": {
-      "id": "B8E20H",
-      "host_session_token": "7a18181c-7f78-48a5-95c5-927c82f45fa7",
-      "email": "free@example.com",
-      "tier": "lite",
-      "status": "inactive",
-      "max_participants": 60,
-      "current_participants": 0,
-      "created_at": "2026-07-14T04:19:45.460Z"
-    },
-    "5BYKZD": {
-      "id": "5BYKZD",
-      "host_session_token": "7a3e6edc-e450-4225-8574-6827507d2f0c",
-      "email": "free@example.com",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 1,
-      "current_participants": 0,
-      "created_at": "2026-07-14T04:20:30.894Z"
     }
   },
   "payments": [
@@ -307,7 +257,7 @@
       "room_id": "B8E20H",
       "tier": "lite",
       "amount": 5000,
-      "payment_status": "pending",
+      "payment_status": "completed",
       "created_at": "2026-07-14T04:19:45.462Z"
     }
   ],
@@ -386,51 +336,8 @@
       "font_family": "sans-thin",
       "font_size": 100,
       "trigger_id": "1783526141835"
-    },
-    "53X2CE": {
-      "bg_color": "#0B0B0F",
-      "text": "단색",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000,
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "trigger_id": "1783526141835"
-    },
-    "70P1JG": {
-      "bg_color": "#0B0B0F",
-      "text": "단색",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000,
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "trigger_id": "1783526141835"
-    },
-    "RCM9WA": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
-    },
-    "B8E20H": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
-    },
-    "5BYKZD": {
-      "bg_color": "#0B0B0F",
-      "text": "단색",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000,
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "locale": "ko",
-      "trigger_id": "1784003048236"
     }
-  }
+  },
+  "coupons": [],
+  "funnelLogs": []
 }
