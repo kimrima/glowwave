@@ -85,13 +85,19 @@ function findWorkspaceRoot(): string {
   return cwd;
 }
 
-const rootDir = findWorkspaceRoot();
-const DB_FILE = path.join(rootDir, 'src', 'lib', 'local_db.json');
+let cachedDbFile: string | null = null;
+function getDbFile(): string {
+  if (cachedDbFile) return cachedDbFile;
+  const rootDir = findWorkspaceRoot();
+  cachedDbFile = path.join(rootDir, 'src', 'lib', 'local_db.json');
+  return cachedDbFile;
+}
 
 function readDb() {
   try {
-    if (fs.existsSync(DB_FILE)) {
-      const data = fs.readFileSync(DB_FILE, 'utf8');
+    const dbFile = getDbFile();
+    if (fs.existsSync(dbFile)) {
+      const data = fs.readFileSync(dbFile, 'utf8');
       const parsed = JSON.parse(data);
       return {
         rooms: new Map<string, Room>(Object.entries(parsed.rooms || {})),
@@ -121,7 +127,8 @@ function writeDb(
   funnelLogs: FunnelLog[]
 ) {
   try {
-    const dir = path.dirname(DB_FILE);
+    const dbFile = getDbFile();
+    const dir = path.dirname(dbFile);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -132,7 +139,7 @@ function writeDb(
       coupons: coupons,
       funnelLogs: funnelLogs
     };
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+    fs.writeFileSync(dbFile, JSON.stringify(data, null, 2), 'utf8');
   } catch (err) {
     // Fail silently in serverless environments
   }
@@ -881,13 +888,32 @@ export const localDb = {
 
   // Coupon Helpers
   async getCoupons(): Promise<Coupon[]> {
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data, error } = await supabase.from('coupons').select('*');
+        if (!error && data) return data as Coupon[];
+      } catch (e) {
+        // Fallback silently to in-memory/disk
+      }
+    }
     this.loadFromDisk();
     return this.coupons;
   },
 
   async addCoupon(coupon: Coupon): Promise<boolean> {
-    this.loadFromDisk();
     const cleanCode = coupon.code.toUpperCase().trim();
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { error } = await supabase.from('coupons').insert({
+          ...coupon,
+          code: cleanCode
+        });
+        if (!error) return true;
+      } catch (e) {
+        // Fallback silently to in-memory/disk
+      }
+    }
+    this.loadFromDisk();
     if (this.coupons.some(c => c.code === cleanCode)) return false;
     this.coupons.push({
       ...coupon,
@@ -898,8 +924,19 @@ export const localDb = {
   },
 
   async toggleCoupon(code: string): Promise<boolean> {
-    this.loadFromDisk();
     const cleanCode = code.toUpperCase().trim();
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data: coupon, error: fetchErr } = await supabase.from('coupons').select('*').eq('code', cleanCode).maybeSingle();
+        if (!fetchErr && coupon) {
+          const { error } = await supabase.from('coupons').update({ is_active: !coupon.is_active }).eq('code', cleanCode);
+          if (!error) return true;
+        }
+      } catch (e) {
+        // Fallback silently
+      }
+    }
+    this.loadFromDisk();
     const coupon = this.coupons.find(c => c.code === cleanCode);
     if (coupon) {
       coupon.is_active = !coupon.is_active;
@@ -910,8 +947,16 @@ export const localDb = {
   },
 
   async deleteCoupon(code: string): Promise<boolean> {
-    this.loadFromDisk();
     const cleanCode = code.toUpperCase().trim();
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { error } = await supabase.from('coupons').delete().eq('code', cleanCode);
+        if (!error) return true;
+      } catch (e) {
+        // Fallback silently
+      }
+    }
+    this.loadFromDisk();
     const index = this.coupons.findIndex(c => c.code === cleanCode);
     if (index > -1) {
       this.coupons.splice(index, 1);
@@ -922,8 +967,21 @@ export const localDb = {
   },
 
   async verifyCoupon(code: string): Promise<Coupon | null> {
-    this.loadFromDisk();
     const cleanCode = code.toUpperCase().trim();
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data, error } = await supabase.from('coupons').select('*').eq('code', cleanCode).maybeSingle();
+        if (!error && data) {
+          const coupon = data as Coupon;
+          if (coupon.is_active && coupon.used_count < coupon.max_uses) {
+            return coupon;
+          }
+        }
+      } catch (e) {
+        // Fallback silently
+      }
+    }
+    this.loadFromDisk();
     const coupon = this.coupons.find(c => c.code === cleanCode);
     if (coupon && coupon.is_active && coupon.used_count < coupon.max_uses) {
       return coupon;
@@ -932,8 +990,21 @@ export const localDb = {
   },
 
   async useCoupon(code: string): Promise<boolean> {
-    this.loadFromDisk();
     const cleanCode = code.toUpperCase().trim();
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data: coupon, error: fetchErr } = await supabase.from('coupons').select('*').eq('code', cleanCode).maybeSingle();
+        if (!fetchErr && coupon) {
+          if (coupon.is_active && coupon.used_count < coupon.max_uses) {
+            const { error } = await supabase.from('coupons').update({ used_count: coupon.used_count + 1 }).eq('code', cleanCode);
+            if (!error) return true;
+          }
+        }
+      } catch (e) {
+        // Fallback silently
+      }
+    }
+    this.loadFromDisk();
     const coupon = this.coupons.find(c => c.code === cleanCode);
     if (coupon && coupon.is_active && coupon.used_count < coupon.max_uses) {
       coupon.used_count += 1;
@@ -945,6 +1016,17 @@ export const localDb = {
 
   // Funnel Helpers
   async logFunnelEvent(step: FunnelLog['step']): Promise<void> {
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { error } = await supabase.from('funnel_logs').insert({
+          step,
+          created_at: new Date().toISOString()
+        });
+        if (!error) return;
+      } catch (e) {
+        // Fallback silently
+      }
+    }
     this.loadFromDisk();
     this.funnelLogs.push({
       step,
@@ -954,6 +1036,14 @@ export const localDb = {
   },
 
   async getFunnelLogs(): Promise<FunnelLog[]> {
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data, error } = await supabase.from('funnel_logs').select('*');
+        if (!error && data) return data as FunnelLog[];
+      } catch (e) {
+        // Fallback silently
+      }
+    }
     this.loadFromDisk();
     return this.funnelLogs;
   }
