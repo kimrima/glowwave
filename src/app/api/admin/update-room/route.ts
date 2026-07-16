@@ -11,11 +11,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { roomId, tier, status, max_participants } = body as {
+    const { roomId, tier, status, max_participants, email } = body as {
       roomId: string;
       tier?: TierType;
       status?: 'active' | 'inactive';
       max_participants?: number;
+      email?: string;
     };
 
     if (!roomId) {
@@ -23,6 +24,9 @@ export async function POST(request: NextRequest) {
     }
 
     const updates: any = {};
+    if (email !== undefined) {
+      updates.email = email;
+    }
     if (status) {
       updates.status = status;
     }

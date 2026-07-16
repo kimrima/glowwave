@@ -57,6 +57,10 @@ export default function AdminPage() {
   // Coupons Manager State
   const [coupons, setCoupons] = useState<any[]>([]);
 
+  // Inline Email Editor States
+  const [editingEmailRoomId, setEditingEmailRoomId] = useState<string | null>(null);
+  const [editingEmailValue, setEditingEmailValue] = useState<string>('');
+
   // Real-time custom preset trends state
   const [trendsStats, setTrendsStats] = useState<any>({
     fontUsage: {},
@@ -325,13 +329,13 @@ export default function AdminPage() {
   }, [isAuthenticated]);
 
   // Admin Actions
-  const handleUpdateRoom = async (roomId: string, tier?: TierType, status?: 'active' | 'inactive', maxParticipants?: number) => {
+  const handleUpdateRoom = async (roomId: string, tier?: TierType, status?: 'active' | 'inactive', maxParticipants?: number, email?: string) => {
     setActionLoading(`room-update-${roomId}`);
     try {
       const res = await fetch('/api/admin/update-room', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ roomId, tier, status, max_participants: maxParticipants })
+        body: JSON.stringify({ roomId, tier, status, max_participants: maxParticipants, email })
       });
       if (res.ok) {
         // Optimistic local state update to prevent flashing or scrolling jitter
@@ -350,6 +354,7 @@ export default function AdminPage() {
               }
               if (status !== undefined) updatedRoom.status = status;
               if (maxParticipants !== undefined) updatedRoom.max_participants = maxParticipants;
+              if (email !== undefined) updatedRoom.email = email;
               return updatedRoom;
             }
             return room;
@@ -1234,7 +1239,46 @@ export default function AdminPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 font-bold text-zinc-300">
-                            {room.email || 'N/A'}
+                            {editingEmailRoomId === room.id ? (
+                              <div className="flex items-center gap-1.5 max-w-[200px]">
+                                <input
+                                  type="email"
+                                  value={editingEmailValue}
+                                  onChange={(e) => setEditingEmailValue(e.target.value)}
+                                  className="w-full bg-[#030305] border border-white/20 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-violet-500 font-mono"
+                                />
+                                <button
+                                  onClick={async () => {
+                                    if (!editingEmailValue.trim()) return;
+                                    await handleUpdateRoom(room.id, undefined, undefined, undefined, editingEmailValue.trim());
+                                    setEditingEmailRoomId(null);
+                                  }}
+                                  className="px-2 py-1 bg-violet-600 hover:bg-violet-500 text-white rounded text-[10px] cursor-pointer flex-shrink-0"
+                                >
+                                  저장
+                                </button>
+                                <button
+                                  onClick={() => setEditingEmailRoomId(null)}
+                                  className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 rounded text-[10px] cursor-pointer flex-shrink-0"
+                                >
+                                  취소
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 group/email">
+                                <span className="font-mono text-xs">{room.email || 'N/A'}</span>
+                                <button
+                                  onClick={() => {
+                                    setEditingEmailRoomId(room.id);
+                                    setEditingEmailValue(room.email || '');
+                                  }}
+                                  className="opacity-0 group-hover/email:opacity-100 flex items-center justify-center p-1 bg-white/5 hover:bg-white/10 rounded cursor-pointer transition-all"
+                                  title="이메일 변경"
+                                >
+                                  <Edit className="w-3 h-3 text-zinc-400" />
+                                </button>
+                              </div>
+                            )}
                           </td>
                           <td className="px-6 py-4">
                             <select
