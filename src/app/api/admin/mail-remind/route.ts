@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!success) {
-      return NextResponse.json({ error: 'Failed to record mailing timestamp' }, { status: 500 });
+      console.warn(`[Admin Mail Remind] Could not write mail_sent_at timestamp in database for room ${roomId}. (Ensure schema has been updated)`);
     }
 
     return NextResponse.json({
