@@ -1077,8 +1077,11 @@ export const localDb = {
       created_at: new Date().toISOString()
     };
 
+    console.log('[localDb CS] Preparing to insert support ticket:', newInquiry);
+
     if (isSupabaseConfigured() && supabase) {
       try {
+        console.log('[localDb CS] Supabase configured. Attempting database insert...');
         const { error } = await supabase.from('cs_inquiries').insert({
           room_id: inquiry.room_id || null,
           email: inquiry.email,
@@ -1087,16 +1090,29 @@ export const localDb = {
           status: 'pending',
           created_at: newInquiry.created_at
         });
-        if (!error) return;
+        if (!error) {
+          console.log('[localDb CS] Supabase insert succeeded!');
+          return;
+        }
+        console.error('[localDb CS] Supabase insert failed with error object:', error);
       } catch (e) {
-        // Fallback silently
+        console.error('[localDb CS] Supabase insert threw exception:', e);
       }
+    } else {
+      console.log('[localDb CS] Supabase is NOT configured. Skipping DB insert.');
     }
 
-    this.loadFromDisk();
-    newInquiry.id = this.csInquiries.length + 1;
-    this.csInquiries.push(newInquiry);
-    this.saveToDisk();
+    console.log('[localDb CS] Falling back to local disk storage write...');
+    try {
+      this.loadFromDisk();
+      newInquiry.id = this.csInquiries.length + 1;
+      this.csInquiries.push(newInquiry);
+      this.saveToDisk();
+      console.log('[localDb CS] Fallback write to disk complete! Inquiries size:', this.csInquiries.length);
+    } catch (diskErr) {
+      console.error('[localDb CS] Failed to write fallback ticket to disk:', diskErr);
+      throw diskErr;
+    }
   },
 
   async getCSInquiries(): Promise<CSInquiry[]> {

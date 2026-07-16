@@ -348,5 +348,16 @@
       "step": "step1_landing",
       "created_at": "2026-07-16T16:50:42.610Z"
     }
+  ],
+  "csInquiries": [
+    {
+      "email": "alertverify@glowwave.com",
+      "category": "refund",
+      "message": "This is the verified end to end CS message with customAlert active check.",
+      "room_id": "T5X87F",
+      "status": "pending",
+      "created_at": "2026-07-16T17:43:47.377Z",
+      "id": 1
+    }
   ]
 }

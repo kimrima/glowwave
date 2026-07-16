@@ -1189,6 +1189,27 @@ export default function HostSetup() {
         </div>
       )}
 
+      {/* Custom Alert Modal */}
+      {customAlert?.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setCustomAlert(null)} />
+          <div className="glass-effect rounded-2xl w-full max-w-sm p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150 border border-white/10 bg-[#12121a] text-center">
+            <h3 className="text-sm font-bold text-white mb-2">
+              {customAlert.title || '알림'}
+            </h3>
+            <p className="text-xs text-zinc-400 leading-relaxed mb-6">
+              {customAlert.message}
+            </p>
+            <button
+              onClick={() => setCustomAlert(null)}
+              className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-500 transition-colors"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
