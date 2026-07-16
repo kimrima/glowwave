@@ -86,15 +86,20 @@ CREATE TABLE IF NOT EXISTS public.funnel_logs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- 9. Enable RLS and Create Policies
-ALTER TABLE public.coupons ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.funnel_logs ENABLE ROW LEVEL SECURITY;
+-- 10. Create CS Inquiries Table
+CREATE TABLE IF NOT EXISTS public.cs_inquiries (
+    id BIGSERIAL PRIMARY KEY,
+    room_id VARCHAR(100),
+    email VARCHAR(255) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    message TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'pending' NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
 
--- Allow public selectors
-CREATE POLICY "Allow public select on coupons" ON public.coupons FOR SELECT USING (true);
-CREATE POLICY "Allow public insert on funnel_logs" ON public.funnel_logs FOR INSERT WITH CHECK (true);
+-- Enable RLS and Create Policies
+ALTER TABLE public.cs_inquiries ENABLE ROW LEVEL SECURITY;
 
--- Allow master admin access
-CREATE POLICY "Allow admin full access on coupons" ON public.coupons FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Allow admin full access on funnel_logs" ON public.funnel_logs FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public insert on cs_inquiries" ON public.cs_inquiries FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow admin full access on cs_inquiries" ON public.cs_inquiries FOR ALL USING (true) WITH CHECK (true);
 

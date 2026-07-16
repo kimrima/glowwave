@@ -27,7 +27,8 @@ import {
   Eye,
   Lock,
   Activity,
-  HelpCircle
+  HelpCircle,
+  MessageSquare
 } from 'lucide-react';
 import { Room, Payment, TierType, TIER_CONFIGS } from '@/lib/types';
 
@@ -49,7 +50,7 @@ export default function AdminPage() {
   const [cleanupMessage, setCleanupMessage] = useState('');
 
   // UI state
-  const [activeTab, setActiveTab] = useState<'analytics' | 'rooms' | 'payments' | 'templates' | 'trends' | 'coupons' | 'health'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'rooms' | 'payments' | 'templates' | 'trends' | 'coupons' | 'health' | 'cs'>('analytics');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [tierFilter, setTierFilter] = useState<string>('all');
@@ -60,6 +61,10 @@ export default function AdminPage() {
   // Inline Email Editor States
   const [editingEmailRoomId, setEditingEmailRoomId] = useState<string | null>(null);
   const [editingEmailValue, setEditingEmailValue] = useState<string>('');
+
+  // CS Inquiries States
+  const [csList, setCsList] = useState<any[]>([]);
+  const [csLoading, setCsLoading] = useState(false);
 
   // Real-time custom preset trends state
   const [trendsStats, setTrendsStats] = useState<any>({
@@ -186,6 +191,8 @@ export default function AdminPage() {
         if (data.stats) {
           setTrendsStats(data.stats);
         }
+        // Unified load support inquiries in background
+        fetchCSInquiries();
       }
     } catch (err) {
       console.error('Fetch data error:', err);
@@ -296,6 +303,46 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error('Fetch templates error:', err);
+    }
+  };
+
+  const fetchCSInquiries = async () => {
+    setCsLoading(true);
+    try {
+      const res = await fetch('/api/admin/cs');
+      if (res.status === 401) {
+        setIsAuthenticated(false);
+        return;
+      }
+      if (res.ok) {
+        const data = await res.json();
+        setCsList(data.inquiries || []);
+      }
+    } catch (err) {
+      console.error('Fetch CS error:', err);
+    } finally {
+      setCsLoading(false);
+    }
+  };
+
+  const handleResolveCSInquiry = async (inquiryId: number) => {
+    setActionLoading(`cs-resolve-${inquiryId}`);
+    try {
+      const res = await fetch('/api/admin/cs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: inquiryId })
+      });
+      if (res.ok) {
+        // Optimistic update
+        setCsList(prev => prev.map(item => item.id === inquiryId ? { ...item, status: 'resolved' } : item));
+      } else {
+        alert('문의 처리 완료 반영 실패');
+      }
+    } catch (err) {
+      console.error('Resolve CS error:', err);
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -766,6 +813,17 @@ export default function AdminPage() {
           >
             <Activity className="w-3.5 h-3.5" />
             시스템 헬스
+          </button>
+          <button
+            onClick={() => { setActiveTab('cs'); setSearchQuery(''); fetchCSInquiries(); }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
+              activeTab === 'cs' 
+                ? 'bg-violet-600 text-white font-extrabold shadow-md' 
+                : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            고객 문의 관리
           </button>
         </div>
 
@@ -2625,6 +2683,157 @@ export default function AdminPage() {
               <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-ping" />
               시스템 헬스는 5초마다 실시간으로 자동 갱신됩니다.
             </div>
+          </div>
+        )}
+
+        {/* Tab 8: Customer Support (CS) Inquiries */}
+        {activeTab === 'cs' && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-3xl">
+              <div>
+                <h3 className="text-sm font-black text-white uppercase tracking-widest">
+                  고객 문의 관리 (CS Tickets)
+                </h3>
+                <p className="text-[10px] text-zinc-500 mt-1 font-bold">
+                  접수된 환불, 오류 제보, 문의 사항을 바로 검토하고 처리 상태를 관리합니다.
+                </p>
+              </div>
+              <button
+                onClick={fetchCSInquiries}
+                disabled={csLoading}
+                className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-zinc-300 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {csLoading ? '갱신 중...' : '새로고침'}
+              </button>
+            </div>
+
+            {csLoading && csList.length === 0 ? (
+              <div className="p-12 text-center text-zinc-500 text-xs font-bold bg-[#0c0c14]/30 border border-white/5 rounded-3xl">
+                문의 정보를 불러오는 중...
+              </div>
+            ) : csList.length === 0 ? (
+              <div className="p-12 text-center text-zinc-500 text-xs font-bold bg-[#0c0c14]/30 border border-white/5 rounded-3xl">
+                접수된 고객 문의가 없습니다.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {csList.map((cs) => {
+                  const isResolving = actionLoading === `cs-resolve-${cs.id}`;
+                  const isEmailEditing = editingEmailRoomId === `cs-room-${cs.room_id}`;
+                  
+                  return (
+                    <div 
+                      key={cs.id} 
+                      className={`p-6 rounded-3xl border transition-all duration-300 flex flex-col justify-between gap-4 ${
+                        cs.status === 'resolved'
+                          ? 'bg-[#0a0a0f]/40 border-white/5 opacity-60'
+                          : 'bg-[#0f0f18]/80 border-white/10 shadow-lg'
+                      }`}
+                    >
+                      <div className="space-y-3.5">
+                        {/* Upper line: Category badge & datetime */}
+                        <div className="flex justify-between items-center">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black border uppercase ${
+                            cs.category === 'refund' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                            cs.category === 'recovery' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                            cs.category === 'bug' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                            'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+                          }`}>
+                            {cs.category === 'refund' ? '💸 결제 환불' :
+                             cs.category === 'recovery' ? '🔑 계정 복구' :
+                             cs.category === 'bug' ? '🐛 버그 제보' : '💬 기타 문의'}
+                          </span>
+                          <span className="text-[10px] text-zinc-500 font-bold font-mono">
+                            {new Date(cs.created_at).toLocaleString()}
+                          </span>
+                        </div>
+
+                        {/* User Email & Room ID */}
+                        <div className="space-y-1 bg-black/20 p-3 rounded-xl border border-white/5">
+                          <div className="text-[10px] text-zinc-400 flex justify-between items-center">
+                            <span>가입/답변 이메일:</span>
+                            <span className="font-mono text-white font-bold">{cs.email}</span>
+                          </div>
+                          {cs.room_id && (
+                            <div className="text-[10px] text-zinc-400 flex justify-between items-center pt-1.5 mt-1.5 border-t border-white/5">
+                              <span>접수된 방 코드:</span>
+                              <span className="font-mono text-indigo-400 font-black">{cs.room_id}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Inquiry Message content */}
+                        <div className="bg-black/40 rounded-xl p-4 border border-white/5 text-xs leading-relaxed text-zinc-300 font-medium whitespace-pre-wrap">
+                          {cs.message}
+                        </div>
+                      </div>
+
+                      {/* Bottom Action controls */}
+                      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 pt-3 border-t border-white/5">
+                        {/* Inline Room email fast fixer */}
+                        {cs.room_id ? (
+                          isEmailEditing ? (
+                            <div className="flex items-center gap-1 flex-1">
+                              <input
+                                type="email"
+                                value={editingEmailValue}
+                                onChange={(e) => setEditingEmailValue(e.target.value)}
+                                className="bg-[#030305] border border-white/20 rounded px-2 py-1 text-[10px] text-white focus:outline-none focus:border-violet-500 font-mono w-full"
+                              />
+                              <button
+                                onClick={async () => {
+                                  if (!editingEmailValue.trim()) return;
+                                  await handleUpdateRoom(cs.room_id, undefined, undefined, undefined, editingEmailValue.trim());
+                                  setEditingEmailRoomId(null);
+                                  alert('해당 방의 이메일이 수동으로 교정되었습니다.');
+                                }}
+                                className="px-2 py-1 bg-violet-600 hover:bg-violet-500 text-white rounded text-[9px] font-bold cursor-pointer"
+                              >
+                                저장
+                              </button>
+                              <button
+                                onClick={() => setEditingEmailRoomId(null)}
+                                className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 rounded text-[9px] font-bold cursor-pointer"
+                              >
+                                취소
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingEmailRoomId(`cs-room-${cs.room_id}`);
+                                setEditingEmailValue(cs.email);
+                              }}
+                              className="text-[10px] text-zinc-400 hover:text-white font-bold underline text-left flex items-center gap-1 cursor-pointer"
+                            >
+                              ✍️ 방 이메일 즉석 수정하기
+                            </button>
+                          )
+                        ) : (
+                          <div className="text-[10px] text-zinc-600 font-bold">방 코드 없음</div>
+                        )}
+
+                        {/* Ticket resolver */}
+                        {cs.status === 'resolved' ? (
+                          <span className="text-[10px] text-zinc-500 font-black text-right flex items-center justify-end gap-1 select-none">
+                            ✅ 문의 처리 완료됨
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleResolveCSInquiry(cs.id)}
+                            disabled={isResolving}
+                            className="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] rounded-xl cursor-pointer select-none transition-colors text-center disabled:opacity-50"
+                          >
+                            {isResolving ? '처리 중...' : '문의 해결 완료 처리'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </main>

@@ -236,3 +236,13 @@ export interface FunnelLog {
   step: 'step1_landing' | 'step2_create' | 'step3_view_upgrade' | 'step4_payment_success';
   created_at: string;
 }
+
+export interface CSInquiry {
+  id?: number;
+  room_id?: string;
+  email: string;
+  category: 'refund' | 'recovery' | 'bug' | 'etc';
+  message: string;
+  status: 'pending' | 'resolved';
+  created_at: string;
+}

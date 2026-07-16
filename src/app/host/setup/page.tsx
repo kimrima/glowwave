@@ -28,6 +28,36 @@ export default function HostSetup() {
   const [emailError, setEmailError] = useState('');
   const [passcode, setPasscode] = useState('');
   const [passcodeError, setPasscodeError] = useState('');
+
+  // Email Typo Suggestion States
+  const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
+  const checkEmailTypo = (val: string) => {
+    const parts = val.split('@');
+    if (parts.length !== 2) {
+      setEmailSuggestion(null);
+      return;
+    }
+    const domain = parts[1].toLowerCase().trim();
+    const suggestions: Record<string, string> = {
+      'gamil.com': 'gmail.com',
+      'gmeil.com': 'gmail.com',
+      'gamil.co.kr': 'gmail.com',
+      'gmail.con': 'gmail.com',
+      'naver.con': 'naver.com',
+      'naever.com': 'naver.com',
+      'nvaer.com': 'naver.com',
+      'daun.net': 'daum.net',
+      'daum.con': 'daum.net',
+      'hanmail.con': 'hanmail.net',
+      'hanmail.co.kr': 'hanmail.net',
+      'nate.con': 'nate.com'
+    };
+    if (suggestions[domain]) {
+      setEmailSuggestion(`${parts[0]}@${suggestions[domain]}`);
+    } else {
+      setEmailSuggestion(null);
+    }
+  };
   
   // Checkout Modal State
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -35,6 +65,44 @@ export default function HostSetup() {
   const [paymentMethod, setPaymentMethod] = useState<'toss' | 'stripe'>('toss');
   const [checkoutStep, setCheckoutStep] = useState<'input' | 'done'>('input');
   const [createdRoomInfo, setCreatedRoomInfo] = useState<{ room_id: string; host_session_token: string } | null>(null);
+
+  // CS Inquiries Modal States
+  const [isInquiryOpen, setIsInquiryOpen] = useState(false);
+  const [inquiryEmail, setInquiryEmail] = useState('');
+  const [inquiryCategory, setInquiryCategory] = useState<'refund' | 'recovery' | 'bug' | 'etc'>('refund');
+  const [inquiryMessage, setInquiryMessage] = useState('');
+  const [inquiryRoomId, setInquiryRoomId] = useState('');
+  const [inquirySubmitting, setInquirySubmitting] = useState(false);
+
+  const handleSubmitInquiry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inquiryEmail.trim() || !inquiryMessage.trim()) return;
+    setInquirySubmitting(true);
+    try {
+      const res = await fetch('/api/cs/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: inquiryEmail.trim(),
+          category: inquiryCategory,
+          message: inquiryMessage.trim(),
+          room_id: inquiryRoomId.trim() || undefined
+        })
+      });
+      if (res.ok) {
+        showAlert('고객 문의가 성공적으로 접수되었습니다. 관리자가 검토 후 순차적으로 처리해 드립니다.', '접수 완료');
+        setIsInquiryOpen(false);
+        setInquiryMessage('');
+        setInquiryRoomId('');
+      } else {
+        showAlert('문의 접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      }
+    } catch (err) {
+      showAlert('네트워크 통신 오류가 발생했습니다.');
+    } finally {
+      setInquirySubmitting(false);
+    }
+  };
 
   // Import Status from Solo Signboard
   const [importStatus, setImportStatus] = useState<'free' | 'premium' | null>(null);
@@ -634,10 +702,23 @@ export default function HostSetup() {
                 onChange={(e) => {
                   setHostEmail(e.target.value);
                   setEmailError('');
+                  checkEmailTypo(e.target.value);
                 }}
                 placeholder="event@glowwave.com"
                 className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-sm"
               />
+              {emailSuggestion && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHostEmail(emailSuggestion);
+                    setEmailSuggestion(null);
+                  }}
+                  className="text-amber-400 text-[10px] font-bold mt-2 hover:underline text-left block bg-amber-400/5 border border-amber-400/10 rounded-lg p-2 w-full animate-pulse"
+                >
+                  💡 혹시 이메일이 <span className="font-black text-white underline">{emailSuggestion}</span> 인가요? 클릭하여 자동 수정
+                </button>
+              )}
               {emailError ? (
                 <p className="text-xs text-red-400 mt-2">
                   {emailError}
@@ -815,6 +896,19 @@ export default function HostSetup() {
 
       </main>
 
+      <div className="text-center py-4 relative z-10 bg-zinc-950/20">
+        <button
+          type="button"
+          onClick={() => {
+            setIsInquiryOpen(true);
+            setInquiryEmail(hostEmail);
+          }}
+          className="text-zinc-500 hover:text-zinc-400 text-[11px] font-bold underline cursor-pointer"
+        >
+          1:1 결제 오류 / 환불 및 기능 문의 접수처
+        </button>
+      </div>
+
       {/* Footer */}
       <footer className="border-t border-white/5 bg-zinc-950 py-6 text-center text-xs text-zinc-600">
         &copy; 2026 Anti-gravity. App setup is anonymous & encrypted.
@@ -884,54 +978,46 @@ export default function HostSetup() {
                     <input
                       type="text"
                       value={promoCodeInput}
-                      onChange={(e) => setPromoCodeInput(e.target.value)}
-                      placeholder={activeLocale === 'ko' ? '예: WELCOME20' : 'e.g. WELCOME20'}
-                      disabled={isVerifyingCoupon || verifiedCoupon}
-                      className="flex-1 bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono uppercase"
+                      onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
+                      placeholder={activeLocale === 'ko' ? '예: GLOW30' : 'e.g. GLOW30'}
+                      disabled={isVerifyingCoupon}
+                      className="flex-1 bg-[#0c0c14] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-indigo-500 transition-colors uppercase font-mono font-bold"
                     />
                     <button
                       type="button"
                       onClick={handleApplyPromoCode}
-                      disabled={isVerifyingCoupon || verifiedCoupon || !promoCodeInput.trim()}
-                      className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-40 disabled:hover:bg-zinc-800"
+                      disabled={isVerifyingCoupon || !promoCodeInput.trim()}
+                      className="px-3.5 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-extrabold hover:bg-indigo-500 transition-colors cursor-pointer select-none disabled:opacity-50"
                     >
-                      {isVerifyingCoupon ? '...' : activeLocale === 'ko' ? '적용' : 'Apply'}
+                      {isVerifyingCoupon ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        activeLocale === 'ko' ? '적용' : 'Apply'
+                      )}
                     </button>
                   </div>
                   {couponError && (
-                    <p className="text-[10px] text-red-400 font-bold mt-0.5">{couponError}</p>
-                  )}
-                  {verifiedCoupon && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setVerifiedCoupon(null);
-                        setPromoCodeInput('');
-                        setCouponError(null);
-                      }}
-                      className="text-[9px] text-zinc-500 hover:text-zinc-300 font-semibold self-start underline cursor-pointer"
-                    >
-                      {activeLocale === 'ko' ? '코드 취소하기' : 'Remove promo code'}
-                    </button>
+                    <span className="text-[10px] text-red-400 font-bold block mt-1">{couponError}</span>
                   )}
                 </div>
 
-                {/* PG Checkout Simulator Card */}
-                <div className="bg-black/50 border border-white/5 rounded-xl p-4 flex flex-col gap-3">
-                  <div className="text-xs text-zinc-400 flex justify-between">
-                    <span>{t('setup_checkout_prod', activeLocale)}</span>
-                    <span className="text-white font-semibold">GlowWave Room Ticket ({getLocalizedTierName(selectedTier, activeLocale)})</span>
+                {/* Pricing Summary info */}
+                <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 flex flex-col gap-3">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-zinc-400 font-bold">{t('setup_checkout_plan', activeLocale)}</span>
+                    <span className="text-white font-extrabold">{getLocalizedTierName(selectedTier, activeLocale)}</span>
                   </div>
-                  <div className="text-xs text-zinc-400 flex justify-between">
-                    <span>{t('setup_checkout_email', activeLocale)}</span>
-                    <span className="text-white font-semibold">{hostEmail}</span>
+                  <div className="flex justify-between text-xs pb-3 border-b border-white/5">
+                    <span className="text-zinc-400 font-bold">{t('setup_checkout_capacity', activeLocale)}</span>
+                    <span className="text-white font-extrabold">{TIER_CONFIGS[selectedTier]?.maxParticipants}명</span>
                   </div>
-                  <div className="text-xs text-zinc-400 flex justify-between border-t border-white/5 pt-3 mt-1">
-                    <span>{t('setup_checkout_total', activeLocale)}</span>
+
+                  <div className="flex justify-between items-center pt-1.5">
+                    <span className="text-zinc-400 font-extrabold text-xs">{t('setup_checkout_total', activeLocale)}</span>
                     <div className="flex flex-col items-end">
                       {verifiedCoupon ? (
                         <>
-                          <span className="text-zinc-500 text-[10px] line-through font-mono">
+                          <span className="text-[10px] text-zinc-500 line-through font-mono">
                             {paymentMethod === 'toss' 
                               ? getLocalizedPrice(selectedTier, 'ko') 
                               : getLocalizedPrice(selectedTier, activeLocale)}
@@ -990,8 +1076,115 @@ export default function HostSetup() {
                     )}
                   </button>
                 </div>
+
+                <div className="mt-4 pt-3 border-t border-white/5 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsInquiryOpen(true);
+                      setInquiryEmail(hostEmail);
+                      setInquiryRoomId(createdRoomInfo?.room_id || '');
+                    }}
+                    className="text-[10px] text-zinc-500 hover:text-zinc-400 font-bold underline transition-colors"
+                  >
+                    결제 오류 및 환불 신청 1:1 접수
+                  </button>
+                </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* CS Inquiry Modal */}
+      {isInquiryOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => setIsInquiryOpen(false)} />
+          
+          <div className="glass-effect rounded-2xl w-full max-w-md p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150 border border-white/10 bg-[#12121a]">
+            <div className="flex justify-between items-center pb-3 border-b border-white/10 mb-4">
+              <h3 className="text-base font-bold text-white flex items-center gap-1.5">
+                <span>💬 1:1 고객 문의 / 환불 접수</span>
+              </h3>
+              <button onClick={() => setIsInquiryOpen(false)} className="text-zinc-500 hover:text-white transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitInquiry} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">답변받을 이메일 주소</label>
+                <input
+                  type="email"
+                  required
+                  value={inquiryEmail}
+                  onChange={(e) => setInquiryEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-white text-xs font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">문의 분류</label>
+                <select
+                  value={inquiryCategory}
+                  onChange={(e) => setInquiryCategory(e.target.value as any)}
+                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-white text-xs cursor-pointer font-bold text-zinc-300"
+                >
+                  <option value="refund">결제 환불 신청</option>
+                  <option value="recovery">방 복구 / 연장 오류</option>
+                  <option value="bug">버그 / 기술적 결함 문의</option>
+                  <option value="etc">기타 제안 및 문의</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">방 코드 (Room ID) - 선택 사항</label>
+                <input
+                  type="text"
+                  value={inquiryRoomId}
+                  onChange={(e) => setInquiryRoomId(e.target.value)}
+                  placeholder="예: 8-자리 방 코드"
+                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-white text-xs font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">상세 문의 / 요청 사항</label>
+                <textarea
+                  required
+                  rows={4}
+                  value={inquiryMessage}
+                  onChange={(e) => setInquiryMessage(e.target.value)}
+                  placeholder="환불 사유나 오류 상황을 구체적으로 기재해 주시면 보다 원활하게 해결됩니다."
+                  className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-white text-xs resize-none leading-relaxed"
+                />
+              </div>
+
+              <div className="flex gap-2.5 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsInquiryOpen(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white transition-all text-xs font-bold"
+                >
+                  취소
+                </button>
+                <button
+                  type="submit"
+                  disabled={inquirySubmitting}
+                  className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-500 transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  {inquirySubmitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                      제출 중...
+                    </>
+                  ) : (
+                    '문의 접수하기'
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

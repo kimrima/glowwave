@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import { Room, Payment, Preset, TierType, TIER_CONFIGS, Coupon, FunnelLog } from './types';
+import { Room, Payment, Preset, TierType, TIER_CONFIGS, Coupon, FunnelLog, CSInquiry } from './types';
 import { isSupabaseConfigured, supabase } from './supabase';
 
 function hashPasscode(passcode?: string): string | undefined {
@@ -22,6 +22,7 @@ const globalForRoomStore = global as unknown as {
   currentStates: Map<string, Preset>;
   coupons: Coupon[];
   funnelLogs: FunnelLog[];
+  csInquiries: CSInquiry[];
   supabaseChannels?: Map<string, any>;
   supabasePresenceCounts?: Map<string, number>;
 };
@@ -43,6 +44,9 @@ if (!globalForRoomStore.coupons) {
 }
 if (!globalForRoomStore.funnelLogs) {
   globalForRoomStore.funnelLogs = [];
+}
+if (!globalForRoomStore.csInquiries) {
+  globalForRoomStore.csInquiries = [];
 }
 if (!globalForRoomStore.supabaseChannels) {
   globalForRoomStore.supabaseChannels = new Map();
@@ -110,7 +114,8 @@ function readDb() {
         payments: (parsed.payments || []) as Payment[],
         currentStates: new Map<string, Preset>(Object.entries(parsed.currentStates || {})),
         coupons: (parsed.coupons || []) as Coupon[],
-        funnelLogs: (parsed.funnelLogs || []) as FunnelLog[]
+        funnelLogs: (parsed.funnelLogs || []) as FunnelLog[],
+        csInquiries: (parsed.csInquiries || []) as CSInquiry[]
       };
     }
   } catch (err) {
@@ -121,7 +126,8 @@ function readDb() {
     payments: [] as Payment[],
     currentStates: new Map<string, Preset>(),
     coupons: [] as Coupon[],
-    funnelLogs: [] as FunnelLog[]
+    funnelLogs: [] as FunnelLog[],
+    csInquiries: [] as CSInquiry[]
   };
 }
 
@@ -130,7 +136,8 @@ function writeDb(
   payments: Payment[],
   currentStates: Map<string, Preset>,
   coupons: Coupon[],
-  funnelLogs: FunnelLog[]
+  funnelLogs: FunnelLog[],
+  csInquiries: CSInquiry[]
 ) {
   try {
     const dbFile = getDbFile();
@@ -143,7 +150,8 @@ function writeDb(
       payments: payments,
       currentStates: Object.fromEntries(currentStates.entries()),
       coupons: coupons,
-      funnelLogs: funnelLogs
+      funnelLogs: funnelLogs,
+      csInquiries: csInquiries
     };
     fs.writeFileSync(dbFile, JSON.stringify(data, null, 2), 'utf8');
   } catch (err) {
@@ -158,6 +166,7 @@ export const localDb = {
   currentStates: globalForRoomStore.currentStates,
   coupons: globalForRoomStore.coupons,
   funnelLogs: globalForRoomStore.funnelLogs,
+  csInquiries: globalForRoomStore.csInquiries,
   supabaseChannels: globalForRoomStore.supabaseChannels!,
   supabasePresenceCounts: globalForRoomStore.supabasePresenceCounts!,
 
@@ -182,10 +191,13 @@ export const localDb = {
 
     this.funnelLogs.length = 0;
     this.funnelLogs.push(...data.funnelLogs);
+
+    this.csInquiries.length = 0;
+    this.csInquiries.push(...(data.csInquiries || []));
   },
 
   saveToDisk(): void {
-    writeDb(this.rooms, this.payments, this.currentStates, this.coupons, this.funnelLogs);
+    writeDb(this.rooms, this.payments, this.currentStates, this.coupons, this.funnelLogs, this.csInquiries);
   },
 
   async cleanupExpiredRooms(): Promise<void> {
@@ -1055,5 +1067,67 @@ export const localDb = {
     }
     this.loadFromDisk();
     return this.funnelLogs;
+  },
+
+  // CS Inquiries Helpers
+  async addCSInquiry(inquiry: Omit<CSInquiry, 'id' | 'status' | 'created_at'>): Promise<void> {
+    const newInquiry: CSInquiry = {
+      ...inquiry,
+      status: 'pending',
+      created_at: new Date().toISOString()
+    };
+
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { error } = await supabase.from('cs_inquiries').insert({
+          room_id: inquiry.room_id || null,
+          email: inquiry.email,
+          category: inquiry.category,
+          message: inquiry.message,
+          status: 'pending',
+          created_at: newInquiry.created_at
+        });
+        if (!error) return;
+      } catch (e) {
+        // Fallback silently
+      }
+    }
+
+    this.loadFromDisk();
+    newInquiry.id = this.csInquiries.length + 1;
+    this.csInquiries.push(newInquiry);
+    this.saveToDisk();
+  },
+
+  async getCSInquiries(): Promise<CSInquiry[]> {
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { data, error } = await supabase.from('cs_inquiries').select('*').order('created_at', { ascending: false });
+        if (!error && data) return data as CSInquiry[];
+      } catch (e) {
+        // Fallback silently
+      }
+    }
+    this.loadFromDisk();
+    return [...this.csInquiries].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  },
+
+  async resolveCSInquiry(id: number): Promise<boolean> {
+    if (isSupabaseConfigured() && supabase) {
+      try {
+        const { error } = await supabase.from('cs_inquiries').update({ status: 'resolved' }).eq('id', id);
+        if (!error) return true;
+      } catch (e) {
+        // Fallback silently
+      }
+    }
+    this.loadFromDisk();
+    const item = this.csInquiries.find(c => c.id === id);
+    if (item) {
+      item.status = 'resolved';
+      this.saveToDisk();
+      return true;
+    }
+    return false;
   }
 };
