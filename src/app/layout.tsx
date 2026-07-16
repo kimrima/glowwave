@@ -42,6 +42,51 @@ const gowunBatang = Gowun_Batang({
 export const metadata: Metadata = {
   title: "GlowWave | 실시간 관객 참여형 스마트폰 전광판 동기화",
   description: "별도의 앱 설치 없이 QR 코드 스캔만으로 관객 스마트폰 화면 색상과 텍스트를 실시간 동기화하는 소규모 이벤트용 조명 연출 웹서비스",
+  metadataBase: new URL("https://glow-wave.net"),
+  alternates: {
+    canonical: "/",
+    languages: {
+      "ko-KR": "/",
+      "en-US": "/",
+      "ja-JP": "/",
+      "es-ES": "/",
+      "zh-TW": "/",
+      "zh-HK": "/"
+    }
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1
+    }
+  },
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    url: "https://glow-wave.net",
+    title: "GlowWave | 실시간 관객 참여형 스마트폰 전광판 동기화",
+    description: "별도의 앱 설치 없이 QR 코드 스캔만으로 관객 스마트폰 화면 색상과 텍스트를 실시간 동기화하는 소규모 이벤트용 조명 연출 웹서비스",
+    siteName: "GlowWave",
+    images: [
+      {
+        url: "/og-banner.png",
+        width: 1200,
+        height: 630,
+        alt: "GlowWave - Real-time crowd signboards sync"
+      }
+    ]
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GlowWave | 실시간 관객 참여형 스마트폰 전광판 동기화",
+    description: "별도의 앱 설치 없이 QR 코드 스캔만으로 관객 스마트폰 화면 색상과 텍스트를 실시간 동기화하는 소규모 이벤트용 조명 연출 웹서비스",
+    images: ["/og-banner.png"]
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

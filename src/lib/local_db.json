@@ -339,5 +339,14 @@
     }
   },
   "coupons": [],
-  "funnelLogs": []
+  "funnelLogs": [
+    {
+      "step": "step1_landing",
+      "created_at": "2026-07-16T16:46:28.819Z"
+    },
+    {
+      "step": "step1_landing",
+      "created_at": "2026-07-16T16:50:42.610Z"
+    }
+  ]
 }

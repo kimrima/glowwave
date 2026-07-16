@@ -548,10 +548,10 @@ export default function HostSetup() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-10 flex-1 grid lg:grid-cols-12 gap-12 w-full items-center relative z-10">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex-1 grid lg:grid-cols-12 gap-8 lg:gap-12 w-full items-center relative z-10 overflow-hidden">
         
         {/* Left Column: Welcome & Showcase */}
-        <div className="lg:col-span-6 flex flex-col gap-8 pr-0 lg:pr-8 py-4">
+        <div className="lg:col-span-6 flex flex-col gap-6 pr-0 lg:pr-8 py-4">
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold">
               <span>{t('setup_badge', activeLocale)}</span>
@@ -582,8 +582,8 @@ export default function HostSetup() {
         </div>
 
         {/* Right Column: Setup Form */}
-        <div className="lg:col-span-6 flex flex-col justify-center">
-          <form onSubmit={handleStartSetup} className="glass-effect rounded-2xl p-6 sm:p-8 flex flex-col gap-6 bg-[#12121a]">
+        <div className="lg:col-span-6 w-full max-w-lg mx-auto flex flex-col justify-center">
+          <form onSubmit={handleStartSetup} className="glass-effect rounded-2xl p-5 sm:p-8 flex flex-col gap-6 bg-[#12121a] w-full">
             <h2 className="text-xl font-bold text-white mb-2">
               {t('setup_title', activeLocale)}
             </h2>
@@ -669,8 +669,8 @@ export default function HostSetup() {
                       en: 'e.g. 1234',
                       ja: '例: 1234',
                       es: 'ej. 1234',
-                      'zh-TW': '例如: 1234',
-                      'zh-HK': '例如: 1234'
+                      'zh-TW': '예: 1234',
+                      'zh-HK': '예: 1234'
                     }[activeLocale] || '예: 1234'
                   }
                   className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white tracking-widest text-center text-sm font-black focus:outline-none focus:border-white font-mono"
@@ -707,10 +707,10 @@ export default function HostSetup() {
                   {
                     ko: '이벤트/행사용 (18h-24h)',
                     en: 'Event / Party (18h-24h)',
-                    ja: 'イベント・フェス用 (18h-24h)',
+                    ja: '이벤트/페스티벌용 (18h-24h)',
                     es: 'Eventos y Fiestas (18h-24h)',
-                    'zh-TW': '活動/派對用 (18h-24h)',
-                    'zh-HK': '活動/派對用 (18h-24h)'
+                    'zh-TW': '이벤트/행사용 (18h-24h)',
+                    'zh-HK': '이벤트/행사용 (18h-24h)'
                   }[activeLocale] || '이벤트/행사용 (18h-24h)'
                 }
               </button>
@@ -730,10 +730,10 @@ export default function HostSetup() {
                   {
                     ko: '매장 전광판 (1년 무중단)',
                     en: 'Store Signage (1-Yr 24/7)',
-                    ja: '店舗看板用 (1年常時稼働)',
+                    ja: '매장 간판용 (1년 상시 가동)',
                     es: 'Letrero de Tienda (1 año 24/7)',
-                    'zh-TW': '店家電子看板 (1年無中斷)',
-                    'zh-HK': '商戶電子看板 (1年無中斷)'
+                    'zh-TW': '매장 전광판 (1년 무중단)',
+                    'zh-HK': '매장 전광판 (1년 무중단)'
                   }[activeLocale] || '매장 전광판 (1년 무중단)'
                 }
               </button>
@@ -758,7 +758,7 @@ export default function HostSetup() {
                     key={tierKey}
                     type="button"
                     onClick={() => setSelectedTier(tierKey)}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all flex justify-between items-center duration-200 ${
+                    className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 duration-200 text-left ${
                       isSelected 
                         ? 'border-white bg-white/[0.04] shadow-[0_0_20px_rgba(255,255,255,0.03)]' 
                         : 'border-white/5 bg-transparent hover:border-white/10 hover:bg-white/[0.01]'

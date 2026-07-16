@@ -412,36 +412,61 @@ export default function Home() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "SoftwareApplication",
-            "name": "GlowWave (GlowWave)",
-            "operatingSystem": "WEB",
-            "applicationCategory": "EventApplication",
-            "description": "별도의 앱 설치 없이 QR 코드 스캔만으로 관객 스마트폰 화면 색상과 텍스트를 실시간 동기화하는 소규모 이벤트용 조명 연출 웹서비스",
-            "offers": {
-              "@type": "Offer",
-              "price": "3.99",
-              "priceCurrency": "USD",
-              "priceSpecification": {
-                "@type": "UnitPriceSpecification",
-                "price": "3.99",
-                "priceCurrency": "USD",
-                "referenceQuantity": {
-                  "@type": "QuantitativeValue",
-                  "value": "1",
-                  "unitCode": "Room"
-                }
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "GlowWave (글로우웨이브)",
+              "operatingSystem": "WEB",
+              "applicationCategory": "EventApplication",
+              "url": "https://glow-wave.net",
+              "description": "별도의 앱 설치 없이 QR 코드 스캔만으로 관객 스마트폰 화면 색상과 텍스트를 실시간 동기화하는 소규모 이벤트용 조명 연출 웹서비스",
+              "offers": {
+                "@type": "AggregateOffer",
+                "priceCurrency": "KRW",
+                "lowPrice": "0",
+                "highPrice": "249000",
+                "offerCount": "6"
               }
+            },
+            {
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "글로우웨이브를 사용하려면 관객들이 전용 앱을 설치해야 하나요?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "아닙니다. 관객들은 별도의 전용 앱을 다운로드할 필요가 전혀 없으며, 행사장의 QR 코드를 카메라로 스캔하는 즉시 브라우저를 통해 실시간 전광판 동기화 화면에 접속하게 됩니다."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "조명 전광판 동기화 반응 속도는 어떤가요?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "글로우웨이브는 초저지연 시그널링 소켓 통신을 탑재하여 호스트의 제어 변경 명령이 관객들 화면에 도달하는 반응 지연율을 100ms(0.1초) 미만으로 보장합니다."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "무료로 체험해 볼 수 있는 일일 무료 요금제가 있나요?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "네, 하루 동안 동시 접속 10명 한도로 기본적인 전광판 동기화를 시연 및 무료 체험해 볼 수 있는 '일일 무료 체험(Free) 요금제'를 상시 개설 및 이용하실 수 있습니다."
+                  }
+                }
+              ]
             }
-          })
+          ])
         }}
       />
 
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-white/5 bg-[#030305]/60 backdrop-blur-md pt-[calc(env(safe-area-inset-top,0px)+12px)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-black text-xl tracking-tight text-white font-outfit">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
+          <Link href="/" className="flex items-center gap-1.5 font-black text-lg sm:text-xl tracking-tight text-white font-outfit flex-shrink-0">
             <span>GlowWave</span>
           </Link>
           
@@ -451,13 +476,13 @@ export default function Home() {
             <Link href="/recovery" className="hover:text-white transition-colors">{t('nav_recovery', activeLocale)}</Link>
           </nav>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
             {/* Language Selector Dropdown */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 px-2.5 py-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
+                className="flex items-center gap-1 bg-white/5 hover:bg-white/10 border border-white/10 px-2 py-2 sm:px-3 sm:py-2 rounded-xl text-xs font-bold text-white cursor-pointer shadow-md select-none transition-all"
               >
                 <Globe className="w-3.5 h-3.5 text-zinc-400" />
                 <span className="hidden sm:inline uppercase">{activeLocale}</span>
@@ -500,7 +525,7 @@ export default function Home() {
 
             <button 
               onClick={() => setIsQRScannerOpen(true)}
-              className="btn-secondary text-xs p-2 sm:px-4 sm:py-2 rounded-xl text-zinc-300 hover:text-white transition-all cursor-pointer flex items-center gap-1.5 font-outfit"
+              className="btn-secondary text-xs p-2 sm:px-4 sm:py-2 rounded-xl text-zinc-300 hover:text-white transition-all cursor-pointer flex items-center gap-1 font-outfit"
               title={t('btn_qr_join', activeLocale)}
             >
               <QrCode className="w-4 h-4 text-zinc-400" />
@@ -508,7 +533,7 @@ export default function Home() {
             </button>
             <Link 
               href="/host/setup" 
-              className="btn-primary text-xs p-2 sm:px-4 sm:py-2 rounded-xl text-black hover:bg-zinc-200 transition-all cursor-pointer font-outfit flex items-center gap-1.5"
+              className="btn-primary text-xs p-2 sm:px-4 sm:py-2 rounded-xl text-black hover:bg-zinc-200 transition-all cursor-pointer font-outfit flex items-center gap-1"
               title={t('btn_create_room', activeLocale)}
             >
               <Plus className="w-4 h-4" />
