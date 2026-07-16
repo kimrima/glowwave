@@ -736,7 +736,7 @@ export default function AdminPage() {
       <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-8 flex-1 relative z-10">
         
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 p-1.5 rounded-2xl max-w-2xl mb-8 overflow-x-auto flex-nowrap scrollbar-none shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/5 border border-white/10 p-1.5 rounded-2xl w-full mb-8 overflow-x-auto flex-nowrap scrollbar-thin">
           <button
             onClick={() => { setActiveTab('analytics'); setSearchQuery(''); }}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
