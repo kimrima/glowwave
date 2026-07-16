@@ -66,6 +66,144 @@ export default function HostSetup() {
   const [checkoutStep, setCheckoutStep] = useState<'input' | 'done'>('input');
   const [createdRoomInfo, setCreatedRoomInfo] = useState<{ room_id: string; host_session_token: string } | null>(null);
 
+  // CS Inquiries Translations
+  const csTranslations: Record<string, any> = {
+    ko: {
+      btn_open: '1:1 결제 오류 / 환불 및 기능 문의 접수처',
+      title: '💬 1:1 고객 문의 / 환불 접수',
+      email_label: '답변받을 이메일 주소',
+      category_label: '문의 분류',
+      cat_refund: '결제 환불 신청',
+      cat_recovery: '방 복구 / 연장 오류',
+      cat_bug: '버그 / 기술적 결함 문의',
+      cat_etc: '기타 제안 및 문의',
+      room_id_label: '방 코드 (Room ID) - 선택 사항',
+      room_placeholder: '예: 8-자리 방 코드',
+      message_label: '상세 문의 / 요청 사항',
+      message_placeholder: '환불 사유나 오류 상황을 구체적으로 기재해 주시면 보다 원활하게 해결됩니다.',
+      cancel: '취소',
+      submit: '문의 접수하기',
+      submitting: '제출 중...',
+      alert_success: '고객 문의가 성공적으로 접수되었습니다. 관리자가 검토 후 순차적으로 처리해 드립니다.',
+      alert_success_title: '접수 완료',
+      alert_error: '문의 접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+      alert_network: '네트워크 통신 오류가 발생했습니다.',
+      alert_ok: '확인'
+    },
+    en: {
+      btn_open: '1:1 Payment Issue / Refund & Support Desk',
+      title: '💬 1:1 Customer Support / Refund Request',
+      email_label: 'Your Email Address',
+      category_label: 'Category',
+      cat_refund: 'Payment Refund Request',
+      cat_recovery: 'Room Recovery / Extension Issue',
+      cat_bug: 'Bug / Technical Glitch Report',
+      cat_etc: 'Other Questions & Suggestions',
+      room_id_label: 'Room Code (Room ID) - Optional',
+      room_placeholder: 'e.g. 8-digit Room Code',
+      message_label: 'Detailed Message / Request Reason',
+      message_placeholder: 'Please describe your request or issue specifically for faster resolution.',
+      cancel: 'Cancel',
+      submit: 'Submit Ticket',
+      submitting: 'Submitting...',
+      alert_success: 'Your inquiry has been successfully submitted. Our team will review and reply soon.',
+      alert_success_title: 'Submitted',
+      alert_error: 'An error occurred during submission. Please try again later.',
+      alert_network: 'A network communication error occurred.',
+      alert_ok: 'OK'
+    },
+    ja: {
+      btn_open: '1:1 決済エラー / 返金および機能問い合わせ窓口',
+      title: '💬 1:1 顧客サポート / 返金申請',
+      email_label: '返信用メールアドレス',
+      category_label: 'お問い合わせ区分',
+      cat_refund: '決済返金申請',
+      cat_recovery: 'ルーム復旧 / 延長エラー',
+      cat_bug: 'バグ / 技術的欠陥の報告',
+      cat_etc: 'その他の提案および問い合わせ',
+      room_id_label: 'ルームコード (Room ID) - 任意',
+      room_placeholder: '例: 8桁のルームコード',
+      message_label: '詳細内容 / 要望事項',
+      message_placeholder: '返金理由やエラー状況を具体的にご記載いただくと、よりスムーズに対応できます。',
+      cancel: 'キャンセル',
+      submit: '問い合わせを送信',
+      submitting: '送信中...',
+      alert_success: 'お問い合わせが正常に受け付けられました。順次確認のうえ対応いたします。',
+      alert_success_title: '受付完了',
+      alert_error: '送信中にエラーが発生しました。しばらくしてからもう一度お試しください。',
+      alert_network: 'ネットワーク通信エラーが発生しました。',
+      alert_ok: '確認'
+    },
+    es: {
+      btn_open: 'Mesa de soporte 1:1 / Problema de pago y reembolso',
+      title: '💬 Soporte al cliente 1:1 / Solicitud de reembolso',
+      email_label: 'Su dirección de correo electrónico',
+      category_label: 'Categoría',
+      cat_refund: 'Solicitud de reembolso de pago',
+      cat_recovery: 'Problema de recuperación / extensión de sala',
+      cat_bug: 'Reportar error / falla técnica',
+      cat_etc: 'Otras preguntas y sugerencias',
+      room_id_label: 'Código de sala (Room ID) - Opcional',
+      room_placeholder: 'ej. Código de sala de 8 dígitos',
+      message_label: 'Mensaje detallado / Razón del problema',
+      message_placeholder: 'Describa su solicitud o problema específicamente para una resolución más rápida.',
+      cancel: 'Cancelar',
+      submit: 'Enviar ticket',
+      submitting: 'Enviando...',
+      alert_success: 'Su consulta ha sido enviada con éxito. Nuestro equipo la revisará y responderá pronto.',
+      alert_success_title: 'Enviado',
+      alert_error: 'Ocurrió un error al enviar. Por favor, inténtelo de nuevo más tarde.',
+      alert_network: 'Ocurrió un error de comunicación de red.',
+      alert_ok: 'Aceptar'
+    },
+    'zh-TW': {
+      btn_open: '1:1 付款錯誤 / 退款與功能諮詢管道',
+      title: '💬 1:1 客戶諮詢 / 退款申請',
+      email_label: '回覆用電子郵件地址',
+      category_label: '諮詢類別',
+      cat_refund: '付款退款申請',
+      cat_recovery: '房間復原 / 延期錯誤',
+      cat_bug: '回報漏洞 / 技術性缺陷',
+      cat_etc: '其他提案與諮詢',
+      room_id_label: '房間代碼 (Room ID) - 選填',
+      room_placeholder: '例: 8位數房間代碼',
+      message_label: '詳細諮詢內容 / 請求事項',
+      message_placeholder: '請具體填寫退款原因或錯誤狀況，以便我們更快速地為您解決。',
+      cancel: '取消',
+      submit: '送出諮詢',
+      submitting: '送出中...',
+      alert_success: '客戶諮詢已成功送出。管理員審查後將依序為您處理。',
+      alert_success_title: '送出成功',
+      alert_error: '送出諮詢時發生錯誤。請稍後再試。',
+      alert_network: '發生網路通訊錯誤。',
+      alert_ok: '確認'
+    },
+    'zh-HK': {
+      btn_open: '1:1 付款錯誤 / 退款與功能諮詢管道',
+      title: '💬 1:1 客戶諮詢 / 退款申請',
+      email_label: '回覆用電子郵件地址',
+      category_label: '諮詢類別',
+      cat_refund: '付款退款申請',
+      cat_recovery: '房間復原 / 延期錯誤',
+      cat_bug: '回報漏洞 / 技術性缺陷',
+      cat_etc: '其他提案與諮詢',
+      room_id_label: '房間代碼 (Room ID) - 選填',
+      room_placeholder: '例: 8位數房間代碼',
+      message_label: '詳細諮詢內容 / 請求事項',
+      message_placeholder: '請具體填寫退款原因或錯誤狀況，以便我們更快速地為您解決。',
+      cancel: '取消',
+      submit: '送出諮詢',
+      submitting: '送出中...',
+      alert_success: '客戶諮詢已成功送出。管理員審查後將依序為您處理。',
+      alert_success_title: '送出成功',
+      alert_error: '送出諮詢時發生錯誤。請稍後再試。',
+      alert_network: '發生網路通訊錯誤。',
+      alert_ok: '確認'
+    }
+  };
+
+  const csLoc = csTranslations[activeLocale] || csTranslations.ko;
+
   // CS Inquiries Modal States
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [inquiryEmail, setInquiryEmail] = useState('');
@@ -90,15 +228,15 @@ export default function HostSetup() {
         })
       });
       if (res.ok) {
-        showAlert('고객 문의가 성공적으로 접수되었습니다. 관리자가 검토 후 순차적으로 처리해 드립니다.', '접수 완료');
+        showAlert(csLoc.alert_success, csLoc.alert_success_title);
         setIsInquiryOpen(false);
         setInquiryMessage('');
         setInquiryRoomId('');
       } else {
-        showAlert('문의 접수 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+        showAlert(csLoc.alert_error);
       }
     } catch (err) {
-      showAlert('네트워크 통신 오류가 발생했습니다.');
+      showAlert(csLoc.alert_network);
     } finally {
       setInquirySubmitting(false);
     }
@@ -905,7 +1043,7 @@ export default function HostSetup() {
           }}
           className="text-zinc-500 hover:text-zinc-400 text-[11px] font-bold underline cursor-pointer"
         >
-          1:1 결제 오류 / 환불 및 기능 문의 접수처
+          {csLoc.btn_open}
         </button>
       </div>
 
@@ -1104,7 +1242,7 @@ export default function HostSetup() {
           <div className="glass-effect rounded-2xl w-full max-w-md p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150 border border-white/10 bg-[#12121a]">
             <div className="flex justify-between items-center pb-3 border-b border-white/10 mb-4">
               <h3 className="text-base font-bold text-white flex items-center gap-1.5">
-                <span>💬 1:1 고객 문의 / 환불 접수</span>
+                <span>{csLoc.title}</span>
               </h3>
               <button onClick={() => setIsInquiryOpen(false)} className="text-zinc-500 hover:text-white transition-colors">
                 <X className="w-4 h-4" />
@@ -1113,7 +1251,7 @@ export default function HostSetup() {
 
             <form onSubmit={handleSubmitInquiry} className="flex flex-col gap-4">
               <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">답변받을 이메일 주소</label>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{csLoc.email_label}</label>
                 <input
                   type="email"
                   required
@@ -1125,38 +1263,38 @@ export default function HostSetup() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">문의 분류</label>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{csLoc.category_label}</label>
                 <select
                   value={inquiryCategory}
                   onChange={(e) => setInquiryCategory(e.target.value as any)}
                   className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-white text-xs cursor-pointer font-bold text-zinc-300"
                 >
-                  <option value="refund">결제 환불 신청</option>
-                  <option value="recovery">방 복구 / 연장 오류</option>
-                  <option value="bug">버그 / 기술적 결함 문의</option>
-                  <option value="etc">기타 제안 및 문의</option>
+                  <option value="refund">{csLoc.cat_refund}</option>
+                  <option value="recovery">{csLoc.cat_recovery}</option>
+                  <option value="bug">{csLoc.cat_bug}</option>
+                  <option value="etc">{csLoc.cat_etc}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">방 코드 (Room ID) - 선택 사항</label>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{csLoc.room_id_label}</label>
                 <input
                   type="text"
                   value={inquiryRoomId}
                   onChange={(e) => setInquiryRoomId(e.target.value)}
-                  placeholder="예: 8-자리 방 코드"
+                  placeholder={csLoc.room_placeholder}
                   className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-white text-xs font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">상세 문의 / 요청 사항</label>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{csLoc.message_label}</label>
                 <textarea
                   required
                   rows={4}
                   value={inquiryMessage}
                   onChange={(e) => setInquiryMessage(e.target.value)}
-                  placeholder="환불 사유나 오류 상황을 구체적으로 기재해 주시면 보다 원활하게 해결됩니다."
+                  placeholder={csLoc.message_placeholder}
                   className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-white text-xs resize-none leading-relaxed"
                 />
               </div>
@@ -1167,7 +1305,7 @@ export default function HostSetup() {
                   onClick={() => setIsInquiryOpen(false)}
                   className="flex-1 py-2.5 rounded-xl bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white transition-all text-xs font-bold"
                 >
-                  취소
+                  {csLoc.cancel}
                 </button>
                 <button
                   type="submit"
@@ -1177,10 +1315,10 @@ export default function HostSetup() {
                   {inquirySubmitting ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
-                      제출 중...
+                      {csLoc.submitting}
                     </>
                   ) : (
-                    '문의 접수하기'
+                    csLoc.submit
                   )}
                 </button>
               </div>
@@ -1195,7 +1333,7 @@ export default function HostSetup() {
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setCustomAlert(null)} />
           <div className="glass-effect rounded-2xl w-full max-w-sm p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150 border border-white/10 bg-[#12121a] text-center">
             <h3 className="text-sm font-bold text-white mb-2">
-              {customAlert.title || '알림'}
+              {customAlert.title || (activeLocale === 'ko' ? '알림' : 'Notification')}
             </h3>
             <p className="text-xs text-zinc-400 leading-relaxed mb-6">
               {customAlert.message}
@@ -1204,7 +1342,7 @@ export default function HostSetup() {
               onClick={() => setCustomAlert(null)}
               className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-500 transition-colors"
             >
-              확인
+              {csLoc.alert_ok}
             </button>
           </div>
         </div>

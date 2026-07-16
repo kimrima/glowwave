@@ -64,6 +64,7 @@ export default function AdminPage() {
 
   // CS Inquiries States
   const [csList, setCsList] = useState<any[]>([]);
+  const [activeOtps, setActiveOtps] = useState<any[]>([]);
   const [csLoading, setCsLoading] = useState(false);
 
   // Real-time custom preset trends state
@@ -317,6 +318,7 @@ export default function AdminPage() {
       if (res.ok) {
         const data = await res.json();
         setCsList(data.inquiries || []);
+        setActiveOtps(data.activeOtps || []);
       }
     } catch (err) {
       console.error('Fetch CS error:', err);
@@ -2706,6 +2708,28 @@ export default function AdminPage() {
                 {csLoading ? '갱신 중...' : '새로고침'}
               </button>
             </div>
+
+            {/* Real-time active OTP session monitoring */}
+            {activeOtps.length > 0 && (
+              <div className="bg-amber-500/5 border border-amber-500/20 p-4 rounded-3xl space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-ping" />
+                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest">
+                    🔑 실시간 발급된 복구 OTP 번호 (이메일 연동 전 수동 안내용)
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                  {activeOtps.map((o) => (
+                    <div key={o.email} className="bg-black/30 border border-white/5 px-3 py-2 rounded-xl flex justify-between items-center text-xs">
+                      <span className="font-mono text-zinc-400 font-medium truncate max-w-[150px]" title={o.email}>{o.email}</span>
+                      <span className="font-mono text-amber-400 font-extrabold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 tracking-wider">
+                        {o.otp}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {csLoading && csList.length === 0 ? (
               <div className="p-12 text-center text-zinc-500 text-xs font-bold bg-[#0c0c14]/30 border border-white/5 rounded-3xl">

@@ -12,7 +12,8 @@ export async function GET(request: NextRequest) {
     }
 
     const inquiries = await localDb.getCSInquiries();
-    return NextResponse.json({ inquiries });
+    const activeOtps = localDb.getAllActiveOtps ? localDb.getAllActiveOtps() : [];
+    return NextResponse.json({ inquiries, activeOtps });
   } catch (error) {
     console.error('[Admin CS GET API] Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -1145,5 +1145,51 @@ export const localDb = {
       return true;
     }
     return false;
+  },
+
+  createRecoveryOtp(email: string): string {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 mins expiry
+    if (!globalRecoveryOtps.recoveryOtps) {
+      globalRecoveryOtps.recoveryOtps = new Map();
+    }
+    globalRecoveryOtps.recoveryOtps.set(email.trim().toLowerCase(), { otp, expiresAt });
+    console.log(`\n[RECOVERY OTP GENERATED] To: ${email} | Code: ${otp} | Expires in 5 minutes\n`);
+    return otp;
+  },
+
+  verifyRecoveryOtp(email: string, otp: string): boolean {
+    if (!globalRecoveryOtps.recoveryOtps) return false;
+    const key = email.trim().toLowerCase();
+    const record = globalRecoveryOtps.recoveryOtps.get(key);
+    if (!record) return false;
+    if (Date.now() > record.expiresAt) {
+      globalRecoveryOtps.recoveryOtps.delete(key);
+      return false;
+    }
+    if (record.otp === otp.trim()) {
+      globalRecoveryOtps.recoveryOtps.delete(key);
+      return true;
+    }
+    return false;
+  },
+
+  getAllActiveOtps(): { email: string; otp: string; expiresAt: number }[] {
+    if (!globalRecoveryOtps.recoveryOtps) return [];
+    const list: { email: string; otp: string; expiresAt: number }[] = [];
+    const now = Date.now();
+    for (const [email, record] of globalRecoveryOtps.recoveryOtps.entries()) {
+      if (record.expiresAt > now) {
+        list.push({ email, otp: record.otp, expiresAt: record.expiresAt });
+      }
+    }
+    return list;
   }
 };
+
+const globalRecoveryOtps = global as unknown as {
+  recoveryOtps?: Map<string, { otp: string; expiresAt: number }>;
+};
+if (!globalRecoveryOtps.recoveryOtps) {
+  globalRecoveryOtps.recoveryOtps = new Map();
+}
