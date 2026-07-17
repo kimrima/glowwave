@@ -13,6 +13,8 @@ export async function sendEmail(email: string, subject: string, html: string): P
   }
 
   try {
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -20,7 +22,7 @@ export async function sendEmail(email: string, subject: string, html: string): P
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'GlowWave <noreply@glow-wave.net>',
+        from: fromEmail,
         to: [email.trim().toLowerCase()],
         subject: subject,
         html: html

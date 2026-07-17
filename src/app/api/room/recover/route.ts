@@ -23,20 +23,50 @@ export async function GET(request: Request) {
     const otp = localDb.createRecoveryOtp(email);
 
     // Send email via Resend
-    const mailSubject = '[GlowWave] 복구 일회용 인증코드(OTP) 안내';
+    const mailSubject = '🔑 [GlowWave] 요청하신 일회용 복구 보안코드(OTP)입니다.';
     const mailHtml = `
-      <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto; padding: 25px; border: 1px solid #eef2f6; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-        <h2 style="color: #4f46e5; font-size: 20px; font-weight: bold; margin-bottom: 20px; text-align: center;">🔑 GlowWave 리모컨 복구</h2>
-        <p style="font-size: 13px; color: #4b5563; line-height: 1.6; margin-bottom: 25px;">
-          안녕하세요! 글로우웨이브 전광판 대시보드 리모컨 복구용 보안 일회용 비밀번호(OTP)입니다.<br />
-          복구 화면에 아래의 6자리 인증 코드를 입력하여 복구 단계를 마쳐주세요.
-        </p>
-        <div style="background-color: #f3f4f6; padding: 18px; border-radius: 12px; text-align: center; font-size: 26px; font-weight: 800; letter-spacing: 5px; color: #111827; margin: 20px 0; font-family: monospace;">
-          ${otp}
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 480px; margin: 40px auto; padding: 0; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; background-color: #0b0b0f; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+        <!-- Gradient Top Header -->
+        <div style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%); padding: 35px 20px; text-align: center;">
+          <div style="font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            GlowWave 🌊
+          </div>
+          <div style="font-size: 11px; color: rgba(255, 255, 255, 0.8); font-weight: bold; margin-top: 6px; letter-spacing: 1px; text-transform: uppercase;">
+            Secure One-Time Password
+          </div>
         </div>
-        <p style="font-size: 11px; color: #9ca3af; text-align: center; margin-top: 25px;">
-          * 본 코드는 5분 동안만 유효합니다. 타인에게 이 코드를 양도하지 마십시오.
-        </p>
+
+        <!-- Body Content -->
+        <div style="padding: 35px 30px 40px 30px; text-align: center;">
+          <h2 style="color: #ffffff; font-size: 18px; font-weight: 800; margin: 0 0 16px 0; letter-spacing: -0.3px;">
+            임시 리모컨 복구 보안 코드
+          </h2>
+          <p style="font-size: 13px; color: #94a3b8; line-height: 1.6; margin: 0 0 30px 0; text-align: left;">
+            안녕하세요! 관객 소통용 스마트 전광판 <b>글로우웨이브</b>입니다.<br />
+            요청하신 전광판 방 대시보드 리모컨 복구 단계 완료를 위해 생성된 6자리 일회용 보안 번호입니다. 아래 코드를 복구 창에 기입해 주세요.
+          </p>
+
+          <!-- OTP Box -->
+          <div style="background: linear-gradient(180deg, #181825 0%, #111116 100%); border: 1px solid rgba(139, 92, 246, 0.3); padding: 22px; border-radius: 16px; text-align: center; margin: 25px 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);">
+            <div style="font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #a5b4fc; font-family: 'SF Mono', Consolas, Monaco, monospace; text-shadow: 0 0 10px rgba(139,92,246,0.3); padding-left: 8px;">
+              ${otp}
+            </div>
+          </div>
+
+          <!-- Notice Block -->
+          <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 25px; margin-top: 30px; text-align: left;">
+            <p style="font-size: 11px; color: #64748b; line-height: 1.5; margin: 0;">
+              ⚠️ 본 코드는 <b>5분 동안만 유효</b>합니다. 만약 본인이 요청하지 않으셨다면 이 메일을 조용히 무시해 주시기 바랍니다. 보안을 위해 본 코드를 타인에게 양도하거나 양식 공유를 삼가 주십시오.
+            </p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #07070a; padding: 20px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.04);">
+          <span style="font-size: 10px; color: #475569; font-weight: bold;">
+            &copy; 2026 GlowWave. Built for Next-Generation Interactions.
+          </span>
+        </div>
       </div>
     `;
     await sendEmail(email, mailSubject, mailHtml);
