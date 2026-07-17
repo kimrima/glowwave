@@ -6312,6 +6312,59 @@ export default function HostDashboard() {
           />
         </div>
       )}
+
+      {/* Custom Alert Modal */}
+      {customAlert?.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setCustomAlert(null)} />
+          <div className="glass-effect rounded-2xl w-full max-w-sm p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150 border border-white/10 bg-[#12121a] text-center">
+            <h3 className="text-sm font-bold text-white mb-2">
+              {customAlert.title || (activeLocale === 'ko' ? '알림' : 'Notification')}
+            </h3>
+            <p className="text-xs text-zinc-400 leading-relaxed mb-6 whitespace-pre-line">
+              {customAlert.message}
+            </p>
+            <button
+              onClick={() => setCustomAlert(null)}
+              className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-500 transition-colors"
+            >
+              {activeLocale === 'ko' ? '확인' : 'OK'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Confirm Modal */}
+      {customConfirm?.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setCustomConfirm(null)} />
+          <div className="glass-effect rounded-2xl w-full max-w-sm p-6 relative z-10 animate-in fade-in zoom-in-95 duration-150 border border-white/10 bg-[#12121a] text-center">
+            <h3 className="text-sm font-bold text-white mb-2">
+              {customConfirm.title || (activeLocale === 'ko' ? '확인' : 'Confirm')}
+            </h3>
+            <p className="text-xs text-zinc-400 leading-relaxed mb-6 whitespace-pre-line">
+              {customConfirm.message}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCustomConfirm(null)}
+                className="flex-1 py-2.5 rounded-xl bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white font-bold text-xs transition-colors"
+              >
+                {activeLocale === 'ko' ? '취소' : 'Cancel'}
+              </button>
+              <button
+                onClick={() => {
+                  customConfirm.onConfirm();
+                  setCustomConfirm(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-500 transition-colors"
+              >
+                {activeLocale === 'ko' ? '확인' : 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
