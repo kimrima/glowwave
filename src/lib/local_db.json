@@ -347,6 +347,22 @@
     {
       "step": "step1_landing",
       "created_at": "2026-07-16T16:50:42.610Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-20T18:08:08.759Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-20T18:08:09.418Z"
+    },
+    {
+      "step": "step1_landing",
+      "created_at": "2026-07-20T18:08:11.458Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-20T18:08:16.694Z"
     }
   ],
   "csInquiries": [
