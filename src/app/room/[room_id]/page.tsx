@@ -1064,7 +1064,7 @@ export default function AudienceRoom() {
       className={`${
         isForcedLandscape 
           ? 'fixed inset-0 overflow-hidden bg-black' 
-          : 'relative w-full min-h-[100dvh] overflow-x-hidden bg-[#0B0B0F]'
+          : 'relative w-full h-[100dvh] min-h-[100dvh] overflow-hidden bg-[#0B0B0F]'
       } select-none cursor-none`}
       onClick={resetControlsTimer}
       onMouseMove={resetControlsTimer}
@@ -1459,9 +1459,7 @@ export default function AudienceRoom() {
 
       {/* Initial entry user activation overlay */}
       {showEnterOverlay && (
-        <div className={`fixed inset-0 bg-[#030305] z-50 flex flex-col justify-center items-center text-center px-6 text-white bg-grid-pattern relative overflow-hidden ${
-          !isForcedLandscape ? 'hidden md:flex' : ''
-        }`}>
+        <div className="fixed inset-0 bg-[#030305] z-50 flex flex-col justify-center items-center text-center px-6 text-white bg-grid-pattern relative overflow-hidden">
           {/* Background Aura Spheres */}
           <div className="absolute top-[20%] left-[-15%] w-[60vw] h-[60vw] bg-indigo-500/10 blur-[120px] rounded-full animate-pulse z-0 pointer-events-none" style={{ animationDuration: '6s' }} />
           <div className="absolute bottom-[20%] right-[-15%] w-[50vw] h-[50vw] bg-purple-500/10 blur-[120px] rounded-full animate-pulse z-0 pointer-events-none" style={{ animationDuration: '8s' }} />
