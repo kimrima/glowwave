@@ -4071,6 +4071,55 @@ function LocalFullscreenSignboard({ preset, onClose, locale }: LocalFullscreenSi
     };
   }, []);
 
+  // Dynamically control html/body height and trigger automatic scroll force to push away mobile address bars
+  useEffect(() => {
+    const htmlEl = document.documentElement;
+    const bodyEl = document.body;
+    if (isForcedLandscape) {
+      // 1. Stretch HTML/Body 0.5% larger than 100dvh to invite browser scrolling capability
+      htmlEl.style.height = '100.5dvh';
+      htmlEl.style.overflow = 'hidden';
+      bodyEl.style.height = '100.5dvh';
+      bodyEl.style.overflow = 'hidden';
+
+      // 2. Perform automatic scroll force to slide away the mobile browser masked bottom bar immediately
+      const forceScroll = () => {
+        window.scrollTo(0, 150);
+      };
+      
+      // Execute multiple times with micro-delays to survive mobile browser layout shifts
+      forceScroll();
+      const t1 = setTimeout(forceScroll, 50);
+      const t2 = setTimeout(forceScroll, 200);
+      const t3 = setTimeout(forceScroll, 500);
+
+      // 3. Register touchmove interceptor to lock down the scrolled viewport position
+      const handleTouchMove = (e: TouchEvent) => {
+        if (e.touches.length > 1 || (e.target as HTMLElement).closest('.rotate-90-forced')) {
+          e.preventDefault();
+        }
+        e.preventDefault();
+      };
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+        document.removeEventListener('touchmove', handleTouchMove);
+        htmlEl.style.height = '';
+        htmlEl.style.overflow = '';
+        bodyEl.style.height = '';
+        bodyEl.style.overflow = '';
+      };
+    } else {
+      htmlEl.style.height = '';
+      htmlEl.style.overflow = '';
+      bodyEl.style.height = '';
+      bodyEl.style.overflow = '';
+    }
+  }, [isForcedLandscape]);
+
   // Monitor visibility
   useEffect(() => {
     const handleVisibilityChange = async () => {
