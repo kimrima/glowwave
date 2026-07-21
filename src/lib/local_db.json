@@ -87,6 +87,16 @@
       "max_participants": 1,
       "current_participants": 0,
       "created_at": "2026-07-21T19:49:24.180Z"
+    },
+    "FB4PA1": {
+      "id": "FB4PA1",
+      "host_session_token": "a58003d8-b6a5-47b9-a99c-a83f203cdb44",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 1,
+      "current_participants": 0,
+      "created_at": "2026-07-21T20:01:43.432Z"
     }
   },
   "payments": [
@@ -389,6 +399,16 @@
       "font_family": "sans-thin",
       "special_effect": "none",
       "trigger_id": "1784663475534"
+    },
+    "FB4PA1": {
+      "bg_color": "#F97316",
+      "text": "스크롤",
+      "text_color": "#FFFFFF",
+      "effect": "marquee",
+      "speed": 11606,
+      "font_family": "sans-thin",
+      "font_size": 100,
+      "trigger_id": "1784657253373"
     }
   },
   "coupons": [],
@@ -476,6 +496,18 @@
     {
       "step": "step1_landing",
       "created_at": "2026-07-21T19:53:34.770Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-21T20:01:28.122Z"
+    },
+    {
+      "step": "step1_landing",
+      "created_at": "2026-07-21T20:02:11.019Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-21T20:07:33.197Z"
     }
   ],
   "csInquiries": [

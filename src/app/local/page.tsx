@@ -332,9 +332,22 @@ function LocalSignboardContent() {
 
   // Sync Room Recovery states
   const [syncRecoveryEmail, setSyncRecoveryEmail] = useState('');
+  const [syncRecoveryOtp, setSyncRecoveryOtp] = useState('');
+  const [syncRecoveryOtpSent, setSyncRecoveryOtpSent] = useState(false);
   const [isSyncRecoveryLoading, setIsSyncRecoveryLoading] = useState(false);
   const [syncRecoveryRooms, setSyncRecoveryRooms] = useState<any[]>([]);
   const [syncRecoveryMessage, setSyncRecoveryMessage] = useState('');
+
+  // Reset Sync Recovery state when Vault open status changes
+  useEffect(() => {
+    if (!isVaultOpen) {
+      setSyncRecoveryEmail('');
+      setSyncRecoveryOtp('');
+      setSyncRecoveryOtpSent(false);
+      setSyncRecoveryRooms([]);
+      setSyncRecoveryMessage('');
+    }
+  }, [isVaultOpen]);
 
   // Active categories
   const [activeCategory, setActiveCategory] = useState<'custom' | 'busking' | 'sports' | 'party' | 'anniversary' | 'store'>('custom');
@@ -1073,7 +1086,7 @@ function LocalSignboardContent() {
   };
 
   const handleRecoverSyncRooms = async () => {
-    const email = syncRecoveryEmail.trim();
+    const email = syncRecoveryEmail.trim().toLowerCase();
     if (!email) {
       setSyncRecoveryMessage(
         activeLocale === 'ko' 
@@ -1089,11 +1102,63 @@ function LocalSignboardContent() {
 
     try {
       const res = await fetch(`/api/room/recover?email=${encodeURIComponent(email)}`);
-      if (!res.ok) throw new Error('API request failed');
-      const data = await res.json();
+      if (!res.ok) {
+        let errDesc = activeLocale === 'ko' ? '활성화된 방을 찾지 못했습니다.' : 'No active rooms found for this email.';
+        try {
+          const errData = await res.json();
+          if (errData.error) errDesc = errData.error;
+        } catch (e) {}
+        throw new Error(errDesc);
+      }
       
+      setSyncRecoveryOtpSent(true);
+      setSyncRecoveryMessage(
+        activeLocale === 'ko'
+          ? '입력하신 이메일로 6자리 일회용 보안코드(OTP) 메일이 발송되었습니다.'
+          : 'A 6-digit one-time password (OTP) mail has been sent to your email.'
+      );
+    } catch (err: any) {
+      console.error(err);
+      setSyncRecoveryMessage(
+        activeLocale === 'ko'
+          ? (err.message || '조회 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
+          : 'An error occurred during lookup. Please try again.'
+      );
+    } finally {
+      setIsSyncRecoveryLoading(false);
+    }
+  };
+
+  const handleVerifySyncRoomsOtp = async () => {
+    const email = syncRecoveryEmail.trim().toLowerCase();
+    const otp = syncRecoveryOtp.trim();
+    if (!otp) {
+      setSyncRecoveryMessage(
+        activeLocale === 'ko' ? '보안코드를 입력해 주세요.' : 'Please enter the security code.'
+      );
+      return;
+    }
+
+    setIsSyncRecoveryLoading(true);
+    setSyncRecoveryMessage('');
+
+    try {
+      const res = await fetch(`/api/room/recover`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp })
+      });
+      if (!res.ok) {
+        let errDesc = activeLocale === 'ko' ? '올바르지 않거나 만료된 보안코드입니다.' : 'Invalid or expired OTP code.';
+        try {
+          const errData = await res.json();
+          if (errData.error) errDesc = errData.error;
+        } catch (e) {}
+        throw new Error(errDesc);
+      }
+
+      const data = await res.json();
       if (data.rooms && data.rooms.length > 0) {
-        // Sort rooms by created_at in descending order (newest first)
         const sortedRooms = [...data.rooms].sort((a, b) => {
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
@@ -1105,17 +1170,15 @@ function LocalSignboardContent() {
         );
       } else {
         setSyncRecoveryMessage(
-          activeLocale === 'ko'
-            ? '활성화된 방을 찾지 못했습니다.'
-            : 'No active rooms found for this email.'
+          activeLocale === 'ko' ? '활성화된 방이 없습니다.' : 'No active rooms found.'
         );
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       setSyncRecoveryMessage(
         activeLocale === 'ko'
-          ? '조회 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
-          : 'An error occurred during lookup. Please try again.'
+          ? (err.message || '인증 중 오류가 발생했습니다. 다시 시도해 주세요.')
+          : 'Authentication failed. Please try again.'
       );
     } finally {
       setIsSyncRecoveryLoading(false);
@@ -1523,20 +1586,20 @@ function LocalSignboardContent() {
                 setVaultTab('sync');
                 setIsVaultOpen(true);
               }}
-              className="flex items-center gap-1.5 bg-indigo-600/95 hover:bg-indigo-500 border border-indigo-500/35 p-2 sm:px-4 sm:py-2 rounded-xl text-xs font-extrabold text-white cursor-pointer shadow-md select-none transition-all hover:scale-[1.02]"
-              title={activeLocale === 'ko' ? '화면 연동 (모바일/TV)' : 'Sync Screen'}
+              className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-indigo-500/5 hover:from-indigo-500/20 hover:to-purple-500/15 border border-indigo-500/30 text-indigo-200 hover:text-white p-2 sm:px-4 sm:py-2 rounded-xl text-xs font-extrabold cursor-pointer shadow-lg shadow-indigo-500/5 select-none transition-all hover:scale-[1.02]"
+              title={activeLocale === 'ko' ? '화면 연동 (모바일/스크린)' : 'Sync Screen'}
             >
-              <Smartphone className="w-4 h-4 text-indigo-200" />
+              <Smartphone className="w-4 h-4 text-indigo-300" />
               <span className="hidden sm:inline">
                 {
                   {
-                    ko: '화면 연동 (모바일/TV)',
-                    en: 'Sync Screen (Mobile/TV)',
-                    ja: '画面同期 (モバイル/TV)',
+                    ko: '화면 연동 (모바일/스크린)',
+                    en: 'Sync Screen (Mobile/Screen)',
+                    ja: '画面同期 (モバイル/スクリーン)',
                     es: 'Sincronizar Pantalla',
                     'zh-TW': '螢幕同步連動',
                     'zh-HK': '螢幕同步連動'
-                  }[activeLocale] || '화면 연동 (모바일/TV)'
+                  }[activeLocale] || '화면 연동 (모바일/스크린)'
                 }
               </span>
             </button>
@@ -3717,9 +3780,9 @@ function LocalSignboardContent() {
                           type="button"
                           onClick={() => handleStartMobileSync(false)}
                           disabled={isSyncCreating}
-                          className="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-300 font-bold text-xs transition-all cursor-pointer text-center active:scale-95 mt-auto"
+                          className="w-full py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-extrabold text-xs transition-all border border-zinc-700/50 shadow-md cursor-pointer text-center active:scale-95 mt-auto"
                         >
-                          {isSyncCreating ? '...' : syncOptionABtn}
+                          {isSyncCreating ? (activeLocale === 'ko' ? '개설 중...' : 'Creating...') : syncOptionABtn}
                         </button>
                       </div>
 
@@ -3811,25 +3874,65 @@ function LocalSignboardContent() {
                           ? '결제시 입력하셨던 이메일 주소를 입력하시면, 현재 활성화되어 있는 방의 연동 키와 주소를 확인하여 복구할 수 있습니다.'
                           : 'Enter the email address you used during payment to look up and restore your active room sessions.'}
                       </p>
-                      <div className="flex gap-2">
-                        <input
-                          type="email"
-                          placeholder="your-email@example.com"
-                          value={syncRecoveryEmail}
-                          onChange={(e) => setSyncRecoveryEmail(e.target.value)}
-                          className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-zinc-300 font-sans focus:outline-none focus:border-violet-500/50"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleRecoverSyncRooms}
-                          disabled={isSyncRecoveryLoading}
-                          className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:bg-violet-800 disabled:text-zinc-500 text-white font-bold text-xs transition-all cursor-pointer text-center active:scale-95 shrink-0"
-                        >
-                          {isSyncRecoveryLoading 
-                            ? (activeLocale === 'ko' ? '조회 중...' : 'Checking...') 
-                            : (activeLocale === 'ko' ? '방 조회' : 'Lookup Rooms')}
-                        </button>
-                      </div>
+                      
+                      {!syncRecoveryOtpSent ? (
+                        /* Step 1: Input Email */
+                        <div className="flex gap-2">
+                          <input
+                            type="email"
+                            placeholder="your-email@example.com"
+                            value={syncRecoveryEmail}
+                            onChange={(e) => setSyncRecoveryEmail(e.target.value)}
+                            className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-zinc-300 font-sans focus:outline-none focus:border-violet-500/50"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleRecoverSyncRooms}
+                            disabled={isSyncRecoveryLoading}
+                            className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:bg-violet-800 disabled:text-zinc-500 text-white font-bold text-xs transition-all cursor-pointer text-center active:scale-95 shrink-0"
+                          >
+                            {isSyncRecoveryLoading 
+                              ? (activeLocale === 'ko' ? '조회 중...' : 'Checking...') 
+                              : (activeLocale === 'ko' ? '방 조회' : 'Lookup Rooms')}
+                          </button>
+                        </div>
+                      ) : (
+                        /* Step 2: Input OTP */
+                        <div className="space-y-3">
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              maxLength={6}
+                              placeholder={activeLocale === 'ko' ? '6자리 보안코드 입력' : '6-digit OTP code'}
+                              value={syncRecoveryOtp}
+                              onChange={(e) => setSyncRecoveryOtp(e.target.value)}
+                              className="flex-1 bg-black/40 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-zinc-300 font-mono tracking-widest text-center focus:outline-none focus:border-violet-500/50"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleVerifySyncRoomsOtp}
+                              disabled={isSyncRecoveryLoading}
+                              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 disabled:text-zinc-500 text-white font-bold text-xs transition-all cursor-pointer text-center active:scale-95 shrink-0"
+                            >
+                              {isSyncRecoveryLoading 
+                                ? (activeLocale === 'ko' ? '인증 중...' : 'Verifying...') 
+                                : (activeLocale === 'ko' ? '보안코드 확인' : 'Verify Code')}
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSyncRecoveryOtpSent(false);
+                              setSyncRecoveryOtp('');
+                              setSyncRecoveryMessage('');
+                              setSyncRecoveryRooms([]);
+                            }}
+                            className="text-[10px] text-zinc-500 hover:text-zinc-300 font-semibold underline cursor-pointer"
+                          >
+                            {activeLocale === 'ko' ? '← 이메일 재입력하기' : '← Re-enter email'}
+                          </button>
+                        </div>
+                      )}
                       
                       {syncRecoveryMessage && (
                         <p className="text-[10px] text-amber-400 mt-2 font-medium">{syncRecoveryMessage}</p>
