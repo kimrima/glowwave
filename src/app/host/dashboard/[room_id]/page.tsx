@@ -158,9 +158,9 @@ export default function HostDashboard() {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [upgradePlanType, setUpgradePlanType] = useState<'event' | 'store'>('event');
 
-  // Auto-initialize plan type on modal open
+  // Auto-initialize plan type only once when the modal is opened
   useEffect(() => {
-    if (isUpgradeModalOpen && room && upgradeStep !== 'success') {
+    if (isUpgradeModalOpen && room) {
       if (room.tier === 'store' || room.tier === 'store_annual') {
         setUpgradePlanType('store');
         setSelectedUpgradeTier(room.tier === 'store' ? 'store_annual' : null);
@@ -169,7 +169,7 @@ export default function HostDashboard() {
         setSelectedUpgradeTier(null);
       }
     }
-  }, [isUpgradeModalOpen, room, upgradeStep]);
+  }, [isUpgradeModalOpen]);
 
   // Time Extension Modal States
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
