@@ -1132,6 +1132,27 @@ export default function AudienceRoom() {
 
       {/* Floating Control Toolbar */}
       <div className={`absolute top-[calc(env(safe-area-inset-top,0px)+24px)] left-6 z-40 flex flex-wrap items-center gap-2 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        {isForcedLandscape && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsForcedLandscape(false);
+              setShowEnterOverlay(true);
+            }}
+            className="px-3.5 py-2 rounded-xl bg-red-600/90 border border-red-500 text-[10px] text-white hover:bg-red-700 transition-all font-bold cursor-pointer shadow-lg shadow-red-500/20 flex items-center gap-1 z-50"
+          >
+            <span>{
+              {
+                ko: '← 뒤로가기 (종료)',
+                en: '← Back (Exit)',
+                ja: '← 戻る (終了)',
+                es: '← Volver (Salir)',
+                'zh-TW': '← 返回 (退出)',
+                'zh-HK': '← 返回 (退出)'
+              }[activeLocale] || '← 뒤로가기 (종료)'
+            }</span>
+          </button>
+        )}
         {!isStandalone && (
           !isIOS ? (
             <button
@@ -1257,6 +1278,13 @@ export default function AudienceRoom() {
       {/* Main Display Screen */}
       <div 
         ref={containerRef}
+        onDoubleClick={(e) => {
+          if (isForcedLandscape) {
+            e.stopPropagation();
+            setIsForcedLandscape(false);
+            setShowEnterOverlay(true);
+          }
+        }}
         className={`${
           isForcedLandscape ? 'rotate-90-forced fixed inset-0 z-10 w-full h-full' : 'w-full h-full relative'
         } flex items-center justify-center ${
@@ -1418,7 +1446,9 @@ export default function AudienceRoom() {
 
       {/* Initial entry user activation overlay */}
       {showEnterOverlay && (
-        <div className="fixed inset-0 bg-[#030305] z-50 flex flex-col justify-center items-center text-center px-6 text-white bg-grid-pattern relative overflow-hidden">
+        <div className={`fixed inset-0 bg-[#030305] z-50 flex flex-col justify-center items-center text-center px-6 text-white bg-grid-pattern relative overflow-hidden ${
+          !isForcedLandscape ? 'hidden md:flex' : ''
+        }`}>
           {/* Background Aura Spheres */}
           <div className="absolute top-[20%] left-[-15%] w-[60vw] h-[60vw] bg-indigo-500/10 blur-[120px] rounded-full animate-pulse z-0 pointer-events-none" style={{ animationDuration: '6s' }} />
           <div className="absolute bottom-[20%] right-[-15%] w-[50vw] h-[50vw] bg-purple-500/10 blur-[120px] rounded-full animate-pulse z-0 pointer-events-none" style={{ animationDuration: '8s' }} />
