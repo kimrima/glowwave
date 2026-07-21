@@ -217,6 +217,7 @@ export default function AudienceRoom() {
 
   const [showSafariTip, setShowSafariTip] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isForcedLandscape, setIsForcedLandscape] = useState<boolean>(false);
 
   const getFontFamilyClass = (fontFamily?: string) => {
     const loc = currentPreset?.locale || 'ko';
@@ -371,7 +372,8 @@ export default function AudienceRoom() {
   const { containerRef, fontSize } = useFitText(
     displayText,
     currentPreset.effect,
-    currentPreset.font_size || 100
+    currentPreset.font_size || 100,
+    isForcedLandscape
   );
 
   // Active Locale State
@@ -1004,7 +1006,8 @@ export default function AudienceRoom() {
     >
       
       {/* Landscape forced Warning overlay */}
-      <div className="fixed inset-0 bg-[#0B0B0F] flex flex-col justify-center items-center text-center px-6 text-white z-50 md:hidden portrait-overlay">
+      {!isForcedLandscape && (
+        <div className="fixed inset-0 bg-[#0B0B0F] flex flex-col justify-center items-center text-center px-6 text-white z-50 md:hidden portrait-overlay">
         <button 
           onClick={(e) => {
             e.stopPropagation();
@@ -1051,7 +1054,19 @@ export default function AudienceRoom() {
             }[activeLocale] || '빛의 방사 면적을 최대화하고 자막이 깨지지 않도록 하기 위해 가로 모드 회전이 필수입니다.'
           }
         </p>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsForcedLandscape(true);
+            setShowEnterOverlay(false);
+          }}
+          className="mt-5 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-xl shadow-indigo-600/40 border border-indigo-400 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
+        >
+          <RotateCw className="w-4 h-4 text-indigo-200 animate-spin-slow" />
+          회전 잠금 해제 없이 즉시 가로로 사용
+        </button>
       </div>
+      )}
 
       {/* CSS style rule to enforce portrait overlay block */}
       <style jsx global>{`
@@ -1114,6 +1129,20 @@ export default function AudienceRoom() {
             </button>
           )
         )}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsForcedLandscape(!isForcedLandscape);
+          }}
+          className={`px-3.5 py-2 rounded-xl backdrop-blur-md border text-[10px] transition-all font-bold cursor-pointer flex items-center gap-1.5 ${
+            isForcedLandscape 
+              ? 'bg-indigo-600/90 border-indigo-400 text-white shadow-lg shadow-indigo-500/30' 
+              : 'bg-black/40 border-white/10 text-white/80 hover:text-white hover:bg-black/70'
+          }`}
+        >
+          <RotateCw className="w-3 h-3 text-indigo-400 animate-spin-slow" />
+          {isForcedLandscape ? '가로 고정 해제 (세로 복귀)' : '회전 잠금 해제 없이 즉시 가로로 사용'}
+        </button>
         {wakeLockError && (
           <span className="px-3.5 py-2 rounded-xl bg-amber-500/20 backdrop-blur-md border border-amber-500/30 text-[9px] text-amber-300 font-extrabold flex items-center gap-1.5 select-none shadow-lg animate-pulse">
             {
@@ -1131,7 +1160,7 @@ export default function AudienceRoom() {
       </div>
 
       {/* iOS Safari/Chrome Home Screen Tooltip */}
-      {showSafariTip && !isStandalone && (
+      {showSafariTip && !isStandalone && showEnterOverlay && (
         <div className={`fixed top-[calc(env(safe-area-inset-top,0px)+24px)] left-6 right-6 md:left-auto md:w-80 bg-black/95 backdrop-blur-md border border-white/10 rounded-2xl p-4 text-xs text-zinc-300 shadow-2xl z-50 animate-in fade-in slide-in-from-top-4 duration-200 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className="flex justify-between items-center mb-2">
             <span className="font-bold text-white flex items-center gap-1.5">
@@ -1175,7 +1204,9 @@ export default function AudienceRoom() {
       {/* Main Display Screen */}
       <div 
         ref={containerRef}
-        className={`w-full h-full flex items-center justify-center relative ${
+        className={`${
+          isForcedLandscape ? 'rotate-90-forced fixed inset-0 z-10 w-full h-full' : 'w-full h-full relative'
+        } flex items-center justify-center ${
           (isDuoSiren || currentPreset.effect === 'blink') ? '' : 'transition-colors duration-300'
         } ${
           isDuoSiren ? 'animate-siren' : currentPreset.effect === 'blink' ? 'animate-blink' : ''

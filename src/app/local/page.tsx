@@ -16,7 +16,8 @@ import {
   Smartphone,
   Copy,
   ExternalLink,
-  QrCode
+  QrCode,
+  RotateCw
 } from 'lucide-react';
 import jsQR from 'jsqr';
 import { Preset, EffectType, TierType, TIER_CONFIGS } from '@/lib/types';
@@ -4014,11 +4015,14 @@ function LocalFullscreenSignboard({ preset, onClose, locale }: LocalFullscreenSi
       ? (t('raffle_board', locale) || '추첨 대기 중')
       : (preset.text || '');
 
+  const [isForcedLandscape, setIsForcedLandscape] = useState(false);
+
   // FitText Hook
   const { containerRef, fontSize } = useFitText(
     displayText,
     preset.effect || 'none',
-    preset.font_size || 100
+    preset.font_size || 100,
+    isForcedLandscape
   );
 
   // ESC key listener
@@ -4163,7 +4167,9 @@ function LocalFullscreenSignboard({ preset, onClose, locale }: LocalFullscreenSi
       ref={containerRef}
       onClick={triggerResetControls}
       onDoubleClick={onClose}
-      className={`w-full h-full flex items-center justify-center relative select-none ${
+      className={`${
+        isForcedLandscape ? 'rotate-90-forced fixed inset-0 z-10 w-full h-full' : 'w-full h-full relative'
+      } flex items-center justify-center select-none ${
         (isDuoSiren || isBlink) ? '' : 'transition-colors duration-300'
       } ${
         isDuoSiren ? 'animate-siren' : isBlink ? 'animate-blink' : ''
@@ -4291,12 +4297,26 @@ function LocalFullscreenSignboard({ preset, onClose, locale }: LocalFullscreenSi
       )}
 
       {/* Floating Exit overlay */}
-      <div className={`absolute top-6 left-6 z-40 transition-opacity duration-300 ${showExitBtn ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute top-6 left-6 z-40 transition-opacity duration-300 flex items-center gap-2 ${showExitBtn ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <button
           onClick={onClose}
           className="py-2.5 px-5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/10 text-white font-bold text-xs tracking-wider flex items-center gap-2 cursor-pointer shadow-lg active:scale-95 transition-all"
         >
           {t('close', locale)} (Exit)
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsForcedLandscape(!isForcedLandscape);
+          }}
+          className={`py-2.5 px-4 rounded-full backdrop-blur-md border font-extrabold text-xs tracking-wider flex items-center gap-2 cursor-pointer shadow-lg active:scale-95 transition-all ${
+            isForcedLandscape
+              ? 'bg-indigo-600 border-indigo-400 text-white shadow-indigo-600/50'
+              : 'bg-black/60 hover:bg-black/80 border-white/10 text-white'
+          }`}
+        >
+          <RotateCw className="w-3.5 h-3.5 text-indigo-300" />
+          <span>{isForcedLandscape ? '세로 복귀' : '회전 잠금 해제 없이 즉시 가로로 사용'}</span>
         </button>
       </div>
 

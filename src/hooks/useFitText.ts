@@ -6,7 +6,7 @@ const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffec
  * Hook to dynamically calculate font size to fit text perfectly on 1 line 
  * without wrapping or overflowing the screen boundaries, relative to container dimensions.
  */
-export default function useFitText(text: string, effect: string, sizePercent: number | undefined) {
+export default function useFitText(text: string, effect: string, sizePercent: number | undefined, isForcedLandscape?: boolean) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [fontSize, setFontSize] = useState<string>('8vw'); // Fallback style before layout computation
 
@@ -18,13 +18,18 @@ export default function useFitText(text: string, effect: string, sizePercent: nu
       const { clientWidth, clientHeight } = container;
       if (clientWidth === 0 || clientHeight === 0) return;
 
+      // Handle CSS 90-degree rotation scenario by swapping width and height bounds
+      const isRotated = container.classList.contains('rotate-90-forced');
+      const widthVal = isRotated ? clientHeight : clientWidth;
+      const heightVal = isRotated ? clientWidth : clientHeight;
+
       // Calculate size multiplier continuously based on percentage (30 to 100)
       const sizeMultiplier = (sizePercent || 100) / 100;
 
       // Marquee is scrolling text: it flows offscreen horizontally. 
       // Thus, only the vertical height is the scaling limit.
       if (effect === 'marquee') {
-        const targetHeightSize = clientHeight * 0.60 * sizeMultiplier;
+        const targetHeightSize = heightVal * 0.60 * sizeMultiplier;
         setFontSize(`${targetHeightSize}px`);
         return;
       }
@@ -115,7 +120,7 @@ export default function useFitText(text: string, effect: string, sizePercent: nu
       window.clearTimeout(mountTimeout2);
       resizeTimeouts.forEach((t) => window.clearTimeout(t));
     };
-  }, [text, effect, sizePercent]);
+  }, [text, effect, sizePercent, isForcedLandscape]);
 
   return { containerRef, fontSize };
 }

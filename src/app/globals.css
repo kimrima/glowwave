@@ -138,9 +138,11 @@
   @keyframes blink {
     0%, 100% {
       opacity: 1;
+      filter: brightness(1);
     }
     50% {
-      opacity: 0;
+      opacity: 1;
+      filter: brightness(0.05);
     }
   }
 }
@@ -478,4 +480,17 @@ body {
   position: absolute;
   pointer-events: none;
   will-change: opacity, transform, filter;
+}
+
+/* Forced 90-degree landscape mode for mobile screens */
+.rotate-90-forced {
+  transform: translate(-50%, -50%) rotate(90deg) !important;
+  transform-origin: center center !important;
+  width: 100vh !important;
+  height: 100vw !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  z-index: 9999 !important;
+  overflow: hidden !important;
 }

@@ -67,6 +67,26 @@
       "max_participants": 3,
       "current_participants": 0,
       "created_at": "2026-07-14T04:13:05.536Z"
+    },
+    "MP9V2J": {
+      "id": "MP9V2J",
+      "host_session_token": "a5df5f35-5b07-4638-9048-e1f95b70a717",
+      "email": "test@glowwave.com",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 1,
+      "current_participants": 0,
+      "created_at": "2026-07-21T13:20:49.220Z"
+    },
+    "YCPHYC": {
+      "id": "YCPHYC",
+      "host_session_token": "dfa729bf-0a7e-4f66-b92c-e56ba6812812",
+      "email": "test@gmail.com",
+      "tier": "lite",
+      "status": "active",
+      "max_participants": 60,
+      "current_participants": 0,
+      "created_at": "2026-07-21T13:49:24.203Z"
     }
   },
   "payments": [
@@ -259,6 +279,16 @@
       "amount": 5000,
       "payment_status": "completed",
       "created_at": "2026-07-14T04:19:45.462Z"
+    },
+    {
+      "id": "e4899755-62eb-44a3-8e3f-f62f457188bf",
+      "email": "test@gmail.com",
+      "host_session_token": "dfa729bf-0a7e-4f66-b92c-e56ba6812812",
+      "room_id": "YCPHYC",
+      "tier": "lite",
+      "amount": 5000,
+      "payment_status": "completed",
+      "created_at": "2026-07-21T13:49:24.204Z"
     }
   ],
   "currentStates": {
@@ -336,6 +366,30 @@
       "font_family": "sans-thin",
       "font_size": 100,
       "trigger_id": "1783526141835"
+    },
+    "MP9V2J": {
+      "bg_color": "#FFFFFF",
+      "text": "사이키",
+      "text_color": "#EF4444",
+      "effect": "blink",
+      "speed": 1527,
+      "bg_color_secondary": "#0B0B0F",
+      "font_family": "sans-thin",
+      "font_size": 100,
+      "locale": "ko",
+      "trigger_id": "1784640251485"
+    },
+    "YCPHYC": {
+      "bg_color": "#1E3A8A",
+      "text": "날려라~ 홈런! ⚾",
+      "text_color": "#FDE047",
+      "effect": "marquee",
+      "speed": 30061,
+      "font_family": "plump",
+      "font_size": 100,
+      "special_effect": "stars",
+      "locale": "ko",
+      "trigger_id": "1784642669892"
     }
   },
   "coupons": [],
@@ -363,6 +417,46 @@
     {
       "step": "step2_create",
       "created_at": "2026-07-20T18:08:16.694Z"
+    },
+    {
+      "step": "step1_landing",
+      "created_at": "2026-07-21T13:19:03.797Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-21T13:19:11.690Z"
+    },
+    {
+      "step": "step1_landing",
+      "created_at": "2026-07-21T13:24:53.704Z"
+    },
+    {
+      "step": "step1_landing",
+      "created_at": "2026-07-21T13:25:08.378Z"
+    },
+    {
+      "step": "step1_landing",
+      "created_at": "2026-07-21T13:25:44.733Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-21T13:36:04.518Z"
+    },
+    {
+      "step": "step3_view_upgrade",
+      "created_at": "2026-07-21T13:49:20.934Z"
+    },
+    {
+      "step": "step4_payment_success",
+      "created_at": "2026-07-21T13:49:24.226Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-21T13:55:32.966Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-21T13:56:30.569Z"
     }
   ],
   "csInquiries": [
