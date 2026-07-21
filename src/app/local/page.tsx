@@ -4297,7 +4297,7 @@ function LocalFullscreenSignboard({ preset, onClose, locale }: LocalFullscreenSi
       )}
 
       {/* Floating Exit overlay */}
-      <div className={`absolute top-6 left-6 z-40 transition-opacity duration-300 flex items-center gap-2 ${showExitBtn ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`absolute top-[calc(env(safe-area-inset-top,0px)+20px)] left-6 z-40 transition-opacity duration-300 flex items-center gap-2 ${showExitBtn ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <button
           onClick={onClose}
           className="py-2.5 px-5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/10 text-white font-bold text-xs tracking-wider flex items-center gap-2 cursor-pointer shadow-lg active:scale-95 transition-all"

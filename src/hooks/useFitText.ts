@@ -28,8 +28,11 @@ export default function useFitText(text: string, effect: string, sizePercent: nu
 
       // Marquee is scrolling text: it flows offscreen horizontally. 
       // Thus, only the vertical height is the scaling limit.
+      // Marquee effect sweeps horizontally continuously without fitting width constraint.
+      // Thus, only the vertical height is the scaling limit.
       if (effect === 'marquee') {
-        const targetHeightSize = heightVal * 0.60 * sizeMultiplier;
+        const maxMarqueeHeight = isRotated ? Math.min(clientWidth, clientHeight) : heightVal;
+        const targetHeightSize = Math.min(maxMarqueeHeight * 0.42 * sizeMultiplier, maxMarqueeHeight * 0.50);
         setFontSize(`${targetHeightSize}px`);
         return;
       }

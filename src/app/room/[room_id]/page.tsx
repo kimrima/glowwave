@@ -1296,7 +1296,7 @@ export default function AudienceRoom() {
         )}
 
         {currentPreset.effect === 'marquee' ? (
-          <div key={currentPreset.trigger_id} className="w-full overflow-hidden flex items-center whitespace-nowrap relative z-10 py-[2vh]">
+          <div key={currentPreset.trigger_id} className="w-full max-h-full overflow-hidden flex items-center whitespace-nowrap relative z-10 py-1">
             {/* Track 1 */}
             <div 
               className={`animate-marquee-seamless select-none leading-[1.2] flex shrink-0 gap-[4rem] pr-[4rem] ${getFontFamilyClass(currentPreset.font_family)}`}

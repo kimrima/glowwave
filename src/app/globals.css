@@ -484,13 +484,17 @@ body {
 
 /* Forced 90-degree landscape mode for mobile screens */
 .rotate-90-forced {
-  transform: translate(-50%, -50%) rotate(90deg) !important;
-  transform-origin: center center !important;
-  width: 100vh !important;
-  height: 100vw !important;
   position: fixed !important;
   top: 50% !important;
   left: 50% !important;
+  width: 100dvh !important;
+  height: 100dvw !important;
+  min-width: 100vh !important;
+  min-height: 100vw !important;
+  transform: translate(-50%, -50%) rotate(90deg) !important;
+  transform-origin: center center !important;
   z-index: 9999 !important;
   overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
