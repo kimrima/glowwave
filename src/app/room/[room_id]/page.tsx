@@ -349,6 +349,19 @@ export default function AudienceRoom() {
     }
   }, []);
 
+  // Automatically bypass enter overlay on Desktop PC environments
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isMobileDevice = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const isSmallScreen = window.innerWidth < 768;
+      
+      // If it is a Desktop PC (Not mobile device AND not a small screen), skip the enter overlay immediately
+      if (!isMobileDevice && !isSmallScreen) {
+        setShowEnterOverlay(false);
+      }
+    }
+  }, []);
+
   const isCountdown = currentPreset.effect === 'countdown';
   const isLuckyDraw = currentPreset.effect === 'luckydraw';
   const isLuckyDrawWait = currentPreset.effect === 'luckydraw_wait';
