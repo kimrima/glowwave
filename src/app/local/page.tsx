@@ -4217,7 +4217,7 @@ function LocalFullscreenSignboard({ preset, onClose, locale }: LocalFullscreenSi
       onClick={triggerResetControls}
       onDoubleClick={onClose}
       className={`${
-        isForcedLandscape ? 'rotate-90-forced fixed inset-0 z-10 w-full h-full' : 'w-full h-full relative'
+        isForcedLandscape ? 'rotate-90-forced fixed inset-0 z-10 w-full h-full' : 'relative w-full min-h-[100dvh] bg-[#0B0B0F]'
       } flex items-center justify-center select-none ${
         (isDuoSiren || isBlink) ? '' : 'transition-colors duration-300'
       } ${

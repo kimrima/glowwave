@@ -1048,7 +1048,11 @@ export default function AudienceRoom() {
   return (
     <div 
       ref={fullscreenRef} 
-      className="fixed inset-0 overflow-hidden select-none bg-black cursor-none"
+      className={`${
+        isForcedLandscape 
+          ? 'fixed inset-0 overflow-hidden bg-black' 
+          : 'relative w-full min-h-[100dvh] overflow-x-hidden bg-[#0B0B0F]'
+      } select-none cursor-none`}
       onClick={resetControlsTimer}
       onMouseMove={resetControlsTimer}
       onTouchStart={resetControlsTimer}
@@ -1056,7 +1060,7 @@ export default function AudienceRoom() {
       
       {/* Landscape forced Warning overlay */}
       {!isForcedLandscape && (
-        <div className="fixed inset-0 bg-[#0B0B0F] flex flex-col justify-center items-center text-center px-6 text-white z-50 md:hidden portrait-overlay">
+        <div className="absolute inset-0 w-full h-full bg-[#0B0B0F] flex flex-col justify-center items-center text-center px-6 text-white z-50 md:hidden portrait-overlay">
         <button 
           onClick={(e) => {
             e.stopPropagation();
