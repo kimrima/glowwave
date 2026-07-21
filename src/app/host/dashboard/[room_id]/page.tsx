@@ -160,7 +160,7 @@ export default function HostDashboard() {
 
   // Auto-initialize plan type on modal open
   useEffect(() => {
-    if (isUpgradeModalOpen && room) {
+    if (isUpgradeModalOpen && room && upgradeStep !== 'success') {
       if (room.tier === 'store' || room.tier === 'store_annual') {
         setUpgradePlanType('store');
         setSelectedUpgradeTier(room.tier === 'store' ? 'store_annual' : null);
@@ -169,7 +169,7 @@ export default function HostDashboard() {
         setSelectedUpgradeTier(null);
       }
     }
-  }, [isUpgradeModalOpen, room]);
+  }, [isUpgradeModalOpen, room, upgradeStep]);
 
   // Time Extension Modal States
   const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
@@ -390,8 +390,12 @@ export default function HostDashboard() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (!isUpgrading && upgradeStep !== 'success') {
+        if (!isUpgrading) {
           setIsUpgradeModalOpen(false);
+          if (upgradeStep === 'success') {
+            setUpgradeStep('select');
+            setSelectedUpgradeTier(null);
+          }
         }
         setIsExtendModalOpen(false);
         setIsPasscodeDrawerOpen(false);
@@ -1035,7 +1039,15 @@ export default function HostDashboard() {
   const getUpgradableTiers = () => {
     const currentTier = room?.tier || 'free';
     
-    if (currentTier === 'store' || currentTier === 'store_annual' || currentTier === 'max') {
+    // 🚨 Support store-monthly to store-annual upgrade route
+    if (currentTier === 'store') {
+      return ['store_annual'] as TierType[];
+    }
+    if (currentTier === 'store_annual') {
+      return [] as TierType[];
+    }
+    
+    if (currentTier === 'max') {
       return [] as TierType[];
     }
     const currentOrder = TIER_ORDER[currentTier] ?? 0;
@@ -4623,8 +4635,12 @@ export default function HostDashboard() {
       {isUpgradeModalOpen && (
         <div 
           onClick={() => {
-            if (!isUpgrading && upgradeStep !== 'success') {
+            if (!isUpgrading) {
               setIsUpgradeModalOpen(false);
+              if (upgradeStep === 'success') {
+                setUpgradeStep('select');
+                setSelectedUpgradeTier(null);
+              }
             }
           }}
           className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4"
@@ -4638,10 +4654,16 @@ export default function HostDashboard() {
             <div className="flex justify-between items-center pb-4 border-b border-white/10">
               <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
                 {t('upgrade_plan', activeLocale)}
-              </h3>
-              {!isUpgrading && upgradeStep !== 'success' && (
+               </h3>
+              {!isUpgrading && (
                 <button
-                  onClick={() => setIsUpgradeModalOpen(false)}
+                  onClick={() => {
+                    setIsUpgradeModalOpen(false);
+                    if (upgradeStep === 'success') {
+                      setUpgradeStep('select');
+                      setSelectedUpgradeTier(null);
+                    }
+                  }}
                   className="text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg transition-colors cursor-pointer text-xs font-bold hover:bg-white/5"
                 >
                   {t('close', activeLocale)}
