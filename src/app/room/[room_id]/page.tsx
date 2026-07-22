@@ -218,6 +218,8 @@ export default function AudienceRoom() {
   const [showSafariTip, setShowSafariTip] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isForcedLandscape, setIsForcedLandscape] = useState<boolean>(false);
+  const [roomTier, setRoomTier] = useState<string>('free');
+  const [showWatermarkTooltip, setShowWatermarkTooltip] = useState(false);
 
   const getFontFamilyClass = (fontFamily?: string) => {
     const loc = currentPreset?.locale || 'ko';
@@ -584,6 +586,7 @@ export default function AudienceRoom() {
       }
       
       setRoomStatus(roomData.status || 'active');
+      setRoomTier(roomData.tier || 'free');
       if (roomData.status === 'pending') {
         setIsRoomInactive(true);
         setLoading(false);
@@ -1442,18 +1445,61 @@ export default function AudienceRoom() {
           </div>
         )}
 
-        {/* Viral Referral Watermark Link Layer */}
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            handleViralClick();
-          }}
-          className={`absolute bottom-6 right-6 px-3.5 py-1.5 rounded-lg bg-black/40 backdrop-blur-md border border-white/10 text-[10px] text-white/50 hover:text-white hover:bg-black/70 hover:scale-105 active:scale-95 transition-all z-40 cursor-pointer flex items-center gap-1 font-semibold duration-500 ${
-            showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
-          }`}
-        >
-          <span>나만의 전광판 만들기(무료)</span>
-        </button>
+        {/* Smart Branded Watermark & Guide (Only for Free rooms) */}
+        {roomTier === 'free' && (
+          <div 
+            className={`absolute bottom-6 right-6 z-40 transition-all duration-500 flex flex-col items-end ${
+              showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+            }`}
+          >
+            {/* Tooltip Overlay */}
+            {showWatermarkTooltip && (
+              <div 
+                className="mb-2 bg-neutral-900/95 border border-white/10 rounded-2xl p-4 w-60 shadow-2xl flex flex-col gap-2.5 text-left font-sans select-none animate-in fade-in slide-in-from-bottom-2 duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="text-[10px] text-zinc-400 font-semibold leading-relaxed">
+                  {activeLocale === 'ko' 
+                    ? 'GlowWave 무료 체험방을 이용 중입니다. 매장 요금제로 업그레이드 시 로고가 완벽 제거되며 24시간 끊김 없는 가동이 활성화됩니다.'
+                    : 'GlowWave Free Trial active. Upgrading to a store plan removes this logo and unlocks 24/7 continuous play.'}
+                </div>
+                <div className="flex flex-col gap-1.5 mt-1">
+                  <button
+                    onClick={() => {
+                      setShowWatermarkTooltip(false);
+                      window.open('/', '_blank');
+                    }}
+                    className="w-full py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-[10px] font-bold transition-all text-center border border-white/5 active:scale-98"
+                  >
+                    🚀 {activeLocale === 'ko' ? '나도 전광판 만들기 (무료)' : 'Create My Own Signboard'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowWatermarkTooltip(false);
+                      window.open('/host/setup?plan=store', '_blank');
+                    }}
+                    className="w-full py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black transition-all text-center active:scale-98"
+                  >
+                    👑 {activeLocale === 'ko' ? '로고 제거 & 요금제 보기' : 'Remove Logo & Upgrade'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Branded Logo Watermark Trigger Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowWatermarkTooltip((prev) => !prev);
+              }}
+              className="px-3.5 py-2 rounded-xl bg-black/50 backdrop-blur-md border border-white/10 text-[10px] text-white/30 hover:text-white/80 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 font-bold font-mono tracking-wider select-none shadow-lg group"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:animate-ping" />
+              <span>GW | GLOWWAVE</span>
+              <span className="text-[8px] bg-white/10 px-1 py-0.5 rounded text-white/50 group-hover:text-white font-semibold">TRIAL</span>
+            </button>
+          </div>
+        )}
 
       </div>
 

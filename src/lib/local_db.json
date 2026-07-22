@@ -78,25 +78,35 @@
       "current_participants": 0,
       "created_at": "2026-07-21T13:49:24.203Z"
     },
-    "VWALGU": {
-      "id": "VWALGU",
-      "host_session_token": "6436e6e7-5afa-454a-ba73-a95c6c485f90",
-      "email": "test@example.com",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 1,
-      "current_participants": 0,
-      "created_at": "2026-07-21T19:49:24.180Z"
-    },
-    "FB4PA1": {
-      "id": "FB4PA1",
-      "host_session_token": "a58003d8-b6a5-47b9-a99c-a83f203cdb44",
+    "GXUHFS": {
+      "id": "GXUHFS",
+      "host_session_token": "9837f7a4-7fdb-45c9-accb-a0816b48f546",
       "email": "anonymous-local@glowwave.app",
       "tier": "free",
       "status": "active",
-      "max_participants": 1,
+      "max_participants": 15,
       "current_participants": 0,
-      "created_at": "2026-07-21T20:01:43.432Z"
+      "created_at": "2026-07-22T07:08:01.055Z"
+    },
+    "9XGHWX": {
+      "id": "9XGHWX",
+      "host_session_token": "20ee1fc0-762d-445c-a007-f5e5104e7a3e",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "current_participants": 0,
+      "created_at": "2026-07-22T07:12:57.780Z"
+    },
+    "7R0TQM": {
+      "id": "7R0TQM",
+      "host_session_token": "11cfff33-a631-423c-9f9f-b78fab789e98",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 15,
+      "current_participants": 0,
+      "created_at": "2026-07-22T07:15:14.210Z"
     }
   },
   "payments": [
@@ -389,18 +399,27 @@
       "locale": "ko",
       "trigger_id": "1784642669892"
     },
-    "VWALGU": {
-      "bg_color": "#FFFFFF",
-      "text": "사이키HELLO WORLD",
-      "text_color": "#EF4444",
-      "effect": "blink",
-      "speed": 1530,
-      "font_size": 100,
+    "GXUHFS": {
+      "bg_color": "#F97316",
+      "text": "스크롤",
+      "text_color": "#FFFFFF",
+      "effect": "marquee",
+      "speed": 11606,
       "font_family": "sans-thin",
-      "special_effect": "none",
-      "trigger_id": "1784663475534"
+      "font_size": 100,
+      "trigger_id": "1784657253373"
     },
-    "FB4PA1": {
+    "9XGHWX": {
+      "bg_color": "#F97316",
+      "text": "스크롤",
+      "text_color": "#FFFFFF",
+      "effect": "marquee",
+      "speed": 11606,
+      "font_family": "sans-thin",
+      "font_size": 100,
+      "trigger_id": "1784657253373"
+    },
+    "7R0TQM": {
       "bg_color": "#F97316",
       "text": "스크롤",
       "text_color": "#FFFFFF",
@@ -508,6 +527,22 @@
     {
       "step": "step2_create",
       "created_at": "2026-07-21T20:07:33.197Z"
+    },
+    {
+      "step": "step1_landing",
+      "created_at": "2026-07-22T07:06:30.991Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-22T07:07:15.926Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-22T07:08:23.147Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-22T07:14:52.662Z"
     }
   ],
   "csInquiries": [

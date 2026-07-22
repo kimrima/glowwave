@@ -202,13 +202,13 @@ export const localDb = {
 
   async cleanupExpiredRooms(): Promise<void> {
     if (isSupabaseConfigured() && supabase) {
-      const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
       
-      // Perform delete on free rooms older than 6 hours
-      const { error: freeErr } = await supabase.from('rooms').delete().eq('tier', 'free').lt('created_at', sixHoursAgo);
+      // Perform delete on free rooms older than 2 hours
+      const { error: freeErr } = await supabase.from('rooms').delete().eq('tier', 'free').lt('created_at', twoHoursAgo);
       if (freeErr) {
         console.error('[localDb] Supabase cleanup free rooms error:', freeErr);
       }
@@ -244,7 +244,7 @@ export const localDb = {
         const createdAt = new Date(room.created_at);
         let expiryPeriodMs = 24 * 60 * 60 * 1000; // Event tiers default: 24h
         if (room.tier === 'free') {
-          expiryPeriodMs = 6 * 60 * 60 * 1000; // Free sync trial: 6h
+          expiryPeriodMs = 2 * 60 * 60 * 1000; // Free sync trial: 2h
         } else if (room.tier === 'store') {
           expiryPeriodMs = 30 * 24 * 60 * 60 * 1000; // Store monthly: 30 days
         } else if (room.tier === 'store_annual') {

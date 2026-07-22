@@ -62,7 +62,7 @@ CREATE POLICY "Allow read of own payments" ON public.payments
 -- SELECT cron.schedule('glowwave-db-cleanup', '0 4 * * *', $$
 --     DELETE FROM public.rooms 
 --     WHERE 
---         (tier = 'free' AND created_at < NOW() - INTERVAL '6 hours') OR
+--         (tier = 'free' AND created_at < NOW() - INTERVAL '2 hours') OR
 --         (tier IN ('lite', 'pro', 'max') AND created_at < NOW() - INTERVAL '24 hours') OR
 --         (tier = 'store' AND created_at < NOW() - INTERVAL '30 days') OR
 --         (tier = 'store_annual' AND created_at < NOW() - INTERVAL '365 days');

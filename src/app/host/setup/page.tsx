@@ -498,12 +498,8 @@ export default function HostSetup() {
       }
 
       if (selectedTier === 'free') {
-        // 1인용 연동 진입인 경우 로컬 동기화 정보 설정 후 /local로 복귀
+        // 1인용 연동 진입인 경우에도 로컬 동기화 정보 설정 없이 호스트 대시보드로 이동하여 상태 독립 보장
         if (importStatus) {
-          localStorage.setItem('glowwave_local_sync_room_id', data.room_id);
-          localStorage.setItem('glowwave_local_sync_host_token', data.host_session_token);
-          localStorage.setItem('glowwave_local_sync_room_created_at', new Date().toISOString());
-
           // 1인 대시보드 활성 프리셋 동기화 브로드캐스트
           const activeLocalPreset = localStorage.getItem('glowwave_local_active_preset');
           if (activeLocalPreset) {
@@ -617,10 +613,6 @@ export default function HostSetup() {
 
       // If imported from 1-person sync dashboard, configure local sync settings and return back to /local
       if (importStatus) {
-        localStorage.setItem('glowwave_local_sync_room_id', createdRoomInfo.room_id);
-        localStorage.setItem('glowwave_local_sync_host_token', createdRoomInfo.host_session_token);
-        localStorage.setItem('glowwave_local_sync_room_created_at', new Date().toISOString());
-
         // Broadcast current active local preset if exists
         const activeLocalPreset = localStorage.getItem('glowwave_local_active_preset');
         if (activeLocalPreset) {
@@ -908,7 +900,7 @@ export default function HostSetup() {
             )}
 
             {/* Plan Category Selector Tabs */}
-            {(importStatus !== null || planType === 'store') && (
+            {true && (
               <div className="bg-black/30 border border-white/5 p-1 rounded-2xl flex gap-1.5 mt-2">
               <button
                 type="button"

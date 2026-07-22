@@ -694,13 +694,6 @@ function LocalSignboardContent() {
         } catch (e) {}
       }
 
-      // Restore mobile sync room and token
-      const savedSyncRoomId = localStorage.getItem('glowwave_local_sync_room_id');
-      const savedSyncHostToken = localStorage.getItem('glowwave_local_sync_host_token');
-      if (savedSyncRoomId && savedSyncHostToken) {
-        router.replace(`/host/dashboard/${savedSyncRoomId}?token=${savedSyncHostToken}`);
-        return;
-      }
 
       // Check import search query
       const params = new URLSearchParams(window.location.search);
@@ -851,7 +844,7 @@ function LocalSignboardContent() {
 
     const updateTimer = () => {
       const created = new Date(syncRoomCreatedAt).getTime();
-      const limit = syncRoomTier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+      const limit = syncRoomTier === 'free' ? 1 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
       const now = Date.now();
       const diff = created + limit - now;
 
@@ -1688,7 +1681,7 @@ function LocalSignboardContent() {
                 {syncRoomId 
                   ? (['store', 'store_annual'].includes(syncRoomTier) 
                     ? (activeLocale === 'ko' ? '영구 보존 (구독 중)' : 'Permanent (Subscribed)') 
-                    : (activeLocale === 'ko' ? '서버 임시 보존 (6시간)' : 'Temp Server (6h)'))
+                    : (activeLocale === 'ko' ? '서버 임시 보존 (2시간)' : 'Temp Server (2h)'))
                   : t('browser_storage_unlimited', activeLocale)}
               </span>
             </div>
@@ -1705,7 +1698,7 @@ function LocalSignboardContent() {
                 }`}>
                   {['store', 'store_annual'].includes(syncRoomTier)
                     ? (activeLocale === 'ko' ? '매장 전용 24/7 플랜' : 'Store Signage Plan')
-                    : (activeLocale === 'ko' ? '일일 무료 체험 (6시간)' : 'Free Trial (6 Hours)')}
+                    : (activeLocale === 'ko' ? '기기 연동 무료 체험 (1시간)' : 'Free Trial (1 Hour)')}
                 </span>
               ) : (
                 <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-white/5 uppercase border border-white/5">
@@ -3623,22 +3616,22 @@ function LocalSignboardContent() {
             {/* Tab 3: Create Sync Room */}
             {vaultTab === 'sync' && (() => {
               const syncOptionATitle = {
-                ko: '일일 무료 체험 (6시간)',
-                en: 'Free Daily Trial (6 Hours)',
-                ja: '一日無料体験 (6時間)',
-                es: 'Prueba Diaria Gratis (6 Horas)',
-                'zh-TW': '一日免費體驗 (6 小時)',
-                'zh-HK': '一日免費體驗 (6 小時)',
-              }[activeLocale] || '일일 무료 체험 (6시간)';
+                ko: '기기 연동 무료 체험 (1시간)',
+                en: 'Free Sync Trial (1 Hour)',
+                ja: '接続無料体験 (1時間)',
+                es: 'Prueba de Sincronización Gratis (1 Hora)',
+                'zh-TW': '行動裝置連動免費體驗 (1 小時)',
+                'zh-HK': '行動裝置連動免費體驗 (1 小時)',
+              }[activeLocale] || '기기 연동 무료 체험 (1시간)';
 
               const syncOptionADesc = {
-                ko: 'PC에서 대시보드 조작 시 스마트폰/태블릿 등 외부 기기의 실제 연출 화면을 테스트해볼 수 있게 1대 기기 한정으로 6시간 동안 연동 QR을 열어주는 무료 체험용 기능입니다. (모바일 기기에서 대시보드를 직접 사용 중이시라면 필요 없는 기능입니다.)',
-                en: 'Generates a private link for 6 hours to test and preview your settings on a real phone/tablet while editing on PC. Connects 1 device only. (Not needed if you are already using the dashboard on a mobile device.)',
-                ja: 'PCで操作する際、スマホやタブレット等の実機でどのように演出されるかをテストできるよう、1台限定で6時間連動QRを開く無料体験機能です。（モバイル実機で直接ダッシュボードを使用中の場合は不要な機能です。）',
-                es: 'Genera un enlace privado por 6 horas para probar su diseño en un teléfono/tableta real mientras edita en PC. Conecta 1 dispositivo. (No es necesario si ya usa el panel en un dispositivo móvil.)',
-                'zh-TW': '當在 PC 上操作控制板時，可生成 6 小時專屬 QR Code 供單台手機/平板連線，即時測試看板效果。（若已在行動裝置上使用控制板，則不nx功能。）',
-                'zh-HK': '當在 PC 上操作控制板時，可生成 6 小時專屬 QR Code 供單台手機/平板連線，即時測試看板效果。（若已在行動裝置上使用控制板，則不需此功能。）',
-              }[activeLocale] || 'PC에서 대시보드 조작 시 스마트폰/태블릿 등 외부 기기의 실제 연출 화면을 테스트해볼 수 있게 1대 기기 한정으로 6시간 동안 연동 QR을 열어주는 무료 체험용 기능입니다.';
+                ko: 'PC에서 대시보드 조작 시 스마트폰/태블릿 등 외부 기기의 실제 연출 화면을 테스트해볼 수 있게 1대 기기 한정으로 1시간 동안 연동 QR을 열어주는 무료 체험용 기능입니다. (모바일 기기에서 대시보드를 직접 사용 중이시라면 필요 없는 기능입니다.)',
+                en: 'Generates a private link for 1 hour to test and preview your settings on a real phone/tablet while editing on PC. Connects 1 device only. (Not needed if you are already using the dashboard on a mobile device.)',
+                ja: 'PCで操作する際、スマホやタブレット等の実機でどのように演出されるかをテストできるよう、1台限定で1時間連動QRを開く無料体験機能です。（モバイル実機で直接ダッシュボードを使用中の場合は不要な機能です。）',
+                es: 'Genera un enlace privado por 1 hora para probar su diseño en un teléfono/tableta real mientras edita en PC. Conecta 1 dispositivo. (No es necesario si ya usa el panel en un dispositivo móvil.)',
+                'zh-TW': '當在 PC 上操作控制板時，可生成 1 小時專屬 QR Code 供單台手機/平板連線，即時測試看板效果。（若已在行動裝置上使用控制板，則不需此功能。）',
+                'zh-HK': '當在 PC 上操作控制板時，可生成 1 小時專屬 QR Code 供單台手機/平板連線，即時測試看板效果。（若已在行動裝置上使用控制板，則不需此功能。）',
+              }[activeLocale] || 'PC에서 대시보드 조작 시 스마트폰/태블릿 등 외부 기기의 실제 연출 화면을 테스트해볼 수 있게 1대 기기 한정으로 1시간 동안 연동 QR을 열어주는 무료 체험용 기능입니다.';
 
               const syncOptionBTitle = {
                 ko: '매장 전용 24/7 플랜',
@@ -3769,7 +3762,7 @@ function LocalSignboardContent() {
                       {/* Option A: Free Trial */}
                       <div className="glass-effect rounded-2xl p-5 border border-white/5 bg-white/[0.01] hover:bg-white/[0.02] transition-all flex flex-col justify-between text-left active:scale-[0.99] min-h-[250px]">
                         <div>
-                          <span className="text-[10px] font-mono text-amber-400 font-extrabold uppercase block tracking-wider mb-2">6H FREE TRIAL</span>
+                          <span className="text-[10px] font-mono text-amber-400 font-extrabold uppercase block tracking-wider mb-2">1H FREE TRIAL</span>
                           <h3 className="text-base font-black text-white mb-2">{syncOptionATitle}</h3>
                           <p className="text-xs text-zinc-400 leading-relaxed mb-4">
                             {syncOptionADesc}
@@ -3950,7 +3943,7 @@ function LocalSignboardContent() {
                                 const createdTime = new Date(createdAt).getTime();
                                 let limitMs = 24 * 60 * 60 * 1000;
                                 if (tier === 'free') {
-                                  limitMs = 6 * 60 * 60 * 1000;
+                                  limitMs = 2 * 60 * 60 * 1000;
                                 } else if (tier === 'store') {
                                   limitMs = 30 * 24 * 60 * 60 * 1000;
                                 } else if (tier === 'store_annual') {
