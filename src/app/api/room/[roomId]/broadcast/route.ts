@@ -12,9 +12,11 @@ export async function POST(
     const roomId = (resolvedParams.roomId as string).toUpperCase();
     
     const body = await request.json();
-    const { host_session_token, preset } = body as {
+    const { host_session_token, preset, event, payload } = body as {
       host_session_token: string;
-      preset: Preset;
+      preset?: Preset;
+      event?: string;
+      payload?: any;
     };
 
     const room = await localDb.getRoom(roomId);
@@ -33,6 +35,41 @@ export async function POST(
     // Secure token matching to authenticate host authorization
     if (room.host_session_token !== host_session_token) {
       return NextResponse.json({ error: 'Unauthorized host token' }, { status: 401 });
+    }
+
+    // Handle security eject disconnect event
+    if (event === 'force_disconnect') {
+      localDb.broadcastEvent(roomId, {
+        event: 'force_disconnect',
+        payload: payload || {},
+      });
+      
+      const client = supabase;
+      if (isSupabaseConfigured() && client) {
+        new Promise<void>((resolve) => {
+          try {
+            const channel = client.channel(`room_${roomId}`);
+            channel.subscribe(async (status) => {
+              if (status === 'SUBSCRIBED') {
+                await channel.send({
+                  type: 'broadcast',
+                  event: 'force_disconnect',
+                  payload: payload || {},
+                });
+                client.removeChannel(channel);
+                resolve();
+              } else {
+                resolve();
+              }
+            });
+            setTimeout(resolve, 800);
+          } catch (supaErr) {
+            resolve();
+          }
+        });
+      }
+
+      return NextResponse.json({ success: true, event: 'force_disconnect' });
     }
 
     if (!preset || !preset.bg_color || !preset.text) {

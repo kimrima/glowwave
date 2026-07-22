@@ -645,7 +645,7 @@ export default function Home() {
                                 </div>
                               </div>
                               <Link
-                                href={item.roomId.startsWith('SYNC-') ? '/local' : `/host/dashboard/${item.roomId}`}
+                                href={item.roomId.startsWith('SYNC-') ? `/local?room_id=${item.roomId}` : `/host/dashboard/${item.roomId}`}
                                 className="px-3.5 py-2 rounded-xl text-[10px] font-black bg-indigo-600 hover:bg-indigo-500 text-white transition-all flex items-center gap-1 shrink-0"
                               >
                                 {t('bento_btn_dashboard', activeLocale)} &rarr;

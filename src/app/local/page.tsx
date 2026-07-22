@@ -695,9 +695,59 @@ function LocalSignboardContent() {
         } catch (e) {}
       }
 
+      // Restore mobile sync room and token from localStorage or URL parameter
+      const params = new URLSearchParams(window.location.search);
+      const urlRoomId = params.get('room_id');
+      
+      let targetRoomId = '';
+      let targetHostToken = '';
+      let targetTier = 'free';
+      let targetCreatedAt = '';
+
+      if (urlRoomId && urlRoomId.startsWith('SYNC-')) {
+        targetRoomId = urlRoomId;
+        const savedRoomId = localStorage.getItem('glowwave_local_sync_room_id');
+        if (savedRoomId === urlRoomId) {
+          targetHostToken = localStorage.getItem('glowwave_local_sync_host_token') || '';
+          targetTier = localStorage.getItem('glowwave_local_sync_room_tier') || 'free';
+          targetCreatedAt = localStorage.getItem('glowwave_local_sync_room_created_at') || '';
+        } else {
+          const recentRaw = localStorage.getItem('glowwave_recent_rooms');
+          if (recentRaw) {
+            try {
+              const recents = JSON.parse(recentRaw);
+              const matched = recents.find((r: any) => r.roomId === urlRoomId);
+              if (matched) {
+                targetHostToken = matched.host_session_token || matched.hostSessionToken || '';
+                targetTier = matched.tier || 'free';
+                targetCreatedAt = matched.createdAt || matched.created_at || '';
+              }
+            } catch (e) {}
+          }
+          localStorage.setItem('glowwave_local_sync_room_id', urlRoomId);
+          localStorage.setItem('glowwave_local_sync_host_token', targetHostToken);
+          localStorage.setItem('glowwave_local_sync_room_tier', targetTier);
+          if (targetCreatedAt) {
+            localStorage.setItem('glowwave_local_sync_room_created_at', targetCreatedAt);
+          }
+        }
+      } else {
+        targetRoomId = localStorage.getItem('glowwave_local_sync_room_id') || '';
+        targetHostToken = localStorage.getItem('glowwave_local_sync_host_token') || '';
+        targetTier = localStorage.getItem('glowwave_local_sync_room_tier') || 'free';
+        targetCreatedAt = localStorage.getItem('glowwave_local_sync_room_created_at') || '';
+      }
+
+      if (targetRoomId && targetRoomId.startsWith('SYNC-')) {
+        setSyncRoomId(targetRoomId);
+        setSyncHostToken(targetHostToken);
+        setSyncRoomTier(targetTier);
+        if (targetCreatedAt) {
+          setSyncRoomCreatedAt(targetCreatedAt);
+        }
+      }
 
       // Check import search query
-      const params = new URLSearchParams(window.location.search);
       const importKey = params.get('import');
       if (importKey) {
         handleImportByScannedKey(importKey);
