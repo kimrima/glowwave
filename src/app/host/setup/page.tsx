@@ -63,6 +63,11 @@ export default function HostSetup() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'toss' | 'stripe'>('toss');
+
+  // Synchronize default payment method according to active locale
+  useEffect(() => {
+    setPaymentMethod(activeLocale === 'ko' ? 'toss' : 'stripe');
+  }, [activeLocale]);
   const [checkoutStep, setCheckoutStep] = useState<'input' | 'done'>('input');
   const [createdRoomInfo, setCreatedRoomInfo] = useState<{ room_id: string; host_session_token: string } | null>(null);
 
@@ -1068,38 +1073,31 @@ export default function HostSetup() {
                   <span className="text-xs text-zinc-500 font-mono">{t('room_code', activeLocale)}: {createdRoomInfo?.room_id}</span>
                 </div>
 
-                {/* PG Method Selector */}
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setPaymentMethod('toss')}
-                    className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all ${
-                      paymentMethod === 'toss'
-                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-300'
-                        : 'border-white/5 bg-white/5 text-zinc-400'
-                    }`}
-                  >
-                    {
-                      {
-                        ko: '토스페이 / 국내 카드',
-                        en: 'Toss Pay / Domestic Card',
-                        ja: 'Toss Pay / 国内カード',
-                        es: 'Toss Pay / Tarjeta nacional',
-                        'zh-TW': 'Toss Pay / 韓國國內卡',
-                        'zh-HK': 'Toss Pay / 韓國國內卡'
-                      }[activeLocale] || '토스페이 / 국내 카드'
-                    }
-                  </button>
-                  <button
-                    onClick={() => setPaymentMethod('stripe')}
-                    className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all ${
-                      paymentMethod === 'stripe'
-                        ? 'border-indigo-500 bg-indigo-500/10 text-indigo-300'
-                        : 'border-white/5 bg-white/5 text-zinc-400'
-                    }`}
-                  >
-                    Stripe (Global Checkout)
-                  </button>
-                </div>
+                {/* PG Method Selector (Only shown for Korean locale to prevent global checkout confusion) */}
+                {activeLocale === 'ko' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setPaymentMethod('toss')}
+                      className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all ${
+                        paymentMethod === 'toss'
+                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-300'
+                          : 'border-white/5 bg-white/5 text-zinc-400'
+                      }`}
+                    >
+                      토스페이 / 국내 카드
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod('stripe')}
+                      className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all ${
+                        paymentMethod === 'stripe'
+                          ? 'border-indigo-500 bg-indigo-500/10 text-indigo-300'
+                          : 'border-white/5 bg-white/5 text-zinc-400'
+                      }`}
+                    >
+                      Stripe (Global Checkout)
+                    </button>
+                  </div>
+                )}
 
                 {/* Promo Code Input Form */}
                 <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
@@ -1239,7 +1237,7 @@ export default function HostSetup() {
                     }}
                     className="text-[10px] text-zinc-500 hover:text-zinc-400 font-bold underline transition-colors"
                   >
-                    결제 오류 및 환불 신청 1:1 접수
+                    {t('setup_checkout_cs', activeLocale)}
                   </button>
                 </div>
               </div>
