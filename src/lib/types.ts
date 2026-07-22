@@ -33,10 +33,10 @@ export interface TierConfig {
 export const TIER_CONFIGS: Record<TierType, TierConfig> = {
   free: {
     name: 'Free (무료체험)',
-    maxParticipants: 15,
+    maxParticipants: 8,
     priceKrw: 0,
     priceUsd: 0.00,
-    description: '15명 이하 소규모 이벤트용 무료방 (6시간 제한)',
+    description: '8명 이하 소규모 이벤트용 무료방 (3시간 제한)',
   },
   lite: {
     name: '기본형 (Lite)',

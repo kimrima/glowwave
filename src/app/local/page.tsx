@@ -1046,98 +1046,136 @@ function LocalSignboardContent() {
     if (isSyncCreating) return;
     setIsSyncCreating(true);
     try {
-      if (isRegenerate && syncRoomId) {
-        if (isSupabaseConfigured() && supabaseChannelRef.current) {
-          try {
-            await supabaseChannelRef.current.send({
-              type: 'broadcast',
-              event: 'force_disconnect',
-              payload: {}
-            });
-          } catch (e) {
-            console.warn('Supabase force disconnect failed:', e);
+      // Reuse existing local sync room if it is still within 2-hour duration to prevent API spamming
+      if (!isRegenerate) {
+        const savedRoomId = localStorage.getItem('glowwave_local_sync_room_id');
+        const savedHostToken = localStorage.getItem('glowwave_local_sync_host_token');
+        const savedCreatedAt = localStorage.getItem('glowwave_local_sync_room_created_at');
+        
+        if (savedRoomId && savedHostToken && savedCreatedAt) {
+          const createdAt = new Date(savedCreatedAt);
+          if (Date.now() - createdAt.getTime() < 2 * 60 * 60 * 1000) {
+            setSyncRoomId(savedRoomId);
+            setSyncHostToken(savedHostToken);
+            setSyncRoomTier(localStorage.getItem('glowwave_local_sync_room_tier') || 'free');
+            setSyncRoomCreatedAt(savedCreatedAt);
+            setIsVaultOpen(false);
+            setIsSyncCreating(false);
+            return;
           }
         }
-        try {
-          await fetch(`/api/room/${syncRoomId}/broadcast`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ event: 'force_disconnect', payload: {} })
-          });
-        } catch (e) {
-          console.warn('SSE force disconnect failed:', e);
-        }
       }
 
-      const bodyPayload: {
-        email: string;
-        tier: string;
-        passcode: string;
-        is_sync: boolean;
-        created_at?: string;
-      } = {
-        email: 'anonymous-local@glowwave.app',
-        tier: isRegenerate && syncRoomTier ? syncRoomTier : 'free',
-        passcode: '',
-        is_sync: true
-      };
-      if (isRegenerate && syncRoomCreatedAt) {
-        bodyPayload.created_at = syncRoomCreatedAt;
-      }
-
-      const res = await fetch('/api/room/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bodyPayload)
-      });
-      if (!res.ok) throw new Error('Failed to create sync room');
-      const data = await res.json();
-      setSyncRoomId(data.room_id);
-      setSyncHostToken(data.host_session_token);
-      setSyncRoomTier(data.tier || (isRegenerate && syncRoomTier ? syncRoomTier : 'free'));
-      setSyncRoomPasscode(data.passcode || '');
-      
-      const createdAtToSave = isRegenerate && syncRoomCreatedAt ? syncRoomCreatedAt : new Date().toISOString();
-      setSyncRoomCreatedAt(createdAtToSave);
-      
-      // Save sync room and token to localStorage
-      localStorage.setItem('glowwave_local_sync_room_id', data.room_id);
-      localStorage.setItem('glowwave_local_sync_host_token', data.host_session_token);
-      localStorage.setItem('glowwave_local_sync_room_created_at', createdAtToSave);
-
-      // Add to recent rooms list so it shows on home page
-      try {
-        const recentRaw = localStorage.getItem('glowwave_recent_rooms');
-        let recents = recentRaw ? JSON.parse(recentRaw) : [];
-        recents = recents.filter((r: any) => r.roomId !== data.room_id);
-        recents.unshift({
-          roomId: data.room_id,
-          role: 'host',
-          tier: data.tier || (isRegenerate && syncRoomTier ? syncRoomTier : 'free'),
-          createdAt: createdAtToSave
+      if (isRegenerate && syncRoomId) {
+        // 보안용 접속 코드 재발급 API 호출!
+        const res = await fetch('/api/room/regenerate-id', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roomId: syncRoomId,
+            hostSessionToken: syncHostToken
+          })
         });
-        localStorage.setItem('glowwave_recent_rooms', JSON.stringify(recents.slice(0, 50)));
-      } catch (e) {
-        console.error('[local] Failed to update glowwave_recent_rooms:', e);
+
+        if (!res.ok) {
+          throw new Error('Failed to regenerate room ID');
+        }
+
+        const data = await res.json();
+        if (data.success && data.new_room_id) {
+          const oldRoomId = syncRoomId;
+          setSyncRoomId(data.new_room_id);
+          
+          // 로컬 스토리지 정보 갱신
+          localStorage.setItem('glowwave_local_sync_room_id', data.new_room_id);
+
+          // 최근 방 목록(glowwave_recent_rooms)에도 방 ID 교체
+          try {
+            const recentRaw = localStorage.getItem('glowwave_recent_rooms');
+            if (recentRaw) {
+              const recents = JSON.parse(recentRaw);
+              const target = recents.find((r: any) => r.roomId === oldRoomId);
+              if (target) {
+                target.roomId = data.new_room_id;
+              }
+              localStorage.setItem('glowwave_recent_rooms', JSON.stringify(recents));
+            }
+          } catch (e) {
+            console.error('Failed to update recent rooms list:', e);
+          }
+
+          showAlert(activeLocale === 'ko' ? '연동 코드가 재발급되었습니다. 새 코드로 기기를 연동해 주세요.' : 'Connection code regenerated. Please pair again.');
+        } else {
+          throw new Error(data.error || 'Regenerate API returned fail');
+        }
+      } else {
+        // 기존 룸 신규 생성 로직 그대로 작동
+        const bodyPayload: {
+          email: string;
+          tier: string;
+          passcode: string;
+          is_sync: boolean;
+          created_at?: string;
+        } = {
+          email: 'anonymous-local@glowwave.app',
+          tier: 'free',
+          passcode: '',
+          is_sync: true
+        };
+
+        const res = await fetch('/api/room/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bodyPayload)
+        });
+        if (!res.ok) throw new Error('Failed to create sync room');
+        const data = await res.json();
+        setSyncRoomId(data.room_id);
+        setSyncHostToken(data.host_session_token);
+        setSyncRoomTier(data.tier || 'free');
+        setSyncRoomPasscode(data.passcode || '');
+        
+        const createdAtToSave = new Date().toISOString();
+        setSyncRoomCreatedAt(createdAtToSave);
+        
+        localStorage.setItem('glowwave_local_sync_room_id', data.room_id);
+        localStorage.setItem('glowwave_local_sync_host_token', data.host_session_token);
+        localStorage.setItem('glowwave_local_sync_room_created_at', createdAtToSave);
+
+        try {
+          const recentRaw = localStorage.getItem('glowwave_recent_rooms');
+          let recents = recentRaw ? JSON.parse(recentRaw) : [];
+          recents = recents.filter((r: any) => r.roomId !== data.room_id);
+          recents.unshift({
+            roomId: data.room_id,
+            role: 'host',
+            tier: data.tier || 'free',
+            createdAt: createdAtToSave,
+            hostSessionToken: data.host_session_token // 복원용 세션 매핑
+          });
+          localStorage.setItem('glowwave_recent_rooms', JSON.stringify(recents.slice(0, 50)));
+        } catch (e) {
+          console.error('[local] Failed to update glowwave_recent_rooms:', e);
+        }
+
+        // Initialize room broadcast with the current preset
+        await fetch(`/api/room/${data.room_id}/broadcast`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            host_session_token: data.host_session_token,
+            preset: currentBroadcastPreset
+          })
+        });
       }
       
       // Close vault modal on successful sync start
       setIsVaultOpen(false);
-      
-      // Initialize room broadcast with the current preset
-      await fetch(`/api/room/${data.room_id}/broadcast`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          host_session_token: data.host_session_token,
-          preset: currentBroadcastPreset
-        })
-      });
     } catch (err: any) {
       showAlert(
         activeLocale === 'ko' 
-          ? `실시간 연동 시작 실패: ${err.message}` 
-          : `Failed to start real-time sync: ${err.message}`
+          ? `실시간 연동 시작/재발급 실패: ${err.message}` 
+          : `Failed to start or regenerate sync: ${err.message}`
       );
     } finally {
       setIsSyncCreating(false);
@@ -2740,22 +2778,30 @@ function LocalSignboardContent() {
                 </div>
 
                 {/* Upgrade Banner for Free Trial */}
-                {!['store', 'store_annual'].includes(syncRoomTier) && (
-                  <div className="p-4 bg-violet-500/5 border border-violet-500/10 rounded-xl space-y-2 mt-2 text-left">
+                {!['store', 'store_annual', 'premium_lite', 'premium_pro', 'premium_max'].includes(syncRoomTier) && (
+                  <div className="p-4 bg-violet-500/5 border border-violet-500/10 rounded-xl space-y-3 mt-2 text-left">
                     <div className="text-[11px] font-extrabold text-violet-300">
-                      {activeLocale === 'ko' ? '매장 전용 24/7 무중단 플랜' : 'Store Signage 24/7 Plan'}
+                      {activeLocale === 'ko' ? 'GlowWave 프리미엄 업그레이드' : 'GlowWave Premium Upgrade'}
                     </div>
                     <p className="text-[10px] text-zinc-500 font-medium leading-relaxed">
                       {activeLocale === 'ko' 
-                        ? '연중무휴 24시간 끊김 없이 작동하며, 최대 3대 연결 및 입장 비밀번호 설정이 가능합니다.'
-                        : 'Runs 24/7 without disconnects, supports up to 3 screens, and locks with passcode.'}
+                        ? '동시 접속 인원 제한을 풀 수 있는 [다인용 응원 플랜]과 끊김 없이 24시간 재생되는 [매장 전용 플랜]을 지원합니다.'
+                        : 'Supports [Multi-device Plan] for more participants and [Store Plan] for 24/7 continuous signages.'}
                     </p>
-                    <button
-                      onClick={() => handleStartImportRoom('premium', 'store')}
-                      className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs transition-all text-center tracking-wide cursor-pointer active:scale-95"
-                    >
-                      {activeLocale === 'ko' ? '매장 전용 24/7 플랜으로 업그레이드' : 'Upgrade to Store 24/7 Plan'}
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => handleStartImportRoom('premium')}
+                        className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition-all text-center tracking-wide cursor-pointer active:scale-95 shadow-md shadow-indigo-950/20"
+                      >
+                        {activeLocale === 'ko' ? '다인용 프리미엄 플랜으로 업그레이드' : 'Upgrade to Multi-device Plan'}
+                      </button>
+                      <button
+                        onClick={() => handleStartImportRoom('premium', 'store')}
+                        className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs transition-all text-center tracking-wide cursor-pointer active:scale-95 shadow-md shadow-violet-950/20"
+                      >
+                        {activeLocale === 'ko' ? '매장 전용 24/7 플랜으로 업그레이드' : 'Upgrade to Store 24/7 Plan'}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

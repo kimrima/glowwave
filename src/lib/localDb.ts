@@ -252,7 +252,7 @@ export const localDb = {
         let expiryPeriodMs = 24 * 60 * 60 * 1000; // Event tiers default: 24h
         if (room.tier === 'free') {
           const isSyncLocal = roomId.startsWith('SYNC-');
-          expiryPeriodMs = isSyncLocal ? 2 * 60 * 60 * 1000 : 6 * 60 * 60 * 1000;
+          expiryPeriodMs = isSyncLocal ? 2 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000;
         } else if (room.tier === 'store') {
           expiryPeriodMs = 30 * 24 * 60 * 60 * 1000; // Store monthly: 30 days
         } else if (room.tier === 'store_annual') {
@@ -355,7 +355,8 @@ export const localDb = {
       const createdAt = new Date(room.created_at);
       let expiryPeriodMs = 24 * 60 * 60 * 1000;
       if (room.tier === 'free') {
-        expiryPeriodMs = 6 * 60 * 60 * 1000;
+        const isSyncLocal = roomId.startsWith('SYNC-');
+        expiryPeriodMs = isSyncLocal ? 2 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000;
       } else if (room.tier === 'store') {
         expiryPeriodMs = 30 * 24 * 60 * 60 * 1000;
       } else if (room.tier === 'store_annual') {
@@ -397,7 +398,8 @@ export const localDb = {
       const createdAt = new Date(room.created_at);
       let expiryPeriodMs = 24 * 60 * 60 * 1000;
       if (room.tier === 'free') {
-        expiryPeriodMs = 6 * 60 * 60 * 1000;
+        const isSyncLocal = room.id.startsWith('SYNC-');
+        expiryPeriodMs = isSyncLocal ? 2 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000;
       } else if (room.tier === 'store') {
         expiryPeriodMs = 30 * 24 * 60 * 60 * 1000;
       } else if (room.tier === 'store_annual') {
