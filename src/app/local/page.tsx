@@ -1135,7 +1135,22 @@ function LocalSignboardContent() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(bodyPayload)
         });
-        if (!res.ok) throw new Error('Failed to create sync room');
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          const errMsg = errData.error || 'Failed to create sync room';
+          if (errMsg.includes('이미 활성화된 1인 체험방')) {
+            const localizedMsg = {
+              ko: '이미 활성화된 1인 체험방이 존재합니다. 기존 방의 만료 시간(1시간)이 지난 후에 새로운 무료 방을 개설할 수 있습니다.',
+              en: 'An active Free Trial Room already exists. You can create a new one after the existing one expires (1 hour).',
+              ja: 'アクティブな1人体験ルームがすでに存在します。既存のルーム가満了（1時間）した後に新しい無料ルームを作成できます。',
+              es: 'Ya existe una sala de prueba gratuita activa. Puedes crear una nueva después de que la existente expire (1 hora).',
+              'zh-TW': '已存在使用中的單人體驗房。您可以在現有房間過期（1 小時）後建立新的免費房間。',
+              'zh-HK': '已存在使用中的單人體驗房。您可以在現有房間過期（1 小時）後建立新的免費房間。'
+            }[activeLocale] || errMsg;
+            throw new Error(localizedMsg);
+          }
+          throw new Error(errMsg);
+        }
         const data = await res.json();
         setSyncRoomId(data.room_id);
         setSyncHostToken(data.host_session_token);

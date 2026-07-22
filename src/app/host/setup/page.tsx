@@ -428,6 +428,18 @@ export default function HostSetup() {
 
       const data = await response.json();
       if (!response.ok) {
+        if (data.code === 'ACTIVE_FREE_ROOM_EXISTS' || (data.error && data.error.includes('이미 활성화된'))) {
+          const localizedDuplicationMsg = {
+            ko: '이미 활성화된 다인용 Free 플랜 방이 존재합니다. 기존 방의 만료 시간(3시간)이 지난 후에 새로운 무료 방을 개설할 수 있습니다.',
+            en: 'An active Multi-device Free plan room already exists. You can create a new free room after the existing one expires (3 hours).',
+            ja: 'アクティブなマルチデバイス無料プランのルームがすでに存在します。既存のルームが満了（3時間）した後に新しい無料ルームを作成できます。',
+            es: 'Ya existe una sala activa del plan gratuito para múltiples dispositivos. Puedes crear una nueva sala gratuita después de que la existente expire (3 horas).',
+            'zh-TW': '已存在使用中的多用戶免費方案房間。您可以在現有房間過期（3 小時）後建立新的免費房間。',
+            'zh-HK': '已存在使用中的多用戶免費方案房間。您可以在現有房間過期（3 小時）後建立新的免費房間。'
+          }[activeLocale] || data.error;
+          throw new Error(localizedDuplicationMsg);
+        }
+
         const roomCreateFailedMsg = {
           ko: '방 생성 실패',
           en: 'Failed to create room',
@@ -916,13 +928,13 @@ export default function HostSetup() {
               >
                 {
                   {
-                    ko: '이벤트/행사용 (18h-24h)',
-                    en: 'Event / Party (18h-24h)',
-                    ja: '이벤트/페스티벌용 (18h-24h)',
-                    es: 'Eventos y Fiestas (18h-24h)',
-                    'zh-TW': '이벤트/행사용 (18h-24h)',
-                    'zh-HK': '이벤트/행사용 (18h-24h)'
-                  }[activeLocale] || '이벤트/행사용 (18h-24h)'
+                    ko: '이벤트/행사용 (3h-24h)',
+                    en: 'Event / Party (3h-24h)',
+                    ja: 'イベント/フェス用 (3h-24h)',
+                    es: 'Eventos y Fiestas (3h-24h)',
+                    'zh-TW': '活動/派對用 (3h-24h)',
+                    'zh-HK': '活動/派對用 (3h-24h)'
+                  }[activeLocale] || '이벤트/행사용 (3h-24h)'
                 }
               </button>
               <button
@@ -939,13 +951,13 @@ export default function HostSetup() {
               >
                 {
                   {
-                    ko: '매장 전광판 (1년 무중단)',
-                    en: 'Store Signage (1-Yr 24/7)',
-                    ja: '매장 간판용 (1년 상시 가동)',
-                    es: 'Letrero de Tienda (1 año 24/7)',
-                    'zh-TW': '매장 전광판 (1년 무중단)',
-                    'zh-HK': '매장 전광판 (1년 무중단)'
-                  }[activeLocale] || '매장 전광판 (1년 무중단)'
+                    ko: '매장 전광판 (월간/연간 무중단)',
+                    en: 'Store Signage (Monthly/Annual 24/7)',
+                    ja: '店舗用看板 (月間/年間 24h)',
+                    es: 'Letrero de Tienda (Mensual/Anual)',
+                    'zh-TW': '店家電子看板 (月繳/年繳不斷線)',
+                    'zh-HK': '店家電子看板 (月繳/年繳不斷線)'
+                  }[activeLocale] || '매장 전광판 (월간/연간 무중단)'
                 }
               </button>
             </div>
