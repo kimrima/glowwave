@@ -996,15 +996,40 @@ function LocalSignboardContent() {
     if (isSyncCreating) return;
     setIsSyncCreating(true);
     try {
+      if (isRegenerate && syncRoomId) {
+        if (isSupabaseConfigured() && supabaseChannelRef.current) {
+          try {
+            await supabaseChannelRef.current.send({
+              type: 'broadcast',
+              event: 'force_disconnect',
+              payload: {}
+            });
+          } catch (e) {
+            console.warn('Supabase force disconnect failed:', e);
+          }
+        }
+        try {
+          await fetch(`/api/room/${syncRoomId}/broadcast`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ event: 'force_disconnect', payload: {} })
+          });
+        } catch (e) {
+          console.warn('SSE force disconnect failed:', e);
+        }
+      }
+
       const bodyPayload: {
         email: string;
         tier: string;
         passcode: string;
+        is_sync: boolean;
         created_at?: string;
       } = {
         email: 'anonymous-local@glowwave.app',
         tier: isRegenerate && syncRoomTier ? syncRoomTier : 'free',
-        passcode: ''
+        passcode: '',
+        is_sync: true
       };
       if (isRegenerate && syncRoomCreatedAt) {
         bodyPayload.created_at = syncRoomCreatedAt;
@@ -2620,7 +2645,7 @@ function LocalSignboardContent() {
 
           {/* Real-time Sync Control Panel */}
           {syncRoomId && (
-            <div className="glass-effect rounded-2xl p-5 mt-6 flex flex-col bg-[#12121a] border border-violet-500/20 shadow-xl shadow-violet-950/5 relative overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 text-center">
+            <div className="glass-effect rounded-2xl p-6 mt-6 flex flex-col bg-[#12121a] border border-violet-500/20 shadow-xl shadow-violet-950/5 relative overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 text-center">
               
               <div className="flex items-center justify-center gap-2 mb-4">
                 <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
@@ -2630,19 +2655,19 @@ function LocalSignboardContent() {
               </div>
 
               {/* QR Code Container */}
-              <div className="bg-white p-3 rounded-2xl shadow-xl flex flex-col items-center shrink-0 w-[144px] mx-auto mb-4">
+              <div className="bg-white p-3 rounded-2xl shadow-xl flex flex-col items-center shrink-0 w-[208px] mx-auto mb-5 relative group">
                 <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/room/${syncRoomId}`)}`} 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`${window.location.origin}/room/${syncRoomId}`)}`} 
                   alt="Sync Room QR" 
-                  className="w-28 h-28 rounded-lg"
+                  className="w-44 h-44 rounded-lg select-none"
                 />
-                <span className="text-[10px] font-black text-black tracking-widest mt-2 font-mono">${syncRoomId}</span>
+                <span className="text-[11px] font-black text-black tracking-widest mt-2 font-mono">CODE: {syncRoomId}</span>
               </div>
 
               {/* Connection URL with Copy Button */}
               <div className="w-full space-y-4">
                 <div className="space-y-1.5 text-left">
-                  <label className="text-[9px] font-mono text-zinc-500 font-bold block">
+                  <label className="text-[10px] font-mono text-zinc-500 font-bold block">
                     {activeLocale === 'ko' ? '접속 코드 주소' : 'Spectator Link'}
                   </label>
                   <div className="flex gap-2">
@@ -2650,14 +2675,14 @@ function LocalSignboardContent() {
                       type="text"
                       readOnly
                       value={`${window.location.origin}/room/${syncRoomId}`}
-                      className="flex-1 bg-[#09090D] border border-white/10 rounded-xl px-3 py-2 text-[10px] text-zinc-400 font-mono focus:outline-none"
+                      className="flex-1 bg-[#09090D] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-zinc-400 font-mono focus:outline-none"
                     />
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(`${window.location.origin}/room/${syncRoomId}`);
                         showAlert(activeLocale === 'ko' ? '링크가 클립보드에 복사되었습니다.' : 'Link copied to clipboard.');
                       }}
-                      className="px-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-zinc-300 hover:text-white transition-all text-[10px] font-bold shrink-0 cursor-pointer"
+                      className="px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/15 text-zinc-300 hover:text-white transition-all text-xs font-bold shrink-0 cursor-pointer"
                     >
                       {activeLocale === 'ko' ? '복사' : 'Copy'}
                     </button>
@@ -2666,18 +2691,18 @@ function LocalSignboardContent() {
 
                 {/* Upgrade Banner for Free Trial */}
                 {!['store', 'store_annual'].includes(syncRoomTier) && (
-                  <div className="p-3.5 bg-violet-500/5 border border-violet-500/10 rounded-xl space-y-2 mt-2 text-left">
-                    <div className="text-[10px] font-extrabold text-violet-300">
+                  <div className="p-4 bg-violet-500/5 border border-violet-500/10 rounded-xl space-y-2 mt-2 text-left">
+                    <div className="text-[11px] font-extrabold text-violet-300">
                       {activeLocale === 'ko' ? '매장 전용 24/7 무중단 플랜' : 'Store Signage 24/7 Plan'}
                     </div>
-                    <p className="text-[9px] text-zinc-500 font-medium leading-relaxed">
+                    <p className="text-[10px] text-zinc-500 font-medium leading-relaxed">
                       {activeLocale === 'ko' 
                         ? '연중무휴 24시간 끊김 없이 작동하며, 최대 3대 연결 및 입장 비밀번호 설정이 가능합니다.'
                         : 'Runs 24/7 without disconnects, supports up to 3 screens, and locks with passcode.'}
                     </p>
                     <button
                       onClick={() => handleStartImportRoom('premium', 'store')}
-                      className="w-full py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-[10px] transition-all text-center tracking-wide cursor-pointer active:scale-95"
+                      className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-extrabold text-xs transition-all text-center tracking-wide cursor-pointer active:scale-95"
                     >
                       {activeLocale === 'ko' ? '매장 전용 24/7 플랜으로 업그레이드' : 'Upgrade to Store 24/7 Plan'}
                     </button>
@@ -2688,14 +2713,19 @@ function LocalSignboardContent() {
               {/* Action Control Buttons */}
               <div className="flex flex-col gap-2 border-t border-white/5 pt-4 mt-4">
                 <button
-                  onClick={() => handleStartMobileSync(true)}
-                  className="w-full py-2 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-400 hover:text-white transition-all text-[10px] font-bold text-center cursor-pointer active:scale-95"
+                  onClick={() => {
+                    const confirmMsg = activeLocale === 'ko' 
+                      ? '연동 코드를 재발급하면 현재 연결되어 있던 스마트폰과의 연동이 해제됩니다. 진행하시겠습니까?' 
+                      : 'Regenerating the connection code will disconnect your currently paired device. Proceed?';
+                    showConfirm(confirmMsg, () => handleStartMobileSync(true));
+                  }}
+                  className="w-full py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-400 hover:text-white transition-all text-xs font-bold text-center cursor-pointer active:scale-95"
                 >
-                  {activeLocale === 'ko' ? '새 연동용 큐알 재생성' : 'Regenerate QR'}
+                  {activeLocale === 'ko' ? '연동 코드 재발급' : 'Regenerate Connection Code'}
                 </button>
                 <button
                   onClick={handleStopMobileSync}
-                  className="w-full py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 transition-all text-[10px] font-bold text-center cursor-pointer active:scale-95"
+                  className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 transition-all text-xs font-bold text-center cursor-pointer active:scale-95"
                 >
                   {activeLocale === 'ko' ? '실시간 연동 해제' : 'Disconnect Sync'}
                 </button>

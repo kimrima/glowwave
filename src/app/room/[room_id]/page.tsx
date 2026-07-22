@@ -684,6 +684,14 @@ export default function AudienceRoom() {
           console.log('[Room] Received broadcast payload:', payload);
           setCurrentPreset(payload);
         })
+        .on('broadcast', { event: 'force_disconnect' }, () => {
+          console.log('[Room] force_disconnect broadcast received');
+          setError(activeLocale === 'ko' ? '방 주소가 보안상 재설정되어 연결이 끊어졌습니다.' : 'The room passcode was regenerated. Connection terminated.');
+          setLoading(false);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('glowwave_last_joined_room_id');
+          }
+        })
         .on('broadcast', { event: 'room_activated' }, () => {
           setIsRoomInactive(false);
           validateAndConnect(true);
@@ -713,6 +721,13 @@ export default function AudienceRoom() {
           } else if (data.event === 'render') {
             console.log('[Room] SSE render preset state:', data.payload);
             setCurrentPreset(data.payload);
+          } else if (data.event === 'force_disconnect') {
+            console.log('[Room] SSE force_disconnect event received');
+            setError(activeLocale === 'ko' ? '방 주소가 보안상 재설정되어 연결이 끊어졌습니다.' : 'The room passcode was regenerated. Connection terminated.');
+            setLoading(false);
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('glowwave_last_joined_room_id');
+            }
           } else if (data.event === 'room_activated') {
             setIsRoomInactive(false);
             validateAndConnect(true);

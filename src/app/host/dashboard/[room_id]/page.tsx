@@ -1866,6 +1866,44 @@ export default function HostDashboard() {
     }
   };
 
+  const handleRegenerateRoomId = () => {
+    const confirmMsg = {
+      ko: '접속 코드를 재생성하면 현재 연결된 모든 관객 기기가 강제 종료(퇴장)됩니다. 진행하시겠습니까?',
+      en: 'Regenerating the room code will forcefully disconnect all active spectators. Do you want to proceed?',
+      ja: '接続コードを再生成すると、現在接続されているすべての観客デバイスが強制終了されます。よろしいですか？',
+      es: 'Regenerar el código de sala desconectará a todos los espectadores activos. ¿Desea proceder?',
+      'zh-TW': '重新產生房間代碼將強制斷開所有作用中的觀眾。您確定要繼續嗎？',
+      'zh-HK': '重新產生房間代碼將強制斷開所有作用中的觀眾。您確定要繼續嗎？'
+    }[activeLocale] || '접속 코드를 재생성하면 현재 연결된 모든 관객 기기가 강제 종료됩니다. 진행하시겠습니까?';
+
+    showConfirm(confirmMsg, async () => {
+      try {
+        const res = await fetch('/api/room/regenerate-id', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            roomId,
+            hostSessionToken: token
+          })
+        });
+
+        if (!res.ok) {
+          throw new Error('Failed to regenerate room ID');
+        }
+
+        const data = await res.json();
+        if (data.success && data.new_room_id) {
+          router.replace(`/host/dashboard/${data.new_room_id}?token=${token}`);
+        } else {
+          alert('Error: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        console.error('Failed to regenerate room ID:', err);
+        alert(activeLocale === 'ko' ? '방 코드 재발급에 실패했습니다.' : 'Failed to regenerate room code.');
+      }
+    });
+  };
+
   if (loading || !isHydrated) {
     return (
       <div className="min-h-screen bg-[#0B0B0F] flex items-center justify-center text-white">
@@ -3547,6 +3585,22 @@ export default function HostDashboard() {
                     'zh-TW': '下載入場 QR 圖片',
                     'zh-HK': '下載入場 QR 圖片'
                   }[activeLocale] || '입장 QR 이미지 다운로드'
+                }
+              </button>
+
+              <button
+                onClick={handleRegenerateRoomId}
+                className="w-full py-3 rounded-xl border border-red-500/25 bg-red-500/5 hover:bg-red-500/10 text-red-400 hover:text-red-300 font-extrabold text-xs transition-all flex items-center justify-center cursor-pointer active:scale-95"
+              >
+                {
+                  {
+                    ko: '보안용 접속 코드 재발급',
+                    en: 'Regenerate Security Room Code',
+                    ja: 'セキュリティ接続コードの再発行',
+                    es: 'Regenerar código de sala de seguridad',
+                    'zh-TW': '重新發行安全連線代碼',
+                    'zh-HK': '重新發行安全連線代碼'
+                  }[activeLocale] || '보안용 접속 코드 재발급'
                 }
               </button>
             </div>
