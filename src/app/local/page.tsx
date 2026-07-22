@@ -325,6 +325,7 @@ function LocalSignboardContent() {
   const [syncRoomCreatedAt, setSyncRoomCreatedAt] = useState<string>('');
   const [syncRoomActiveParticipants, setSyncRoomActiveParticipants] = useState<number>(0);
   const [syncTimeRemaining, setSyncTimeRemaining] = useState<string>('');
+  const [syncRoomPasscode, setSyncRoomPasscode] = useState<string>('');
 
   // Real-time mobile sync refs for persistent connection
   const supabaseChannelRef = useRef<any>(null);
@@ -745,6 +746,7 @@ function LocalSignboardContent() {
           } else {
             setSyncRoomTier(roomInfo.tier);
             setSyncRoomCreatedAt(roomInfo.created_at);
+            setSyncRoomPasscode(roomInfo.passcode || '');
             // If local SSE mode, we fallback to polling for participants count if SSE doesn't push it
             if (!isSupabaseConfigured()) {
               setSyncRoomActiveParticipants(roomInfo.current_participants || 0);
@@ -1018,6 +1020,7 @@ function LocalSignboardContent() {
       setSyncRoomId(data.room_id);
       setSyncHostToken(data.host_session_token);
       setSyncRoomTier(data.tier || (isRegenerate && syncRoomTier ? syncRoomTier : 'free'));
+      setSyncRoomPasscode(data.passcode || '');
       
       const createdAtToSave = isRegenerate && syncRoomCreatedAt ? syncRoomCreatedAt : new Date().toISOString();
       setSyncRoomCreatedAt(createdAtToSave);
@@ -1073,6 +1076,7 @@ function LocalSignboardContent() {
     setSyncRoomCreatedAt('');
     setSyncRoomActiveParticipants(0);
     setSyncTimeRemaining('');
+    setSyncRoomPasscode('');
     localStorage.removeItem('glowwave_local_sync_room_id');
     localStorage.removeItem('glowwave_local_sync_host_token');
     localStorage.removeItem('glowwave_local_sync_room_created_at');
@@ -1184,6 +1188,7 @@ function LocalSignboardContent() {
     setSyncRoomTier(room.tier);
     setSyncRoomCreatedAt(room.created_at);
     setSyncRoomActiveParticipants(0);
+    setSyncRoomPasscode(room.passcode || '');
     
     // Close vault modal on successful recovery
     setIsVaultOpen(false);
@@ -1661,77 +1666,135 @@ function LocalSignboardContent() {
       </header>
 
       {/* Unified HUD Status Bar */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 w-full relative z-10">
-        <div className={`glass-effect rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 bg-[#12121a] border transition-colors duration-300 ${syncRoomId ? 'border-violet-500/20' : 'border-white/5'}`}>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 w-full relative z-10 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className={`glass-effect rounded-2xl p-4 flex flex-wrap justify-between items-center gap-4 bg-[#12121a] border transition-colors duration-300 ${syncRoomId ? 'border-violet-500/20 shadow-xl shadow-violet-950/5' : 'border-white/5'}`}>
           <div className="flex flex-wrap items-center gap-6">
+            {/* 1. 방 코드 */}
             <div>
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{t('room_mode', activeLocale)}</span>
-              <span className="text-sm font-mono font-black text-white">
-                {syncRoomId 
-                  ? (activeLocale === 'ko' ? '실시간 연동 모드 (온라인)' : 'Real-time Sync Mode') 
-                  : t('solo_offline', activeLocale)}
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">
+                {activeLocale === 'ko' ? '방 코드' : 'Room Code'}
+              </span>
+              <span className="text-xl font-mono font-black text-white select-all">
+                {syncRoomId || 'STANDALONE'}
               </span>
             </div>
             
             <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
             
+            {/* 2. 실시간 접속자 */}
             <div>
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{t('data_storage', activeLocale)}</span>
-              <span className="text-sm font-black text-white">
-                {syncRoomId 
-                  ? (['store', 'store_annual'].includes(syncRoomTier) 
-                    ? (activeLocale === 'ko' ? '영구 보존 (구독 중)' : 'Permanent (Subscribed)') 
-                    : (activeLocale === 'ko' ? '서버 임시 보존 (2시간)' : 'Temp Server (2h)'))
-                  : t('browser_storage_unlimited', activeLocale)}
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">
+                {activeLocale === 'ko' ? '실시간 접속자' : 'Spectators'}
+              </span>
+              <span className="text-xl font-black text-white flex items-baseline gap-1">
+                <span>{syncRoomId ? syncRoomActiveParticipants : 0}</span>
+                <span className="text-[10px] text-zinc-500 font-bold">
+                  {activeLocale === 'ko' ? '/ 1명' : '/ 1 Screen'}
+                </span>
               </span>
             </div>
 
             <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
 
+            {/* 3. 사용 중인 요금제 */}
             <div>
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{t('subscription_plan', activeLocale)}</span>
-              {syncRoomId ? (
-                <span className={`text-xs font-black text-white px-2 py-0.5 rounded-md uppercase border ${
-                  ['store', 'store_annual'].includes(syncRoomTier)
-                    ? 'bg-violet-500/10 border-violet-500/20 text-violet-400'
-                    : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">
+                {activeLocale === 'ko' ? '사용 중인 요금제' : 'Active Plan'}
+              </span>
+              <div className="flex items-center gap-2 mt-0.5">
+                {syncRoomId ? (
+                  <span className={`text-xs font-black text-white px-2 py-0.5 rounded-md uppercase border ${
+                    ['store', 'store_annual'].includes(syncRoomTier)
+                      ? 'bg-violet-500/10 border-violet-500/20 text-violet-400'
+                      : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                  }`}>
+                    {['store', 'store_annual'].includes(syncRoomTier)
+                      ? (activeLocale === 'ko' ? '매장 전용 24/7 플랜' : 'STORE 24/7')
+                      : (activeLocale === 'ko' ? '기기 연동 무료체험' : 'SYNC TRIAL')}
+                  </span>
+                ) : (
+                  <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-white/5 uppercase border border-white/5">
+                    {activeLocale === 'ko' ? '평생 무료 (1인용)' : 'FOREVER FREE'}
+                  </span>
+                )}
+                {syncRoomId && !['store', 'store_annual'].includes(syncRoomTier) && (
+                  <button
+                    onClick={() => handleStartImportRoom('premium', 'store')}
+                    className="text-[9px] font-bold text-indigo-400 hover:text-indigo-300 cursor-pointer transition-colors"
+                  >
+                    {activeLocale === 'ko' ? '업그레이드' : 'Upgrade Plan'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
+
+            {/* 4. 방 비밀번호 */}
+            <div>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">
+                {activeLocale === 'ko' ? '방 비밀번호' : 'Room Passcode'}
+              </span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-white/[0.03] border border-white/5 font-mono">
+                  {syncRoomId ? (
+                    syncRoomPasscode ? '🔒 설정됨' : (activeLocale === 'ko' ? '설정 없음' : 'Not Set')
+                  ) : '-'}
+                </span>
+                {syncRoomId && (
+                  <button
+                    onClick={() => setIsVaultOpen(true)}
+                    className="text-[9px] font-bold text-indigo-400 hover:text-indigo-300 cursor-pointer transition-colors"
+                  >
+                    {activeLocale === 'ko' ? '설정/변경' : 'Set/Change'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
+
+            {/* 5. 남은 시간 */}
+            <div>
+              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">
+                {activeLocale === 'ko' ? '남은 시간' : 'Time Remaining'}
+              </span>
+              <div className="flex items-center gap-3">
+                <span className={`text-xs sm:text-sm font-black font-mono tracking-tight block ${
+                  syncRoomId && (syncTimeRemaining === '만료됨' || syncTimeRemaining.startsWith('00:'))
+                    ? 'text-red-500 animate-pulse'
+                    : 'text-zinc-300'
                 }`}>
-                  {['store', 'store_annual'].includes(syncRoomTier)
-                    ? (activeLocale === 'ko' ? '매장 전용 24/7 플랜' : 'Store Signage Plan')
-                    : (activeLocale === 'ko' ? '기기 연동 무료 체험 (1시간)' : 'Free Trial (1 Hour)')}
+                  {syncRoomId ? (syncTimeRemaining || '--:--:--') : (activeLocale === 'ko' ? '무제한 (만료 없음)' : 'Unlimited')}
                 </span>
-              ) : (
-                <span className="text-xs font-black text-white px-2 py-0.5 rounded-md bg-white/5 uppercase border border-white/5">
-                  {t('forever_free', activeLocale)}
-                </span>
-              )}
-            </div>
-
-            <div className="hidden sm:block w-[1px] h-8 bg-white/5" />
-
-            <div>
-              <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{t('time_remaining', activeLocale)}</span>
-              <span className="text-sm font-black text-zinc-300">
-                {syncRoomId 
-                  ? (syncTimeRemaining || '--:--:--')
-                  : t('unlimited', activeLocale)}
-              </span>
+                {syncRoomId && (
+                  <button
+                    onClick={() => {
+                      if (!['store', 'store_annual'].includes(syncRoomTier)) {
+                        handleStartImportRoom('premium', 'store');
+                      } else {
+                        showAlert(activeLocale === 'ko' ? '매장용 24/7 요금제는 연중무휴로 작동하며 기간 만료가 존재하지 않습니다.' : 'Store 24/7 plan runs continuously with no expiration.');
+                      }
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-zinc-300 hover:text-white transition-all text-[9px] font-bold tracking-wider cursor-pointer"
+                  >
+                    {activeLocale === 'ko' ? '시간 연장' : 'Extend'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
+          {/* 6. 시스템 연결 상태 */}
           <div className="flex items-center gap-3">
-            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{t('system_connection', activeLocale)}</span>
+            <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest block">{activeLocale === 'ko' ? '시스템 연결 상태' : 'System Connection'}</span>
             {syncRoomId ? (
               <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-950/30 border border-violet-500/30 text-violet-400 text-xs font-bold tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(139,92,246,0.15)] transition-all duration-300">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
                 </span>
-                <span>
-                  {activeLocale === 'ko' 
-                    ? `연동 중: ${syncRoomId} (${syncRoomActiveParticipants} / ${TIER_CONFIGS[syncRoomTier as TierType]?.maxParticipants || 1}명 연결)` 
-                    : `Synced: ${syncRoomId} (${syncRoomActiveParticipants} / ${TIER_CONFIGS[syncRoomTier as TierType]?.maxParticipants || 1} Connected)`}
-                </span>
+                <span>{activeLocale === 'ko' ? '연결됨' : 'Connected'}</span>
               </div>
             ) : (
               <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/30 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wider backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all duration-300">
@@ -1739,7 +1802,7 @@ function LocalSignboardContent() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                <span>{t('local_standalone', activeLocale)}</span>
+                <span>{activeLocale === 'ko' ? '로컬 독립 실행' : 'Standalone'}</span>
               </div>
             )}
           </div>
@@ -1749,8 +1812,11 @@ function LocalSignboardContent() {
       {/* Main Grid */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col lg:grid lg:grid-cols-12 lg:items-start gap-8 w-full relative z-10">
         
-        {/* Item 1: Templates (원터치 연출 보드) */}
-        <div className="order-1 lg:col-span-8 flex flex-col w-full min-w-0">
+        {/* Left Column Wrapper */}
+        <div className="lg:col-span-8 flex flex-col gap-6 w-full min-w-0">
+          
+          {/* Item 1: Templates (원터치 연출 보드) */}
+          <div className="flex flex-col w-full min-w-0">
           <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a] border border-white/5">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/5">
               <h2 className="text-sm font-bold text-white font-outfit">{t('quick_preset_board', activeLocale)}</h2>
@@ -1914,7 +1980,7 @@ function LocalSignboardContent() {
           </div>
         </div>
           {/* Item 3: 즉석 라이브 메시지 전송 */}
-        <div className="order-3 lg:col-span-8 flex flex-col w-full min-w-0">
+        <div className="flex flex-col w-full min-w-0">
           <div className="glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a] border border-white/5">
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
               <h2 className="text-sm font-bold text-white">{t('instant_live_broadcast', activeLocale)}</h2>
@@ -2391,8 +2457,13 @@ function LocalSignboardContent() {
             </div>
           </div>
         </div>
-          {/* Item 4: 1인 모드 이용 가이드 & 보관 안내 (Short impact text card) */}
-        <div className="order-4 lg:col-span-4 flex flex-col gap-6 w-full min-w-0">
+      </div>
+
+      {/* Right Column Wrapper */}
+      <div className="lg:col-span-4 flex flex-col gap-6 w-full min-w-0">
+
+        {/* Relocated original Item 4 block (rendered at the bottom of Right Column) */}
+        <div className="hidden lg:col-span-4 flex-col gap-6 w-full min-w-0">
           <div className="glass-effect rounded-2xl p-6 text-xs text-zinc-400 leading-relaxed flex flex-col gap-4 bg-[#12121a] border border-white/5">
             <h3 className="font-bold text-white text-sm">
               {
@@ -2493,7 +2564,7 @@ function LocalSignboardContent() {
         </div>
 
         {/* Item 2: LIVE ON AIR Preview Card */}
-        <div className="order-2 lg:col-span-4 flex flex-col w-full min-w-0">
+        <div className="flex flex-col w-full min-w-0">
           <div className="glass-effect rounded-2xl p-4 sm:p-6 flex flex-col items-center bg-[#12121a] border border-white/5">
             <div className="flex items-center gap-2 mb-2 self-start">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
@@ -2631,8 +2702,108 @@ function LocalSignboardContent() {
               </div>
             </div>
           )}
+
+          {/* Item 4: 1인 모드 이용 가이드 & 보관 안내 (Short impact text card) */}
+          <div className="glass-effect rounded-2xl p-6 text-xs text-zinc-400 leading-relaxed flex flex-col gap-4 bg-[#12121a] border border-white/5 mt-6">
+            <h3 className="font-bold text-white text-sm">
+              {
+                {
+                  ko: '1인 모드 이용 가이드 & 보관 안내',
+                  en: 'Solo Mode User Guide & Storage Info',
+                  ja: '1人モード利用ガイド＆保存案内',
+                  es: 'Guía de usuario de Modo Solo e información de almacenamiento',
+                  'zh-TW': '單人模式使用指南與儲存說明',
+                  'zh-HK': '單人模式使用指南與儲存說明',
+                }[activeLocale] || '1인 모드 이용 가이드 & 보관 안내'
+              }
+            </h3>
+            
+            <div className="flex flex-col gap-3.5">
+              <div>
+                <strong className="text-zinc-200 block text-[11px] mb-1">
+                  {
+                    {
+                      ko: '더블 탭으로 나가기',
+                      en: 'Double-tap to Exit',
+                      ja: 'ダブルタップで終了',
+                      es: 'Doble toque para salir',
+                      'zh-TW': '連點難下退出',
+                      'zh-HK': '連點難下退出',
+                    }[activeLocale] || '더블 탭으로 나가기'
+                  }
+                </strong>
+                <p className="text-[10.5px]">
+                  {
+                    {
+                      ko: '전광판 화면을 **더블 클릭** (또는 ESC 키)하면 대시보드로 돌아옵니다.',
+                      en: 'Double-click the signboard screen (or press ESC) to return to the dashboard.',
+                      ja: '電光掲示板画面をダブルクリック（またはESCキー）するとダッシュボードに戻ります。',
+                      es: 'Haga doble clic en la pantalla del letrero (o presione ESC) para volver al tablero.',
+                      'zh-TW': '連按兩下電子看板畫面（或按 ESC 鍵）即可返回儀表板。',
+                      'zh-HK': '連按兩下電子看板畫面（或按 ESC 鍵）即可返回儀表板。',
+                    }[activeLocale] || '전광판 화면을 **더블 클릭** (또는 ESC 키)하면 대시보드로 돌아옵니다.'
+                  }
+                </p>
+              </div>
+              
+              <div>
+                <strong className="text-zinc-200 block text-[11px] mb-1">
+                  {
+                    {
+                      ko: '화면 자동 켜짐 유지',
+                      en: 'Keep Screen Awake',
+                      ja: '画面の常時点灯を維持',
+                      es: 'Mantener pantalla encendida',
+                      'zh-TW': '螢幕自動保持開啟',
+                      'zh-HK': '螢幕自動保持開啟',
+                    }[activeLocale] || '화면 자동 켜짐 유지'
+                  }
+                </strong>
+                <p className="text-[10.5px]">
+                  {
+                    {
+                      ko: '전광판이 켜진 동안에는 폰이 **절전 모드로 들어가지 않고** 화면이 유지됩니다.',
+                      en: 'While the signboard is active, your phone will not go to sleep, and the screen stays on.',
+                      ja: '電光掲示板が表示されている間は, スマートフォン가스립모드에 들어가지 않고 화면이 점등됩니다.',
+                      es: 'Mientras el letrero esté activo, su teléfono no entrará en modo de suspensión y la pantalla permanecerá encendida.',
+                      'zh-TW': '電子看板開啟期間, 手機不會進入休眠狀態, 螢幕將保持開啟.',
+                      'zh-HK': '電子看板開啟期間, 手機不會进入休眠狀態, 螢幕將保持開啟.',
+                    }[activeLocale] || '전광판이 켜진 동안에는 폰이 **절전 모드로 들어가지 않고** 화면이 유지됩니다.'
+                  }
+                </p>
+              </div>
+              
+              <div className="border-t border-white/5 pt-3">
+                <strong className="text-zinc-200 block text-[11px] mb-1">
+                  {
+                    {
+                      ko: '기기에 안전하게 자동 보존',
+                      en: 'Automatically Saved Safely to Device',
+                      ja: '端末에安全에自動保存',
+                      es: 'Guardado automático seguro en el dispositivo',
+                      'zh-TW': '安全自動儲存於裝置',
+                      'zh-HK': '安全自動儲存於裝置',
+                    }[activeLocale] || '기기에 안전하게 자동 보존'
+                  }
+                </strong>
+                <p className="text-[10.5px]">
+                  {
+                    {
+                      ko: '수정한 프리셋들은 **브라우저에 자동 저장**됩니다. 방문 기록(캐시/쿠키)을 청소하면 데이터가 소멸할 수 있으니, 소중한 디자인 세트는 상단의 **[보관 & 공유]** 메뉴에서 모바일로 백업해 두세요!',
+                      en: 'Modified presets are automatically saved in the browser. Clearing browser history/cache may delete data, so backup your precious design sets on mobile using the [Vault & Share] menu!',
+                      ja: '編集したプリセットはブラウザに自動保存されます. 履歴（キャッシュ/クッキー）を削除するとデータが消える可能性があるため, 대단한 디자인은 상단의 【保管＆共有】메뉴에서 모바일로 백업하세요!',
+                      es: 'Los ajustes modificados se guardan automáticamente en el navegador. Limpiar el historial (caché/cookies) puede borrar los datos, ¡así que haga una copia de seguridad en el menú [Bóveda y Compartir]!',
+                      'zh-TW': '修改後的預設會自動儲存於瀏覽器中. 清除瀏覽器紀錄（快取/Cookie）可能會導致資料遺失, 請務必사용한 上方의 [保管與分享] 選單將珍貴의設計備份至行動裝置！',
+                      'zh-HK': '修改後的預設會自動儲存於瀏覽器中. 清除瀏覽기기록（快取/Cookie）可能會導致資料遺失, 請務必사용한 上方의 [保管與分享] 選單將珍貴의設計備份至行動裝置！',
+                    }[activeLocale] || '수정한 프리셋들은 **브라우저에 자동 저장**됩니다. 방문 기록(캐시/쿠키)을 청소하면 데이터가 소멸할 수 있으니, 소중한 디자인 세트는 상단의 **[보관 & 공유]** 메뉴에서 모바일로 백업해 두세요!'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-            </main>
+      </div>
+    </main>
 
       {/* Footer */}
       <footer className="border-t border-white/5 bg-zinc-950 py-4 text-center text-[10px] text-zinc-600 font-mono">

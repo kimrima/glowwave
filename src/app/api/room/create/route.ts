@@ -21,12 +21,25 @@ export async function POST(request: Request) {
     }
 
     const hostSessionToken = crypto.randomUUID();
-    let roomId = generateRoomId();
+    const isSync = (body as any).is_sync || email === 'anonymous-local@glowwave.app';
+    const generateTargetRoomId = (): string => {
+      if (isSync) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < 4; i++) {
+          result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return `SYNC-${result}`;
+      }
+      return generateRoomId();
+    };
+
+    let roomId = generateTargetRoomId();
 
     // Prevent collision
     let attempts = 0;
     while ((await localDb.getRoom(roomId)) && attempts < 100) {
-      roomId = generateRoomId();
+      roomId = generateTargetRoomId();
       attempts++;
     }
 

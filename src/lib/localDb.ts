@@ -203,12 +203,19 @@ export const localDb = {
   async cleanupExpiredRooms(): Promise<void> {
     if (isSupabaseConfigured() && supabase) {
       const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+      const sixHoursAgo = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
       
-      // Perform delete on free rooms older than 2 hours
-      const { error: freeErr } = await supabase.from('rooms').delete().eq('tier', 'free').lt('created_at', twoHoursAgo);
+      // Perform delete on free sync local rooms older than 2 hours
+      const { error: syncErr } = await supabase.from('rooms').delete().eq('tier', 'free').like('id', 'SYNC-%').lt('created_at', twoHoursAgo);
+      if (syncErr) {
+        console.error('[localDb] Supabase cleanup sync rooms error:', syncErr);
+      }
+
+      // Perform delete on standard free rooms older than 6 hours
+      const { error: freeErr } = await supabase.from('rooms').delete().eq('tier', 'free').not('id', 'like', 'SYNC-%').lt('created_at', sixHoursAgo);
       if (freeErr) {
         console.error('[localDb] Supabase cleanup free rooms error:', freeErr);
       }
@@ -244,7 +251,8 @@ export const localDb = {
         const createdAt = new Date(room.created_at);
         let expiryPeriodMs = 24 * 60 * 60 * 1000; // Event tiers default: 24h
         if (room.tier === 'free') {
-          expiryPeriodMs = 2 * 60 * 60 * 1000; // Free sync trial: 2h
+          const isSyncLocal = roomId.startsWith('SYNC-');
+          expiryPeriodMs = isSyncLocal ? 2 * 60 * 60 * 1000 : 6 * 60 * 60 * 1000;
         } else if (room.tier === 'store') {
           expiryPeriodMs = 30 * 24 * 60 * 60 * 1000; // Store monthly: 30 days
         } else if (room.tier === 'store_annual') {
@@ -281,6 +289,8 @@ export const localDb = {
   async createRoom(roomId: string, email: string, tier: TierType, hostSessionToken: string, passcode?: string, createdAt?: string): Promise<Room> {
     await this.cleanupExpiredRooms();
     const config = TIER_CONFIGS[tier];
+    const isSyncLocal = roomId.startsWith('SYNC-');
+    const maxParticipants = isSyncLocal ? 1 : config.maxParticipants;
     const hashedPasscode = hashPasscode(passcode);
     const newRoom: Room = {
       id: roomId,
@@ -288,7 +298,7 @@ export const localDb = {
       email,
       tier,
       status: tier === 'free' ? 'active' : 'inactive',
-      max_participants: config.maxParticipants,
+      max_participants: maxParticipants,
       current_participants: 0,
       created_at: createdAt || new Date().toISOString(),
       passcode: hashedPasscode,
@@ -301,7 +311,7 @@ export const localDb = {
         email,
         tier,
         status: newRoom.status,
-        max_participants: config.maxParticipants,
+        max_participants: maxParticipants,
         current_participants: 0,
         created_at: newRoom.created_at,
         passcode: hashedPasscode,
