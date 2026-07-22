@@ -113,6 +113,20 @@ export default function Home() {
     localStorage.setItem('glowwave_local_locale', newLocale);
   };
 
+  const getRoomLimitMs = (tier: string, roomId: string) => {
+    const isSyncLocal = roomId.startsWith('SYNC-');
+    if (tier === 'free') {
+      return isSyncLocal ? 2 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000;
+    }
+    if (tier === 'store') {
+      return 30 * 24 * 60 * 60 * 1000;
+    }
+    if (tier === 'store_annual') {
+      return 365 * 24 * 60 * 60 * 1000;
+    }
+    return 24 * 60 * 60 * 1000;
+  };
+
   const formatTimeLeft = (detail: RoomDetail) => {
     if (detail.isExpired) return t('exp_expired', activeLocale);
     const diff = detail.diff;
@@ -151,10 +165,7 @@ export default function Home() {
     const createdTime = room.createdAt ? new Date(room.createdAt).getTime() : Date.now();
     const tier = room.tier || 'free';
     const isSyncLocal = room.roomId.startsWith('SYNC-');
-    let limitMs = 24 * 60 * 60 * 1000;
-    if (tier === 'free') {
-      limitMs = isSyncLocal ? 1 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000;
-    }
+    const limitMs = getRoomLimitMs(tier, room.roomId);
     const diff = (createdTime + limitMs) - Date.now();
     if (diff <= 0) return false; // Definitely expired!
 
@@ -290,10 +301,7 @@ export default function Home() {
             } else {
               const createdTime = new Date(roomInfo.created_at).getTime();
               const isSyncLocal = id.startsWith('SYNC-');
-              let limitMs = 24 * 60 * 60 * 1000;
-              if (roomInfo.tier === 'free') {
-                limitMs = isSyncLocal ? 1 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000;
-              }
+              const limitMs = getRoomLimitMs(roomInfo.tier, id);
               const expireTime = createdTime + limitMs;
               const diff = expireTime - Date.now();
               
