@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       const activeRoom = activeSyncRoomsByIp.get(ip);
       if (activeRoom && activeRoom.expiresAt > now) {
         return NextResponse.json({
-          error: '이미 활성화된 1인 체험방이 존재합니다. 기존 방의 만료 시간(2시간)이 지난 후에 새로운 무료 방을 개설할 수 있습니다.'
+          error: '이미 활성화된 1인 체험방이 존재합니다. 기존 방의 만료 시간(1시간)이 지난 후에 새로운 무료 방을 개설할 수 있습니다.'
         }, { status: 429 });
       }
     }
@@ -104,7 +104,7 @@ export async function POST(request: Request) {
       const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
       activeSyncRoomsByIp.set(ip, {
         roomId: room.id,
-        expiresAt: Date.now() + 2 * 60 * 60 * 1000 // 2 hours
+        expiresAt: Date.now() + 1 * 60 * 60 * 1000 // 1 hour
       });
     }
 

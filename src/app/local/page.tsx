@@ -1046,7 +1046,7 @@ function LocalSignboardContent() {
     if (isSyncCreating) return;
     setIsSyncCreating(true);
     try {
-      // Reuse existing local sync room if it is still within 2-hour duration to prevent API spamming
+      // Reuse existing local sync room if it is still within 1-hour duration to prevent API spamming
       if (!isRegenerate) {
         const savedRoomId = localStorage.getItem('glowwave_local_sync_room_id');
         const savedHostToken = localStorage.getItem('glowwave_local_sync_host_token');
@@ -1054,11 +1054,18 @@ function LocalSignboardContent() {
         
         if (savedRoomId && savedHostToken && savedCreatedAt) {
           const createdAt = new Date(savedCreatedAt);
-          if (Date.now() - createdAt.getTime() < 2 * 60 * 60 * 1000) {
+          if (Date.now() - createdAt.getTime() < 1 * 60 * 60 * 1000) {
             setSyncRoomId(savedRoomId);
             setSyncHostToken(savedHostToken);
             setSyncRoomTier(localStorage.getItem('glowwave_local_sync_room_tier') || 'free');
             setSyncRoomCreatedAt(savedCreatedAt);
+            
+            showAlert(
+              activeLocale === 'ko'
+                ? '기존에 생성된 일일무료체험방 세션이 존재하여 해당 방으로 자동 연결됩니다.'
+                : 'An active free trial room exists. Reconnecting to your existing room.'
+            );
+            
             setIsVaultOpen(false);
             setIsSyncCreating(false);
             return;

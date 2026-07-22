@@ -116,7 +116,7 @@ export default function Home() {
   const getRoomLimitMs = (tier: string, roomId: string) => {
     const isSyncLocal = roomId.startsWith('SYNC-');
     if (tier === 'free') {
-      return isSyncLocal ? 2 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000;
+      return isSyncLocal ? 1 * 60 * 60 * 1000 : 3 * 60 * 60 * 1000;
     }
     if (tier === 'store') {
       return 30 * 24 * 60 * 60 * 1000;
