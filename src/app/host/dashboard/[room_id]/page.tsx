@@ -2447,8 +2447,10 @@ export default function HostDashboard() {
       {/* Main Grid */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col lg:grid lg:grid-cols-12 lg:items-start gap-8 w-full">
         
-        {/* Quick Triggers Dashboard */}
-        <div className="order-1 lg:col-span-8 flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a]">
+        {/* Left Column Wrapper (Combined Quick Preset and Instant customizer to prevent spacing gaps) */}
+        <div className="order-1 lg:col-span-8 flex flex-col gap-8 w-full min-w-0">
+          {/* Quick Triggers Dashboard */}
+          <div className="flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a]">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-indigo-400" />
@@ -2733,7 +2735,7 @@ export default function HostDashboard() {
           </div>
 
           {/* Custom Customizer Input for On-the-fly Triggering */}
-          <div className="order-3 lg:col-span-8 flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a]">
+          <div className="flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a]">
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <Volume2 className="w-4 h-4 text-zinc-400" />
@@ -3386,6 +3388,7 @@ export default function HostDashboard() {
               )}
             </div>
           </div>
+        </div>
 
         {/* Right Sidebar Column Wrapper (Combined Live Preview, QR & Guide to prevent spacing gaps) */}
         <div className="order-2 lg:col-span-4 flex flex-col gap-6 w-full min-w-0">
