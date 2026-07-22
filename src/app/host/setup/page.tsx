@@ -997,9 +997,6 @@ export default function HostSetup() {
                       <div className="text-xs font-black text-white font-mono">
                         {getLocalizedPrice(tierKey, activeLocale)}
                       </div>
-                      {cfg.priceKrw > 0 && activeLocale !== 'ko' && (
-                        <div className="text-[9px] text-zinc-500 font-bold font-mono">(₩{cfg.priceKrw.toLocaleString()} KRW)</div>
-                      )}
                     </div>
                   </button>
                 );
@@ -1139,7 +1136,20 @@ export default function HostSetup() {
                   </div>
                   <div className="flex justify-between text-xs pb-3 border-b border-white/5">
                     <span className="text-zinc-400 font-bold">{t('setup_checkout_capacity', activeLocale)}</span>
-                    <span className="text-white font-extrabold">{TIER_CONFIGS[selectedTier]?.maxParticipants}명</span>
+                    <span className="text-white font-extrabold">
+                      {(() => {
+                        const maxParticipants = TIER_CONFIGS[selectedTier]?.maxParticipants;
+                        if (maxParticipants === undefined) return '';
+                        return {
+                          ko: `${maxParticipants}명`,
+                          en: `${maxParticipants}`,
+                          ja: `${maxParticipants}名`,
+                          es: `${maxParticipants} personas`,
+                          'zh-TW': `${maxParticipants} 人`,
+                          'zh-HK': `${maxParticipants} 人`
+                        }[activeLocale] || `${maxParticipants}명`;
+                      })()}
+                    </span>
                   </div>
 
                   <div className="flex justify-between items-center pt-1.5">
@@ -1161,9 +1171,9 @@ export default function HostSetup() {
                               if (paymentMethod === 'toss') {
                                 return discounted === 0 ? '무료 (Free)' : `₩${discounted.toLocaleString()}원`;
                               } else {
-                                const usdBase = selectedTier === 'free' ? 0 : selectedTier === 'lite' ? 9.9 : selectedTier === 'pro' ? 29.0 : selectedTier === 'max' ? 79.0 : selectedTier === 'store' ? 12.0 : 110.0;
+                                const usdBase = config.priceUsd;
                                 const discountedUsd = usdBase * (1 - verifiedCoupon.discount_pct / 100);
-                                return `$${discountedUsd.toFixed(1)} USD`;
+                                return `$${discountedUsd.toFixed(2)} USD`;
                               }
                             })()}
                           </span>

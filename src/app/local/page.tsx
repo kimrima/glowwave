@@ -1197,9 +1197,6 @@ function LocalSignboardContent() {
     setSyncRoomActiveParticipants(0);
     setSyncTimeRemaining('');
     setSyncRoomPasscode('');
-    localStorage.removeItem('glowwave_local_sync_room_id');
-    localStorage.removeItem('glowwave_local_sync_host_token');
-    localStorage.removeItem('glowwave_local_sync_room_created_at');
   };
 
   const handleRecoverSyncRooms = async () => {

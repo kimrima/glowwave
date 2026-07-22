@@ -3387,8 +3387,10 @@ export default function HostDashboard() {
             </div>
           </div>
 
-        {/* LIVE ON AIR Preview Card */}
-        <div className="order-2 lg:col-span-4 flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 items-center bg-[#12121a]">
+        {/* Right Sidebar Column Wrapper (Combined Live Preview, QR & Guide to prevent spacing gaps) */}
+        <div className="order-2 lg:col-span-4 flex flex-col gap-6 w-full min-w-0">
+          {/* LIVE ON AIR Preview Card */}
+          <div className="flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 items-center bg-[#12121a]">
             <div className="flex items-center gap-2 mb-2 self-start">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
               <h2 className="text-sm font-bold text-white uppercase tracking-wider">LIVE ON AIR</h2>
@@ -3486,8 +3488,7 @@ export default function HostDashboard() {
             )}
           </div>
 
-          {/* Admission QR Card & Guide wrapper */}
-          <div className="order-4 lg:col-span-4 flex flex-col gap-6 w-full min-w-0">
+          {/* Admission QR Card */}
           <div className="glass-effect rounded-2xl p-4 sm:p-6 flex flex-col items-center text-center bg-[#12121a]">
             <Share2 className="w-6 h-6 text-indigo-400 mb-3" />
             <h2 className="text-lg font-bold text-white mb-1">
