@@ -2447,11 +2447,9 @@ export default function HostDashboard() {
       {/* Main Grid */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col lg:grid lg:grid-cols-12 lg:items-start gap-8 w-full">
         
-        {/* Left Column Wrapper (Combined Quick Preset and Instant customizer to prevent spacing gaps) */}
-        <div className="order-1 lg:col-span-8 flex flex-col gap-8 w-full min-w-0">
-          {/* Quick Triggers Dashboard */}
-          <div className="flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a]">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/5">
+        {/* Quick Triggers Dashboard */}
+        <div className="order-1 lg:col-span-8 lg:col-start-1 lg:row-start-1 lg:self-start flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a] h-fit">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-indigo-400" />
                 <h2 className="text-sm font-bold text-white font-outfit">{t('quick_preset_board', activeLocale)}</h2>
@@ -2735,7 +2733,7 @@ export default function HostDashboard() {
           </div>
 
           {/* Custom Customizer Input for On-the-fly Triggering */}
-          <div className="flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a]">
+          <div className="order-3 lg:col-span-8 lg:col-start-1 lg:row-start-2 lg:self-start flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a] h-fit">
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <Volume2 className="w-4 h-4 text-zinc-400" />
@@ -3388,12 +3386,9 @@ export default function HostDashboard() {
               )}
             </div>
           </div>
-        </div>
 
-        {/* Right Sidebar Column Wrapper (Combined Live Preview, QR & Guide to prevent spacing gaps) */}
-        <div className="order-2 lg:col-span-4 flex flex-col gap-6 w-full min-w-0">
-          {/* LIVE ON AIR Preview Card */}
-          <div className="flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 items-center bg-[#12121a]">
+        {/* LIVE ON AIR Preview Card */}
+        <div className="order-2 lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:self-start flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 items-center bg-[#12121a] h-fit">
             <div className="flex items-center gap-2 mb-2 self-start">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
               <h2 className="text-sm font-bold text-white uppercase tracking-wider">LIVE ON AIR</h2>
@@ -3492,7 +3487,7 @@ export default function HostDashboard() {
           </div>
 
           {/* Admission QR Card */}
-          <div className="glass-effect rounded-2xl p-4 sm:p-6 flex flex-col items-center text-center bg-[#12121a]">
+          <div className="order-4 lg:col-span-4 lg:col-start-9 lg:row-start-2 lg:self-start flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 items-center text-center bg-[#12121a] h-fit">
             <Share2 className="w-6 h-6 text-indigo-400 mb-3" />
             <h2 className="text-lg font-bold text-white mb-1">
               {
@@ -3611,7 +3606,7 @@ export default function HostDashboard() {
           </div>
 
           {/* Host Guide Card */}
-          <div className="glass-effect rounded-2xl p-6 text-xs text-zinc-500 leading-normal flex flex-col gap-2 bg-[#12121a]">
+          <div className="order-5 lg:col-span-4 lg:col-start-9 lg:row-start-3 lg:self-start flex flex-col w-full min-w-0 glass-effect rounded-2xl p-6 text-xs text-zinc-500 leading-normal gap-2 bg-[#12121a] h-fit">
             <div className="font-bold text-zinc-400 mb-1 flex items-center gap-1.5">
               <Smartphone className="w-3.5 h-3.5" />
               {
@@ -3661,7 +3656,6 @@ export default function HostDashboard() {
                 }[activeLocale] || '3. 동시 접속 수가 요금제 한도에 도달하면 신규 접속 관객에게 대기 화면이 표시됩니다.'
               }
             </div>
-          </div>
           </div>
 
       </main>
