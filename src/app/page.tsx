@@ -35,10 +35,14 @@ const getSpeedMs = (factor: number, effect: string) => {
   return 1000;
 };
 
-const getTierBadgeText = (tier: string, locale: string) => {
+const getTierBadgeText = (tier: string, locale: string, roomId?: string) => {
   const normalized = (tier || '').toLowerCase();
   if (normalized === 'free') {
-    return locale === 'ko' ? '일일체험' : 'Free';
+    const isSyncLocal = roomId && roomId.startsWith('SYNC-');
+    if (isSyncLocal) {
+      return locale === 'ko' ? '기기 연동 무료체험 (1시간)' : 'Sync Free Trial (1h)';
+    }
+    return locale === 'ko' ? 'FREE (15명)' : 'FREE (15 Max)';
   }
   if (normalized === 'lite') return 'Lite';
   if (normalized === 'pro') return 'Pro';
@@ -52,9 +56,13 @@ const getTierBadgeText = (tier: string, locale: string) => {
   return (tier || '').toUpperCase();
 };
 
-const getTierBadgeClass = (tier: string) => {
+const getTierBadgeClass = (tier: string, roomId?: string) => {
   const normalized = (tier || '').toLowerCase();
   if (normalized === 'free') {
+    const isSyncLocal = roomId && roomId.startsWith('SYNC-');
+    if (isSyncLocal) {
+      return 'bg-amber-500/10 text-amber-400 border border-amber-500/20';
+    }
     return 'bg-zinc-800 text-zinc-400 border border-zinc-700/50';
   }
   if (normalized === 'store' || normalized === 'store_annual') {
@@ -142,7 +150,11 @@ export default function Home() {
     // 1. Client-side static time check (instant filter on mount)
     const createdTime = room.createdAt ? new Date(room.createdAt).getTime() : Date.now();
     const tier = room.tier || 'free';
-    const limitMs = tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+    const isSyncLocal = room.roomId.startsWith('SYNC-');
+    let limitMs = 24 * 60 * 60 * 1000;
+    if (tier === 'free') {
+      limitMs = isSyncLocal ? 1 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000;
+    }
     const diff = (createdTime + limitMs) - Date.now();
     if (diff <= 0) return false; // Definitely expired!
 
@@ -277,7 +289,11 @@ export default function Home() {
               hasChanges = true;
             } else {
               const createdTime = new Date(roomInfo.created_at).getTime();
-              const limitMs = roomInfo.tier === 'free' ? 6 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+              const isSyncLocal = id.startsWith('SYNC-');
+              let limitMs = 24 * 60 * 60 * 1000;
+              if (roomInfo.tier === 'free') {
+                limitMs = isSyncLocal ? 1 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000;
+              }
               const expireTime = createdTime + limitMs;
               const diff = expireTime - Date.now();
               
@@ -599,12 +615,12 @@ export default function Home() {
                                     {item.roomId}
                                   </h4>
                                   {details ? (
-                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold capitalize ${getTierBadgeClass(details.tier)}`}>
-                                      {getTierBadgeText(details.tier, activeLocale)}
+                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold capitalize ${getTierBadgeClass(details.tier, item.roomId)}`}>
+                                      {getTierBadgeText(details.tier, activeLocale, item.roomId)}
                                     </span>
                                   ) : item.tier ? (
-                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold capitalize ${getTierBadgeClass(item.tier)}`}>
-                                      {getTierBadgeText(item.tier, activeLocale)}
+                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold capitalize ${getTierBadgeClass(item.tier, item.roomId)}`}>
+                                      {getTierBadgeText(item.tier, activeLocale, item.roomId)}
                                     </span>
                                   ) : null}
                                 </div>
@@ -629,7 +645,7 @@ export default function Home() {
                                 </div>
                               </div>
                               <Link
-                                href={`/host/dashboard/${item.roomId}`}
+                                href={item.roomId.startsWith('SYNC-') ? '/local' : `/host/dashboard/${item.roomId}`}
                                 className="px-3.5 py-2 rounded-xl text-[10px] font-black bg-indigo-600 hover:bg-indigo-500 text-white transition-all flex items-center gap-1 shrink-0"
                               >
                                 {t('bento_btn_dashboard', activeLocale)} &rarr;
@@ -674,8 +690,8 @@ export default function Home() {
                                   {item.roomId}
                                 </h4>
                                 {details && (
-                                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold capitalize ${getTierBadgeClass(details.tier)}`}>
-                                    {getTierBadgeText(details.tier, activeLocale)}
+                                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold capitalize ${getTierBadgeClass(details.tier, item.roomId)}`}>
+                                    {getTierBadgeText(details.tier, activeLocale, item.roomId)}
                                   </span>
                                 )}
                               </div>

@@ -418,9 +418,10 @@ export default function HostDashboard() {
     if (!room?.created_at) return;
     const calculateTime = () => {
       const createdTime = new Date(room.created_at).getTime();
+      const isSyncLocal = roomId.startsWith('SYNC-');
       let limitMs = 24 * 60 * 60 * 1000;
       if (room.tier === 'free') {
-        limitMs = 6 * 60 * 60 * 1000;
+        limitMs = isSyncLocal ? 1 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000;
       } else if (room.tier === 'store') {
         limitMs = 30 * 24 * 60 * 60 * 1000;
       } else if (room.tier === 'store_annual') {
@@ -508,7 +509,8 @@ export default function HostDashboard() {
       
       // Determine token: check URL search parameter first, then localStorage
       const queryToken = searchParams.get('token');
-      const localTokenKey = `glowwave_token_${roomId}`;
+      const isSyncLocal = roomId.startsWith('SYNC-');
+      const localTokenKey = isSyncLocal ? 'glowwave_local_sync_host_token' : `glowwave_token_${roomId}`;
       const localToken = localStorage.getItem(localTokenKey);
       
       const activeToken = queryToken || localToken;
