@@ -2436,6 +2436,120 @@ export default function AdminPage() {
               </p>
             </div>
 
+            {/* Real-time Event Theme Detection Briefing Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Event Detection Alerts */}
+              <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-2xl md:col-span-2 flex flex-col justify-between">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Activity className="w-3.5 h-3.5 text-rose-500 animate-pulse" /> 실시간 행사/팬덤 트렌드 감지 레이더 (Event Theme Detector)
+                </h3>
+                <div className="space-y-3">
+                  {(trendsStats.trendAlerts || []).map((alert: any) => {
+                    const isSports = alert.type === 'sports';
+                    const isConcert = alert.type === 'concert';
+                    
+                    let bgBorderClass = 'bg-zinc-500/5 border-zinc-500/10 text-zinc-300';
+                    if (isSports) bgBorderClass = 'bg-sky-500/5 border-sky-500/15 text-sky-200';
+                    else if (isConcert) bgBorderClass = 'bg-rose-500/5 border-rose-500/15 text-rose-200';
+                    
+                    return (
+                      <div key={alert.id} className={`p-4 rounded-xl border ${bgBorderClass} flex flex-col gap-1.5`}>
+                        <div className="flex items-center gap-2">
+                          <span className="font-extrabold text-[11px] sm:text-xs">{alert.title}</span>
+                          <span className="text-[8px] uppercase font-black px-1.5 py-0.5 rounded bg-white/5 text-zinc-400">REALTIME</span>
+                        </div>
+                        <p className="text-[10px] text-zinc-400 leading-relaxed font-medium">
+                          {alert.desc}
+                        </p>
+                      </div>
+                    );
+                  })}
+                  {(!trendsStats.trendAlerts || trendsStats.trendAlerts.length === 0) && (
+                    <p className="text-[10px] text-zinc-500 text-center py-6">분석할 트렌드 감지 내역이 없습니다.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Category distribution chart card */}
+              <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-2xl md:col-span-1 flex flex-col justify-between">
+                <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Layers className="w-3.5 h-3.5 text-zinc-400" /> 목적별 전광판 사용 점유율
+                </h3>
+                {(() => {
+                  const dist = trendsStats.categoryDistribution || { sports: 0, concert: 0, personal: 0, total: 0 };
+                  const total = Math.max(1, dist.total);
+                  const sportsPct = Math.round((dist.sports / total) * 100);
+                  const concertPct = Math.round((dist.concert / total) * 100);
+                  const personalPct = Math.round((dist.personal / total) * 100);
+                  
+                  return (
+                    <div className="space-y-4 font-sans">
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[9px] font-bold">
+                          <span className="text-sky-400 font-extrabold">⚾ 스포츠/응원 ({dist.sports}회)</span>
+                          <span className="text-white font-mono">{sportsPct}%</span>
+                        </div>
+                        <div className="h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                          <div className="h-full bg-sky-500" style={{ width: `${sportsPct}%` }} />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[9px] font-bold">
+                          <span className="text-rose-400 font-extrabold">🎤 공연/콘서트/아이돌 ({dist.concert}회)</span>
+                          <span className="text-white font-mono">{concertPct}%</span>
+                        </div>
+                        <div className="h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                          <div className="h-full bg-rose-500" style={{ width: `${concertPct}%` }} />
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[9px] font-bold">
+                          <span className="text-zinc-400 font-extrabold">🎈 매장/일반 이벤트 ({dist.personal}회)</span>
+                          <span className="text-white font-mono">{personalPct}%</span>
+                        </div>
+                        <div className="h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/5">
+                          <div className="h-full bg-zinc-500" style={{ width: `${personalPct}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Keyword Popularity Rankings Grid */}
+            <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 p-6 rounded-2xl">
+              <h3 className="text-xs font-black text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> 실시간 핫 응원 키워드 순위 (Top 15 Live Keywords)
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+                {(trendsStats.hotKeywords || []).map((item: any, idx: number) => {
+                  return (
+                    <div 
+                      key={item.keyword}
+                      className="bg-black/25 border border-white/5 rounded-xl p-3.5 flex flex-col justify-between hover:border-violet-500/30 transition-all cursor-pointer hover:scale-105 shadow-inner"
+                      onClick={() => {
+                        setActiveTab('rooms');
+                        setSearchQuery(item.keyword);
+                      }}
+                      title="클릭 시 이 키워드를 가진 방 세션을 바로 검색합니다."
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-zinc-500 font-mono">TOP {idx + 1}</span>
+                        <span className="text-[9px] font-mono text-zinc-400 font-extrabold">{item.count}회 등장</span>
+                      </div>
+                      <span className="text-xs font-black text-white tracking-wide mt-2 block truncate">
+                        {item.keyword}
+                      </span>
+                    </div>
+                  );
+                })}
+                {(!trendsStats.hotKeywords || trendsStats.hotKeywords.length === 0) && (
+                  <p className="col-span-full text-center text-[10px] text-zinc-500 py-6">수집된 키워드 데이터가 없습니다.</p>
+                )}
+              </div>
+            </div>
+
             {/* 1단: BI Segmentation Metrics & Feature Adoption Rates */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Segmentation Card (B2B vs B2C Gauge) */}

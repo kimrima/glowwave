@@ -192,6 +192,89 @@ export async function GET(request: NextRequest) {
 
     const coupons = await localDb.getCoupons();
 
+    // 4. Real-time Keyword & Trend analysis
+    const keywordCounts: Record<string, number> = {};
+    for (const sample of textSamples) {
+      const rawText = sample.text || '';
+      const words = rawText
+        .replace(/[^\uAC00-\uD7A3a-zA-Z0-9\s]/g, '')
+        .split(/\s+/);
+      for (const w of words) {
+        const trimmed = w.trim();
+        if (trimmed.length >= 2) {
+          keywordCounts[trimmed] = (keywordCounts[trimmed] || 0) + 1;
+        }
+      }
+    }
+
+    const hotKeywords = Object.entries(keywordCounts)
+      .map(([keyword, count]) => ({ keyword, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 15);
+
+    let sportsCount = 0;
+    let concertCount = 0;
+    let personalCount = 0;
+
+    const sportsKeywords = ['야구', '축구', '한화', '이글스', '두산', '베어스', '기아', '타이거즈', '삼성', '라이온즈', '엘지', '트윈스', '롯데', '자이언츠', '쓱', '랜더스', '골', '홈런', '응원', '월드컵', '올림픽', '국가대표', '대한민국'];
+    const concertKeywords = ['사랑해', '영웅', '임영웅', '아이유', '에스파', '뉴진스', '뉴진', '아이브', '공연', '콘서트', '티켓', '팬미팅', '오빠', '언니', '노래', '가수', 'bts', '방탄', '콘'];
+    
+    for (const sample of textSamples) {
+      const textLower = (sample.text || '').toLowerCase();
+      const hasSports = sportsKeywords.some(kw => textLower.includes(kw));
+      const hasConcert = concertKeywords.some(kw => textLower.includes(kw));
+      
+      if (hasSports) sportsCount++;
+      else if (hasConcert) concertCount++;
+      else personalCount++;
+    }
+
+    const categoryDistribution = {
+      sports: sportsCount,
+      concert: concertCount,
+      personal: personalCount,
+      total: textSamples.length
+    };
+
+    const trendAlerts: { id: string; type: 'sports' | 'concert' | 'info'; title: string; desc: string }[] = [];
+    if (hotKeywords.length > 0) {
+      const top1 = hotKeywords[0].keyword;
+      const top2 = hotKeywords[1]?.keyword || '';
+      
+      if (sportsKeywords.some(kw => top1.includes(kw) || top2.includes(kw))) {
+        trendAlerts.push({
+          id: 'sports-alert',
+          type: 'sports',
+          title: '⚾ 프로야구/스포츠 응원 열기 감지!',
+          desc: `현재 '${top1}' 등의 키워드가 대형 스포츠 전광판 수요로 이어지고 있습니다. 야구 구단/축구 응원 템플릿(시그니처 컬러 매칭)을 추천 기획해 보세요.`
+        });
+      }
+      if (concertKeywords.some(kw => top1.includes(kw) || top2.includes(kw))) {
+        trendAlerts.push({
+          id: 'concert-alert',
+          type: 'concert',
+          title: '🔥 가수 콘서트/공연 응원 트렌드 감지!',
+          desc: `최근 팬덤의 전광판 텍스트에 '${top1}'이(가) 자주 사용되고 있습니다. 응원 문구 템플릿 및 아이돌 콘서트 전용 디자인 프리셋 보강을 추천합니다.`
+        });
+      }
+      
+      if (trendAlerts.length === 0) {
+        trendAlerts.push({
+          id: 'general-alert',
+          type: 'info',
+          title: '🌟 실시간 핫 응원 문구 발견',
+          desc: `현재 사용자들은 '${top1}'(이)라는 문구를 전광판에 가장 많이 띄워두고 있습니다. 해당 문구를 담은 트렌디한 추천 템플릿 제작을 검토해보세요.`
+        });
+      }
+    } else {
+      trendAlerts.push({
+        id: 'no-data-alert',
+        type: 'info',
+        title: '📊 트렌드 감지 대기 중',
+        desc: '아직 활성화된 사용자의 텍스트 샘플이 누적되지 않았습니다. 사용자들이 전광판 문구를 작성하기 시작하면 실시간 테마 감지가 활성화됩니다.'
+      });
+    }
+
     return NextResponse.json({
       success: true,
       rooms: activeRoomsWithStates,
@@ -200,8 +283,11 @@ export async function GET(request: NextRequest) {
       stats: {
         fontUsage,
         effectUsage,
-        textSamples: textSamples.slice(0, 50), // Limit to top 50 recent samples
-        liveHotRooms: liveHotRooms.slice(0, 10), // Top 10 highly engaging active signs
+        textSamples: textSamples.slice(0, 50),
+        liveHotRooms: liveHotRooms.slice(0, 10),
+        hotKeywords,
+        categoryDistribution,
+        trendAlerts,
         segmentation: {
           b2cCount,
           b2bCount,
@@ -215,7 +301,7 @@ export async function GET(request: NextRequest) {
           retainedUsers,
           retentionRate: userRetentionRate
         },
-        userRegistry: userRegistry.slice(0, 100), // Top 100 active users list
+        userRegistry: userRegistry.slice(0, 100),
         funnel: funnelCounts
       }
     });
