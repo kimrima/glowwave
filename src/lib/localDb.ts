@@ -738,11 +738,13 @@ export const localDb = {
   },
 
   getClientCount(roomId: string): number {
+    const localCount = this.clients.get(roomId)?.filter((c) => c.role !== 'host').length || 0;
+    let supabaseCount = 0;
     if (isSupabaseConfigured() && supabase) {
       this.trackSupabasePresence(roomId);
-      return this.supabasePresenceCounts.get(roomId) || 0;
+      supabaseCount = this.supabasePresenceCounts.get(roomId) || 0;
     }
-    return this.clients.get(roomId)?.filter((c) => c.role !== 'host').length || 0;
+    return Math.max(localCount, supabaseCount);
   },
 
   trackSupabasePresence(roomId: string): void {

@@ -110,18 +110,16 @@ export async function GET(request: NextRequest) {
           };
           textSamples.push(sample);
 
-          // Add to Hot Rooms if there are active client viewers
-          if (activeClients > 0) {
-            liveHotRooms.push({
-              id: room.id,
-              text: state.text,
-              active_clients: activeClients,
-              tier: room.tier,
-              time: room.created_at,
-              bg,
-              color
-            });
-          }
+          // Add to Hot Rooms (Include zero-viewers rooms for hybrid test visibility)
+          liveHotRooms.push({
+            id: room.id,
+            text: state.text,
+            active_clients: activeClients,
+            tier: room.tier,
+            time: room.created_at,
+            bg,
+            color
+          });
         }
       }
 
@@ -152,8 +150,13 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Sort live hot rooms by client count descending
-    liveHotRooms.sort((a, b) => b.active_clients - a.active_clients);
+    // Sort live hot rooms by client count descending, then by time descending (newest first)
+    liveHotRooms.sort((a, b) => {
+      if (b.active_clients !== a.active_clients) {
+        return b.active_clients - a.active_clients;
+      }
+      return new Date(b.time).getTime() - new Date(a.time).getTime();
+    });
 
     // Format top color combos
     const topThemeCombos = Object.entries(themeCombos)
