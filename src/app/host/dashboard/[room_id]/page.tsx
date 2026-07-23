@@ -330,11 +330,15 @@ export default function HostDashboard() {
         'zh-TW': '此字型為付費方案（Lite 以上）專用。是否要升級您的方案？',
         'zh-HK': '此字型為付費方案（Lite 以上）專用。是否要升級您的方案？',
       }[activeLocale] || '이 글꼴은 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?';
-      if (confirm(confirmFontMsg)) {
-        setSelectedUpgradeTier(null);
-        setUpgradeStep('select');
-        setIsUpgradeModalOpen(true);
-      }
+      showConfirm(
+        confirmFontMsg,
+        () => {
+          setSelectedUpgradeTier(null);
+          setUpgradeStep('select');
+          setIsUpgradeModalOpen(true);
+        },
+        activeLocale === 'ko' ? '요금제 업그레이드' : 'Upgrade Plan'
+      );
       return;
     }
     if (isEdit) {
@@ -1334,32 +1338,40 @@ export default function HostDashboard() {
       'zh-TW': '確定要刪除此儲存的主題格嗎？',
       'zh-HK': '確定要刪除此儲存的主題格嗎？',
     }[activeLocale] || '이 테마 보관 슬롯을 삭제하시겠습니까?';
-    if (confirm(confirmDeleteSlot)) {
-      const updated = savedSlots.filter((_, idx) => idx !== index);
-      setSavedSlots(updated);
-      localStorage.setItem('glowwave_host_slots', JSON.stringify(updated));
-    }
+    showConfirm(
+      confirmDeleteSlot,
+      () => {
+        const updated = savedSlots.filter((_, idx) => idx !== index);
+        setSavedSlots(updated);
+        localStorage.setItem('glowwave_host_slots', JSON.stringify(updated));
+      },
+      activeLocale === 'ko' ? '슬롯 삭제' : 'Delete Slot'
+    );
   };
 
   const handleResetDashboard = () => {
-    if (confirm(t('confirm_reset_all', activeLocale))) {
-      localStorage.removeItem(`glowwave_presets_${roomId}`);
-      localStorage.removeItem('glowwave_host_slots');
-      
-      const loadedPresets = getDefaultsByLocale(activeLocale);
-      setPresets(loadedPresets);
-      setSavedSlots([]);
-      setActivePresetIndex(0);
-      setCurrentBroadcastPreset(loadedPresets[0]);
-      applyPresetToController(loadedPresets[0]);
-      
-      if (isSupabaseConfigured() && supabase) {
-        supabase.from('rooms').update({ current_state: loadedPresets[0] }).eq('id', roomId);
-      }
-      
-      showAlert(t('reset_success', activeLocale));
-      setIsVaultOpen(false);
-    }
+    showConfirm(
+      t('confirm_reset_all', activeLocale),
+      () => {
+        localStorage.removeItem(`glowwave_presets_${roomId}`);
+        localStorage.removeItem('glowwave_host_slots');
+        
+        const loadedPresets = getDefaultsByLocale(activeLocale);
+        setPresets(loadedPresets);
+        setSavedSlots([]);
+        setActivePresetIndex(0);
+        setCurrentBroadcastPreset(loadedPresets[0]);
+        applyPresetToController(loadedPresets[0]);
+        
+        if (isSupabaseConfigured() && supabase) {
+          supabase.from('rooms').update({ current_state: loadedPresets[0] }).eq('id', roomId);
+        }
+        
+        showAlert(t('reset_success', activeLocale));
+        setIsVaultOpen(false);
+      },
+      activeLocale === 'ko' ? '대시보드 초기화' : 'Reset Dashboard'
+    );
   };
 
   const handleLocaleChange = (newLocale: Locale) => {
@@ -2154,9 +2166,13 @@ export default function HostDashboard() {
                   'zh-TW': "確定要結束控制器面板嗎？\n目前即時播放的電子看板不會中斷，但您的控制器連線階段將會結束。",
                   'zh-HK': "確定要結束控制器面板嗎？\n目前即時播放的電子看板不會中斷，但您的控制器連線階段將會結束。",
                 }[activeLocale] || "정말 대시보드(리모컨)에서 나가시겠습니까?\n현재 실시간으로 연출 중인 전광판 송출이 중단되지는 않지만, 대시보드 제어 세션이 닫힙니다.";
-                if (confirm(exitConfirmMsg)) {
-                  router.push('/');
-                }
+                showConfirm(
+                  exitConfirmMsg,
+                  () => {
+                    router.push('/');
+                  },
+                  activeLocale === 'ko' ? '대시보드 종료' : 'Exit Dashboard'
+                );
               }}
               className="p-2 text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all"
               title={
@@ -2547,11 +2563,15 @@ export default function HostDashboard() {
                           'zh-TW': '此範本使用付費方案（Lite 以上）專用字型或特殊效果。是否要升級您的方案？',
                           'zh-HK': '此範本使用付費方案（Lite 以上）專用字型或特殊效果。是否要升級您的方案？',
                         }[activeLocale] || '이 템플릿은 유료 요금제(Lite 이상) 전용 폰트 또는 특수 효과를 사용하고 있습니다. 요금제를 업그레이드하시겠습니까?';
-                        if (confirm(confirmTemplateMsg)) {
-                          setSelectedUpgradeTier(null);
-                          setUpgradeStep('select');
-                          setIsUpgradeModalOpen(true);
-                        }
+                        showConfirm(
+                          confirmTemplateMsg,
+                          () => {
+                            setSelectedUpgradeTier(null);
+                            setUpgradeStep('select');
+                            setIsUpgradeModalOpen(true);
+                          },
+                          activeLocale === 'ko' ? '요금제 업그레이드' : 'Upgrade Plan'
+                        );
                         return;
                       }
 
@@ -2901,11 +2921,15 @@ export default function HostDashboard() {
                               'zh-TW': '自訂背景顏色（調色盤）為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
                               'zh-HK': '自訂背景顏色（調色盤）為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
                             }[activeLocale] || '커스텀 배경 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?';
-                            if (confirm(confirmCustomBgMsg)) {
-                              setSelectedUpgradeTier(null);
-                              setUpgradeStep('select');
-                              setIsUpgradeModalOpen(true);
-                            }
+                            showConfirm(
+                              confirmCustomBgMsg,
+                              () => {
+                                setSelectedUpgradeTier(null);
+                                setUpgradeStep('select');
+                                setIsUpgradeModalOpen(true);
+                              },
+                              activeLocale === 'ko' ? '요금제 업그레이드' : 'Upgrade Plan'
+                            );
                           }}
                         >
                           <span className="text-[7px] font-black text-white bg-violet-600 border border-violet-400 rounded-[2px] px-0.5 scale-90">
@@ -2984,11 +3008,15 @@ export default function HostDashboard() {
                               'zh-TW': '自訂文字顏色（調色盤）為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
                               'zh-HK': '自訂文字顏色（調色盤）為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
                             }[activeLocale] || '커스텀 글자 색상(팔레트)은 유료 요금제(Lite 이상) 전용 기능입니다. 요금제를 업그레이드하시겠습니까?';
-                            if (confirm(confirmCustomTextMsg)) {
-                              setSelectedUpgradeTier(null);
-                              setUpgradeStep('select');
-                              setIsUpgradeModalOpen(true);
-                            }
+                            showConfirm(
+                              confirmCustomTextMsg,
+                              () => {
+                                setSelectedUpgradeTier(null);
+                                setUpgradeStep('select');
+                                setIsUpgradeModalOpen(true);
+                              },
+                              activeLocale === 'ko' ? '요금제 업그레이드' : 'Upgrade Plan'
+                            );
                           }}
                         >
                           <span className="text-[7px] font-black text-white bg-violet-600 border border-violet-400 rounded-[2px] px-0.5 scale-90">
@@ -3185,11 +3213,15 @@ export default function HostDashboard() {
                                 'zh-TW': '特殊效果為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
                                 'zh-HK': '特殊效果為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
                               }[activeLocale] || '특수 효과는 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?';
-                              if (confirm(confirmSpecialEffectMsg)) {
-                                setSelectedUpgradeTier(null);
-                                setUpgradeStep('select');
-                                setIsUpgradeModalOpen(true);
-                              }
+                              showConfirm(
+                                confirmSpecialEffectMsg,
+                                () => {
+                                  setSelectedUpgradeTier(null);
+                                  setUpgradeStep('select');
+                                  setIsUpgradeModalOpen(true);
+                                },
+                                activeLocale === 'ko' ? '요금제 업그레이드' : 'Upgrade Plan'
+                              );
                               return;
                             }
                             setCustomSpecialEffect(item.val as any);
@@ -4335,11 +4367,15 @@ export default function HostDashboard() {
                             'zh-TW': '自由選擇所需文字顏色的自訂顏色功能為付費方案（Lite 以上）專屬權益。是否要升級？',
                             'zh-HK': '自由選擇所需文字顏色的自訂顏色功能為付費方案（Lite 以上）專屬權益。是否要升級？'
                           }[activeLocale] || '커스텀 색상 기능은 유료 요금제 전용 혜택입니다. 업그레이드하시겠습니까?';
-                          if (confirm(confirmMsg)) {
-                            setSelectedUpgradeTier(null);
-                            setUpgradeStep('select');
-                            setIsUpgradeModalOpen(true);
-                          }
+                          showConfirm(
+                            confirmMsg,
+                            () => {
+                              setSelectedUpgradeTier(null);
+                              setUpgradeStep('select');
+                              setIsUpgradeModalOpen(true);
+                            },
+                            activeLocale === 'ko' ? '요금제 업그레이드' : 'Upgrade Plan'
+                          );
                         }}
                         className="h-9 rounded-lg border border-white/10 bg-white/5 text-zinc-500 hover:text-white flex items-center justify-center cursor-pointer transition-all hover:scale-105"
                         title="Locked"
@@ -4428,11 +4464,15 @@ export default function HostDashboard() {
                               'zh-TW': '特殊效果為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
                               'zh-HK': '特殊效果為付費方案（Lite 以上）專用功能。是否要升級您的方案？',
                             }[activeLocale] || '특수 효과는 유료 요금제(Lite 이상) 전용입니다. 요금제를 업그레이드하시겠습니까?';
-                            if (confirm(confirmSpecialEffectMsg)) {
-                              setSelectedUpgradeTier(null);
-                              setUpgradeStep('select');
-                              setIsUpgradeModalOpen(true);
-                            }
+                            showConfirm(
+                              confirmSpecialEffectMsg,
+                              () => {
+                                setSelectedUpgradeTier(null);
+                                setUpgradeStep('select');
+                                setIsUpgradeModalOpen(true);
+                              },
+                              activeLocale === 'ko' ? '요금제 업그레이드' : 'Upgrade Plan'
+                            );
                             return;
                           }
                           setEditingPreset(prev => ({ ...prev!, special_effect: item.val as any }));

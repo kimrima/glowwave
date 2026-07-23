@@ -1022,24 +1022,28 @@ function LocalSignboardContent() {
   };
 
   const handleResetDashboard = () => {
-    if (confirm(t('confirm_reset_all', activeLocale))) {
-      localStorage.removeItem('glowwave_local_presets');
-      localStorage.removeItem('glowwave_local_active_preset');
-      localStorage.removeItem('glowwave_local_slots');
-      
-      const defaultList = getDefaultsByLocale(activeLocale);
-      setPresets(defaultList);
-      setCurrentBroadcastPreset(defaultList[0]);
-      applyPresetToController(defaultList[0]);
-      setActivePresetIndex(0);
-      setSavedSlots([]);
-      
-      localStorage.setItem('glowwave_local_presets', JSON.stringify(defaultList));
-      localStorage.setItem('glowwave_local_active_preset', JSON.stringify(defaultList[0]));
-      localStorage.setItem('glowwave_local_slots', JSON.stringify([]));
-      showAlert(t('reset_success', activeLocale));
-      setIsVaultOpen(false);
-    }
+    showConfirm(
+      t('confirm_reset_all', activeLocale),
+      () => {
+        localStorage.removeItem('glowwave_local_presets');
+        localStorage.removeItem('glowwave_local_active_preset');
+        localStorage.removeItem('glowwave_local_slots');
+        
+        const defaultList = getDefaultsByLocale(activeLocale);
+        setPresets(defaultList);
+        setCurrentBroadcastPreset(defaultList[0]);
+        applyPresetToController(defaultList[0]);
+        setActivePresetIndex(0);
+        setSavedSlots([]);
+        
+        localStorage.setItem('glowwave_local_presets', JSON.stringify(defaultList));
+        localStorage.setItem('glowwave_local_active_preset', JSON.stringify(defaultList[0]));
+        localStorage.setItem('glowwave_local_slots', JSON.stringify([]));
+        showAlert(t('reset_success', activeLocale));
+        setIsVaultOpen(false);
+      },
+      activeLocale === 'ko' ? '대시보드 초기화' : 'Reset Dashboard'
+    );
   };
 
   const handleStartMobileSync = async (isRegenerate = false) => {
@@ -1445,20 +1449,24 @@ function LocalSignboardContent() {
   };
 
   const handleDeleteLocalPreset = (indexToDelete: number) => {
-    if (confirm(t('confirm_delete_preset', activeLocale))) {
-      const updated = presets.filter((_, idx) => idx !== indexToDelete);
-      setPresets(updated);
-      localStorage.setItem('glowwave_local_presets', JSON.stringify(updated));
-      
-      if (updated.length > 0) {
-        setCurrentBroadcastPreset(updated[0]);
-        applyPresetToController(updated[0]);
-        localStorage.setItem('glowwave_local_active_preset', JSON.stringify(updated[0]));
-        setActivePresetIndex(0);
-      }
-      setEditingPresetIndex(null);
-      setEditingPreset(null);
-    }
+    showConfirm(
+      t('confirm_delete_preset', activeLocale),
+      () => {
+        const updated = presets.filter((_, idx) => idx !== indexToDelete);
+        setPresets(updated);
+        localStorage.setItem('glowwave_local_presets', JSON.stringify(updated));
+        
+        if (updated.length > 0) {
+          setCurrentBroadcastPreset(updated[0]);
+          applyPresetToController(updated[0]);
+          localStorage.setItem('glowwave_local_active_preset', JSON.stringify(updated[0]));
+          setActivePresetIndex(0);
+        }
+        setEditingPresetIndex(null);
+        setEditingPreset(null);
+      },
+      activeLocale === 'ko' ? '프리셋 삭제' : 'Delete Preset'
+    );
   };
 
   // Slots Vault Handlers
@@ -1495,11 +1503,15 @@ function LocalSignboardContent() {
 
   const handleDeleteSlotPackage = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(t('confirm_delete_slot', activeLocale))) {
-      const updated = savedSlots.filter((_, idx) => idx !== index);
-      setSavedSlots(updated);
-      localStorage.setItem('glowwave_local_slots', JSON.stringify(updated));
-    }
+    showConfirm(
+      t('confirm_delete_slot', activeLocale),
+      () => {
+        const updated = savedSlots.filter((_, idx) => idx !== index);
+        setSavedSlots(updated);
+        localStorage.setItem('glowwave_local_slots', JSON.stringify(updated));
+      },
+      activeLocale === 'ko' ? '슬롯 삭제' : 'Delete Slot'
+    );
   };
 
   // Wireless Sharing triggers
@@ -4382,6 +4394,31 @@ function LocalSignboardContent() {
             </div>
           )}
         </div>
+      )}
+
+      {customConfirm && (
+        <CustomConfirmModal
+          isOpen={customConfirm.isOpen}
+          title={customConfirm.title}
+          message={customConfirm.message}
+          onConfirm={() => {
+            customConfirm.onConfirm();
+            setCustomConfirm(null);
+          }}
+          onCancel={() => setCustomConfirm(null)}
+          okLabel={activeLocale === 'ko' ? '확인' : 'OK'}
+          cancelLabel={activeLocale === 'ko' ? '취소' : 'Cancel'}
+        />
+      )}
+
+      {customAlert && (
+        <CustomAlertModal
+          isOpen={customAlert.isOpen}
+          title={customAlert.title}
+          message={customAlert.message}
+          onClose={() => setCustomAlert(null)}
+          okLabel={activeLocale === 'ko' ? '확인' : 'OK'}
+        />
       )}
     </div>
   );

@@ -435,12 +435,12 @@ export default function HostSetup() {
       if (!response.ok) {
         if (data.code === 'ACTIVE_FREE_ROOM_EXISTS' || (data.error && data.error.includes('이미 활성화된'))) {
           const localizedDuplicationMsg = {
-            ko: '이미 활성화된 다인용 Free 플랜 방이 존재합니다. 기존 방의 만료 시간(3시간)이 지난 후에 새로운 무료 방을 개설할 수 있습니다.',
-            en: 'An active Multi-device Free plan room already exists. You can create a new free room after the existing one expires (3 hours).',
-            ja: 'アクティブなマルチデバイス無料プランのルームがすでに存在します。既存のルームが満了（3時間）した後に新しい無料ルームを作成できます。',
-            es: 'Ya existe una sala activa del plan gratuito para múltiples dispositivos. Puedes crear una nueva sala gratuita después de que la existente expire (3 horas).',
-            'zh-TW': '已存在使用中的多用戶免費方案房間。您可以在現有房間過期（3 小時）後建立新的免費房間。',
-            'zh-HK': '已存在使用中的多用戶免費方案房間。您可以在現有房間過期（3 小時）後建立新的免費房間。'
+            ko: '이미 활성화된 다인용 Free 플랜 방이 존재합니다. 기존 방의 만료 시간(3시간)이 지난 후에 새로운 무료 방을 개설할 수 있습니다. (혹시 홈 화면 목록에서 방이 보이지 않는다면, 우측 상단의 [구매 복구] 기능을 이용해 이전에 생성된 Free 플랜 방을 찾아 연결할 수 있습니다.)',
+            en: 'An active Multi-device Free plan room already exists. You can create a new free room after the existing one expires (3 hours). (If the room is not visible on your home screen list, you can use the [Restore Purchase] feature at the top-right to find and reconnect to your previously created Free plan room.)',
+            ja: 'アクティブなマルチデバイス無料プラン의ルームがすでに存在します。既存のルームが満了（3時間）した後に新しい無料ルームを作成できます。（もしホーム画面의リストに表示されない場合は、右上の「購入の復元」機能を使用して、以前に作成された無料プラン의ルームを再検索・接続できます。）',
+            es: 'Ya existe una sala activa del plan gratuito para múltiples dispositivos. Puedes crear una nueva sala gratuita después de que la existente expire (3 horas). (Si la sala no es visible en la lista de tu pantalla de inicio, puedes usar la función [Restaurar compra] en la parte superior derecha para buscar y reconectar tu sala gratuita creada anteriormente.)',
+            'zh-TW': '已存在使用中的多用戶免費方案房間。您可以在現有房間過期（3 小時）後建立新的免費房間。（如果主畫面列表未顯示該房間，您可以利用右上角的 [復原購買] 功能，尋找並重新連線至先前建立的免費方案房間。）',
+            'zh-HK': '已存在使用中的多用戶免費方案房間。您可以在現有房間過期（3 小時）後建立新的免費房間。（如果主畫面列表未顯示該房間，您可以利用右上角的 [復原購買] 功能，尋找並重新連線至先前建立的免費方案房間。）'
           }[activeLocale] || data.error;
           throw new Error(localizedDuplicationMsg);
         }
