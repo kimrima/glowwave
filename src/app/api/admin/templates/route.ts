@@ -40,6 +40,19 @@ export async function POST(request: NextRequest) {
     // Set globally in memory cache first for instant runtime updates in Vercel
     MEMORY_TEMPLATES_CACHE = templates;
 
+    // Mutate the imported LOCALIZED_TEMPLATES object in-place to bypass Node/ESM module caching issues
+    try {
+      for (const key of Object.keys(LOCALIZED_TEMPLATES)) {
+        delete (LOCALIZED_TEMPLATES as any)[key];
+      }
+      for (const [lang, categories] of Object.entries(templates)) {
+        (LOCALIZED_TEMPLATES as any)[lang] = categories;
+      }
+      console.log('[Admin Templates POST] Successfully mutated LOCALIZED_TEMPLATES in memory.');
+    } catch (mutationError) {
+      console.error('[Admin Templates POST] In-place mutation failed:', mutationError);
+    }
+
     // Path to templates.ts
     const filePath = path.join(process.cwd(), 'src', 'lib', 'templates.ts');
 
