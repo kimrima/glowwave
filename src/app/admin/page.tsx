@@ -562,6 +562,24 @@ export default function AdminPage() {
     try {
       const res = await fetch('/api/admin/reset-db', { method: 'POST' });
       if (res.ok) {
+        // Force local state wring-out for instant premium visual response
+        setRooms([]);
+        setPayments([]);
+        setAnalytics(null);
+        setCoupons([]);
+        setCsList([]);
+        setActiveOtps([]);
+        setTrendsStats({
+          fontUsage: {},
+          effectUsage: {},
+          textSamples: [],
+          liveHotRooms: [],
+          segmentation: { b2cCount: 0, b2bCount: 0, total: 0 },
+          visualThemes: [],
+          featuresAdoption: { luckyDrawCount: 0, countdownCount: 0, totalActiveStates: 0 },
+          funnel: { step1_landing: 0, step2_create: 0, step3_view_upgrade: 0, step4_payment_success: 0 }
+        });
+        
         alert('데이터베이스가 성공적으로 완전히 초기화되었습니다.');
         await fetchData();
         await fetchAnalytics();

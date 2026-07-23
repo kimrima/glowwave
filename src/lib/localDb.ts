@@ -288,17 +288,20 @@ export const localDb = {
 
   async resetAllData(): Promise<void> {
     if (isSupabaseConfigured() && supabase) {
-      const { error: roomsErr } = await supabase.from('rooms').delete().neq('id', '');
-      if (roomsErr) console.error('[localDb] Supabase reset rooms error:', roomsErr);
-
-      const { error: payErr } = await supabase.from('payments').delete().neq('id', '');
+      // 1. Delete child records first to satisfy foreign key constraints
+      const { error: payErr } = await supabase.from('payments').delete().neq('created_at', '1970-01-01T00:00:00.000Z');
       if (payErr) console.error('[localDb] Supabase reset payments error:', payErr);
 
-      const { error: coupErr } = await supabase.from('coupons').delete().neq('code', '');
-      if (coupErr) console.error('[localDb] Supabase reset coupons error:', coupErr);
-
-      const { error: csErr } = await supabase.from('cs_inquiries').delete().neq('id', 0);
+      const { error: csErr } = await supabase.from('cs_inquiries').delete().neq('created_at', '1970-01-01T00:00:00.000Z');
       if (csErr) console.error('[localDb] Supabase reset cs error:', csErr);
+
+      // 2. Delete parent rooms records
+      const { error: roomsErr } = await supabase.from('rooms').delete().neq('created_at', '1970-01-01T00:00:00.000Z');
+      if (roomsErr) console.error('[localDb] Supabase reset rooms error:', roomsErr);
+
+      // 3. Delete independent coupons records
+      const { error: coupErr } = await supabase.from('coupons').delete().neq('code', 'MUST_NOT_MATCH_ANYTHING_EMPTY_VAL');
+      if (coupErr) console.error('[localDb] Supabase reset coupons error:', coupErr);
     } else {
       this.rooms.clear();
       globalForRoomStore.payments = [];
