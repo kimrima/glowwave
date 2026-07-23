@@ -286,6 +286,39 @@ export const localDb = {
     }
   },
 
+  async resetAllData(): Promise<void> {
+    if (isSupabaseConfigured() && supabase) {
+      const { error: roomsErr } = await supabase.from('rooms').delete().neq('id', '');
+      if (roomsErr) console.error('[localDb] Supabase reset rooms error:', roomsErr);
+
+      const { error: payErr } = await supabase.from('payments').delete().neq('id', '');
+      if (payErr) console.error('[localDb] Supabase reset payments error:', payErr);
+
+      const { error: coupErr } = await supabase.from('coupons').delete().neq('code', '');
+      if (coupErr) console.error('[localDb] Supabase reset coupons error:', coupErr);
+
+      const { error: csErr } = await supabase.from('cs_inquiries').delete().neq('id', 0);
+      if (csErr) console.error('[localDb] Supabase reset cs error:', csErr);
+    } else {
+      this.rooms.clear();
+      globalForRoomStore.payments = [];
+      this.currentStates.clear();
+      globalForRoomStore.coupons = [];
+      globalForRoomStore.funnelLogs = [];
+      globalForRoomStore.csInquiries = [];
+      
+      for (const [roomId, clientList] of this.clients.entries()) {
+        clientList.forEach((client) => {
+          try {
+            client.controller.close();
+          } catch (err) {}
+        });
+      }
+      this.clients.clear();
+      this.saveToDisk();
+    }
+  },
+
   async createRoom(roomId: string, email: string, tier: TierType, hostSessionToken: string, passcode?: string, createdAt?: string): Promise<Room> {
     await this.cleanupExpiredRooms();
     const config = TIER_CONFIGS[tier];

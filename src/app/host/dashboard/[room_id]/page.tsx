@@ -5734,7 +5734,7 @@ export default function HostDashboard() {
                 }[activeLocale] || '승인 중...';
 
                 const getFormattedLocalPrice = (tier: TierType, loc: string, mult: number = 1) => {
-                  if (tier === 'free') {
+                  if (tier === 'free' || tier === 'sync') {
                     return {
                       ko: '무료',
                       en: 'Free',
@@ -5752,7 +5752,7 @@ export default function HostDashboard() {
                     return mult === 0.2 ? `-${krwVal.toLocaleString()}원` : `${krwVal.toLocaleString()}원`;
                   }
                   
-                  const basePrices: Record<Exclude<TierType, 'free'>, { jpy: number; twd: number; hkd: number }> = {
+                  const basePrices: Record<Exclude<TierType, 'free' | 'sync'>, { jpy: number; twd: number; hkd: number }> = {
                     lite: { jpy: 600, twd: 130, hkd: 30 },
                     pro: { jpy: 3000, twd: 650, hkd: 150 },
                     max: { jpy: 6000, twd: 1300, hkd: 300 },
@@ -5762,7 +5762,7 @@ export default function HostDashboard() {
 
                   let localPriceStr = '';
                   const lowerLoc = loc.toLowerCase();
-                  const priceConfig = basePrices[tier];
+                  const priceConfig = basePrices[tier as Exclude<TierType, 'free' | 'sync'>];
                   if (lowerLoc.startsWith('ja')) {
                     const jpyVal = Math.round(priceConfig.jpy * mult);
                     localPriceStr = `${jpyVal.toLocaleString()}円`;

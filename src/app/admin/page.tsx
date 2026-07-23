@@ -396,7 +396,8 @@ export default function AdminPage() {
                 updatedRoom.tier = tier;
                 // Update expires_at locally based on tier changes for countdown calculations
                 let durationMs = 24 * 60 * 60 * 1000;
-                if (tier === 'free') durationMs = 6 * 60 * 60 * 1000;
+                if (tier === 'free') durationMs = 3 * 60 * 60 * 1000;
+                else if (tier === 'sync') durationMs = 1 * 60 * 60 * 1000;
                 else if (tier === 'store') durationMs = 30 * 24 * 60 * 60 * 1000;
                 else if (tier === 'store_annual') durationMs = 365 * 24 * 60 * 60 * 1000;
                 updatedRoom.expires_at = new Date(Date.now() + durationMs).toISOString();
@@ -507,8 +508,8 @@ export default function AdminPage() {
         body: JSON.stringify({ paymentId, payment_status: status })
       });
       if (res.ok) {
-        await fetchData();
-        await fetchAnalytics();
+        setPayments(prev => prev.map(p => p.id === paymentId ? { ...p, payment_status: status } : p));
+        fetchAnalytics();
       }
     } catch (err) {
       console.error('Update payment error:', err);
@@ -527,8 +528,8 @@ export default function AdminPage() {
         body: JSON.stringify({ paymentId })
       });
       if (res.ok) {
-        await fetchData();
-        await fetchAnalytics();
+        setPayments(prev => prev.filter(p => p.id !== paymentId));
+        fetchAnalytics();
       }
     } catch (err) {
       console.error('Delete payment error:', err);
@@ -552,6 +553,26 @@ export default function AdminPage() {
       setCleanupMessage('정리 중 네트워크 오류 발생');
     } finally {
       setTimeout(() => setCleanupMessage(''), 3000);
+    }
+  };
+
+  const handleResetDatabase = async () => {
+    if (!confirm('경고: 정말로 데이터베이스의 모든 세션(방), 결제 내역, 쿠폰 및 CS 문의 내역을 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    setActionLoading('db-reset');
+    try {
+      const res = await fetch('/api/admin/reset-db', { method: 'POST' });
+      if (res.ok) {
+        alert('데이터베이스가 성공적으로 완전히 초기화되었습니다.');
+        await fetchData();
+        await fetchAnalytics();
+      } else {
+        alert('데이터베이스 초기화 실패');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('네트워크 오류로 초기화하지 못했습니다.');
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -720,6 +741,15 @@ export default function AdminPage() {
                   {cleanupMessage}
                 </span>
               )}
+            </button>
+
+            <button 
+              onClick={handleResetDatabase}
+              className="px-2 py-1.5 sm:px-3.5 sm:py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+              disabled={actionLoading === 'db-reset'}
+            >
+              <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">{actionLoading === 'db-reset' ? '초기화 중...' : 'DB 전체 초기화'}</span>
             </button>
 
             <button 
@@ -1348,6 +1378,7 @@ export default function AdminPage() {
                                 const newTier = e.target.value as TierType;
                                 let newMaxParts = room.max_participants;
                                 if (newTier === 'free') newMaxParts = 15;
+                                else if (newTier === 'sync') newMaxParts = 1;
                                 else if (newTier === 'lite') newMaxParts = 60;
                                 else if (newTier === 'pro') newMaxParts = 250;
                                 else if (newTier === 'max') newMaxParts = 800;
@@ -1358,19 +1389,13 @@ export default function AdminPage() {
                               }}
                               className="bg-[#030305] border border-white/10 rounded-lg px-2.5 py-1 text-xs font-bold text-zinc-300 focus:outline-none cursor-pointer focus:border-violet-500"
                             >
-                              {(room.tier === 'store' || room.tier === 'store_annual') ? (
-                                <>
-                                  <option value="store">매장용 월간 (3명)</option>
-                                  <option value="store_annual">매장용 연간 (3명)</option>
-                                </>
-                              ) : (
-                                <>
-                                  <option value="free">Free (15명)</option>
-                                  <option value="lite">Lite (60명)</option>
-                                  <option value="pro">Pro (250명)</option>
-                                  <option value="max">Max (800명)</option>
-                                </>
-                              )}
+                              <option value="free">Free (15명)</option>
+                              <option value="sync">1인체험방 (1명)</option>
+                              <option value="lite">Lite (60명)</option>
+                              <option value="pro">Pro (250명)</option>
+                              <option value="max">Max (800명)</option>
+                              <option value="store">매장용 월간 (3명)</option>
+                              <option value="store_annual">매장용 연간 (3명)</option>
                             </select>
                           </td>
                           <td className="px-6 py-4">

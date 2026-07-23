@@ -20,7 +20,7 @@ export interface Preset {
   locale?: string;
 }
 
-export type TierType = 'free' | 'lite' | 'pro' | 'max' | 'store' | 'store_annual';
+export type TierType = 'free' | 'sync' | 'lite' | 'pro' | 'max' | 'store' | 'store_annual';
 
 export interface TierConfig {
   name: string;
@@ -37,6 +37,13 @@ export const TIER_CONFIGS: Record<TierType, TierConfig> = {
     priceKrw: 0,
     priceUsd: 0.00,
     description: '8명 이하 소규모 이벤트용 무료방 (3시간 제한)',
+  },
+  sync: {
+    name: '1인용 일일무료체험 (Sync)',
+    maxParticipants: 1,
+    priceKrw: 0,
+    priceUsd: 0.00,
+    description: '1인용 일일 실시간 무료 연동 체험방 (1시간 제한)',
   },
   lite: {
     name: '기본형 (Lite)',
@@ -76,7 +83,7 @@ export const TIER_CONFIGS: Record<TierType, TierConfig> = {
 };
 
 export const getLocalizedPrice = (tier: TierType, locale: string): string => {
-  if (tier === 'free') {
+  if (tier === 'free' || tier === 'sync') {
     switch (locale) {
       case 'ko': return '무료';
       case 'ja': return '無料';
@@ -87,7 +94,7 @@ export const getLocalizedPrice = (tier: TierType, locale: string): string => {
     }
   }
 
-  const prices: Record<Exclude<TierType, 'free'>, Record<string, string>> = {
+  const prices: Record<Exclude<TierType, 'free' | 'sync'>, Record<string, string>> = {
     lite: {
       ko: '5,000원',
       en: '$3.99 USD',
@@ -143,6 +150,14 @@ export const getLocalizedTierName = (tier: TierType, locale: string): string => 
       es: 'Plan Gratuito',
       'zh-TW': '免費方案 (Free)',
       'zh-HK': '免費方案 (Free)',
+    },
+    sync: {
+      ko: '일일 무료 체험방 (Sync)',
+      en: 'Daily Free Sync Plan',
+      ja: '一日無料体験ルーム (Sync)',
+      es: 'Plan de Sincronización Gratuito',
+      'zh-TW': '一日免費體驗連動方案 (Sync)',
+      'zh-HK': '一日免費體驗連動方案 (Sync)',
     },
     lite: {
       ko: '기본형 (Lite)',
