@@ -10,18 +10,25 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { paymentId } = body as { paymentId: string };
+    const { paymentId, paymentIds } = body as { paymentId?: string; paymentIds?: string[] };
 
-    if (!paymentId) {
-      return NextResponse.json({ error: 'Missing paymentId' }, { status: 400 });
+    const targets = paymentIds || (paymentId ? [paymentId] : []);
+
+    if (targets.length === 0) {
+      return NextResponse.json({ error: 'Missing paymentId or paymentIds' }, { status: 400 });
     }
 
-    const success = await localDb.deletePayment(paymentId);
-    if (!success) {
-      return NextResponse.json({ error: 'Payment record not found or delete failed' }, { status: 404 });
+    let deletedCount = 0;
+    for (const targetId of targets) {
+      const success = await localDb.deletePayment(targetId);
+      if (success) deletedCount++;
     }
 
-    return NextResponse.json({ success: true });
+    if (deletedCount === 0) {
+      return NextResponse.json({ error: 'No payments were deleted' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, deletedCount });
   } catch (error) {
     console.error('[Admin Delete Payment] Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

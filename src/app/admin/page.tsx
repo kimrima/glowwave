@@ -54,6 +54,20 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [tierFilter, setTierFilter] = useState<string>('all');
+  // Pagination & Multi-Selection States
+  const [roomsCurrentPage, setRoomsCurrentPage] = useState<number>(1);
+  const [paymentsCurrentPage, setPaymentsCurrentPage] = useState<number>(1);
+  const [selectedRooms, setSelectedRooms] = useState<Set<string>>(new Set());
+  const [selectedPayments, setSelectedPayments] = useState<Set<string>>(new Set());
+  const ITEMS_PER_PAGE = 50;
+
+  // Reset pages and selections on filter/query changes to prevent errors
+  useEffect(() => {
+    setRoomsCurrentPage(1);
+    setPaymentsCurrentPage(1);
+    setSelectedRooms(new Set());
+    setSelectedPayments(new Set());
+  }, [searchQuery, statusFilter, tierFilter, activeTab]);
 
   // Coupons Manager State
   const [coupons, setCoupons] = useState<any[]>([]);
@@ -499,6 +513,32 @@ export default function AdminPage() {
     }
   };
 
+  const handleDeleteSelectedRooms = async () => {
+    if (selectedRooms.size === 0) return;
+    if (!confirm(`정말로 선택한 ${selectedRooms.size}개의 방을 일괄 삭제하시겠습니까? 관련 화면들이 즉시 만료됩니다.`)) return;
+    setActionLoading('rooms-bulk-delete');
+    try {
+      const roomIdsArray = Array.from(selectedRooms);
+      const res = await fetch('/api/admin/delete-room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomIds: roomIdsArray })
+      });
+      if (res.ok) {
+        setRooms(prev => prev.filter(r => !selectedRooms.has(r.id)));
+        setSelectedRooms(new Set());
+        fetchAnalytics();
+      } else {
+        alert('선택된 방 일괄 삭제 실패');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('일괄 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleUpdatePayment = async (paymentId: string, status: 'pending' | 'completed' | 'failed') => {
     setActionLoading(`payment-update-${paymentId}`);
     try {
@@ -533,6 +573,32 @@ export default function AdminPage() {
       }
     } catch (err) {
       console.error('Delete payment error:', err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteSelectedPayments = async () => {
+    if (selectedPayments.size === 0) return;
+    if (!confirm(`정말로 선택한 ${selectedPayments.size}개의 결제 이력을 일괄 삭제하시겠습니까?`)) return;
+    setActionLoading('payments-bulk-delete');
+    try {
+      const paymentIdsArray = Array.from(selectedPayments);
+      const res = await fetch('/api/admin/delete-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentIds: paymentIdsArray })
+      });
+      if (res.ok) {
+        setPayments(prev => prev.filter(p => !selectedPayments.has(p.id)));
+        setSelectedPayments(new Set());
+        fetchAnalytics();
+      } else {
+        alert('선택된 결제 이력 일괄 삭제 실패');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('일괄 삭제 중 오류가 발생했습니다.');
     } finally {
       setActionLoading(null);
     }
@@ -759,15 +825,6 @@ export default function AdminPage() {
                   {cleanupMessage}
                 </span>
               )}
-            </button>
-
-            <button 
-              onClick={handleResetDatabase}
-              className="px-2 py-1.5 sm:px-3.5 sm:py-2 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-xl text-[10px] sm:text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
-              disabled={actionLoading === 'db-reset'}
-            >
-              <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden sm:inline">{actionLoading === 'db-reset' ? '초기화 중...' : 'DB 전체 초기화'}</span>
             </button>
 
             <button 
@@ -1285,305 +1342,499 @@ export default function AdminPage() {
         )}
 
         {/* Tab 2: Rooms Sessions Manager */}
-        {activeTab === 'rooms' && (
-          <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl animate-in fade-in duration-200">
-            {loading ? (
-              <div className="p-12 text-center text-zinc-500 text-xs font-bold flex flex-col justify-center items-center">
-                <RefreshCw className="w-6 h-6 text-violet-500 animate-spin mb-3" />
-                세션 정보를 불러오는 중...
-              </div>
-            ) : filteredRooms.length === 0 ? (
-              <div className="p-12 text-center text-zinc-500 text-xs font-bold">
-                조회된 활성 세션(방)이 없습니다.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-white/5 text-zinc-400 font-black tracking-wider uppercase text-[10px] border-b border-white/5">
-                    <tr>
-                      <th className="px-6 py-4">방 ID / 생성 일시</th>
-                      <th className="px-6 py-4">이메일</th>
-                      <th className="px-6 py-4">구독 등급</th>
-                      <th className="px-6 py-4">만료 일시 (남은 시간)</th>
-                      <th className="px-6 py-4">참관인</th>
-                      <th className="px-6 py-4">송출 상태</th>
-                      <th className="px-6 py-4 text-right">제어</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {filteredRooms.map((room) => {
-                      const isMutating = actionLoading?.includes(room.id);
-                      
-                      // Calculate countdown for remaining time
-                      const getRemainingTimeText = (expiresAtStr?: string) => {
-                        if (!expiresAtStr) return 'N/A';
-                        const expiresAt = new Date(expiresAtStr);
-                        const now = new Date();
-                        const diffMs = expiresAt.getTime() - now.getTime();
-                        
-                        if (diffMs <= 0) {
-                          return <span className="text-red-500 font-extrabold text-[9px] bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20">만료됨 (Expired)</span>;
-                        }
-                        
-                        const diffMins = Math.floor(diffMs / 1000 / 60);
-                        const diffHours = Math.floor(diffMins / 60);
-                        const diffDays = Math.floor(diffHours / 24);
-                        
-                        if (diffDays > 0) {
-                          return <span className="text-emerald-400 font-bold">{diffDays}일 {diffHours % 24}시간 남음</span>;
-                        } else if (diffHours > 0) {
-                          return <span className="text-sky-400 font-bold">{diffHours}시간 {diffMins % 60}분 남음</span>;
-                        } else {
-                          return <span className="text-amber-500 font-bold animate-pulse">{diffMins}분 남음</span>;
-                        }
-                      };
+        {activeTab === 'rooms' && (() => {
+          const totalRoomsPages = Math.ceil(filteredRooms.length / ITEMS_PER_PAGE);
+          const paginatedRooms = filteredRooms.slice((roomsCurrentPage - 1) * ITEMS_PER_PAGE, roomsCurrentPage * ITEMS_PER_PAGE);
+          
+          const isAllSelected = paginatedRooms.length > 0 && paginatedRooms.every(r => selectedRooms.has(r.id));
+          
+          const handleSelectAllToggle = () => {
+            const newSelected = new Set(selectedRooms);
+            if (isAllSelected) {
+              paginatedRooms.forEach(r => newSelected.delete(r.id));
+            } else {
+              paginatedRooms.forEach(r => newSelected.add(r.id));
+            }
+            setSelectedRooms(newSelected);
+          };
+          
+          const handleSelectToggle = (roomId: string) => {
+            const newSelected = new Set(selectedRooms);
+            if (newSelected.has(roomId)) {
+              newSelected.delete(roomId);
+            } else {
+              newSelected.add(roomId);
+            }
+            setSelectedRooms(newSelected);
+          };
 
-                      return (
-                        <tr key={room.id} className="hover:bg-white/[0.02] transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="font-extrabold text-white">{room.id}</div>
-                            <div className="text-[10px] text-zinc-500 mt-1 font-bold">
-                              {new Date(room.created_at).toLocaleString()}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 font-bold text-zinc-300">
-                            {editingEmailRoomId === room.id ? (
-                              <div className="flex items-center gap-1.5 max-w-[200px]">
-                                <input
-                                  type="email"
-                                  value={editingEmailValue}
-                                  onChange={(e) => setEditingEmailValue(e.target.value)}
-                                  className="w-full bg-[#030305] border border-white/20 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-violet-500 font-mono"
-                                />
-                                <button
-                                  onClick={async () => {
-                                    if (!editingEmailValue.trim()) return;
-                                    await handleUpdateRoom(room.id, undefined, undefined, undefined, editingEmailValue.trim());
-                                    setEditingEmailRoomId(null);
-                                  }}
-                                  className="px-2 py-1 bg-violet-600 hover:bg-violet-500 text-white rounded text-[10px] cursor-pointer flex-shrink-0"
-                                >
-                                  저장
-                                </button>
-                                <button
-                                  onClick={() => setEditingEmailRoomId(null)}
-                                  className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 rounded text-[10px] cursor-pointer flex-shrink-0"
-                                >
-                                  취소
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-2 group/email">
-                                <span className="font-mono text-xs">{room.email || 'N/A'}</span>
-                                <button
-                                  onClick={() => {
-                                    setEditingEmailRoomId(room.id);
-                                    setEditingEmailValue(room.email || '');
-                                  }}
-                                  className="opacity-0 group-hover/email:opacity-100 flex items-center justify-center p-1 bg-white/5 hover:bg-white/10 rounded cursor-pointer transition-all"
-                                  title="이메일 변경"
-                                >
-                                  <Edit className="w-3 h-3 text-zinc-400" />
-                                </button>
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            <select
-                              value={room.tier}
-                              disabled={isMutating}
-                              onChange={(e) => {
-                                const newTier = e.target.value as TierType;
-                                let newMaxParts = room.max_participants;
-                                if (newTier === 'free') newMaxParts = 15;
-                                else if (newTier === 'sync') newMaxParts = 1;
-                                else if (newTier === 'lite') newMaxParts = 60;
-                                else if (newTier === 'pro') newMaxParts = 250;
-                                else if (newTier === 'max') newMaxParts = 800;
-                                else if (newTier === 'store') newMaxParts = 3;
-                                else if (newTier === 'store_annual') newMaxParts = 3;
-                                
-                                handleUpdateRoom(room.id, newTier, undefined, newMaxParts);
-                              }}
-                              className="bg-[#030305] border border-white/10 rounded-lg px-2.5 py-1 text-xs font-bold text-zinc-300 focus:outline-none cursor-pointer focus:border-violet-500"
-                            >
-                              <option value="free">Free (15명)</option>
-                              <option value="sync">1인체험방 (1명)</option>
-                              <option value="lite">Lite (60명)</option>
-                              <option value="pro">Pro (250명)</option>
-                              <option value="max">Max (800명)</option>
-                              <option value="store">매장용 월간 (3명)</option>
-                              <option value="store_annual">매장용 연간 (3명)</option>
-                            </select>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="font-bold text-zinc-300">
-                              {room.expires_at ? new Date(room.expires_at).toLocaleString() : 'N/A'}
-                            </div>
-                            <div className="flex flex-col gap-1.5 mt-1">
-                              <div className="text-[10px] font-extrabold">
-                                {getRemainingTimeText(room.expires_at)}
-                              </div>
-                              {(() => {
-                                const isUnder3Days = room.expires_at && (new Date(room.expires_at).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000) && (new Date(room.expires_at).getTime() - Date.now() > 0);
-                                if (!isUnder3Days) return null;
-                                return (
-                                  <div className="flex flex-col gap-1 mt-0.5">
-                                    {room.mail_sent_at ? (
-                                      <span className="text-[8px] font-bold text-zinc-500">
-                                        ✉️ 경고 메일 발송됨 ({new Date(room.mail_sent_at).toLocaleDateString()})
-                                      </span>
-                                    ) : (
-                                      <button
-                                        onClick={() => handleSendCSWarningEmail(room.id)}
-                                        disabled={actionLoading === `mail-remind-${room.id}`}
-                                        className="text-[9px] font-black text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 px-2 py-1 rounded-lg w-fit cursor-pointer transition-all disabled:opacity-40"
-                                      >
-                                        {actionLoading === `mail-remind-${room.id}` ? '전송 중...' : 'CS 경고 메일 발송'}
-                                      </button>
-                                    )}
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 font-bold text-zinc-400">
-                            {room.active_clients || 0}명 / {room.max_participants}명
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col gap-1 select-none">
-                              <span 
-                                onClick={() => {
-                                  const newStatus = room.status === 'active' ? 'inactive' : 'active';
-                                  handleUpdateRoom(room.id, undefined, newStatus);
-                                }}
-                                className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase cursor-pointer border transition-all text-center block w-32 ${
-                                  room.status === 'active'
-                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                                    : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
-                                }`}
-                                title="클릭 시 송출 상태를 차단하거나 정상화합니다."
-                              >
-                                {room.status === 'active' ? '● 송출 활성화' : '○ 송출 임시차단'}
-                              </span>
-                              <span className="text-[8px] text-zinc-500 font-bold block">
-                                {room.status === 'active' ? '정상 브로드캐스팅 중' : '사용자 화면 차단됨'}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <button
-                              disabled={isMutating}
-                              onClick={() => handleDeleteRoom(room.id)}
-                              className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg transition-all cursor-pointer"
-                              title="세션 만료/삭제"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </td>
+          return (
+            <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl animate-in fade-in duration-200">
+              {/* Batch Action Bar */}
+              {selectedRooms.size > 0 && (
+                <div className="bg-red-500/10 border-b border-red-500/20 px-6 py-3 flex items-center justify-between animate-in slide-in-from-top duration-200">
+                  <span className="text-xs font-bold text-red-400">
+                    {selectedRooms.size}개의 방 세션이 선택되었습니다.
+                  </span>
+                  <button
+                    onClick={handleDeleteSelectedRooms}
+                    className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-[10px] font-black tracking-wider transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-lg border border-red-500/30"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    선택 항목 일괄 만료/삭제
+                  </button>
+                </div>
+              )}
+
+              {loading ? (
+                <div className="p-12 text-center text-zinc-500 text-xs font-bold flex flex-col justify-center items-center">
+                  <RefreshCw className="w-6 h-6 text-violet-500 animate-spin mb-3" />
+                  세션 정보를 불러오는 중...
+                </div>
+              ) : filteredRooms.length === 0 ? (
+                <div className="p-12 text-center text-zinc-500 text-xs font-bold">
+                  조회된 활성 세션(방)이 없습니다.
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-white/5 text-zinc-400 font-black tracking-wider uppercase text-[10px] border-b border-white/5">
+                        <tr>
+                          <th className="px-4 py-4 w-12 text-center">
+                            <input 
+                              type="checkbox"
+                              checked={isAllSelected}
+                              onChange={handleSelectAllToggle}
+                              className="w-4 h-4 rounded bg-[#030305] border-white/10 text-violet-500 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-violet-600"
+                            />
+                          </th>
+                          <th className="px-6 py-4">방 ID / 생성 일시</th>
+                          <th className="px-6 py-4">이메일</th>
+                          <th className="px-6 py-4">구독 등급</th>
+                          <th className="px-6 py-4">만료 일시 (남은 시간)</th>
+                          <th className="px-6 py-4">참관인</th>
+                          <th className="px-6 py-4">송출 상태</th>
+                          <th className="px-6 py-4 text-right">제어</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {paginatedRooms.map((room) => {
+                          const isMutating = actionLoading?.includes(room.id);
+                          
+                          // Calculate countdown for remaining time
+                          const getRemainingTimeText = (expiresAtStr?: string) => {
+                            if (!expiresAtStr) return 'N/A';
+                            const expiresAt = new Date(expiresAtStr);
+                            const now = new Date();
+                            const diffMs = expiresAt.getTime() - now.getTime();
+                            
+                            if (diffMs <= 0) {
+                              return <span className="text-red-500 font-extrabold text-[9px] bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20">만료됨 (Expired)</span>;
+                            }
+                            
+                            const diffMins = Math.floor(diffMs / 1000 / 60);
+                            const diffHours = Math.floor(diffMins / 60);
+                            const diffDays = Math.floor(diffHours / 24);
+                            
+                            if (diffDays > 0) {
+                              return <span className="text-emerald-400 font-bold">{diffDays}일 {diffHours % 24}시간 남음</span>;
+                            } else if (diffHours > 0) {
+                              return <span className="text-sky-400 font-bold">{diffHours}시간 {diffMins % 60}분 남음</span>;
+                            } else {
+                              return <span className="text-amber-500 font-bold animate-pulse">{diffMins}분 남음</span>;
+                            }
+                          };
+
+                          return (
+                            <tr key={room.id} className="hover:bg-white/[0.02] transition-colors">
+                              <td className="px-4 py-4 text-center">
+                                <input 
+                                  type="checkbox"
+                                  checked={selectedRooms.has(room.id)}
+                                  onChange={() => handleSelectToggle(room.id)}
+                                  className="w-4 h-4 rounded bg-[#030305] border-white/10 text-violet-500 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-violet-600"
+                                />
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="font-extrabold text-white">{room.id}</div>
+                                <div className="text-[10px] text-zinc-500 mt-1 font-bold">
+                                  {new Date(room.created_at).toLocaleString()}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 font-bold text-zinc-300">
+                                {editingEmailRoomId === room.id ? (
+                                  <div className="flex items-center gap-1.5 max-w-[200px]">
+                                    <input
+                                      type="email"
+                                      value={editingEmailValue}
+                                      onChange={(e) => setEditingEmailValue(e.target.value)}
+                                      className="w-full bg-[#030305] border border-white/20 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-violet-500 font-mono"
+                                    />
+                                    <button
+                                      onClick={async () => {
+                                        if (!editingEmailValue.trim()) return;
+                                        await handleUpdateRoom(room.id, undefined, undefined, undefined, editingEmailValue.trim());
+                                        setEditingEmailRoomId(null);
+                                      }}
+                                      className="px-2 py-1 bg-violet-600 hover:bg-violet-500 text-white rounded text-[10px] cursor-pointer flex-shrink-0"
+                                    >
+                                      저장
+                                    </button>
+                                    <button
+                                      onClick={() => setEditingEmailRoomId(null)}
+                                      className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 rounded text-[10px] cursor-pointer flex-shrink-0"
+                                    >
+                                      취소
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2 group/email">
+                                    <span className="font-mono text-xs">{room.email || 'N/A'}</span>
+                                    <button
+                                      onClick={() => {
+                                        setEditingEmailRoomId(room.id);
+                                        setEditingEmailValue(room.email || '');
+                                      }}
+                                      className="opacity-0 group-hover/email:opacity-100 flex items-center justify-center p-1 bg-white/5 hover:bg-white/10 rounded cursor-pointer transition-all"
+                                      title="이메일 변경"
+                                    >
+                                      <Edit className="w-3 h-3 text-zinc-400" />
+                                    </button>
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-6 py-4">
+                                <select
+                                  value={room.tier}
+                                  disabled={isMutating}
+                                  onChange={(e) => {
+                                    const newTier = e.target.value as TierType;
+                                    let newMaxParts = room.max_participants;
+                                    if (newTier === 'free') newMaxParts = 15;
+                                    else if (newTier === 'sync') newMaxParts = 1;
+                                    else if (newTier === 'lite') newMaxParts = 60;
+                                    else if (newTier === 'pro') newMaxParts = 250;
+                                    else if (newTier === 'max') newMaxParts = 800;
+                                    else if (newTier === 'store') newMaxParts = 3;
+                                    else if (newTier === 'store_annual') newMaxParts = 3;
+                                    
+                                    handleUpdateRoom(room.id, newTier, undefined, newMaxParts);
+                                  }}
+                                  className="bg-[#030305] border border-white/10 rounded-lg px-2.5 py-1 text-xs font-bold text-zinc-300 focus:outline-none cursor-pointer focus:border-violet-500"
+                                >
+                                  <option value="free">Free (15명)</option>
+                                  <option value="sync">1인체험방 (1명)</option>
+                                  <option value="lite">Lite (60명)</option>
+                                  <option value="pro">Pro (250명)</option>
+                                  <option value="max">Max (800명)</option>
+                                  <option value="store">매장용 월간 (3명)</option>
+                                  <option value="store_annual">매장용 연간 (3명)</option>
+                                </select>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="font-bold text-zinc-300">
+                                  {room.expires_at ? new Date(room.expires_at).toLocaleString() : 'N/A'}
+                                </div>
+                                <div className="flex flex-col gap-1.5 mt-1">
+                                  <div className="text-[10px] font-extrabold">
+                                    {getRemainingTimeText(room.expires_at)}
+                                  </div>
+                                  {(() => {
+                                    const isUnder3Days = room.expires_at && (new Date(room.expires_at).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000) && (new Date(room.expires_at).getTime() - Date.now() > 0);
+                                    if (!isUnder3Days) return null;
+                                    return (
+                                      <div className="flex flex-col gap-1 mt-0.5">
+                                        {room.mail_sent_at ? (
+                                          <span className="text-[8px] font-bold text-zinc-500">
+                                            ✉️ 경고 메일 발송됨 ({new Date(room.mail_sent_at).toLocaleDateString()})
+                                          </span>
+                                        ) : (
+                                          <button
+                                            onClick={() => handleSendCSWarningEmail(room.id)}
+                                            disabled={actionLoading === `mail-remind-${room.id}`}
+                                            className="text-[9px] font-black text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 px-2 py-1 rounded-lg w-fit cursor-pointer transition-all disabled:opacity-40"
+                                          >
+                                            {actionLoading === `mail-remind-${room.id}` ? '전송 중...' : 'CS 경고 메일 발송'}
+                                          </button>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 font-bold text-zinc-400">
+                                {room.active_clients || 0}명 / {room.max_participants}명
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex flex-col gap-1 select-none">
+                                  <span 
+                                    onClick={() => {
+                                      const newStatus = room.status === 'active' ? 'inactive' : 'active';
+                                      handleUpdateRoom(room.id, undefined, newStatus);
+                                    }}
+                                    className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase cursor-pointer border transition-all text-center block w-32 ${
+                                      room.status === 'active'
+                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+                                        : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
+                                    }`}
+                                    title="클릭 시 송출 상태를 차단하거나 정상화합니다."
+                                  >
+                                    {room.status === 'active' ? '● 송출 활성화' : '○ 송출 임시차단'}
+                                  </span>
+                                  <span className="text-[8px] text-zinc-500 font-bold block">
+                                    {room.status === 'active' ? '정상 브로드캐스팅 중' : '사용자 화면 차단됨'}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <button
+                                  disabled={isMutating}
+                                  onClick={() => handleDeleteRoom(room.id)}
+                                  className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg transition-all cursor-pointer"
+                                  title="세션 만료/삭제"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {totalRoomsPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 p-6 border-t border-white/5 bg-white/[0.01]">
+                      <button
+                        disabled={roomsCurrentPage === 1}
+                        onClick={() => setRoomsCurrentPage(p => Math.max(p - 1, 1))}
+                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold disabled:opacity-30 disabled:hover:bg-white/5 transition-all cursor-pointer"
+                      >
+                        &lt; 이전
+                      </button>
+                      {Array.from({ length: totalRoomsPages }).map((_, idx) => {
+                        const pNum = idx + 1;
+                        return (
+                          <button
+                            key={pNum}
+                            onClick={() => setRoomsCurrentPage(pNum)}
+                            className={`w-8 h-8 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
+                              roomsCurrentPage === pNum
+                                ? 'bg-violet-600 text-white shadow-lg'
+                                : 'bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white'
+                            }`}
+                          >
+                            {pNum}
+                          </button>
+                        );
+                      })}
+                      <button
+                        disabled={roomsCurrentPage === totalRoomsPages}
+                        onClick={() => setRoomsCurrentPage(p => Math.min(p + 1, totalRoomsPages))}
+                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold disabled:opacity-30 disabled:hover:bg-white/5 transition-all cursor-pointer"
+                      >
+                        다음 &gt;
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Tab 3: Payments & Financial Logs */}
-        {activeTab === 'payments' && (
-          <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl animate-in fade-in duration-200">
-            {loading ? (
-              <div className="p-12 text-center text-zinc-500 text-xs font-bold flex flex-col justify-center items-center">
-                <RefreshCw className="w-6 h-6 text-violet-500 animate-spin mb-3" />
-                장부 내역을 조회 중...
-              </div>
-            ) : filteredPayments.length === 0 ? (
-              <div className="p-12 text-center text-zinc-500 text-xs font-bold">
-                등록된 결제 거래 내역이 없습니다.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-white/5 text-zinc-400 font-black tracking-wider uppercase text-[10px] border-b border-white/5">
-                    <tr>
-                      <th className="px-6 py-4">결제 ID / 승인 시각</th>
-                      <th className="px-6 py-4">방 ID</th>
-                      <th className="px-6 py-4">이메일</th>
-                      <th className="px-6 py-4">구매 등급</th>
-                      <th className="px-6 py-4">결제액</th>
-                      <th className="px-6 py-4">진행 상태</th>
-                      <th className="px-6 py-4 text-right">삭제</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {filteredPayments.map((pay) => {
-                      const isMutating = actionLoading?.includes(pay.id);
-                      return (
-                        <tr key={pay.id} className="hover:bg-white/[0.02] transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="font-extrabold text-zinc-300 text-[11px] truncate max-w-[120px]">{pay.id}</div>
-                            <div className="text-[10px] text-zinc-500 mt-1 font-bold">
-                              {new Date(pay.created_at).toLocaleString()}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 font-extrabold text-white">
-                            {pay.room_id}
-                          </td>
-                          <td className="px-6 py-4 font-bold text-zinc-400">
-                            {pay.email || 'N/A'}
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className="px-2 py-0.5 rounded text-[10px] bg-white/5 border border-white/10 font-bold uppercase text-zinc-300">
-                              {pay.tier}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 font-extrabold text-white">
-                            {pay.amount.toLocaleString()}원
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col gap-1">
-                              <select
-                                value={pay.payment_status}
-                                disabled={isMutating}
-                                onChange={(e) => handleUpdatePayment(pay.id, e.target.value as any)}
-                                className={`px-2 py-1 rounded-lg text-[9px] font-black border bg-[#030305] focus:outline-none cursor-pointer ${
-                                  pay.payment_status === 'completed'
-                                    ? 'text-emerald-400 border-emerald-500/20'
-                                    : pay.payment_status === 'failed'
-                                    ? 'text-red-400 border-red-500/20'
-                                    : 'text-amber-400 border-amber-500/20'
-                                }`}
-                              >
-                                <option value="pending" className="text-amber-400">🕒 입금 대기 (Pending)</option>
-                                <option value="completed" className="text-emerald-400">✅ 결제 완료 승인 (Completed)</option>
-                                <option value="failed" className="text-red-400">❌ 결제 실패 거절 (Failed)</option>
-                              </select>
-                              <span className="text-[8px] text-zinc-500 font-bold block">
-                                {pay.payment_status === 'completed' ? '정상 등급 활성화' : (pay.payment_status === 'failed' ? '입금 거절/주문 취소' : '대기 상태')}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <button
-                              disabled={isMutating}
-                              onClick={() => handleDeletePayment(pay.id)}
-                              className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg transition-all cursor-pointer"
-                              title="기록 소거"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </td>
+        {activeTab === 'payments' && (() => {
+          const totalPaymentsPages = Math.ceil(filteredPayments.length / ITEMS_PER_PAGE);
+          const paginatedPayments = filteredPayments.slice((paymentsCurrentPage - 1) * ITEMS_PER_PAGE, paymentsCurrentPage * ITEMS_PER_PAGE);
+          
+          const isAllSelected = paginatedPayments.length > 0 && paginatedPayments.every(p => selectedPayments.has(p.id));
+          
+          const handleSelectAllToggle = () => {
+            const newSelected = new Set(selectedPayments);
+            if (isAllSelected) {
+              paginatedPayments.forEach(p => newSelected.delete(p.id));
+            } else {
+              paginatedPayments.forEach(p => newSelected.add(p.id));
+            }
+            setSelectedPayments(newSelected);
+          };
+          
+          const handleSelectToggle = (paymentId: string) => {
+            const newSelected = new Set(selectedPayments);
+            if (newSelected.has(paymentId)) {
+              newSelected.delete(paymentId);
+            } else {
+              newSelected.add(paymentId);
+            }
+            setSelectedPayments(newSelected);
+          };
+
+          return (
+            <div className="bg-[#0c0c14]/80 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl animate-in fade-in duration-200">
+              {/* Batch Action Bar */}
+              {selectedPayments.size > 0 && (
+                <div className="bg-red-500/10 border-b border-red-500/20 px-6 py-3 flex items-center justify-between animate-in slide-in-from-top duration-200">
+                  <span className="text-xs font-bold text-red-400">
+                    {selectedPayments.size}개의 결제 장부 기록이 선택되었습니다.
+                  </span>
+                  <button
+                    onClick={handleDeleteSelectedPayments}
+                    className="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-[10px] font-black tracking-wider transition-all flex items-center gap-1 cursor-pointer active:scale-95 shadow-lg border border-red-500/30"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    선택 항목 일괄 삭제
+                  </button>
+                </div>
+              )}
+
+              {loading ? (
+                <div className="p-12 text-center text-zinc-500 text-xs font-bold flex flex-col justify-center items-center">
+                  <RefreshCw className="w-6 h-6 text-violet-500 animate-spin mb-3" />
+                  장부 내역을 조회 중...
+                </div>
+              ) : filteredPayments.length === 0 ? (
+                <div className="p-12 text-center text-zinc-500 text-xs font-bold">
+                  등록된 결제 거래 내역이 없습니다.
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-white/5 text-zinc-400 font-black tracking-wider uppercase text-[10px] border-b border-white/5">
+                        <tr>
+                          <th className="px-4 py-4 w-12 text-center">
+                            <input 
+                              type="checkbox"
+                              checked={isAllSelected}
+                              onChange={handleSelectAllToggle}
+                              className="w-4 h-4 rounded bg-[#030305] border-white/10 text-violet-500 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-violet-600"
+                            />
+                          </th>
+                          <th className="px-6 py-4">결제 ID / 승인 시각</th>
+                          <th className="px-6 py-4">방 ID</th>
+                          <th className="px-6 py-4">이메일</th>
+                          <th className="px-6 py-4">구매 등급</th>
+                          <th className="px-6 py-4">결제액</th>
+                          <th className="px-6 py-4">진행 상태</th>
+                          <th className="px-6 py-4 text-right">삭제</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {paginatedPayments.map((pay) => {
+                          const isMutating = actionLoading?.includes(pay.id);
+                          return (
+                            <tr key={pay.id} className="hover:bg-white/[0.02] transition-colors">
+                              <td className="px-4 py-4 text-center">
+                                <input 
+                                  type="checkbox"
+                                  checked={selectedPayments.has(pay.id)}
+                                  onChange={() => handleSelectToggle(pay.id)}
+                                  className="w-4 h-4 rounded bg-[#030305] border-white/10 text-violet-500 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-violet-600"
+                                />
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="font-extrabold text-zinc-300 text-[11px] truncate max-w-[120px]">{pay.id}</div>
+                                <div className="text-[10px] text-zinc-500 mt-1 font-bold">
+                                  {new Date(pay.created_at).toLocaleString()}
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 font-extrabold text-white">
+                                {pay.room_id}
+                              </td>
+                              <td className="px-6 py-4 font-bold text-zinc-400">
+                                {pay.email || 'N/A'}
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="px-2 py-0.5 rounded text-[10px] bg-white/5 border border-white/10 font-bold uppercase text-zinc-300">
+                                  {pay.tier}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 font-extrabold text-white">
+                                {pay.amount.toLocaleString()}원
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex flex-col gap-1">
+                                  <select
+                                    value={pay.payment_status}
+                                    disabled={isMutating}
+                                    onChange={(e) => handleUpdatePayment(pay.id, e.target.value as any)}
+                                    className={`px-2 py-1 rounded-lg text-[9px] font-black border bg-[#030305] focus:outline-none cursor-pointer ${
+                                      pay.payment_status === 'completed'
+                                        ? 'text-emerald-400 border-emerald-500/20'
+                                        : pay.payment_status === 'failed'
+                                        ? 'text-red-400 border-red-500/20'
+                                        : 'text-amber-400 border-amber-500/20'
+                                    }`}
+                                  >
+                                    <option value="pending" className="text-amber-400">🕒 입금 대기 (Pending)</option>
+                                    <option value="completed" className="text-emerald-400">✅ 결제 완료 승인 (Completed)</option>
+                                    <option value="failed" className="text-red-400">❌ 결제 실패 거절 (Failed)</option>
+                                  </select>
+                                  <span className="text-[8px] text-zinc-500 font-bold block">
+                                    {pay.payment_status === 'completed' ? '정상 등급 활성화' : (pay.payment_status === 'failed' ? '입금 거절/주문 취소' : '대기 상태')}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <button
+                                  disabled={isMutating}
+                                  onClick={() => handleDeletePayment(pay.id)}
+                                  className="p-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg transition-all cursor-pointer"
+                                  title="기록 소거"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {totalPaymentsPages > 1 && (
+                    <div className="flex justify-center items-center gap-2 p-6 border-t border-white/5 bg-white/[0.01]">
+                      <button
+                        disabled={paymentsCurrentPage === 1}
+                        onClick={() => setPaymentsCurrentPage(p => Math.max(p - 1, 1))}
+                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold disabled:opacity-30 disabled:hover:bg-white/5 transition-all cursor-pointer"
+                      >
+                        &lt; 이전
+                      </button>
+                      {Array.from({ length: totalPaymentsPages }).map((_, idx) => {
+                        const pNum = idx + 1;
+                        return (
+                          <button
+                            key={pNum}
+                            onClick={() => setPaymentsCurrentPage(pNum)}
+                            className={`w-8 h-8 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
+                              paymentsCurrentPage === pNum
+                                ? 'bg-violet-600 text-white shadow-lg'
+                                : 'bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white'
+                            }`}
+                          >
+                            {pNum}
+                          </button>
+                        );
+                      })}
+                      <button
+                        disabled={paymentsCurrentPage === totalPaymentsPages}
+                        onClick={() => setPaymentsCurrentPage(p => Math.min(p + 1, totalPaymentsPages))}
+                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold disabled:opacity-30 disabled:hover:bg-white/5 transition-all cursor-pointer"
+                      >
+                        다음 &gt;
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Tab 4: System Base Templates Manager (CRUD) */}
         {activeTab === 'templates' && localizedTemplates && (
