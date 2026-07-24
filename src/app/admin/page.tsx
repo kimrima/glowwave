@@ -364,20 +364,30 @@ export default function AdminPage() {
 
   const handleSaveTemplates = async (updatedTemplates: any) => {
     setActionLoading('templates-save');
+    console.log('[GlowWave Admin] ===================================================');
+    console.log('[GlowWave Admin] 🚀 템플릿 변경사항 배포 시작 (POST /api/admin/templates)');
+    console.log('[GlowWave Admin] 전송할 템플릿 데이터 구조:', updatedTemplates);
+    
     try {
       const res = await fetch('/api/admin/templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ templates: updatedTemplates })
       });
+      
       if (res.ok) {
+        const data = await res.json();
         setLocalizedTemplates(updatedTemplates);
-        alert('기본 템플릿 변경사항이 시스템 디스크에 성공적으로 영구 반영되었습니다!');
+        console.log('[GlowWave Admin] ✅ 템플릿 즉시 배포 성공! 서버 응답:', data);
+        console.log('[GlowWave Admin] 메모리 캐시 및 파일 동기화가 실시간 완료되었습니다.');
+        console.log('[GlowWave Admin] ===================================================');
+        alert('기본 템플릿 변경사항이 시스템 디스크 및 실시간 메모리 캐시에 성공적으로 배포되었습니다!');
       } else {
-        alert('템플릿 저장 실패');
+        console.error('[GlowWave Admin] ❌ 템플릿 배포 실패. 응답 상태코드:', res.status);
+        alert('템플릿 저장 실패 (서버가 오류를 반환했습니다.)');
       }
     } catch (err) {
-      console.error('Save templates error:', err);
+      console.error('[GlowWave Admin] 💥 템플릿 배포 중 네트워크/치명적 오류 발생:', err);
       alert('템플릿 저장 중 네트워크 오류 발생');
     } finally {
       setActionLoading(null);

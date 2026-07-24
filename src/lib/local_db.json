@@ -107,76 +107,6 @@
       "max_participants": 60,
       "current_participants": 0,
       "created_at": "2026-07-22T12:50:13.523Z"
-    },
-    "2LTESH": {
-      "id": "2LTESH",
-      "host_session_token": "57018b2f-4857-42a3-bed9-177af52a39c7",
-      "email": "test@example.com",
-      "tier": "lite",
-      "status": "active",
-      "max_participants": 60,
-      "current_participants": 0,
-      "created_at": "2026-07-22T12:52:05.762Z"
-    },
-    "SYNC-TY5I": {
-      "id": "SYNC-TY5I",
-      "host_session_token": "27d4c683-8a5f-4879-ba13-55b5cc2ae1aa",
-      "email": "anonymous-local@glowwave.app",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 1,
-      "current_participants": 0,
-      "created_at": "2026-07-22T12:56:08.262Z"
-    },
-    "B7NBQ4": {
-      "id": "B7NBQ4",
-      "host_session_token": "cd96b311-ca1a-4fa9-9043-ad31fb2efe42",
-      "email": "test@example.com",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 15,
-      "current_participants": 0,
-      "created_at": "2026-07-22T12:57:58.828Z"
-    },
-    "SYNC-LWMQ": {
-      "id": "SYNC-LWMQ",
-      "host_session_token": "bfceac29-f357-46a6-9010-c5f8431aa67b",
-      "email": "anonymous-local@glowwave.app",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 1,
-      "current_participants": 0,
-      "created_at": "2026-07-22T12:58:10.599Z"
-    },
-    "SYNC-KCFU": {
-      "id": "SYNC-KCFU",
-      "host_session_token": "db2478b1-0f29-4fc3-b699-9243559cf30d",
-      "email": "anonymous-local@glowwave.app",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 1,
-      "current_participants": 0,
-      "created_at": "2026-07-22T13:26:45.097Z"
-    },
-    "SYNC-0HJ1": {
-      "id": "SYNC-0HJ1",
-      "host_session_token": "f207fd64-4b72-4515-b64c-951960f7d80c",
-      "email": "anonymous-local@glowwave.app",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 1,
-      "current_participants": 0,
-      "created_at": "2026-07-22T13:27:00.272Z"
-    },
-    "Q2HRPV": {
-      "id": "Q2HRPV",
-      "host_session_token": "cf98dfca-1bd0-41c4-bbaf-d10092f474f4",
-      "email": "test@example.com",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 15,
-      "current_participants": 0,
-      "created_at": "2026-07-22T13:29:38.825Z"
     }
   },
   "payments": [
@@ -515,73 +445,6 @@
       "text_color": "#FFFFFF",
       "effect": "none",
       "speed": 1000
-    },
-    "2LTESH": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
-    },
-    "SYNC-TY5I": {
-      "bg_color": "#EF4444",
-      "text": "GW",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000,
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "trigger_id": "1784724563243"
-    },
-    "B7NBQ4": {
-      "bg_color": "#0B0B0F",
-      "text": "GlowWave",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000
-    },
-    "SYNC-LWMQ": {
-      "bg_color": "#EF4444",
-      "text": "GW",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000,
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "trigger_id": "1784724563243"
-    },
-    "SYNC-KCFU": {
-      "bg_color": "#EF4444",
-      "text": "GW",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000,
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "trigger_id": "1784724563243"
-    },
-    "SYNC-0HJ1": {
-      "bg_color": "#312E81",
-      "text": "빛나는 너를 응원해 ✨",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000,
-      "font_family": "sans-thick",
-      "font_size": 100,
-      "special_effect": "stars",
-      "locale": "ko",
-      "trigger_id": "1784726882363"
-    },
-    "Q2HRPV": {
-      "bg_color": "#000000",
-      "text": "네가 내 가수라서 자랑스러워",
-      "text_color": "#FDE047",
-      "effect": "marquee",
-      "speed": 14293,
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "special_effect": "none",
-      "trigger_id": "1784726968246"
     }
   },
   "coupons": [],
@@ -901,6 +764,22 @@
     {
       "step": "step2_create",
       "created_at": "2026-07-22T13:28:56.750Z"
+    },
+    {
+      "step": "step1_landing",
+      "created_at": "2026-07-23T17:25:52.189Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-23T17:26:00.802Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-23T17:26:00.818Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-23T17:27:24.505Z"
     }
   ],
   "csInquiries": [
