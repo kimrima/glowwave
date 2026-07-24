@@ -41,7 +41,9 @@ const recoveryTranslations = {
     btn_dashboard: '대시보드 리모컨',
     no_room: '입력하신 이메일로 생성된 활성 방을 찾을 수 없습니다.',
     error_network: '네트워크 통신 오류가 발생했습니다.',
-    error_invalid_otp: '인증코드가 올바르지 않거나 만료되었습니다. 다시 시도해 주세요.'
+    error_invalid_otp: '인증코드가 올바르지 않거나 만료되었습니다. 다시 시도해 주세요.',
+    btn_back: '이전으로',
+    created_at: '생성일'
   },
   en: {
     nav_main: 'Back to Home',
@@ -61,7 +63,9 @@ const recoveryTranslations = {
     btn_dashboard: 'Dashboard Remote',
     no_room: 'No active rooms were found under this email address.',
     error_network: 'A network communication error occurred.',
-    error_invalid_otp: 'The recovery code is incorrect or has expired. Please try again.'
+    error_invalid_otp: 'The recovery code is incorrect or has expired. Please try again.',
+    btn_back: 'Back',
+    created_at: 'Created At'
   },
   ja: {
     nav_main: 'メインに戻る',
@@ -81,7 +85,9 @@ const recoveryTranslations = {
     btn_dashboard: 'ダッシュボード',
     no_room: '入力されたメールアドレスで作成されたアクティブなルームが見つかりません。',
     error_network: 'ネットワーク通信エラーが発生しました。',
-    error_invalid_otp: '認証番号が正しくないか、有効期限が切れています。もう一度お試しください。'
+    error_invalid_otp: '認証番号が正しくないか、有効期限が切れています。もう一度お試しください。',
+    btn_back: '戻る',
+    created_at: '作成日'
   },
   es: {
     nav_main: 'Volver al Inicio',
@@ -101,7 +107,9 @@ const recoveryTranslations = {
     btn_dashboard: 'Panel Remoto',
     no_room: 'No se encontraron salas activas con esta dirección de correo electrónico.',
     error_network: 'Ocurrió un error de comunicación de red.',
-    error_invalid_otp: 'El código de recuperación es incorrecto o ha caducado. Por favor, inténtelo de nuevo.'
+    error_invalid_otp: 'El código de recuperación es incorrecto o ha caducado. Por favor, inténtelo de nuevo.',
+    btn_back: 'Atrás',
+    created_at: 'Creado el'
   },
   'zh-TW': {
     nav_main: '返回首頁',
@@ -121,7 +129,9 @@ const recoveryTranslations = {
     btn_dashboard: '控制面板',
     no_room: '找不到使用此電子郵件地址建立的啟用中房間。',
     error_network: '發生網路通訊錯誤。',
-    error_invalid_otp: '驗證碼錯誤或已過期。請重試。'
+    error_invalid_otp: '驗證碼錯誤或已過期。請重試。',
+    btn_back: '返回',
+    created_at: '建立時間'
   },
   'zh-HK': {
     nav_main: '返回首頁',
@@ -141,7 +151,9 @@ const recoveryTranslations = {
     btn_dashboard: '控制面板',
     no_room: '找不到使用此電子郵件地址建立的啟用中房間。',
     error_network: '發生網路通訊錯誤。',
-    error_invalid_otp: '驗證碼錯誤或已過期。請重試。'
+    error_invalid_otp: '驗證碼錯誤或已過期。請重試。',
+    btn_back: '返回',
+    created_at: '建立時間'
   }
 };
 
@@ -155,12 +167,10 @@ export default function RecoveryPage() {
   const [successMessage, setSuccessMessage] = useState('');
   const [recoveredRooms, setRecoveredRooms] = useState<RecoveredRoom[]>([]);
 
-  // Automatically detect browser locale
+  // Automatically detect browser locale or saved user preference
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname;
-      const path = window.location.pathname;
-      // Simple locale checking logic
+      // 1. Check URL query string
       const searchParams = new URLSearchParams(window.location.search);
       const queryLang = searchParams.get('lang');
       if (queryLang && ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(queryLang)) {
@@ -168,6 +178,16 @@ export default function RecoveryPage() {
         return;
       }
       
+      // 2. Check localStorage saved preferences first
+      const savedLocale = localStorage.getItem('glowwave_local_locale') || 
+                          localStorage.getItem('glowwave_host_locale') || 
+                          localStorage.getItem('glowwave_home_locale');
+      if (savedLocale && ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(savedLocale)) {
+        setActiveLocale(savedLocale as any);
+        return;
+      }
+      
+      // 3. Fallback to navigator settings
       const lang = navigator.language.toLowerCase();
       if (lang.startsWith('ko')) setActiveLocale('ko');
       else if (lang.startsWith('ja')) setActiveLocale('ja');
@@ -355,7 +375,7 @@ export default function RecoveryPage() {
                   onClick={() => setCheckoutStep('email')}
                   className="flex-1 py-3 rounded-xl bg-white/5 text-zinc-400 font-bold hover:bg-white/10 hover:text-white transition-all text-xs"
                 >
-                  {activeLocale === 'ko' ? '이전으로' : 'Back'}
+                  {loc.btn_back}
                 </button>
                 <button
                   type="submit"
@@ -397,7 +417,7 @@ export default function RecoveryPage() {
                         </span>
                       </div>
                       <div className="text-[10px] text-zinc-500 mt-1">
-                        생성일: {new Date(room.created_at).toLocaleString()}
+                        {loc.created_at}: {new Date(room.created_at).toLocaleString()}
                       </div>
                     </div>
                     
