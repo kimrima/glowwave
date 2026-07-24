@@ -146,6 +146,27 @@ export default function HostDashboard() {
   
   // Active Locale State
   const [activeLocale, setActiveLocale] = useState<Locale>('ko');
+  
+  // Dynamic system templates cache to bypass compile caching on client-side
+  const [systemTemplates, setSystemTemplates] = useState<Record<Locale, any>>(LOCALIZED_TEMPLATES);
+
+  useEffect(() => {
+    const fetchLiveTemplates = async () => {
+      try {
+        const res = await fetch('/api/admin/templates');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.templates) {
+            setSystemTemplates(data.templates);
+            console.log('[GlowWave Host] Loaded fresh template presets from live API.');
+          }
+        }
+      } catch (err) {
+        console.warn('[GlowWave Host] Live templates fetch error, using statically bundled fallback:', err);
+      }
+    };
+    fetchLiveTemplates();
+  }, []);
   const maxTextLength = (activeLocale === 'en' || activeLocale === 'es') ? 20 : 15;
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -2524,7 +2545,7 @@ export default function HostDashboard() {
               >
                 <span>{t('my_presets', activeLocale)}</span>
               </button>
-              {(LOCALIZED_TEMPLATES[activeLocale] || LOCALIZED_TEMPLATES['ko']).map((cat) => (
+              {(systemTemplates[activeLocale] || systemTemplates['ko']).map((cat: any) => (
                 <button
                   type="button"
                   key={cat.id}
@@ -2541,7 +2562,7 @@ export default function HostDashboard() {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {(activeCategory === 'custom' ? presets : ((LOCALIZED_TEMPLATES[activeLocale] || LOCALIZED_TEMPLATES['ko']).find(c => c.id === activeCategory)?.presets || [])).map((preset, index) => {
+              {(activeCategory === 'custom' ? presets : ((systemTemplates[activeLocale] || systemTemplates['ko']).find((c: any) => c.id === activeCategory)?.presets || [])).map((preset: any, index: number) => {
                 const isActive = currentBroadcastPreset.text === preset.text &&
                                  currentBroadcastPreset.bg_color === preset.bg_color &&
                                  currentBroadcastPreset.font_family === preset.font_family &&

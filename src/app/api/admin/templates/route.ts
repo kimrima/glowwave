@@ -9,11 +9,7 @@ let MEMORY_TEMPLATES_CACHE: any = null;
 
 export async function GET(request: NextRequest) {
   try {
-    const token = getAdminTokenFromRequest(request);
-    if (!verifyAdminToken(token)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    // GET templates list is public for clients to receive live preset updates instantly
     return NextResponse.json({
       success: true,
       templates: MEMORY_TEMPLATES_CACHE || LOCALIZED_TEMPLATES
