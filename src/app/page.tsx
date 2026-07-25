@@ -420,13 +420,24 @@ export default function Home() {
     }));
   };
 
+  const colorNames: Record<Locale, Record<string, string>> = {
+    ko: { purple: '보라색', red: '빨간색', blue: '파란색', green: '초록색', orange: '주황색', pink: '분홍색' },
+    en: { purple: 'Purple', red: 'Red', blue: 'Blue', green: 'Green', orange: 'Orange', pink: 'Pink' },
+    ja: { purple: '紫', red: '赤', blue: '青', green: '緑', orange: 'オレンジ', pink: 'ピンク' },
+    es: { purple: 'Morado', red: 'Rojo', blue: 'Azul', green: 'Verde', orange: 'Naranja', pink: 'Rosa' },
+    'zh-TW': { purple: '紫色', red: '紅色', blue: '藍色', green: '綠色', orange: '橘色', pink: '粉紅色' },
+    'zh-HK': { purple: '紫色', red: '紅色', blue: '藍色', green: '綠色', orange: '橙色', pink: '粉紅色' }
+  };
+
+  const currentNames = colorNames[activeLocale] || colorNames.ko;
+
   const colors = [
-    { name: '보라색', hex: '#8B5CF6' },
-    { name: '빨간색', hex: '#EF4444' },
-    { name: '파란색', hex: '#3B82F6' },
-    { name: '초록색', hex: '#10B981' },
-    { name: '주황색', hex: '#F59E0B' },
-    { name: '분홍색', hex: '#EC4899' },
+    { name: currentNames.purple, hex: '#8B5CF6' },
+    { name: currentNames.red, hex: '#EF4444' },
+    { name: currentNames.blue, hex: '#3B82F6' },
+    { name: currentNames.green, hex: '#10B981' },
+    { name: currentNames.orange, hex: '#F59E0B' },
+    { name: currentNames.pink, hex: '#EC4899' },
   ];
 
   return (
