@@ -1241,12 +1241,18 @@ function LocalSignboardContent() {
 
   const handleRecoverSyncRooms = async () => {
     const email = syncRecoveryEmail.trim().toLowerCase();
+    
+    const trans = {
+      ko: { emptyEmail: '이메일 주소를 입력해 주세요.', noRoom: '활성화된 방을 찾지 못했습니다.', sent: '입력하신 이메일로 6자리 일회용 보안코드(OTP) 메일이 발송되었습니다.', err: '조회 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.' },
+      en: { emptyEmail: 'Please enter your email address.', noRoom: 'No active rooms found for this email.', sent: 'A 6-digit one-time password (OTP) mail has been sent to your email.', err: 'An error occurred during lookup. Please try again.' },
+      ja: { emptyEmail: 'メールアドレスを入力してください。', noRoom: 'アクティブなルームが見つかりませんでした。', sent: '入力されたメールアドレス宛に6桁のワンタイムセキュリティコード(OTP)가送信されました。', err: '照회中にエラーが発生しました。しばらくしてからもう一度お試しください。' },
+      es: { emptyEmail: 'Por favor, introduce tu dirección de correo electrónico.', noRoom: 'No se encontraron salas activas para este correo electrónico.', sent: 'Se ha enviado un correo con un código de seguridad de 6 dígitos (OTP) a su correo electrónico.', err: 'Ocurrió un error durante la búsqueda. Por favor, inténtelo de nuevo.' },
+      'zh-TW': { emptyEmail: '請輸入電子郵件地址。', noRoom: '找不到此電子郵件地址的啟用中房間。', sent: '已向您的電子郵件發送了6位數一次性安全驗證碼(OTP)。', err: '查詢時發生錯誤。請稍後重試。' },
+      'zh-HK': { emptyEmail: '請輸入電子郵件地址。', noRoom: '找不到此電子郵件地址的啟用中房間。', sent: '已向您的電子郵件發送了6位數一次性安全驗證碼(OTP)。', err: '查詢時發生錯誤。請稍後重試。' }
+    }[activeLocale] || { emptyEmail: 'Please enter your email address.', noRoom: 'No active rooms found for this email.', sent: 'A 6-digit one-time password (OTP) mail has been sent to your email.', err: 'An error occurred during lookup. Please try again.' };
+
     if (!email) {
-      setSyncRecoveryMessage(
-        activeLocale === 'ko' 
-          ? '이메일 주소를 입력해 주세요.' 
-          : 'Please enter your email address.'
-      );
+      setSyncRecoveryMessage(trans.emptyEmail);
       return;
     }
 
@@ -1257,7 +1263,7 @@ function LocalSignboardContent() {
     try {
       const res = await fetch(`/api/room/recover?email=${encodeURIComponent(email)}`);
       if (!res.ok) {
-        let errDesc = activeLocale === 'ko' ? '활성화된 방을 찾지 못했습니다.' : 'No active rooms found for this email.';
+        let errDesc = trans.noRoom;
         try {
           const errData = await res.json();
           if (errData.error) errDesc = errData.error;
@@ -1266,18 +1272,10 @@ function LocalSignboardContent() {
       }
       
       setSyncRecoveryOtpSent(true);
-      setSyncRecoveryMessage(
-        activeLocale === 'ko'
-          ? '입력하신 이메일로 6자리 일회용 보안코드(OTP) 메일이 발송되었습니다.'
-          : 'A 6-digit one-time password (OTP) mail has been sent to your email.'
-      );
+      setSyncRecoveryMessage(trans.sent);
     } catch (err: any) {
       console.error(err);
-      setSyncRecoveryMessage(
-        activeLocale === 'ko'
-          ? (err.message || '조회 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
-          : 'An error occurred during lookup. Please try again.'
-      );
+      setSyncRecoveryMessage(err.message || trans.err);
     } finally {
       setIsSyncRecoveryLoading(false);
     }
@@ -1286,10 +1284,18 @@ function LocalSignboardContent() {
   const handleVerifySyncRoomsOtp = async () => {
     const email = syncRecoveryEmail.trim().toLowerCase();
     const otp = syncRecoveryOtp.trim();
+
+    const trans = {
+      ko: { emptyOtp: '보안코드를 입력해 주세요.', invalidOtp: '올바르지 않거나 만료된 보안코드입니다.', foundRooms: '{cnt}개의 활성화된 방을 찾았습니다.', emptyRooms: '활성화된 방이 없습니다.', err: '인증 중 오류가 발생했습니다. 다시 시도해 주세요.' },
+      en: { emptyOtp: 'Please enter the security code.', invalidOtp: 'Invalid or expired OTP code.', foundRooms: 'Found {cnt} active room(s).', emptyRooms: 'No active rooms found.', err: 'Authentication failed. Please try again.' },
+      ja: { emptyOtp: 'セキュリティコードを入力してください。', invalidOtp: '無効または期限切れのセキュリティコードです。', foundRooms: '{cnt}個のアクティブなルームが見つかりました。', emptyRooms: 'アクティブなルームはありません。', err: '認証中にエラーが発生しました。もう一度お試しください。' },
+      es: { emptyOtp: 'Por favor, introduzca el código de seguridad.', invalidOtp: 'Código de seguridad no válido o caducado.', foundRooms: 'Se encontraron {cnt} salas activas.', emptyRooms: 'No se encontraron salas activas.', err: 'La autenticación falló. Por favor, inténtelo de nuevo.' },
+      'zh-TW': { emptyOtp: '請輸入驗證碼。', invalidOtp: '驗證碼無效或已過期。', foundRooms: '找到 {cnt} 個啟用中的房間。', emptyRooms: '沒有啟用中的房間。', err: '驗證失敗。請重試。' },
+      'zh-HK': { emptyOtp: '請輸入驗證碼。', invalidOtp: '驗證碼無效或已過期。', foundRooms: '找到 {cnt} 個啟用中的房間。', emptyRooms: '沒有啟用中的房間。', err: '驗證失敗。請重試。' }
+    }[activeLocale] || { emptyOtp: 'Please enter the security code.', invalidOtp: 'Invalid or expired OTP code.', foundRooms: 'Found {cnt} active room(s).', emptyRooms: 'No active rooms found.', err: 'Authentication failed. Please try again.' };
+
     if (!otp) {
-      setSyncRecoveryMessage(
-        activeLocale === 'ko' ? '보안코드를 입력해 주세요.' : 'Please enter the security code.'
-      );
+      setSyncRecoveryMessage(trans.emptyOtp);
       return;
     }
 
@@ -1303,7 +1309,7 @@ function LocalSignboardContent() {
         body: JSON.stringify({ email, otp })
       });
       if (!res.ok) {
-        let errDesc = activeLocale === 'ko' ? '올바르지 않거나 만료된 보안코드입니다.' : 'Invalid or expired OTP code.';
+        let errDesc = trans.invalidOtp;
         try {
           const errData = await res.json();
           if (errData.error) errDesc = errData.error;
@@ -1317,23 +1323,13 @@ function LocalSignboardContent() {
           return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
         setSyncRecoveryRooms(sortedRooms);
-        setSyncRecoveryMessage(
-          activeLocale === 'ko'
-            ? `${data.rooms.length}개의 활성화된 방을 찾았습니다.`
-            : `Found ${data.rooms.length} active room(s).`
-        );
+        setSyncRecoveryMessage(trans.foundRooms.replace('{cnt}', String(data.rooms.length)));
       } else {
-        setSyncRecoveryMessage(
-          activeLocale === 'ko' ? '활성화된 방이 없습니다.' : 'No active rooms found.'
-        );
+        setSyncRecoveryMessage(trans.emptyRooms);
       }
     } catch (err: any) {
       console.error(err);
-      setSyncRecoveryMessage(
-        activeLocale === 'ko'
-          ? (err.message || '인증 중 오류가 발생했습니다. 다시 시도해 주세요.')
-          : 'Authentication failed. Please try again.'
-      );
+      setSyncRecoveryMessage(err.message || trans.err);
     } finally {
       setIsSyncRecoveryLoading(false);
     }
@@ -3073,7 +3069,7 @@ function LocalSignboardContent() {
 
                 {/* Background Color Grid */}
                 <div>
-                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">배경 색상</label>
+                  <label className="block text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-2">{t('bg_color', activeLocale)}</label>
                   <div className="grid grid-cols-6 gap-2">
                     {[
                       '#EF4444', '#F97316', '#F59E0B', '#10B981', '#06B6D4', '#3B82F6', 

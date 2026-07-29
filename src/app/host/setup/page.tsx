@@ -1100,43 +1100,56 @@ export default function HostSetup() {
                 )}
 
                 {/* Promo Code Input Form */}
-                <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                      {activeLocale === 'ko' ? '프로모션 코드' : 'Promo Code'}
-                    </span>
-                    {verifiedCoupon && (
-                      <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                        {verifiedCoupon.code} {verifiedCoupon.discount_pct}% 할인 적용됨
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={promoCodeInput}
-                      onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
-                      placeholder={activeLocale === 'ko' ? '예: GLOW30' : 'e.g. GLOW30'}
-                      disabled={isVerifyingCoupon}
-                      className="flex-1 bg-[#0c0c14] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-indigo-500 transition-colors uppercase font-mono font-bold"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleApplyPromoCode}
-                      disabled={isVerifyingCoupon || !promoCodeInput.trim()}
-                      className="px-3.5 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-extrabold hover:bg-indigo-500 transition-colors cursor-pointer select-none disabled:opacity-50"
-                    >
-                      {isVerifyingCoupon ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        activeLocale === 'ko' ? '적용' : 'Apply'
+                {(() => {
+                  const p = {
+                    ko: { label: '프로모션 코드', applied: '할인 적용됨', placeholder: '예: GLOW30', btn: '적용' },
+                    en: { label: 'Promo Code', applied: 'Discount Applied', placeholder: 'e.g. GLOW30', btn: 'Apply' },
+                    ja: { label: 'プロモーションコード', applied: '割引適用', placeholder: '例: GLOW30', btn: '適用' },
+                    es: { label: 'Código promocional', applied: 'descuento aplicado', placeholder: 'ej. GLOW30', btn: 'Aplicar' },
+                    'zh-TW': { label: '促銷代碼', applied: '折扣已套用', placeholder: '例: GLOW30', btn: '套用' },
+                    'zh-HK': { label: '促銷代碼', applied: '折扣已套用', placeholder: '例: GLOW30', btn: '套用' }
+                  }[activeLocale] || { label: 'Promo Code', applied: 'Discount Applied', placeholder: 'e.g. GLOW30', btn: 'Apply' };
+
+                  return (
+                    <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                          {p.label}
+                        </span>
+                        {verifiedCoupon && (
+                          <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                            {verifiedCoupon.code} {verifiedCoupon.discount_pct}% {p.applied}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={promoCodeInput}
+                          onChange={(e) => setPromoCodeInput(e.target.value.toUpperCase())}
+                          placeholder={p.placeholder}
+                          disabled={isVerifyingCoupon}
+                          className="flex-1 bg-[#0c0c14] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-indigo-500 transition-colors uppercase font-mono font-bold"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyPromoCode}
+                          disabled={isVerifyingCoupon || !promoCodeInput.trim()}
+                          className="px-3.5 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-extrabold hover:bg-indigo-500 transition-colors cursor-pointer select-none disabled:opacity-50"
+                        >
+                          {isVerifyingCoupon ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            p.btn
+                          )}
+                        </button>
+                      </div>
+                      {couponError && (
+                        <span className="text-[10px] text-red-400 font-bold block mt-1">{couponError}</span>
                       )}
-                    </button>
-                  </div>
-                  {couponError && (
-                    <span className="text-[10px] text-red-400 font-bold block mt-1">{couponError}</span>
-                  )}
-                </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Pricing Summary info */}
                 <div className="bg-white/[0.02] border border-white/5 rounded-xl p-4 flex flex-col gap-3">

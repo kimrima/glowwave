@@ -5242,52 +5242,65 @@ export default function HostDashboard() {
                   </div>
 
                   {/* Promo Code Input Form */}
-                  <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                        {activeLocale === 'ko' ? '프로모션 코드' : 'Promo Code'}
-                      </span>
-                      {verifiedCoupon && (
-                        <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                          {verifiedCoupon.code} {verifiedCoupon.discount_pct}% 할인 적용됨
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={promoCodeInput}
-                        onChange={(e) => setPromoCodeInput(e.target.value)}
-                        placeholder={activeLocale === 'ko' ? '예: WELCOME20' : 'e.g. WELCOME20'}
-                        disabled={isVerifyingCoupon || verifiedCoupon}
-                        className="flex-1 bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono uppercase"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleApplyPromoCode}
-                        disabled={isVerifyingCoupon || verifiedCoupon || !promoCodeInput.trim()}
-                        className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-40 disabled:hover:bg-zinc-800"
-                      >
-                        {isVerifyingCoupon ? '...' : activeLocale === 'ko' ? '적용' : 'Apply'}
-                      </button>
-                    </div>
-                    {couponError && (
-                      <p className="text-[10px] text-red-400 font-bold mt-0.5">{couponError}</p>
-                    )}
-                    {verifiedCoupon && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVerifiedCoupon(null);
-                          setPromoCodeInput('');
-                          setCouponError(null);
-                        }}
-                        className="text-[9px] text-zinc-500 hover:text-zinc-300 font-semibold self-start underline cursor-pointer"
-                      >
-                        {activeLocale === 'ko' ? '코드 취소하기' : 'Remove promo code'}
-                      </button>
-                    )}
-                  </div>
+                  {(() => {
+                    const p = {
+                      ko: { label: '프로모션 코드', applied: '할인 적용됨', placeholder: '예: WELCOME20', btn: '적용', cancelBtn: '코드 취소하기' },
+                      en: { label: 'Promo Code', applied: 'Discount Applied', placeholder: 'e.g. WELCOME20', btn: 'Apply', cancelBtn: 'Remove promo code' },
+                      ja: { label: 'プロモーションコード', applied: '割引適用', placeholder: '例: WELCOME20', btn: '適用', cancelBtn: 'プロモーションコードを削除' },
+                      es: { label: 'Código promocional', applied: 'descuento aplicado', placeholder: 'ej. WELCOME20', btn: 'Aplicar', cancelBtn: 'Quitar código promocional' },
+                      'zh-TW': { label: '促銷代碼', applied: '折扣已套用', placeholder: '例: WELCOME20', btn: '套用', cancelBtn: '取消套用代碼' },
+                      'zh-HK': { label: '促銷代碼', applied: '折扣已套用', placeholder: '例: WELCOME20', btn: '套用', cancelBtn: '取消套用代碼' }
+                    }[activeLocale] || { label: 'Promo Code', applied: 'Discount Applied', placeholder: 'e.g. WELCOME20', btn: 'Apply', cancelBtn: 'Remove promo code' };
+
+                    return (
+                      <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                            {p.label}
+                          </span>
+                          {verifiedCoupon && (
+                            <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                              {verifiedCoupon.code} {verifiedCoupon.discount_pct}% {p.applied}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={promoCodeInput}
+                            onChange={(e) => setPromoCodeInput(e.target.value)}
+                            placeholder={p.placeholder}
+                            disabled={isVerifyingCoupon || verifiedCoupon}
+                            className="flex-1 bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono uppercase"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleApplyPromoCode}
+                            disabled={isVerifyingCoupon || verifiedCoupon || !promoCodeInput.trim()}
+                            className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-40 disabled:hover:bg-zinc-800"
+                          >
+                            {isVerifyingCoupon ? '...' : p.btn}
+                          </button>
+                        </div>
+                        {couponError && (
+                          <p className="text-[10px] text-red-400 font-bold mt-0.5">{couponError}</p>
+                        )}
+                        {verifiedCoupon && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setVerifiedCoupon(null);
+                              setPromoCodeInput('');
+                              setCouponError(null);
+                            }}
+                            className="text-[9px] text-zinc-500 hover:text-zinc-300 font-semibold self-start underline cursor-pointer"
+                          >
+                            {p.cancelBtn}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* PG Checkout Simulator Card */}
                   <div className="bg-black/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3.5">
@@ -5817,52 +5830,65 @@ export default function HostDashboard() {
                     </div>
 
                   {/* Promo Code Input Form */}
-                  <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                        {activeLocale === 'ko' ? '프로모션 코드' : 'Promo Code'}
-                      </span>
-                      {verifiedCoupon && (
-                        <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                          {verifiedCoupon.code} {verifiedCoupon.discount_pct}% 할인 적용됨
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={promoCodeInput}
-                        onChange={(e) => setPromoCodeInput(e.target.value)}
-                        placeholder={activeLocale === 'ko' ? '예: WELCOME20' : 'e.g. WELCOME20'}
-                        disabled={isVerifyingCoupon || verifiedCoupon}
-                        className="flex-1 bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono uppercase"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleApplyPromoCode}
-                        disabled={isVerifyingCoupon || verifiedCoupon || !promoCodeInput.trim()}
-                        className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-40 disabled:hover:bg-zinc-800"
-                      >
-                        {isVerifyingCoupon ? '...' : activeLocale === 'ko' ? '적용' : 'Apply'}
-                      </button>
-                    </div>
-                    {couponError && (
-                      <p className="text-[10px] text-red-400 font-bold mt-0.5">{couponError}</p>
-                    )}
-                    {verifiedCoupon && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setVerifiedCoupon(null);
-                          setPromoCodeInput('');
-                          setCouponError(null);
-                        }}
-                        className="text-[9px] text-zinc-500 hover:text-zinc-300 font-semibold self-start underline cursor-pointer"
-                      >
-                        {activeLocale === 'ko' ? '코드 취소하기' : 'Remove promo code'}
-                      </button>
-                    )}
-                  </div>
+                  {(() => {
+                    const p = {
+                      ko: { label: '프로모션 코드', applied: '할인 적용됨', placeholder: '예: WELCOME20', btn: '적용', cancelBtn: '코드 취소하기' },
+                      en: { label: 'Promo Code', applied: 'Discount Applied', placeholder: 'e.g. WELCOME20', btn: 'Apply', cancelBtn: 'Remove promo code' },
+                      ja: { label: 'プロモーションコード', applied: '割引適用', placeholder: '例: WELCOME20', btn: '適用', cancelBtn: 'プロモーションコードを削除' },
+                      es: { label: 'Código promocional', applied: 'descuento aplicado', placeholder: 'ej. WELCOME20', btn: 'Aplicar', cancelBtn: 'Quitar código promocional' },
+                      'zh-TW': { label: '促銷代碼', applied: '折扣已套用', placeholder: '例: WELCOME20', btn: '套用', cancelBtn: '取消套用代碼' },
+                      'zh-HK': { label: '促銷代碼', applied: '折扣已套用', placeholder: '例: WELCOME20', btn: '套用', cancelBtn: '取消套用代碼' }
+                    }[activeLocale] || { label: 'Promo Code', applied: 'Discount Applied', placeholder: 'e.g. WELCOME20', btn: 'Apply', cancelBtn: 'Remove promo code' };
+
+                    return (
+                      <div className="bg-black/30 border border-white/5 rounded-xl p-3 flex flex-col gap-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                            {p.label}
+                          </span>
+                          {verifiedCoupon && (
+                            <span className="text-[9px] text-emerald-400 font-extrabold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                              {verifiedCoupon.code} {verifiedCoupon.discount_pct}% {p.applied}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={promoCodeInput}
+                            onChange={(e) => setPromoCodeInput(e.target.value)}
+                            placeholder={p.placeholder}
+                            disabled={isVerifyingCoupon || verifiedCoupon}
+                            className="flex-1 bg-[#0B0B0F] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono uppercase"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleApplyPromoCode}
+                            disabled={isVerifyingCoupon || verifiedCoupon || !promoCodeInput.trim()}
+                            className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg text-xs font-bold transition-all disabled:opacity-40 disabled:hover:bg-zinc-800"
+                          >
+                            {isVerifyingCoupon ? '...' : p.btn}
+                          </button>
+                        </div>
+                        {couponError && (
+                          <p className="text-[10px] text-red-400 font-bold mt-0.5">{couponError}</p>
+                        )}
+                        {verifiedCoupon && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setVerifiedCoupon(null);
+                              setPromoCodeInput('');
+                              setCouponError(null);
+                            }}
+                            className="text-[9px] text-zinc-500 hover:text-zinc-300 font-semibold self-start underline cursor-pointer"
+                          >
+                            {p.cancelBtn}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   <div className="bg-black/40 border border-white/5 rounded-2xl p-5 flex flex-col gap-3.5">
                     <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">{simulatorTitle}</span>

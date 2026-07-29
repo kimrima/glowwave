@@ -68,45 +68,15 @@
       "current_participants": 0,
       "created_at": "2026-07-14T04:13:05.536Z"
     },
-    "YCPHYC": {
-      "id": "YCPHYC",
-      "host_session_token": "dfa729bf-0a7e-4f66-b92c-e56ba6812812",
-      "email": "test@gmail.com",
-      "tier": "lite",
-      "status": "active",
-      "max_participants": 60,
-      "current_participants": 0,
-      "created_at": "2026-07-21T13:49:24.203Z"
-    },
-    "WRRO7Z": {
-      "id": "WRRO7Z",
-      "host_session_token": "943c6c77-e044-479d-b423-59b069f7ea28",
-      "email": "anonymous-local@glowwave.app",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 15,
-      "current_participants": 0,
-      "created_at": "2026-07-22T07:58:52.102Z"
-    },
-    "WI4F1B": {
-      "id": "WI4F1B",
-      "host_session_token": "837dda3d-8e92-45fc-b347-5e981976114c",
-      "email": "anonymous-local@glowwave.app",
-      "tier": "free",
-      "status": "active",
-      "max_participants": 15,
-      "current_participants": 0,
-      "created_at": "2026-07-22T12:48:37.041Z"
-    },
-    "17ES58": {
-      "id": "17ES58",
-      "host_session_token": "7e506683-b0de-4c3e-99eb-40c3e82ca118",
+    "2H1794": {
+      "id": "2H1794",
+      "host_session_token": "1ea39b16-2c7f-4231-bbe1-e899bac7bd9f",
       "email": "test@example.com",
-      "tier": "lite",
-      "status": "active",
-      "max_participants": 60,
+      "tier": "store",
+      "status": "inactive",
+      "max_participants": 3,
       "current_participants": 0,
-      "created_at": "2026-07-22T12:50:13.523Z"
+      "created_at": "2026-07-29T15:50:19.841Z"
     }
   },
   "payments": [
@@ -329,6 +299,16 @@
       "amount": 5000,
       "payment_status": "completed",
       "created_at": "2026-07-22T12:52:04.791Z"
+    },
+    {
+      "id": "fee4621e-8de0-4ad7-870b-43ba988776a7",
+      "email": "test@example.com",
+      "host_session_token": "1ea39b16-2c7f-4231-bbe1-e899bac7bd9f",
+      "room_id": "2H1794",
+      "tier": "store",
+      "amount": 4900,
+      "payment_status": "pending",
+      "created_at": "2026-07-29T15:50:19.842Z"
     }
   ],
   "currentStates": {
@@ -407,39 +387,7 @@
       "font_size": 100,
       "trigger_id": "1783526141835"
     },
-    "YCPHYC": {
-      "bg_color": "#1E3A8A",
-      "text": "날려라~ 홈런! ⚾",
-      "text_color": "#FDE047",
-      "effect": "marquee",
-      "speed": 30061,
-      "font_family": "plump",
-      "font_size": 100,
-      "special_effect": "stars",
-      "locale": "ko",
-      "trigger_id": "1784642669892"
-    },
-    "WRRO7Z": {
-      "bg_color": "#F97316",
-      "text": "스크롤",
-      "text_color": "#FFFFFF",
-      "effect": "marquee",
-      "speed": 11606,
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "trigger_id": "1784657253373"
-    },
-    "WI4F1B": {
-      "bg_color": "#EF4444",
-      "text": "GW",
-      "text_color": "#FFFFFF",
-      "effect": "none",
-      "speed": 1000,
-      "font_family": "sans-thin",
-      "font_size": 100,
-      "trigger_id": "1784724563243"
-    },
-    "17ES58": {
+    "2H1794": {
       "bg_color": "#0B0B0F",
       "text": "GlowWave",
       "text_color": "#FFFFFF",
@@ -832,6 +780,14 @@
     {
       "step": "step1_landing",
       "created_at": "2026-07-25T19:21:59.194Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-29T15:48:55.487Z"
+    },
+    {
+      "step": "step3_view_upgrade",
+      "created_at": "2026-07-29T15:50:19.923Z"
     }
   ],
   "csInquiries": [
