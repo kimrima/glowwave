@@ -897,9 +897,9 @@ export default function HostSetup() {
                       en: 'e.g. 1234',
                       ja: '例: 1234',
                       es: 'ej. 1234',
-                      'zh-TW': '예: 1234',
-                      'zh-HK': '예: 1234'
-                    }[activeLocale] || '예: 1234'
+                      'zh-TW': '例: 1234',
+                      'zh-HK': '例: 1234'
+                    }[activeLocale] || 'e.g. 1234'
                   }
                   className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white tracking-widest text-center text-sm font-black focus:outline-none focus:border-white font-mono"
                   maxLength={6}
@@ -975,7 +975,7 @@ export default function HostSetup() {
                   if (planType === 'store') {
                     return tierKey === 'store' || tierKey === 'store_annual';
                   } else {
-                    return tierKey === 'free' || tierKey === 'lite' || tierKey === 'pro' || tierKey === 'max';
+                    return tierKey === 'free' || tierKey === 'lite' || tierKey === 'standard' || tierKey === 'pro' || tierKey === 'max';
                   }
                 })
                 .map((tierKey) => {

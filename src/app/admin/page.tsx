@@ -1060,6 +1060,7 @@ export default function AdminPage() {
                   {[
                     { key: 'free', label: '무료 일일 체험 (Free Trial)', color: 'bg-zinc-600', text: 'text-zinc-400' },
                     { key: 'lite', label: '다인용 라이트형 (Lite Event)', color: 'bg-cyan-500', text: 'text-cyan-400' },
+                    { key: 'standard', label: '다인용 스탠다드형 (Standard Event)', color: 'bg-indigo-500', text: 'text-indigo-400' },
                     { key: 'pro', label: '다인용 프로형 (Pro Event)', color: 'bg-sky-500', text: 'text-sky-400' },
                     { key: 'max', label: '다인용 맥스형 (Max Event)', color: 'bg-blue-600', text: 'text-blue-400' },
                     { key: 'store', label: '매장 월간 플랜 (Store Monthly)', color: 'bg-violet-500', text: 'text-violet-400' },
@@ -1521,11 +1522,12 @@ export default function AdminPage() {
                                   onChange={(e) => {
                                     const newTier = e.target.value as TierType;
                                     let newMaxParts = room.max_participants;
-                                    if (newTier === 'free') newMaxParts = 15;
+                                    if (newTier === 'free') newMaxParts = 10;
                                     else if (newTier === 'sync') newMaxParts = 1;
-                                    else if (newTier === 'lite') newMaxParts = 60;
-                                    else if (newTier === 'pro') newMaxParts = 250;
-                                    else if (newTier === 'max') newMaxParts = 800;
+                                    else if (newTier === 'lite') newMaxParts = 50;
+                                    else if (newTier === 'standard') newMaxParts = 150;
+                                    else if (newTier === 'pro') newMaxParts = 400;
+                                    else if (newTier === 'max') newMaxParts = 1000;
                                     else if (newTier === 'store') newMaxParts = 3;
                                     else if (newTier === 'store_annual') newMaxParts = 3;
                                     
@@ -1533,11 +1535,12 @@ export default function AdminPage() {
                                   }}
                                   className="bg-[#030305] border border-white/10 rounded-lg px-2.5 py-1 text-xs font-bold text-zinc-300 focus:outline-none cursor-pointer focus:border-violet-500"
                                 >
-                                  <option value="free">Free (15명)</option>
+                                  <option value="free">Free (10명)</option>
                                   <option value="sync">1인체험방 (1명)</option>
-                                  <option value="lite">Lite (60명)</option>
-                                  <option value="pro">Pro (250명)</option>
-                                  <option value="max">Max (800명)</option>
+                                  <option value="lite">Lite (50명)</option>
+                                  <option value="standard">Standard (150명)</option>
+                                  <option value="pro">Pro (400명)</option>
+                                  <option value="max">Max (1000명)</option>
                                   <option value="store">매장용 월간 (3명)</option>
                                   <option value="store_annual">매장용 연간 (3명)</option>
                                 </select>

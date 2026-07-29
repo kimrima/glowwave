@@ -910,7 +910,7 @@ function LocalSignboardContent() {
 
   // Calculate trial countdown timer
   useEffect(() => {
-    if (!syncRoomId || !syncRoomCreatedAt || !['free', 'lite', 'pro', 'max'].includes(syncRoomTier)) {
+    if (!syncRoomId || !syncRoomCreatedAt || !['free', 'lite', 'standard', 'pro', 'max'].includes(syncRoomTier)) {
       setSyncTimeRemaining('');
       return;
     }

@@ -20,7 +20,7 @@ export interface Preset {
   locale?: string;
 }
 
-export type TierType = 'free' | 'sync' | 'lite' | 'pro' | 'max' | 'store' | 'store_annual';
+export type TierType = 'free' | 'sync' | 'lite' | 'standard' | 'pro' | 'max' | 'store' | 'store_annual';
 
 export interface TierConfig {
   name: string;
@@ -33,10 +33,10 @@ export interface TierConfig {
 export const TIER_CONFIGS: Record<TierType, TierConfig> = {
   free: {
     name: 'Free (무료체험)',
-    maxParticipants: 8,
+    maxParticipants: 10,
     priceKrw: 0,
     priceUsd: 0.00,
-    description: '8명 이하 소규모 이벤트용 무료방 (3시간 제한)',
+    description: '10명 이하 소규모 이벤트용 무료방 (3시간 제한)',
   },
   sync: {
     name: '1인용 일일무료체험 (Sync)',
@@ -47,24 +47,31 @@ export const TIER_CONFIGS: Record<TierType, TierConfig> = {
   },
   lite: {
     name: '기본형 (Lite)',
-    maxParticipants: 60,
+    maxParticipants: 50,
     priceKrw: 5000,
     priceUsd: 3.99,
-    description: '60명 이하 버스킹 및 소규모 세션 전용',
+    description: '50명 이하 버스킹 및 소규모 세션 전용',
+  },
+  standard: {
+    name: '스탠다드 (Standard)',
+    maxParticipants: 150,
+    priceKrw: 15000,
+    priceUsd: 11.99,
+    description: '150명 이하 결혼식 피로연, 대학교 동아리 전용',
   },
   pro: {
     name: '프리미엄 (Pro)',
-    maxParticipants: 250,
-    priceKrw: 25000,
-    priceUsd: 19.99,
-    description: '250명 이하 야외 클럽, 스포츠 응원 전용',
+    maxParticipants: 400,
+    priceKrw: 30000,
+    priceUsd: 23.99,
+    description: '400명 이하 야외 클럽, 스포츠 응원 전용',
   },
   max: {
     name: '맥스형 (Max)',
-    maxParticipants: 800,
+    maxParticipants: 1000,
     priceKrw: 50000,
     priceUsd: 39.99,
-    description: '800명 이하 대규모 플래시몹, 대형 강연 전용',
+    description: '1000명 이하 대규모 플래시몹, 대형 강연 전용',
   },
   store: {
     name: '매장 전용 요금제 (월간)',
@@ -103,13 +110,21 @@ export const getLocalizedPrice = (tier: TierType, locale: string): string => {
       'zh-TW': 'NT$ 130 TWD',
       'zh-HK': 'HK$ 30 HKD',
     },
+    standard: {
+      ko: '15,000원',
+      en: '$11.99 USD',
+      ja: '¥1,800 JPY',
+      es: '$11.99 USD',
+      'zh-TW': 'NT$ 390 TWD',
+      'zh-HK': 'HK$ 90 HKD',
+    },
     pro: {
-      ko: '25,000원',
-      en: '$19.99 USD',
-      ja: '¥3,000 JPY',
-      es: '$19.99 USD',
-      'zh-TW': 'NT$ 650 TWD',
-      'zh-HK': 'HK$ 150 HKD',
+      ko: '30,000원',
+      en: '$23.99 USD',
+      ja: '¥3,600 JPY',
+      es: '$23.99 USD',
+      'zh-TW': 'NT$ 780 TWD',
+      'zh-HK': 'HK$ 180 HKD',
     },
     max: {
       ko: '50,000원',
@@ -166,6 +181,14 @@ export const getLocalizedTierName = (tier: TierType, locale: string): string => 
       es: 'Plan Lite',
       'zh-TW': '基本型方案 (Lite)',
       'zh-HK': '基本型方案 (Lite)',
+    },
+    standard: {
+      ko: '스탠다드 (Standard)',
+      en: 'Standard Plan',
+      ja: 'スタンダードプラン (Standard)',
+      es: 'Plan Standard',
+      'zh-TW': '標準方案 (Standard)',
+      'zh-HK': '標準方案 (Standard)',
     },
     pro: {
       ko: '프리미엄 (Pro)',

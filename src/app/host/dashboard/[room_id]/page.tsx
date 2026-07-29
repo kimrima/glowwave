@@ -1059,8 +1059,9 @@ export default function HostDashboard() {
   const TIER_ORDER: Record<string, number> = {
     free: 0,
     lite: 1,
-    pro: 2,
-    max: 3
+    standard: 2,
+    pro: 3,
+    max: 4
   };
 
   const getUpgradableTiers = () => {
@@ -1078,7 +1079,7 @@ export default function HostDashboard() {
       return [] as TierType[];
     }
     const currentOrder = TIER_ORDER[currentTier] ?? 0;
-    return ['lite', 'pro', 'max'].filter(
+    return ['lite', 'standard', 'pro', 'max'].filter(
       (key) => TIER_ORDER[key] > currentOrder
     ) as TierType[];
   };
@@ -5788,7 +5789,8 @@ export default function HostDashboard() {
                   
                   const basePrices: Record<Exclude<TierType, 'free' | 'sync'>, { jpy: number; twd: number; hkd: number }> = {
                     lite: { jpy: 600, twd: 130, hkd: 30 },
-                    pro: { jpy: 3000, twd: 650, hkd: 150 },
+                    standard: { jpy: 1800, twd: 390, hkd: 90 },
+                    pro: { jpy: 3600, twd: 780, hkd: 180 },
                     max: { jpy: 6000, twd: 1300, hkd: 300 },
                     store: { jpy: 600, twd: 130, hkd: 30 },
                     store_annual: { jpy: 4500, twd: 990, hkd: 230 }

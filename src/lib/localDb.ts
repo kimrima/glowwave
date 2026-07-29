@@ -220,8 +220,8 @@ export const localDb = {
         console.error('[localDb] Supabase cleanup free rooms error:', freeErr);
       }
 
-      // Perform delete on event paid rooms (lite, pro, max) older than 24 hours
-      const { error: roomErr } = await supabase.from('rooms').delete().in('tier', ['lite', 'pro', 'max']).lt('created_at', twentyFourHoursAgo);
+      // Perform delete on event paid rooms (lite, standard, pro, max) older than 24 hours
+      const { error: roomErr } = await supabase.from('rooms').delete().in('tier', ['lite', 'standard', 'pro', 'max']).lt('created_at', twentyFourHoursAgo);
       if (roomErr) {
         console.error('[localDb] Supabase cleanup paid event rooms error:', roomErr);
       }
