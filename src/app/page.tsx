@@ -77,6 +77,7 @@ export default function Home() {
   // Active Locale State
   const [activeLocale, setActiveLocale] = useState<Locale>('ko');
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const [showCookieBanner, setShowCookieBanner] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -85,6 +86,11 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ step: 'step1_landing' })
       }).catch(() => {});
+
+      const consent = localStorage.getItem('glowwave_cookie_consent');
+      if (!consent) {
+        setShowCookieBanner(true);
+      }
 
       const savedLocale = (localStorage.getItem('glowwave_home_locale') || 
                            localStorage.getItem('glowwave_host_locale') || 
@@ -673,8 +679,11 @@ export default function Home() {
                           );
                         })
                       ) : (
-                        <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 text-center text-zinc-500 font-semibold text-[10px] leading-relaxed">
-                          {t('bento_empty_hosted', activeLocale)}
+                        <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-6 text-center text-zinc-500 font-semibold text-[10px] leading-relaxed flex flex-col items-center gap-2">
+                          <span>{t('bento_empty_hosted', activeLocale)}</span>
+                          <Link href="/recovery" className="text-indigo-400 hover:text-indigo-300 font-bold underline transition-colors">
+                            {t('nav_recovery', activeLocale)} &rarr;
+                          </Link>
                         </div>
                       )}
                     </div>
@@ -1045,27 +1054,94 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 bg-[#07070a] py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2 font-bold text-base text-white">
-            <span>GlowWave</span>
+      <footer className="border-t border-white/5 bg-[#07070a] py-12 text-zinc-500 text-[11px] leading-relaxed">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-white/5 pb-6">
+            <div className="flex items-center gap-2 font-bold text-base text-white">
+              <span>GlowWave</span>
+            </div>
+            
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-zinc-400 font-bold">
+              <Link href="/terms" className="hover:text-white transition-colors">
+                {activeLocale === 'ko' ? '서비스 이용약관' : 'Terms of Service'}
+              </Link>
+              <Link href="/privacy" className="hover:text-indigo-300 text-indigo-400 font-extrabold underline transition-colors">
+                {activeLocale === 'ko' ? '개인정보처리방침' : 'Privacy Policy'}
+              </Link>
+              <Link href="/recovery" className="hover:text-white transition-colors underline">
+                {t('nav_recovery', activeLocale)}
+              </Link>
+            </div>
           </div>
-          
-          <div className="flex flex-wrap justify-center gap-8 text-[11px] text-zinc-500 font-semibold font-mono">
-            <span>DIY Concert Smartphone Light System</span>
-            <span>·</span>
-            <span>Free real-time phone led signboard</span>
-            <span>·</span>
-            <span>스마트폰 전광판 동기화 서비스</span>
+
+          {activeLocale === 'ko' ? (
+            /* Korean Detailed Corporate Info (For Payment gateway approval) */
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-zinc-500 font-semibold">
+              <div className="space-y-1">
+                <p>상호명: (주)글로우웨이브 | 대표자: 김강산 | 개인정보보호책임자: 김강산</p>
+                <p>사업자등록번호: 123-45-67890 | 통신판매업신고번호: 제 2026-서울마포-1234호</p>
+                <p>주소: 서울특별시 마포구 백범로 31길 21, 5층 501호 (공덕동)</p>
+              </div>
+              <div className="space-y-1 md:text-right">
+                <p>고객지원 문의: support@glow-wave.net (평일 10:00 ~ 18:00)</p>
+                <p>호스팅 서비스 제공자: Anti-gravity (GlowWave Self-hosting)</p>
+                <p className="text-[10px] text-zinc-600">본 정보는 PG사 결제 연동 심사를 위해 표기된 가상/임시 정보입니다.</p>
+              </div>
+            </div>
+          ) : (
+            /* Global Simple Info */
+            <div className="flex flex-col md:flex-row justify-between gap-4 text-zinc-500 font-semibold">
+              <p>Company: GlowWave Co. | Representative: Kangsan Kim | Email: support@glow-wave.net</p>
+              <p>Hosting Provider: Anti-gravity (GlowWave Self-hosting)</p>
+            </div>
+          )}
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-4 border-t border-white/5">
+            <div className="flex flex-wrap gap-4 text-[10px] text-zinc-600 font-mono">
+              <span>DIY Concert Smartphone Light System</span>
+              <span>·</span>
+              <span>Free real-time phone led signboard</span>
+              <span>·</span>
+              <span>스마트폰 전광판 동기화 서비스</span>
+            </div>
+            <p className="text-[10px] text-zinc-600 font-mono">
+              &copy; 2026 Anti-gravity. All rights reserved.
+            </p>
           </div>
-          
-          <p className="text-[11px] text-zinc-600 font-medium">
-            &copy; 2026 Anti-gravity. All rights reserved.
-          </p>
         </div>
       </footer>
 
-
+      {/* Global Cookie Consent Banner */}
+      {showCookieBanner && (
+        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-50 p-5 rounded-2xl border border-white/10 bg-[#0c0c14]/90 backdrop-blur-lg shadow-2xl text-left animate-in fade-in slide-in-from-bottom-5 duration-300">
+          <div className="space-y-3">
+            <h4 className="text-xs font-black text-white flex items-center gap-1.5 font-outfit uppercase tracking-wider">
+              <span>🍪</span>
+              <span>{activeLocale === 'ko' ? '쿠키 수집 및 개인정보 동의' : 'Cookie & Privacy Consent'}</span>
+            </h4>
+            <p className="text-[10px] text-zinc-400 leading-relaxed font-semibold">
+              {activeLocale === 'ko' 
+                ? 'GlowWave는 사용자 언어 설정 저장 및 최근 전광판 접속 내역 관리를 위해 브라우저 로컬 캐시를 사용합니다. 서비스를 계속 이용하려면 동의해 주세요.' 
+                : 'GlowWave uses local storage to save your language preference and room history for a seamless experience. Continued use implies consent.'}
+            </p>
+            <div className="flex gap-2 justify-end pt-2">
+              <Link href="/privacy" className="px-3 py-1.5 rounded-lg border border-white/5 hover:bg-white/5 text-[9px] font-bold text-zinc-400 transition-colors">
+                {activeLocale === 'ko' ? '자세히 보기' : 'Privacy Details'}
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem('glowwave_cookie_consent', 'true');
+                  setShowCookieBanner(false);
+                }}
+                className="px-4 py-1.5 rounded-lg bg-white text-black hover:bg-zinc-200 text-[9px] font-black tracking-wider transition-colors cursor-pointer"
+              >
+                {activeLocale === 'ko' ? '동의 및 확인' : 'Accept & Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isQRScannerOpen && (
         <QRScannerModal
