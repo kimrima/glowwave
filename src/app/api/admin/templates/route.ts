@@ -7,12 +7,32 @@ import path from 'path';
 // Global in-memory cache to support Vercel serverless read-only environments
 let MEMORY_TEMPLATES_CACHE: any = null;
 
+const jsonFilePath = path.join(process.cwd(), 'src', 'lib', 'templates.json');
+
+// Helper to ensure persistent load across hot-reloads or cold-starts
+function loadTemplates() {
+  if (MEMORY_TEMPLATES_CACHE) {
+    return MEMORY_TEMPLATES_CACHE;
+  }
+  try {
+    if (fs.existsSync(jsonFilePath)) {
+      const data = fs.readFileSync(jsonFilePath, 'utf8');
+      MEMORY_TEMPLATES_CACHE = JSON.parse(data);
+      return MEMORY_TEMPLATES_CACHE;
+    }
+  } catch (e) {
+    console.error('[Admin Templates loadTemplates] JSON file read failed:', e);
+  }
+  return LOCALIZED_TEMPLATES;
+}
+
 export async function GET(request: NextRequest) {
   try {
     // GET templates list is public for clients to receive live preset updates instantly
+    const templates = loadTemplates();
     return NextResponse.json({
       success: true,
-      templates: MEMORY_TEMPLATES_CACHE || LOCALIZED_TEMPLATES
+      templates
     });
   } catch (error) {
     console.error('[Admin Templates GET] Error:', error);
@@ -35,6 +55,14 @@ export async function POST(request: NextRequest) {
 
     // Set globally in memory cache first for instant runtime updates in Vercel
     MEMORY_TEMPLATES_CACHE = templates;
+
+    // Persist to json file first for 100% durable disk backup
+    try {
+      fs.writeFileSync(jsonFilePath, JSON.stringify(templates, null, 2), 'utf8');
+      console.log('[Admin Templates POST] Successfully persisted templates.json to disk.');
+    } catch (jsonWriteError) {
+      console.warn('[Admin Templates POST] templates.json persistence failed:', jsonWriteError);
+    }
 
     // Mutate the imported LOCALIZED_TEMPLATES object in-place to bypass Node/ESM module caching issues
     try {
