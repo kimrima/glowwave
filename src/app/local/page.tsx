@@ -4493,7 +4493,8 @@ function LocalFullscreenSignboard({ preset, onClose, locale }: LocalFullscreenSi
     displayText,
     preset.effect || 'none',
     preset.font_size || 100,
-    isForcedLandscape
+    isForcedLandscape,
+    preset.font_family
   );
 
   // ESC key listener

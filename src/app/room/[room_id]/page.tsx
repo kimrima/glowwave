@@ -388,7 +388,8 @@ export default function AudienceRoom() {
     displayText,
     currentPreset.effect,
     currentPreset.font_size || 100,
-    isForcedLandscape
+    isForcedLandscape,
+    currentPreset.font_family
   );
 
   // Active Locale State

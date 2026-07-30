@@ -6587,7 +6587,8 @@ function HostFullscreenSignboard({ preset, onClose, activeLocale }: { preset: Pr
     displayText,
     preset.effect || 'none',
     preset.font_size || 100,
-    isForcedLandscape
+    isForcedLandscape,
+    preset.font_family
   );
 
   // Exiting triggers
@@ -6758,14 +6759,15 @@ function HostFullscreenSignboard({ preset, onClose, activeLocale }: { preset: Pr
   const isMarquee = preset.effect === 'marquee';
 
   const getFontFamilyClass = (fontFamily?: string) => {
+    const loc = preset.locale || activeLocale || 'ko';
     switch (fontFamily) {
-      case 'sans-thin': return 'font-sign-sans-thin font-bold';
-      case 'sans-thick': return 'font-sign-sans-thick font-black';
-      case 'serif': return 'font-sign-serif font-bold';
-      case 'neon': return 'font-sign-neon font-black';
-      case 'pixel': return 'font-sign-pixel';
-      case 'plump': return 'font-sign-plump font-black';
-      default: return 'font-sign-sans-thin font-bold';
+      case 'sans-thin': return `font-sign-sans-thin-${loc} font-bold`;
+      case 'sans-thick': return `font-sign-sans-thick-${loc} font-black`;
+      case 'serif': return `font-sign-serif-${loc} font-bold`;
+      case 'neon': return `font-sign-neon-${loc} font-black`;
+      case 'pixel': return `font-sign-pixel-${loc}`;
+      case 'plump': return `font-sign-plump-${loc} font-black`;
+      default: return `font-sign-sans-thin-${loc} font-bold`;
     }
   };
 

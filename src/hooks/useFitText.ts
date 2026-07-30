@@ -6,7 +6,13 @@ const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffec
  * Hook to dynamically calculate font size to fit text perfectly on 1 line 
  * without wrapping or overflowing the screen boundaries, relative to container dimensions.
  */
-export default function useFitText(text: string, effect: string, sizePercent: number | undefined, isForcedLandscape?: boolean) {
+export default function useFitText(
+  text: string, 
+  effect: string, 
+  sizePercent: number | undefined, 
+  isForcedLandscape?: boolean,
+  fontFamily?: string
+) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [fontSize, setFontSize] = useState<string>('8vw'); // Fallback style before layout computation
 
@@ -123,7 +129,7 @@ export default function useFitText(text: string, effect: string, sizePercent: nu
       window.clearTimeout(mountTimeout2);
       resizeTimeouts.forEach((t) => window.clearTimeout(t));
     };
-  }, [text, effect, sizePercent, isForcedLandscape]);
+  }, [text, effect, sizePercent, isForcedLandscape, fontFamily]);
 
   return { containerRef, fontSize };
 }

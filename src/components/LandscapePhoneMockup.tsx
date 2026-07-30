@@ -9,21 +9,22 @@ interface LandscapePhoneMockupProps {
 export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupProps) {
   // Styles for the font families matching global CSS definitions
   const getFontFamilyClass = () => {
+    const loc = preset.locale || 'ko';
     switch (preset.font_family) {
       case 'sans-thin':
-        return 'font-sign-sans-thin font-bold';
+        return `font-sign-sans-thin-${loc} font-bold`;
       case 'sans-thick':
-        return 'font-sign-sans-thick font-black';
+        return `font-sign-sans-thick-${loc} font-black`;
       case 'serif':
-        return 'font-sign-serif font-bold';
+        return `font-sign-serif-${loc} font-bold`;
       case 'neon':
-        return 'font-sign-neon font-black';
+        return `font-sign-neon-${loc} font-black`;
       case 'pixel':
-        return 'font-sign-pixel';
+        return `font-sign-pixel-${loc}`;
       case 'plump':
-        return 'font-sign-plump font-black';
+        return `font-sign-plump-${loc} font-black`;
       default:
-        return 'font-sign-sans-thin font-bold';
+        return `font-sign-sans-thin-${loc} font-bold`;
     }
   };
 
@@ -111,7 +112,9 @@ export default function LandscapePhoneMockup({ preset }: LandscapePhoneMockupPro
   const { containerRef, fontSize } = useFitText(
     displayText,
     preset.effect || 'none',
-    preset.font_size || 100
+    preset.font_size || 100,
+    undefined,
+    preset.font_family
   );
 
   const isDuoSiren = (isBlink && !!preset.bg_color_secondary) || isLuckyDraw;
