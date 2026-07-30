@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Preset, EffectType } from '@/lib/types';
+import { Preset, EffectType, getMaxTextLength } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import QRScannerModal from '@/components/QRScannerModal';
 import { t, Locale } from '@/lib/translations';
@@ -898,13 +898,16 @@ export default function Home() {
                   <input
                     type="text"
                     value={demoPreset.text}
-                    onChange={(e) => handleDemoPresetChange('text', e.target.value)}
+                    onChange={(e) => {
+                      const maxLen = getMaxTextLength(demoPreset.effect);
+                      handleDemoPresetChange('text', e.target.value.slice(0, maxLen));
+                    }}
                     className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/20 text-xs font-semibold"
                     placeholder={t('sim_text_placeholder', activeLocale)}
-                    maxLength={15}
+                    maxLength={getMaxTextLength(demoPreset.effect)}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-mono text-zinc-600 font-bold">
-                    {demoPreset.text.length}/15
+                    {demoPreset.text.length}/{getMaxTextLength(demoPreset.effect)}
                   </span>
                 </div>
               </div>

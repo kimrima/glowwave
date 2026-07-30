@@ -100,7 +100,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#4C1D95",
-          "text": "오늘의 주인공은 너야 👑",
+          "text": "오늘 주인공은 너야 👑",
           "text_color": "#FDE047",
           "effect": "none",
           "speed": 1000,
@@ -122,7 +122,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#2E1065",
-          "text": "청춘은 60부터! 화이팅 🌸",
+          "text": "청춘은 60부터! 🌸",
           "text_color": "#FDE047",
           "effect": "none",
           "speed": 1000,
@@ -133,7 +133,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#FFE4E6",
-          "text": "울엄마 환갑을 축하해요 💐",
+          "text": "엄마 환갑 축하해요 💐",
           "text_color": "#E11D48",
           "effect": "none",
           "speed": 1000,
@@ -144,7 +144,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E3A8A",
-          "text": "세상 최고 멋진 아빠 칠순 🎉",
+          "text": "최고 멋진 아빠 칠순 🎉",
           "text_color": "#FFFFFF",
           "effect": "blink",
           "speed": 1921,
@@ -199,7 +199,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#000000",
-          "text": "꽃길만 걷자 우리 공주 👑",
+          "text": "꽃길만 걷자 공주 👑",
           "text_color": "#F59E0B",
           "effect": "none",
           "speed": 1000,
@@ -437,7 +437,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E2937",
-          "text": "노래 제목이 궁금해요 🎤❓",
+          "text": "노래 제목이 궁금해요 🎤",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -565,7 +565,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#B91C1C",
-          "text": "끝까지 포기하지 마! 🔥",
+          "text": "끝까지 포기하지 마 🔥",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -620,7 +620,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E2937",
-          "text": "삼진 아웃 잡으러 가자! ⚡",
+          "text": "삼진 아웃 잡으러 가자 ⚡",
           "text_color": "#00FFFF",
           "effect": "blink",
           "speed": 1921,
@@ -642,7 +642,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#15803D",
-          "text": "할 수 있다! 포기 금지 ✊",
+          "text": "할 수 있다 포기 금지 ✊",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -781,7 +781,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#7F1D1D",
-          "text": "새해 복 많이 받으세요 🌅",
+          "text": "새해 복 많이 받으세요",
           "text_color": "#FDE047",
           "effect": "none",
           "speed": 1000,
@@ -803,7 +803,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#DB2777",
-          "text": "오늘 생일인 사람 소리질러!! 🎂",
+          "text": "생일인 사람 소리질러!! 🎂",
           "text_color": "#FFFFFF",
           "effect": "blink",
           "speed": 1921,
@@ -975,7 +975,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#7F1D1D",
-          "text": "노키즈존 No Kids Zone 🚼",
+          "text": "노키즈존 No Kids 🚼",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -1006,7 +1006,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#DB2777",
-          "text": "Happy Birthday! 🎂",
+          "text": "Happy Birthday 🎂",
           "text_color": "#FFFFFF",
           "effect": "blink",
           "speed": 1921,
@@ -1017,7 +1017,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#DB2777",
-          "text": "Congratulations! 🎉",
+          "text": "Congrats! 🎉",
           "text_color": "#FFFFFF",
           "effect": "blink",
           "speed": 1921,
@@ -1028,7 +1028,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#4C1D95",
-          "text": "Today is your day 👑",
+          "text": "Today is your day",
           "text_color": "#FDE047",
           "effect": "none",
           "speed": 1000,
@@ -1039,7 +1039,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#4C1D95",
-          "text": "Here Comes the Bride 👰",
+          "text": "Here Comes Bride",
           "text_color": "#FDE047",
           "effect": "none",
           "speed": 1000,
@@ -1050,7 +1050,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#FCE7F3",
-          "text": "Happily Ever After 💖",
+          "text": "Ever After 💖",
           "text_color": "#BE185D",
           "effect": "none",
           "speed": 1000,
@@ -1061,7 +1061,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#FCE7F3",
-          "text": "Bride & Groom 🤵👰",
+          "text": "Bride & Groom",
           "text_color": "#BE185D",
           "effect": "none",
           "speed": 1000,
@@ -1105,7 +1105,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E3A8A",
-          "text": "Best Night Ever 💫",
+          "text": "Best Night Ever",
           "text_color": "#FFFFFF",
           "effect": "blink",
           "speed": 1921,
@@ -1116,7 +1116,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E3A8A",
-          "text": "Happy Graduation! 🎓",
+          "text": "Happy Grad! 🎓",
           "text_color": "#FFFFFF",
           "effect": "blink",
           "speed": 1921,
@@ -1149,7 +1149,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#FFE4E6",
-          "text": "Best Couple Ever 💑",
+          "text": "Best Couple Ever",
           "text_color": "#BE185D",
           "effect": "none",
           "speed": 1000,
@@ -1160,7 +1160,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#2E1065",
-          "text": "Happy Anniversary 🥂",
+          "text": "Happy Anniv. 🥂",
           "text_color": "#FDE047",
           "effect": "none",
           "speed": 1000,
@@ -1182,7 +1182,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#DB2777",
-          "text": "Happy Anniversary! 🥂",
+          "text": "Happy Anniv.! 🥂",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -1193,7 +1193,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#9333EA",
-          "text": "Will You Marry Me? 💍",
+          "text": "Marry Me? 💍",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -1204,7 +1204,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#F43F5E",
-          "text": "Happy Mother's Day 🌸",
+          "text": "Happy Mom's Day",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -1233,7 +1233,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#F59E0B",
-          "text": "MAKE SOME NOISE! 🔊",
+          "text": "MAKE SOME NOISE!",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -1244,7 +1244,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E1B4B",
-          "text": "LIVE MUSIC TONIGHT 🎶",
+          "text": "LIVE MUSIC 🎶",
           "text_color": "#00FFFF",
           "effect": "none",
           "speed": 1000,
@@ -1266,7 +1266,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#312E81",
-          "text": "Your Voice is Magic ✨",
+          "text": "Voice is Magic ✨",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -1288,7 +1288,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#0B0B0F",
-          "text": "Support the music! 💰",
+          "text": "Support music! 💰",
           "text_color": "#22C55E",
           "effect": "marquee",
           "speed": 30061,
@@ -1343,7 +1343,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#F59E0B",
-          "text": "Absolute Masterpiece 🏆",
+          "text": "Masterpiece 🏆",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -1365,7 +1365,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#4F46E5",
-          "text": "You are a Superstar! ⭐",
+          "text": "Superstar! ⭐",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -1460,7 +1460,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#B91C1C",
-          "text": "Fight till the end! 🔥",
+          "text": "Fight till end!",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -1654,7 +1654,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#EF4444",
-          "text": "Shots! Shots! Shots! 🥃",
+          "text": "Shots! Shots! 🥃",
           "text_color": "#FFFFFF",
           "effect": "blink",
           "speed": 1921,
@@ -1665,7 +1665,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#7C3AED",
-          "text": "Club Session ON 🎛️",
+          "text": "Club Session ON",
           "text_color": "#00FFCC",
           "effect": "blink",
           "speed": 1921,
@@ -1837,7 +1837,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#000000",
-          "text": "No Outside Food 🚫",
+          "text": "No Outside Food",
           "text_color": "#EF4444",
           "effect": "none",
           "speed": 1000,
@@ -1892,7 +1892,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#7F1D1D",
-          "text": "Order via QR code 📱",
+          "text": "Order via QR 📱",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -2818,7 +2818,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#DB2777",
-          "text": "¡Vivan los Novios! 👰🤵",
+          "text": "Vivan los Novios",
           "text_color": "#FFFFFF",
           "effect": "blink",
           "speed": 1921,
@@ -2851,7 +2851,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#2E1065",
-          "text": "Brindis de Amor 🥂",
+          "text": "Brindis de Amor",
           "text_color": "#FDE047",
           "effect": "none",
           "speed": 1000,
@@ -2862,7 +2862,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#FFE4E6",
-          "text": "Felices Para Siempre ✨",
+          "text": "Felices x Siempre",
           "text_color": "#E11D48",
           "effect": "none",
           "speed": 1000,
@@ -2873,7 +2873,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#000000",
-          "text": "¿Te casarías conmigo? 💍",
+          "text": "¿Te casas? 💍",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -2884,7 +2884,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#DB2777",
-          "text": "Feliz Cumpleaños 🎂",
+          "text": "Feliz Cumple 🎂",
           "text_color": "#FFFFFF",
           "effect": "blink",
           "speed": 1921,
@@ -2906,7 +2906,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#FCE7F3",
-          "text": "El amor de mi vida 💖",
+          "text": "Amor de mi vida",
           "text_color": "#BE185D",
           "effect": "none",
           "speed": 1000,
@@ -2917,7 +2917,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#2E1065",
-          "text": "Fiesta de Compromiso 💍",
+          "text": "Compromiso 💍",
           "text_color": "#FDE047",
           "effect": "none",
           "speed": 1000,
@@ -2928,7 +2928,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#FFE4E6",
-          "text": "Shower de Novias 👰‍♀️",
+          "text": "Bridal Shower 🥂",
           "text_color": "#E11D48",
           "effect": "none",
           "speed": 1000,
@@ -2939,7 +2939,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#F43F5E",
-          "text": "Feliz Aniversario 🥂",
+          "text": "Feliz Aniv. 🥂",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -2950,7 +2950,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#9333EA",
-          "text": "¡Feliz Día de la Madre! 🌸",
+          "text": "Feliz Día Mamá 🌸",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -2961,7 +2961,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#BE185D",
-          "text": "¡Bautizo de Ensueño! 👶",
+          "text": "Mi Bautizo 👶",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -2990,7 +2990,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#F59E0B",
-          "text": "¡QUE SE ESCUCHE! 🔊",
+          "text": "¡Que se escuche!",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -3045,7 +3045,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#4F46E5",
-          "text": "Sígueme en Instagram 📱",
+          "text": "Insta: @glowwave 📱",
           "text_color": "#FFFFFF",
           "effect": "marquee",
           "speed": 30061,
@@ -3056,7 +3056,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#0B0B0F",
-          "text": "Propina para el artista 💰",
+          "text": "Apoya al artista 💰",
           "text_color": "#22C55E",
           "effect": "marquee",
           "speed": 30061,
@@ -3067,7 +3067,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E1B4B",
-          "text": "Acústico en vivo 🎸",
+          "text": "En vivo 🎸",
           "text_color": "#00FFFF",
           "effect": "none",
           "speed": 1000,
@@ -3078,7 +3078,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#065F46",
-          "text": "Cantemos juntos 🎤",
+          "text": "Canta conmigo 🎤",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -3089,7 +3089,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#065F46",
-          "text": "Canciones a pedido 📝",
+          "text": "Pide tu canción",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -3100,7 +3100,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#F59E0B",
-          "text": "¡Eres el mejor! 🏆",
+          "text": "Eres el mejor 🏆",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -3111,7 +3111,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#E11D48",
-          "text": "¡Nuevo Sencillo Lanzado! 🎧",
+          "text": "Nuevo Sencillo 🎧",
           "text_color": "#FFFFFF",
           "effect": "marquee",
           "speed": 30061,
@@ -3122,7 +3122,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E1B4B",
-          "text": "Eres una Estrella ⭐",
+          "text": "Eres una estrella",
           "text_color": "#00FFFF",
           "effect": "none",
           "speed": 1000,
@@ -3133,7 +3133,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#4F46E5",
-          "text": "Canta con el Alma 🎤",
+          "text": "Canta con el alma",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -3162,7 +3162,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#0000FF",
-          "text": "¡VISCA EL BARÇA! 🔵🔴",
+          "text": "¡Visca el Barça!",
           "text_color": "#EF4444",
           "effect": "blink",
           "speed": 1921,
@@ -3206,7 +3206,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#B91C1C",
-          "text": "¡Vamos Selección! 🇨🇴🇲🇽🇪🇸",
+          "text": "¡Vamos Selección!",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -3217,7 +3217,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#B91C1C",
-          "text": "Fuerza y Corazón 🔥",
+          "text": "Fuerza y Corazón",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -3228,7 +3228,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#000000",
-          "text": "¡Árbitro vendido! 🦓",
+          "text": "Árbitro vendido",
           "text_color": "#EF4444",
           "effect": "none",
           "speed": 1000,
@@ -3250,7 +3250,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#0B0B0F",
-          "text": "Jugador del Partido 🏅",
+          "text": "MVP del Partido",
           "text_color": "#F59E0B",
           "effect": "none",
           "speed": 1000,
@@ -3261,7 +3261,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E3A8A",
-          "text": "La afición te apoya 📣",
+          "text": "Te apoyamos 📣",
           "text_color": "#FDE047",
           "effect": "blink",
           "speed": 1921,
@@ -3272,7 +3272,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E2937",
-          "text": "¡Defensa impenetrable! 🛡️",
+          "text": "Muro Defensivo",
           "text_color": "#00FFFF",
           "effect": "blink",
           "speed": 1921,
@@ -3283,7 +3283,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#A30027",
-          "text": "¡Bateo de Walk-off! ⚾",
+          "text": "Bateo Walk-off ⚾",
           "text_color": "#FFC72C",
           "effect": "blink",
           "speed": 1921,
@@ -3294,7 +3294,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#15803D",
-          "text": "¡La defensa gana campeonatos! 🛡️",
+          "text": "Defensa Ganadora",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -3305,7 +3305,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E3A8A",
-          "text": "El Jugador Número 12 ⚽",
+          "text": "Jugador Nro 12 ⚽",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -3411,7 +3411,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#EF4444",
-          "text": "Noche de Reggaetón 💃",
+          "text": "Noche Reggaetón",
           "text_color": "#FFFFFF",
           "effect": "blink",
           "speed": 1921,
@@ -3433,7 +3433,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#F97316",
-          "text": "Fiesta de Halloween 🎃",
+          "text": "Fiesta Halloween",
           "text_color": "#000000",
           "effect": "blink",
           "speed": 1921,
@@ -3455,7 +3455,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#7C3AED",
-          "text": "¡A mover el esqueleto! 🕺",
+          "text": "¡A bailar! 🕺",
           "text_color": "#00FFCC",
           "effect": "blink",
           "speed": 1921,
@@ -3466,7 +3466,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#DB2777",
-          "text": "Invitado de Honor VIP 👑",
+          "text": "Invitado VIP 👑",
           "text_color": "#FFFFFF",
           "effect": "blink",
           "speed": 1921,
@@ -3550,7 +3550,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#0B0B0F",
-          "text": "SE APRECIAN PROPINAS 💵",
+          "text": "Propinas bienvenidas",
           "text_color": "#22C55E",
           "effect": "marquee",
           "speed": 30061,
@@ -3583,7 +3583,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#000000",
-          "text": "Área de no fumar 🚭",
+          "text": "No fumar 🚭",
           "text_color": "#EF4444",
           "effect": "none",
           "speed": 1000,
@@ -3594,7 +3594,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E2937",
-          "text": "Regreso enseguida ⏳",
+          "text": "Vuelvo pronto ⏳",
           "text_color": "#F59E0B",
           "effect": "none",
           "speed": 1000,
@@ -3616,7 +3616,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E2937",
-          "text": "Pago solo en efectivo 💵",
+          "text": "Solo efectivo 💵",
           "text_color": "#F59E0B",
           "effect": "none",
           "speed": 1000,
@@ -3627,7 +3627,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#0D9488",
-          "text": "¡Nuevo Menú Disponible! 🌟",
+          "text": "¡Nuevo Menú! 🌟",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -3638,7 +3638,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#1E2937",
-          "text": "Valide su boleto de estacionamiento 🚗",
+          "text": "Valide su ticket 🚗",
           "text_color": "#FFFFFF",
           "effect": "marquee",
           "speed": 30061,
@@ -3649,7 +3649,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#7F1D1D",
-          "text": "Ordene por código QR 📱",
+          "text": "Ordene por QR 📱",
           "text_color": "#FFFFFF",
           "effect": "none",
           "speed": 1000,
@@ -3768,7 +3768,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#FCE7F3",
-          "text": "執子之手，與子偕老 👩‍❤️‍👨",
+          "text": "執子之手，與子偕老",
           "text_color": "#BE185D",
           "effect": "none",
           "speed": 1000,

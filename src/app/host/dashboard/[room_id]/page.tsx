@@ -28,7 +28,7 @@ import {
   FolderHeart,
   RotateCw
 } from 'lucide-react';
-import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS, getLocalizedPrice, getLocalizedTierName } from '@/lib/types';
+import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS, getLocalizedPrice, getLocalizedTierName, getMaxTextLength } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import jsQR from 'jsqr';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
@@ -167,7 +167,6 @@ export default function HostDashboard() {
     };
     fetchLiveTemplates();
   }, []);
-  const maxTextLength = (activeLocale === 'en' || activeLocale === 'es') ? 20 : 15;
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const defaults = getDefaultsByLocale(activeLocale);
@@ -2791,7 +2790,10 @@ export default function HostDashboard() {
                   <input
                     type="text"
                     value={customText}
-                    onChange={(e) => setCustomText(e.target.value.slice(0, maxTextLength))}
+                    onChange={(e) => {
+                      const maxLen = getMaxTextLength(currentBroadcastPreset.effect);
+                      setCustomText(e.target.value.slice(0, maxLen));
+                    }}
                     placeholder={
                       {
                         ko: '즉석 구호 입력 (예: 소리질러!)',
@@ -2803,10 +2805,10 @@ export default function HostDashboard() {
                       }[activeLocale] || '즉석 구호 입력 (예: 소리질러!)'
                     }
                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:border-white text-sm font-semibold"
-                    maxLength={maxTextLength}
+                    maxLength={getMaxTextLength(currentBroadcastPreset.effect)}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold font-mono text-zinc-600">
-                    {customText.length}/{maxTextLength}
+                    {customText.length}/{getMaxTextLength(currentBroadcastPreset.effect)}
                   </span>
                 </div>
                 
@@ -3318,10 +3320,10 @@ export default function HostDashboard() {
                     <input
                       type="text"
                       value={customResultText}
-                      onChange={(e) => setCustomResultText(e.target.value.slice(0, maxTextLength))}
+                      onChange={(e) => setCustomResultText(e.target.value.slice(0, 17))}
                       placeholder="START"
                       className="w-full bg-black/45 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white text-xs md:text-sm font-semibold h-12"
-                      maxLength={maxTextLength}
+                      maxLength={17}
                     />
                   </div>
                 </div>
@@ -3381,19 +3383,19 @@ export default function HostDashboard() {
                     <input
                       type="text"
                       value={customResultText}
-                      onChange={(e) => setCustomResultText(e.target.value.slice(0, maxTextLength))}
+                      onChange={(e) => setCustomResultText(e.target.value.slice(0, 17))}
                       placeholder={
                         {
                           ko: '아쉽네요! 다음 기회에..',
                           en: 'Better luck next time!',
                           ja: '残念！次の機会に..',
                           es: '¡Suerte para la próxima!',
-                          'zh-TW': '真可惜！下次還有機會..',
-                          'zh-HK': '真可惜！下次還有機會..'
+                          'zh-TW': '真開心！下次還有機會..',
+                          'zh-HK': '真開心！下次還有機會..'
                         }[activeLocale] || '아쉽네요! 다음 기회에..'
                       }
                       className="w-full bg-black/45 border border-white/5 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white text-xs md:text-sm font-semibold h-12"
-                      maxLength={maxTextLength}
+                      maxLength={17}
                     />
                   </div>
                 </div>
@@ -3836,9 +3838,12 @@ export default function HostDashboard() {
                   <input
                     type="text"
                     value={editingPreset.text || ''}
-                    onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, maxTextLength) }))}
+                    onChange={(e) => {
+                      const maxLen = getMaxTextLength(editingPreset.effect);
+                      setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, maxLen) }));
+                    }}
                     className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-sm font-semibold"
-                    maxLength={maxTextLength}
+                    maxLength={getMaxTextLength(editingPreset.effect)}
                   />
                 </div>
 
@@ -4164,9 +4169,9 @@ export default function HostDashboard() {
                       <input
                         type="text"
                         value={editingPreset.result_text || ''}
-                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, maxTextLength) }))}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, 17) }))}
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
-                        maxLength={maxTextLength}
+                        maxLength={17}
                         placeholder="START"
                       />
                     </div>
@@ -4192,9 +4197,9 @@ export default function HostDashboard() {
                       <input
                         type="text"
                         value={editingPreset.text || ''}
-                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, maxTextLength) }))}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, text: e.target.value.slice(0, 17) }))}
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
-                        maxLength={maxTextLength}
+                        maxLength={17}
                         placeholder={
                           {
                             ko: '당첨!',
@@ -4224,9 +4229,9 @@ export default function HostDashboard() {
                       <input
                         type="text"
                         value={editingPreset.result_text || ''}
-                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, maxTextLength) }))}
+                        onChange={(e) => setEditingPreset(prev => ({ ...prev!, result_text: e.target.value.slice(0, 17) }))}
                         className="w-full bg-[#0B0B0F] border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-white text-xs font-semibold"
-                        maxLength={maxTextLength}
+                        maxLength={17}
                         placeholder={
                           {
                             ko: '아쉽네요! 다음 기회에..',
@@ -6240,10 +6245,10 @@ export default function HostDashboard() {
                       <input
                         type="text"
                         value={newSlotName}
-                        onChange={(e) => setNewSlotName(e.target.value.slice(0, maxTextLength))}
+                        onChange={(e) => setNewSlotName(e.target.value.slice(0, 20))}
                         placeholder={t('enter_theme_name', activeLocale)}
                         className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-white/40 focus:bg-black/50 text-sm font-semibold transition-colors"
-                        maxLength={maxTextLength}
+                        maxLength={20}
                       />
                       <button
                         type="button"

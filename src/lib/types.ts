@@ -284,3 +284,10 @@ export interface CSInquiry {
   status: 'pending' | 'resolved';
   created_at: string;
 }
+
+export const getMaxTextLength = (effect?: string): number => {
+  if (effect === 'scroll' || effect === 'marquee') {
+    return 20;
+  }
+  return 17;
+}
