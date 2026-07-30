@@ -12,7 +12,7 @@ import {
 import { Preset } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import useFitText from '@/hooks/useFitText';
-import { Locale } from '@/lib/translations';
+import { Locale, t } from '@/lib/translations';
 
 const ROOM_TRANSLATIONS: Record<Locale, Record<string, string>> = {
   ko: {
@@ -1147,7 +1147,7 @@ export default function AudienceRoom() {
           className="mt-5 px-5 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs shadow-xl shadow-indigo-600/40 border border-indigo-400 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
         >
           <RotateCw className="w-4 h-4 text-indigo-200 animate-spin-slow" />
-          회전 잠금 해제 없이 즉시 가로로 사용
+          {t('bypass_rotation_landscape', activeLocale)}
         </button>
       </div>
       )}
@@ -1246,7 +1246,7 @@ export default function AudienceRoom() {
           }`}
         >
           <RotateCw className="w-3 h-3 text-indigo-400 animate-spin-slow" />
-          {isForcedLandscape ? '가로 고정 해제 (세로 복귀)' : '회전 잠금 해제 없이 즉시 가로로 사용'}
+          {isForcedLandscape ? t('release_landscape_lock', activeLocale) : t('bypass_rotation_landscape', activeLocale)}
         </button>
         {wakeLockError && (
           <span className="px-3.5 py-2 rounded-xl bg-amber-500/20 backdrop-blur-md border border-amber-500/30 text-[9px] text-amber-300 font-extrabold flex items-center gap-1.5 select-none shadow-lg animate-pulse">

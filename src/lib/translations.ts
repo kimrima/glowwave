@@ -301,6 +301,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     btn_purchase_store_annual: '연간 구독으로 33% 할인 (₩39,000/년)',
     sync_price_store_monthly: '₩4,900 / 월',
     sync_price_store_annual: '₩39,000 / 년',
+    bypass_rotation_landscape: '회전 잠금 해제 없이 즉시 가로로 사용',
+    restore_portrait: '세로 복귀',
+    release_landscape_lock: '가로 고정 해제 (세로 복귀)',
   },
   en: {
     my_presets: 'My Presets',
@@ -599,6 +602,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     btn_purchase_store_annual: 'Save 33% with Annual Plan ($29.99/yr)',
     sync_price_store_monthly: '$3.99 / mo',
     sync_price_store_annual: '$29.99 / yr',
+    bypass_rotation_landscape: 'Use Landscape directly without unlocking rotation',
+    restore_portrait: 'Return to Portrait',
+    release_landscape_lock: 'Unlock Landscape (Return to Portrait)',
   },
   ja: {
     my_presets: 'マイプリセット',
@@ -897,6 +903,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     btn_purchase_store_annual: '年額プランで33%割引 (¥4,500/年)',
     sync_price_store_monthly: '¥550 / 月',
     sync_price_store_annual: '¥4,500 / 年',
+    bypass_rotation_landscape: '画面回転ロック解除なしで即横画面で使用',
+    restore_portrait: '縦画面に戻る',
+    release_landscape_lock: '横画面固定を解除 (縦画面に戻る)',
   },
   es: {
     my_presets: 'Mis Ajustes',
@@ -1195,6 +1204,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     btn_purchase_store_annual: 'Ahorra 33% con el Plan Anual ($29.99/año)',
     sync_price_store_monthly: '$3.99 / mes',
     sync_price_store_annual: '$29.99 / año',
+    bypass_rotation_landscape: 'Usar en horizontal sin desbloquear rotación',
+    restore_portrait: 'Volver a vertical',
+    release_landscape_lock: 'Desbloquear horizontal (Volver a vertical)',
   },
   'zh-TW': {
     my_presets: '我的預設',
@@ -1493,6 +1505,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     btn_purchase_store_annual: '年費訂閱享 33% 優惠 (NT$990/年)',
     sync_price_store_monthly: 'NT$130 / 月',
     sync_price_store_annual: 'NT$990 / 年',
+    bypass_rotation_landscape: '無需解鎖旋轉即刻以橫螢幕使用',
+    restore_portrait: '返回直螢幕',
+    release_landscape_lock: '解除橫螢幕鎖定 (返回直螢幕)',
   },
   'zh-HK': {
     my_presets: '我的預設',
@@ -1791,6 +1806,9 @@ export const TRANSLATIONS: Record<Locale, Record<string, string>> = {
     btn_purchase_store_annual: '年費訂閱享 33% 優惠 (HK$240/年)',
     sync_price_store_monthly: 'HK$30 / 月',
     sync_price_store_annual: 'HK$240 / 年',
+    bypass_rotation_landscape: '無需解鎖旋轉即刻以橫螢幕使用',
+    restore_portrait: '返回直螢幕',
+    release_landscape_lock: '解除橫螢幕鎖定 (返回直螢幕)',
   }
 };
 

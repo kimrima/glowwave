@@ -4831,7 +4831,7 @@ function LocalFullscreenSignboard({ preset, onClose, locale }: LocalFullscreenSi
           }`}
         >
           <RotateCw className="w-3.5 h-3.5 text-indigo-300" />
-          <span>{isForcedLandscape ? '세로 복귀' : '회전 잠금 해제 없이 즉시 가로로 사용'}</span>
+          <span>{isForcedLandscape ? t('restore_portrait', locale) : t('bypass_rotation_landscape', locale)}</span>
         </button>
       </div>
 

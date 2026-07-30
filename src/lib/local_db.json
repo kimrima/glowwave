@@ -77,6 +77,16 @@
       "max_participants": 3,
       "current_participants": 0,
       "created_at": "2026-07-29T15:50:19.841Z"
+    },
+    "SYNC-EA1X": {
+      "id": "SYNC-EA1X",
+      "host_session_token": "283d464f-673c-4aea-93a3-582469bf66c1",
+      "email": "anonymous-local@glowwave.app",
+      "tier": "free",
+      "status": "active",
+      "max_participants": 1,
+      "current_participants": 0,
+      "created_at": "2026-07-30T16:48:19.090Z"
     }
   },
   "payments": [
@@ -393,6 +403,16 @@
       "text_color": "#FFFFFF",
       "effect": "none",
       "speed": 1000
+    },
+    "SYNC-EA1X": {
+      "bg_color": "#F97316",
+      "text": "반갑습니다 글로우웨이브!",
+      "text_color": "#FFFFFF",
+      "effect": "marquee",
+      "speed": 30061,
+      "font_family": "sans-thin",
+      "font_size": 98,
+      "trigger_id": "1785007021594"
     }
   },
   "coupons": [],
@@ -836,6 +856,22 @@
     {
       "step": "step1_landing",
       "created_at": "2026-07-29T16:47:46.306Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-30T16:47:40.370Z"
+    },
+    {
+      "step": "step2_create",
+      "created_at": "2026-07-30T16:48:40.471Z"
+    },
+    {
+      "step": "step1_landing",
+      "created_at": "2026-07-30T16:49:39.696Z"
+    },
+    {
+      "step": "step1_landing",
+      "created_at": "2026-07-30T16:49:39.711Z"
     }
   ],
   "csInquiries": [
