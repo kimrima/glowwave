@@ -4,6 +4,9 @@ import { sendEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
+// Simple global in-memory map to store last OTP recovery send times
+const recoveryEmailCooldownMap = new Map<string, number>();
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -18,6 +21,20 @@ export async function GET(request: Request) {
     if (rooms.length === 0) {
       return NextResponse.json({ error: 'Room not found for this email', code: 'ROOM_NOT_FOUND' }, { status: 404 });
     }
+
+    // Cooldown Validation (3 Minutes)
+    const now = Date.now();
+    const lastRequestTime = recoveryEmailCooldownMap.get(email);
+    if (lastRequestTime && (now - lastRequestTime) < 3 * 60 * 1000) {
+      const remainingSeconds = Math.ceil((3 * 60 * 1000 - (now - lastRequestTime)) / 1000);
+      return NextResponse.json({ 
+        error: `최근 발송 이력이 있습니다. 스팸 방지를 위해 ${remainingSeconds}초 후 다시 시도해 주세요.`,
+        code: 'COOLDOWN_ACTIVE'
+      }, { status: 429 });
+    }
+
+    // Set cooldown timestamp
+    recoveryEmailCooldownMap.set(email, now);
 
     // Generate secure 6-digit OTP
     const otp = localDb.createRecoveryOtp(email);

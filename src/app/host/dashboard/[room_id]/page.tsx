@@ -638,7 +638,7 @@ export default function HostDashboard() {
     setAuthErrorMessage(null);
 
     try {
-      const response = await fetch(`/api/room/${roomId}/status?token=${token}`);
+      const response = await fetch(`/api/room/${roomId}/status?token=${token}&role=host`);
       if (!response.ok) {
         let errorMsg = {
           ko: '이 방의 생성 세션 정보가 브라우저에 없습니다. 결제하셨던 이메일을 통한 [구매 내역 복구] 기능을 사용해 권한을 획득하십시오.',

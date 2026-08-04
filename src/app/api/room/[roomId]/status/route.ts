@@ -13,6 +13,7 @@ export async function GET(
 
     const { searchParams } = new URL(request.url);
     const queryToken = searchParams.get('token');
+    const role = searchParams.get('role');
 
     const dbConfigured = isSupabaseConfigured();
     let room;
@@ -40,6 +41,13 @@ export async function GET(
     }
 
     const isHost = queryToken === room.host_session_token;
+
+    if (role === 'host' && !isHost) {
+      return NextResponse.json({ 
+        error: 'Unauthorized host token',
+        suggestion: '이 방의 대시보드 제어 권한이 브라우저 세션에 없거나 유효하지 않습니다. 구매 복구 기능을 활용해 대시보드 주소를 새로 발급받아 주세요.'
+      }, { status: 401 });
+    }
 
     return NextResponse.json({
       room_id: room.id,
