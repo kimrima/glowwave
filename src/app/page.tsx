@@ -7,7 +7,7 @@ import { Preset, EffectType, getMaxTextLength } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import QRScannerModal from '@/components/QRScannerModal';
 import { t, Locale } from '@/lib/translations';
-import { Globe, QrCode, Plus } from 'lucide-react';
+import { Globe, QrCode, Plus, Loader2 } from 'lucide-react';
 
 const getSpeedFactor = (ms: number, effect: string) => {
   if (effect === 'blink') {
@@ -403,6 +403,7 @@ export default function Home() {
   // Modal/Scanner for Room Join
   const [joinRoomCode, setJoinRoomCode] = useState('');
   const [joinError, setJoinError] = useState('');
+  const [isJoiningRoom, setIsJoiningRoom] = useState(false);
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
 
   const handleQRScanSuccess = (roomId: string) => {
@@ -410,13 +411,46 @@ export default function Home() {
     router.push(`/room/${roomId}`);
   };
 
-  const handleJoinRoomSubmit = (e: React.FormEvent) => {
+  const handleJoinRoomSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!joinRoomCode || joinRoomCode.trim().length !== 6) {
+    const cleanCode = joinRoomCode.trim().toUpperCase();
+    if (!cleanCode) {
       setJoinError(t('err_join_code', activeLocale));
       return;
     }
-    router.push(`/room/${joinRoomCode.trim().toUpperCase()}`);
+
+    if (cleanCode.startsWith('SYNC-')) {
+      router.push(`/room/${cleanCode}`);
+      return;
+    }
+
+    if (cleanCode.length !== 6) {
+      setJoinError(t('err_join_code', activeLocale));
+      return;
+    }
+
+    setIsJoiningRoom(true);
+    setJoinError('');
+    try {
+      const response = await fetch('/api/room/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ entry_code: cleanCode }),
+      });
+      
+      if (!response.ok) {
+        const errData = await response.json();
+        setJoinError(errData.error || '유효하지 않은 방 코드입니다.');
+        setIsJoiningRoom(false);
+        return;
+      }
+      
+      const data = await response.json();
+      router.push(`/room/${data.room_id}`);
+    } catch (err) {
+      setJoinError('네트워크 연결 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      setIsJoiningRoom(false);
+    }
   };
 
   const handleDemoPresetChange = (key: keyof Preset, value: any) => {
@@ -816,6 +850,7 @@ export default function Home() {
                   <input
                     type="text"
                     value={joinRoomCode}
+                    disabled={isJoiningRoom}
                     onChange={(e) => {
                       setJoinRoomCode(e.target.value.toUpperCase());
                       setJoinError('');
@@ -826,9 +861,11 @@ export default function Home() {
                   />
                   <button
                     type="submit"
-                    className="px-4 py-2.5 rounded-xl text-xs font-extrabold shrink-0 flex items-center justify-center gap-1.5 cursor-pointer bg-white text-black hover:bg-zinc-200 transition-all"
+                    disabled={isJoiningRoom}
+                    className="px-4 py-2.5 rounded-xl text-xs font-extrabold shrink-0 flex items-center justify-center gap-1.5 cursor-pointer bg-white text-black hover:bg-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {t('card_audience_btn', activeLocale)}
+                    {isJoiningRoom && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <span>{t('card_audience_btn', activeLocale)}</span>
                   </button>
                 </form>
                 {joinError && <p className="text-[10px] text-red-500 mb-2 text-center font-bold">{joinError}</p>}

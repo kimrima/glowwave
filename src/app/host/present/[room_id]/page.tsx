@@ -16,6 +16,7 @@ export default function PresentationView() {
   const [loading, setLoading] = useState(true);
   const [isValidRoom, setIsValidRoom] = useState<boolean | null>(null);
   const [roomStatus, setRoomStatus] = useState<string>('active');
+  const [roomEntryCode, setRoomEntryCode] = useState<string>('');
   const [activeParticipants, setActiveParticipants] = useState<number>(0);
   const [channelStatus, setChannelStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
   const [originUrl, setOriginUrl] = useState('');
@@ -71,6 +72,7 @@ export default function PresentationView() {
         const roomData = await response.json();
         setIsValidRoom(true);
         setRoomStatus(roomData.status || 'active');
+        setRoomEntryCode(roomData.entry_code || roomId);
         setPasscode(roomData.passcode || null);
         setLoading(false);
 
@@ -225,7 +227,7 @@ export default function PresentationView() {
           </div>
           <div className="space-y-2">
             <h2 className="text-lg font-black uppercase tracking-wider">송출 차단된 전광판 (Present)</h2>
-            <p className="text-xs text-zinc-400 font-bold font-mono">ROOM ID: {roomId}</p>
+            <p className="text-xs text-zinc-400 font-bold font-mono">ROOM ID: {roomEntryCode}</p>
           </div>
           <div className="p-4 bg-black/40 border border-white/5 rounded-2xl text-[11px] text-zinc-400 font-bold leading-relaxed text-left space-y-2.5">
             <p>🚨 본 전광판 방은 관리자 통제 정책에 의해 실시간 송출 및 제어가 **일시적으로 차단/정지**되었습니다.</p>
@@ -291,7 +293,7 @@ export default function PresentationView() {
             <span className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{t('present_remote_title', activeLocale)}</span>
             <div className="flex flex-wrap items-center justify-center gap-4 my-1">
               <div className="flex items-center gap-2">
-                <span className="text-3xl font-black text-indigo-300 font-mono tracking-widest">{roomId}</span>
+                <span className="text-3xl font-black text-indigo-300 font-mono tracking-widest">{roomEntryCode}</span>
                 <span className="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 text-[10px] font-bold">{t('present_entry_code', activeLocale)}</span>
               </div>
               {passcode && (
@@ -345,7 +347,7 @@ export default function PresentationView() {
 
       {/* Footer */}
       <footer className="text-center text-[10px] text-zinc-600 font-mono z-10">
-        ROOM CODE: <span className="text-indigo-400 font-bold">{roomId}</span> · URL: {audienceUrl}
+        ROOM CODE: <span className="text-indigo-400 font-bold">{roomEntryCode}</span> · URL: {audienceUrl}
       </footer>
     </div>
   );

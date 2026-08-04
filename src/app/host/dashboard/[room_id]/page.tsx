@@ -692,6 +692,7 @@ export default function HostDashboard() {
         max_participants: roomData.max_participants,
         created_at: roomData.created_at,
         passcode: roomData.passcode,
+        entry_code: roomData.entry_code,
       });
 
       // Determine active locale

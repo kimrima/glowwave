@@ -322,7 +322,7 @@ export const localDb = {
     }
   },
 
-  async createRoom(roomId: string, email: string, tier: TierType, hostSessionToken: string, passcode?: string, createdAt?: string): Promise<Room> {
+  async createRoom(roomId: string, email: string, tier: TierType, hostSessionToken: string, passcode?: string, createdAt?: string, entryCode?: string): Promise<Room> {
     await this.cleanupExpiredRooms();
     const config = TIER_CONFIGS[tier];
     const isSyncLocal = roomId.startsWith('SYNC-');
@@ -338,6 +338,7 @@ export const localDb = {
       current_participants: 0,
       created_at: createdAt || new Date().toISOString(),
       passcode: hashedPasscode,
+      entry_code: entryCode,
     };
 
     if (isSupabaseConfigured() && supabase) {
@@ -351,6 +352,7 @@ export const localDb = {
         current_participants: 0,
         created_at: newRoom.created_at,
         passcode: hashedPasscode,
+        entry_code: entryCode,
       });
       if (error) {
         console.error('[localDb] Supabase createRoom error:', error);
@@ -368,6 +370,33 @@ export const localDb = {
       this.saveToDisk();
     }
     return newRoom;
+  },
+
+  async getRoomByEntryCode(entryCode: string): Promise<Room | null> {
+    await this.cleanupExpiredRooms();
+    const upperCode = entryCode.trim().toUpperCase();
+
+    if (isSupabaseConfigured() && supabase) {
+      const { data, error } = await supabase
+        .from('rooms')
+        .select('*')
+        .eq('entry_code', upperCode)
+        .maybeSingle();
+
+      if (error) {
+        console.error('[localDb] Supabase getRoomByEntryCode error:', error);
+        return null;
+      }
+      return data;
+    } else {
+      this.loadFromDisk();
+      for (const room of this.rooms.values()) {
+        if (room.entry_code && room.entry_code.toUpperCase() === upperCode) {
+          return room;
+        }
+      }
+      return null;
+    }
   },
 
   async getRoom(roomId: string): Promise<Room | undefined> {

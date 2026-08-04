@@ -68,29 +68,44 @@ export async function POST(request: Request) {
     }
 
     const hostSessionToken = crypto.randomUUID();
-    const generateTargetRoomId = (): string => {
-      if (isSync) {
+    let roomId = '';
+    let entryCode: string | undefined = undefined;
+
+    if (isSync) {
+      const generateTargetRoomId = (): string => {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let result = '';
         for (let i = 0; i < 4; i++) {
           result += chars.charAt(Math.floor(Math.random() * chars.length));
         }
         return `SYNC-${result}`;
-      }
-      return generateRoomId();
-    };
-
-    let roomId = generateTargetRoomId();
-
-    // Prevent collision
-    let attempts = 0;
-    while ((await localDb.getRoom(roomId)) && attempts < 100) {
+      };
+      
       roomId = generateTargetRoomId();
-      attempts++;
+      let attempts = 0;
+      while ((await localDb.getRoom(roomId)) && attempts < 100) {
+        roomId = generateTargetRoomId();
+        attempts++;
+      }
+    } else {
+      // 1. roomId as 36-char secure UUID
+      roomId = crypto.randomUUID();
+      
+      // 2. entryCode as 6-char human-friendly code
+      const getUniqueEntryCode = async (): Promise<string> => {
+        let code = generateRoomId();
+        let attempts = 0;
+        while ((await localDb.getRoomByEntryCode(code)) && attempts < 100) {
+          code = generateRoomId();
+          attempts++;
+        }
+        return code;
+      };
+      entryCode = await getUniqueEntryCode();
     }
 
     // Create room
-    const room = await localDb.createRoom(roomId, email, tier, hostSessionToken, passcode, created_at);
+    const room = await localDb.createRoom(roomId, email, tier, hostSessionToken, passcode, created_at, entryCode);
     
     // Set status based on Tier. Paid tiers start as 'inactive' until payment success
     if (tier !== 'free') {
