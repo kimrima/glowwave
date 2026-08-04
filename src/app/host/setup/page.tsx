@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Globe, ChevronDown, X, ArrowLeft } from 'lucide-react';
-import { Preset, TierType, TIER_CONFIGS, getLocalizedPrice, getLocalizedTierName } from '@/lib/types';
+import { Preset, TierType, TIER_CONFIGS, getLocalizedPrice, getLocalizedTierName, getLocalizedDuration } from '@/lib/types';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
 import { t, Locale } from '@/lib/translations';
 import { getDefaultsByLocale } from '@/lib/templates';
@@ -997,17 +997,33 @@ export default function HostSetup() {
                         {getLocalizedTierName(tierKey, activeLocale)}
                         {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />}
                       </div>
-                      <div className="text-[10px] text-zinc-400 mt-1 font-semibold">
-                        {
+                      <div className="text-[10px] text-zinc-400 mt-1 font-semibold flex flex-wrap gap-x-3 gap-y-1">
+                        <span>
                           {
-                            ko: `최대 동시 접속 ${cfg.maxParticipants}명`,
-                            en: `Max participants: ${cfg.maxParticipants}`,
-                            ja: `最大接続人数: ${cfg.maxParticipants}名`,
-                            es: `Capacidad máxima: ${cfg.maxParticipants} personas`,
-                            'zh-TW': `最大同連線數 ${cfg.maxParticipants} 人`,
-                            'zh-HK': `最大同連線數 ${cfg.maxParticipants} 人`
-                          }[activeLocale] || `최대 동시 접속 ${cfg.maxParticipants}명`
-                        }
+                            {
+                              ko: `최대 동시 접속 ${cfg.maxParticipants}명`,
+                              en: `Max participants: ${cfg.maxParticipants}`,
+                              ja: `最大接続人数: ${cfg.maxParticipants}名`,
+                              es: `Capacidad máxima: ${cfg.maxParticipants} personas`,
+                              'zh-TW': `最大同連線數 ${cfg.maxParticipants} 人`,
+                              'zh-HK': `最大同連線數 ${cfg.maxParticipants} 人`
+                            }[activeLocale] || `최대 동시 접속 ${cfg.maxParticipants}명`
+                          }
+                        </span>
+                        <span className="text-zinc-700">|</span>
+                        <span className="text-indigo-400 font-bold">
+                          {
+                            {
+                              ko: `이용 기간: `,
+                              en: `Duration: `,
+                              ja: `利用期間: `,
+                              es: `Duración: `,
+                              'zh-TW': `使用期限: `,
+                              'zh-HK': `使用期限: `
+                            }[activeLocale] || `이용 기간: `
+                          }
+                          {getLocalizedDuration(tierKey, activeLocale)}
+                        </span>
                       </div>
                     </div>
                     <div className="text-right">

@@ -227,6 +227,77 @@ export const getLocalizedTierName = (tier: TierType, locale: string): string => 
   return names[tier][localeKey] || names[tier]['en'];
 };
 
+export const getLocalizedDuration = (tier: TierType, locale: string): string => {
+  const durations: Record<TierType, Record<string, string>> = {
+    free: {
+      ko: '3시간',
+      en: '3 Hours',
+      ja: '3時間',
+      es: '3 Horas',
+      'zh-TW': '3 小時',
+      'zh-HK': '3 小時',
+    },
+    sync: {
+      ko: '1시간',
+      en: '1 Hour',
+      ja: '1時間',
+      es: '1 Hora',
+      'zh-TW': '1 小時',
+      'zh-HK': '1 小時',
+    },
+    lite: {
+      ko: '24시간 (1일)',
+      en: '24 Hours (1 Day)',
+      ja: '24時間 (1日)',
+      es: '24 Horas (1 Día)',
+      'zh-TW': '24 小時 (1 天)',
+      'zh-HK': '24 小時 (1 天)',
+    },
+    standard: {
+      ko: '24시간 (1일)',
+      en: '24 Hours (1 Day)',
+      ja: '24시간 (1일)',
+      es: '24 Horas (1 Día)',
+      'zh-TW': '24 小時 (1 天)',
+      'zh-HK': '24 小時 (1 天)',
+    },
+    pro: {
+      ko: '24시간 (1일)',
+      en: '24 Hours (1 Day)',
+      ja: '24時間 (1日)',
+      es: '24 Horas (1 Día)',
+      'zh-TW': '24 小時 (1 天)',
+      'zh-HK': '24 小時 (1 天)',
+    },
+    max: {
+      ko: '24시간 (1일)',
+      en: '24 Hours (1 Day)',
+      ja: '24時間 (1日)',
+      es: '24 Horas (1 Día)',
+      'zh-TW': '24 小時 (1 天)',
+      'zh-HK': '24 小時 (1 天)',
+    },
+    store: {
+      ko: '30일 (1개월)',
+      en: '30 Days (1 Month)',
+      ja: '30日間 (1ヶ月)',
+      es: '30 Días (1 Mes)',
+      'zh-TW': '30 天 (1 個月)',
+      'zh-HK': '30 天 (1 個月)',
+    },
+    store_annual: {
+      ko: '365일 (1개년)',
+      en: '365 Days (1 Year)',
+      ja: '365日間 (1年間)',
+      es: '365 Días (1 Año)',
+      'zh-TW': '365 天 (1 年)',
+      'zh-HK': '365 天 (1 年)',
+    },
+  };
+  const localeKey = ['ko', 'en', 'ja', 'es', 'zh-TW', 'zh-HK'].includes(locale) ? locale : 'en';
+  return durations[tier][localeKey] || durations[tier]['en'];
+};
+
 
 
 export interface Room {

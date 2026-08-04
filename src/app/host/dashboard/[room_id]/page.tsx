@@ -28,7 +28,7 @@ import {
   FolderHeart,
   RotateCw
 } from 'lucide-react';
-import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS, getLocalizedPrice, getLocalizedTierName, getMaxTextLength } from '@/lib/types';
+import { Preset, Room, SignalPayload, EffectType, TierType, TIER_CONFIGS, getLocalizedPrice, getLocalizedTierName, getMaxTextLength, getLocalizedDuration } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import jsQR from 'jsqr';
 import LandscapePhoneMockup from '@/components/LandscapePhoneMockup';
@@ -5136,8 +5136,24 @@ export default function HostDashboard() {
                         >
                           <div>
                             <div className="font-black text-sm sm:text-base capitalize">{planName}</div>
-                            <div className={`text-xs mt-1 font-medium ${isSelected ? 'text-indigo-100' : 'text-zinc-400'}`}>
-                              {activeConnLimitLabel}<strong className={isSelected ? 'text-white' : 'text-zinc-200'}>{config.maxParticipants}{t('person_unit', activeLocale)}</strong>
+                            <div className={`text-xs mt-1 font-medium flex flex-wrap gap-x-2.5 items-center ${isSelected ? 'text-indigo-100' : 'text-zinc-400'}`}>
+                              <span>
+                                {activeConnLimitLabel}<strong className={isSelected ? 'text-white' : 'text-zinc-200'}>{config.maxParticipants}{t('person_unit', activeLocale)}</strong>
+                              </span>
+                              <span className={isSelected ? 'text-indigo-400/40' : 'text-zinc-700'}>|</span>
+                              <span className={isSelected ? 'text-indigo-200 font-bold' : 'text-indigo-400/90 font-bold'}>
+                                {
+                                  {
+                                    ko: `이용 기간: `,
+                                    en: `Duration: `,
+                                    ja: `利用期間: `,
+                                    es: `Duración: `,
+                                    'zh-TW': `使用期限: `,
+                                    'zh-HK': `使用期限: `
+                                  }[activeLocale] || `이용 기간: `
+                                }
+                                {getLocalizedDuration(tKey, activeLocale)}
+                              </span>
                             </div>
                           </div>
                           <div className="text-right">
