@@ -7,7 +7,8 @@ import {
   Smartphone, 
   Loader2,
   Lock,
-  WifiOff
+  WifiOff,
+  X
 } from 'lucide-react';
 import { Preset } from '@/lib/types';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -1332,6 +1333,20 @@ export default function AudienceRoom() {
           '--siren-color-2': currentPreset.bg_color_secondary || '#FFD700'
         } as React.CSSProperties}
       >
+        {/* Floating Exit Button for Spectators */}
+        {isForcedLandscape && (
+          <button
+            onClick={() => {
+              setIsForcedLandscape(false);
+              setShowEnterOverlay(true);
+            }}
+            className="absolute top-4 right-4 z-[99] p-2.5 rounded-full bg-black/45 hover:bg-black/70 text-white/50 hover:text-white border border-white/10 hover:border-white/20 transition-all duration-200 cursor-pointer flex items-center justify-center backdrop-blur-sm shadow-lg active:scale-95"
+            title={t('restore_portrait', activeLocale)}
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+
         {/* Blackout Overlay to cover all texts, effects, and marquee */}
         {currentPreset.blackout && (
           <div className="absolute inset-0 bg-black z-50 pointer-events-none" />

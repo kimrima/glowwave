@@ -2773,6 +2773,105 @@ export default function HostDashboard() {
             </div>
           </div>
 
+        {/* LIVE ON AIR Preview Card */}
+        <div className="order-2 lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:self-start flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 items-center bg-[#12121a] h-fit">
+            <div className="flex items-center gap-2 mb-2 self-start">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+              <h2 className="text-sm font-bold text-white uppercase tracking-wider">LIVE ON AIR</h2>
+            </div>
+            <p className="text-[11px] text-zinc-500 mb-4 self-start">
+              {
+                {
+                  ko: '현재 모든 관객 화면에 송출 중인 실시간 연출 화면입니다.',
+                  en: 'This is the live screen currently broadcasting to all spectators.',
+                  ja: '현재 모든 관객 화면에 송출 중인 실시간 연출 화면입니다.',
+                  es: 'Esta es la pantalla en vivo que se está transmitiendo a todos los espectadores.',
+                  'zh-TW': '目前正在向所有觀眾畫面播出的即時演出畫面。',
+                  'zh-HK': '目前正在向所有觀眾畫面播出的即時演出畫面。'
+                }[activeLocale] || '현재 모든 관객 화면에 송출 중인 실시간 연출 화면입니다.'
+              }
+            </p>
+            <div className="w-full max-w-[420px] flex flex-col items-center">
+              <div className="w-full flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl relative group overflow-hidden">
+                <LandscapePhoneMockup preset={currentBroadcastPreset} />
+                
+                {/* Desktop Hover Overlay */}
+                <button
+                  type="button"
+                  onClick={() => setIsStandaloneFullscreen(true)}
+                  className="hidden lg:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-2 text-white font-bold text-xs cursor-pointer"
+                >
+                  <Maximize2 className="w-5 h-5 text-indigo-400" />
+                  {
+                    {
+                      ko: '내 화면에 전체화면으로 띄우기',
+                      en: 'Show in Fullscreen on My Device',
+                      ja: '自分の画面에全画面で表示',
+                      es: 'Mostrar en pantalla completa en mi dispositivo',
+                      'zh-TW': '在我的螢幕上以全螢幕顯示',
+                      'zh-HK': '在我的螢幕上以全螢幕顯示'
+                    }[activeLocale] || '내 화면에 전체화면으로 띄우기'
+                  }
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsStandaloneFullscreen(true)}
+                className="mt-3 w-full py-2 px-4 rounded-xl bg-white/5 hover:bg-white/10 active:scale-[0.99] text-white font-bold text-xs tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer border border-white/10 hover:border-white/20 shadow-md"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>
+                  {
+                    {
+                      ko: '내 기기를 전광판으로 사용 (전체화면)',
+                      en: 'Use My Device as Signboard (Fullscreen)',
+                      ja: '自分の機器を電光掲示板として使用 (全画面)',
+                      es: 'Usar mi dispositivo como cartelera (Pantalla completa)',
+                      'zh-TW': '將我的裝置當作電子看板使用（全螢幕）',
+                      'zh-HK': '將我的裝置當作電子看板使用（全螢幕）'
+                    }[activeLocale] || '내 기기를 전광판으로 사용 (전체화면)'
+                  }
+                </span>
+              </button>
+            </div>
+
+            {currentBroadcastPreset.effect === 'luckydraw_wait' && (
+              <div className="w-full mt-4 flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleDrawWinner}
+                  className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black text-xs tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl shadow-amber-500/20 animate-bounce cursor-pointer border border-amber-300"
+                >
+                  <span>
+                    {
+                      {
+                        ko: '결과 발표 (추첨 완료)',
+                        en: 'Announce Result (Draw Winner)',
+                        ja: '結果発表 (抽選完了)',
+                        es: 'Anunciar resultado (Sorteo finalizado)',
+                        'zh-TW': '公佈結果（抽籤完成）',
+                        'zh-HK': '公佈結果（抽籤完成）'
+                      }[activeLocale] || '결과 발표 (추첨 완료)'
+                    }
+                  </span>
+                </button>
+                <p className="text-[10px] text-zinc-400 text-center leading-relaxed font-semibold">
+                  {
+                    {
+                      ko: <>⚠️ [결과 발표] 버튼을 누르면 현재 접속해 있는 관객 중 <b>단 1명만</b> 무작위로 당첨자로 선정되어 해당 관객 스마트폰 화면에 당첨 문구가 나타나며, 나머지 관객 화면에는 꽝 문구가 나타납니다.</>,
+                      en: <>⚠️ Clicking the [Announce Result] button will randomly select <b>only 1 winner</b> among connected spectators, displaying the winning slogan on their smartphone screen, while others see a loser message.</>,
+                      ja: <>⚠️ [結果発表] ボタンを押すと、現在接続中の観客の中から<b>たった1人だけ</b>がランダムで当選者に選ばれ、その観客のスマホ画面に当選メッセージが表示され、残りの観客には落選メッセージが表示されます。</>,
+                      es: <>⚠️ Al presionar el botón [Anunciar resultado], se seleccionará aleatoriamente a <b>solo 1 ganador</b> entre los espectadores conectados, mostrando el texto de ganador en su pantalla, mientras que los demás verán el texto de perdedor.</>,
+                      'zh-TW': <>⚠️ 按下 [公佈結果] 按鈕，系統將在目前連線的觀眾中隨機抽取 <b>僅限 1 名</b> 中獎者，並在該觀眾的手機螢幕上顯示中獎文字，其餘觀眾螢幕上顯示未中獎文字。</>,
+                      'zh-HK': <>⚠️ 按下 [公佈結果] 按鈕，系統將在目前連線의觀眾中隨機抽取 <b>僅限 1 名</b> 中獎者，並在該觀眾的手機螢幕上顯示中獎文字，其餘觀眾螢幕上顯示未中獎文字。</>
+                    }[activeLocale] || <>⚠️ [결과 발표] 버튼을 누르면 현재 접속해 있는 관객 중 <b>단 1명만</b> 무작위로 당첨자로 선정되어 해당 관객 스마트폰 화면에 당첨 문구가 나타나며, 나머지 관객 화면에는 꽝 문구가 나타납니다.</>
+                  }
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Custom Customizer Input for On-the-fly Triggering */}
           <div className="order-3 lg:col-span-8 lg:col-start-1 lg:row-start-2 lg:self-start flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 bg-[#12121a] h-fit">
             <div className="flex items-center justify-between mb-6 pb-3 border-b border-white/5">
@@ -3441,105 +3540,6 @@ export default function HostDashboard() {
                 </div>
               )}
             </div>
-          </div>
-
-        {/* LIVE ON AIR Preview Card */}
-        <div className="order-2 lg:col-span-4 lg:col-start-9 lg:row-start-1 lg:self-start flex flex-col w-full min-w-0 glass-effect rounded-2xl p-4 sm:p-6 items-center bg-[#12121a] h-fit">
-            <div className="flex items-center gap-2 mb-2 self-start">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-              <h2 className="text-sm font-bold text-white uppercase tracking-wider">LIVE ON AIR</h2>
-            </div>
-            <p className="text-[11px] text-zinc-500 mb-4 self-start">
-              {
-                {
-                  ko: '현재 모든 관객 화면에 송출 중인 실시간 연출 화면입니다.',
-                  en: 'This is the live screen currently broadcasting to all spectators.',
-                  ja: '현재 모든 관객 화면에 송출 중인 실시간 연출 화면입니다.',
-                  es: 'Esta es la pantalla en vivo que se está transmitiendo a todos los espectadores.',
-                  'zh-TW': '目前正在向所有觀眾畫面播出的即時演出畫面。',
-                  'zh-HK': '目前正在向所有觀眾畫面播出的即時演出畫面。'
-                }[activeLocale] || '현재 모든 관객 화면에 송출 중인 실시간 연출 화면입니다.'
-              }
-            </p>
-            <div className="w-full max-w-[420px] flex flex-col items-center">
-              <div className="w-full flex justify-center py-2 border-y border-white/5 bg-black/20 rounded-xl relative group overflow-hidden">
-                <LandscapePhoneMockup preset={currentBroadcastPreset} />
-                
-                {/* Desktop Hover Overlay */}
-                <button
-                  type="button"
-                  onClick={() => setIsStandaloneFullscreen(true)}
-                  className="hidden lg:flex absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity items-center justify-center gap-2 text-white font-bold text-xs cursor-pointer"
-                >
-                  <Maximize2 className="w-5 h-5 text-indigo-400" />
-                  {
-                    {
-                      ko: '내 화면에 전체화면으로 띄우기',
-                      en: 'Show in Fullscreen on My Device',
-                      ja: '自分の画面에全画面で表示',
-                      es: 'Mostrar en pantalla completa en mi dispositivo',
-                      'zh-TW': '在我的螢幕上以全螢幕顯示',
-                      'zh-HK': '在我的螢幕上以全螢幕顯示'
-                    }[activeLocale] || '내 화면에 전체화면으로 띄우기'
-                  }
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsStandaloneFullscreen(true)}
-                className="mt-3 w-full py-2 px-4 rounded-xl bg-white/5 hover:bg-white/10 active:scale-[0.99] text-white font-bold text-xs tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer border border-white/10 hover:border-white/20 shadow-md"
-              >
-                <Maximize2 className="w-3.5 h-3.5" />
-                <span>
-                  {
-                    {
-                      ko: '내 기기를 전광판으로 사용 (전체화면)',
-                      en: 'Use My Device as Signboard (Fullscreen)',
-                      ja: '自分の機器を電光掲示板として使用 (全画面)',
-                      es: 'Usar mi dispositivo como cartelera (Pantalla completa)',
-                      'zh-TW': '將我的裝置當作電子看板使用（全螢幕）',
-                      'zh-HK': '將我的裝置當作電子看板使用（全螢幕）'
-                    }[activeLocale] || '내 기기를 전광판으로 사용 (전체화면)'
-                  }
-                </span>
-              </button>
-            </div>
-
-            {currentBroadcastPreset.effect === 'luckydraw_wait' && (
-              <div className="w-full mt-4 flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={handleDrawWinner}
-                  className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-black font-black text-xs tracking-wider flex items-center justify-center gap-2 transition-all shadow-xl shadow-amber-500/20 animate-bounce cursor-pointer border border-amber-300"
-                >
-                  <span>
-                    {
-                      {
-                        ko: '결과 발표 (추첨 완료)',
-                        en: 'Announce Result (Draw Winner)',
-                        ja: '結果発表 (抽選完了)',
-                        es: 'Anunciar resultado (Sorteo finalizado)',
-                        'zh-TW': '公佈結果（抽籤完成）',
-                        'zh-HK': '公佈結果（抽籤完成）'
-                      }[activeLocale] || '결과 발표 (추첨 완료)'
-                    }
-                  </span>
-                </button>
-                <p className="text-[10px] text-zinc-400 text-center leading-relaxed font-semibold">
-                  {
-                    {
-                      ko: <>⚠️ [결과 발표] 버튼을 누르면 현재 접속해 있는 관객 중 <b>단 1명만</b> 무작위로 당첨자로 선정되어 해당 관객 스마트폰 화면에 당첨 문구가 나타나며, 나머지 관객 화면에는 꽝 문구가 나타납니다.</>,
-                      en: <>⚠️ Clicking the [Announce Result] button will randomly select <b>only 1 winner</b> among connected spectators, displaying the winning slogan on their smartphone screen, while others see a loser message.</>,
-                      ja: <>⚠️ [結果発表] ボタンを押すと、現在接続中の観客の中から<b>たった1人だけ</b>がランダムで当選者に選ばれ、その観客のスマホ画面に当選メッセージが表示され、残りの観客には落選メッセージが表示されます。</>,
-                      es: <>⚠️ Al presionar el botón [Anunciar resultado], se seleccionará aleatoriamente a <b>solo 1 ganador</b> entre los espectadores conectados, mostrando el texto de ganador en su pantalla, mientras que los demás verán el texto de perdedor.</>,
-                      'zh-TW': <>⚠️ 按下 [公佈結果] 按鈕，系統將在目前連線的觀眾中隨機抽取 <b>僅限 1 名</b> 中獎者，並在該觀眾的手機螢幕上顯示中獎文字，其餘觀眾螢幕上顯示未中獎文字。</>,
-                      'zh-HK': <>⚠️ 按下 [公佈結果] 按鈕，系統將在目前連線의觀眾中隨機抽取 <b>僅限 1 名</b> 中獎者，並在該觀眾的手機螢幕上顯示中獎文字，其餘觀眾螢幕上顯示未中獎文字。</>
-                    }[activeLocale] || <>⚠️ [결과 발표] 버튼을 누르면 현재 접속해 있는 관객 중 <b>단 1명만</b> 무작위로 당첨자로 선정되어 해당 관객 스마트폰 화면에 당첨 문구가 나타나며, 나머지 관객 화면에는 꽝 문구가 나타납니다.</>
-                  }
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Admission QR Card */}
