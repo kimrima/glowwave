@@ -130,20 +130,12 @@ function MiniCountdownPreview({ preset }: MiniCountdownPreviewProps) {
   );
 }
 
-const normalizeRoomId = (id: string): string => {
-  const trimmed = id.trim();
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed)) {
-    return trimmed.toLowerCase();
-  }
-  return trimmed.toUpperCase();
-};
-
 export default function HostDashboard() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
   const rawRoomId = params.room_id as string;
-  const roomId = rawRoomId ? normalizeRoomId(rawRoomId) : '';
+  const roomId = rawRoomId ? rawRoomId.toUpperCase() : '';
   
   const [room, setRoom] = useState<Room | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -700,7 +692,6 @@ export default function HostDashboard() {
         max_participants: roomData.max_participants,
         created_at: roomData.created_at,
         passcode: roomData.passcode,
-        entry_code: roomData.entry_code,
       });
 
       // Determine active locale

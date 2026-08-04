@@ -314,7 +314,6 @@ export interface Room {
   locale?: string;
   expires_at?: string;
   mail_sent_at?: string;
-  entry_code?: string;
 }
 
 export interface Payment {

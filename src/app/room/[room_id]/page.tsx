@@ -210,25 +210,16 @@ const ROOM_TRANSLATIONS: Record<Locale, Record<string, string>> = {
   }
 };
 
-const normalizeRoomId = (id: string): string => {
-  const trimmed = id.trim();
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed)) {
-    return trimmed.toLowerCase();
-  }
-  return trimmed.toUpperCase();
-};
-
 export default function AudienceRoom() {
   const params = useParams();
   const router = useRouter();
   const rawRoomId = params.room_id as string;
-  const roomId = rawRoomId ? normalizeRoomId(rawRoomId) : '';
+  const roomId = rawRoomId ? rawRoomId.toUpperCase() : '';
 
   const [showSafariTip, setShowSafariTip] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isForcedLandscape, setIsForcedLandscape] = useState<boolean>(false);
   const [roomTier, setRoomTier] = useState<string>('free');
-  const [roomEntryCode, setRoomEntryCode] = useState<string>('');
   const [showWatermarkTooltip, setShowWatermarkTooltip] = useState(false);
   const [showOverlayButtons, setShowOverlayButtons] = useState<boolean>(false);
   const overlayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -619,7 +610,6 @@ export default function AudienceRoom() {
       
       setRoomStatus(roomData.status || 'active');
       setRoomTier(roomData.tier || 'free');
-      setRoomEntryCode(roomData.entry_code || roomId);
       if (roomData.status === 'pending') {
         setIsRoomInactive(true);
         setLoading(false);
@@ -1646,7 +1636,7 @@ export default function AudienceRoom() {
                 </div>
               </div>
               <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3 text-[9px] text-indigo-300 leading-normal font-bold">
-                💡 이미 홈 화면에 GlowWave 앱을 추가하셨다면, 홈 화면에서 앱을 직접 실행하시고 입장 코드 <span className="text-white font-mono bg-white/10 px-1 rounded">{roomEntryCode}</span>를 입력하여 참여하시는 것이 가장 편리합니다!
+                💡 이미 홈 화면에 GlowWave 앱을 추가하셨다면, 홈 화면에서 앱을 직접 실행하시고 입장 코드 <span className="text-white font-mono bg-white/10 px-1 rounded">{roomId}</span>를 입력하여 참여하시는 것이 가장 편리합니다!
               </div>
               <p className="text-[9px] text-zinc-500 text-center font-medium">
                 ※ 홈 화면에 추가하지 않고 그냥 브라우저로 이용하려면 아래 버튼을 누르세요.
