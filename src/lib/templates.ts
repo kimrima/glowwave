@@ -89,7 +89,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
         },
         {
           "bg_color": "#DB2777",
-          "text": "Happy Birthday",
+          "text": "Happy Birthday!",
           "text_color": "#FFFFFF",
           "effect": "blink",
           "speed": 1921,
