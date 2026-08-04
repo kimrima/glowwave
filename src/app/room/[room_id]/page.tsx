@@ -221,6 +221,27 @@ export default function AudienceRoom() {
   const [isForcedLandscape, setIsForcedLandscape] = useState<boolean>(false);
   const [roomTier, setRoomTier] = useState<string>('free');
   const [showWatermarkTooltip, setShowWatermarkTooltip] = useState(false);
+  const [showOverlayButtons, setShowOverlayButtons] = useState<boolean>(false);
+  const overlayTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const triggerShowOverlayButtons = () => {
+    setShowOverlayButtons(true);
+    if (overlayTimeoutRef.current) {
+      clearTimeout(overlayTimeoutRef.current);
+    }
+    overlayTimeoutRef.current = setTimeout(() => {
+      setShowOverlayButtons(false);
+      setShowWatermarkTooltip(false);
+    }, 3500);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (overlayTimeoutRef.current) {
+        clearTimeout(overlayTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const getFontFamilyClass = (fontFamily?: string) => {
     const loc = currentPreset?.locale || 'ko';
@@ -1318,6 +1339,11 @@ export default function AudienceRoom() {
             setShowEnterOverlay(true);
           }
         }}
+        onClick={() => {
+          if (isForcedLandscape) {
+            triggerShowOverlayButtons();
+          }
+        }}
         className={`${
           isForcedLandscape ? 'rotate-90-forced fixed inset-0 z-10 w-full h-full' : 'w-full h-full relative'
         } flex items-center justify-center ${
@@ -1336,11 +1362,14 @@ export default function AudienceRoom() {
         {/* Floating Exit Button for Spectators */}
         {isForcedLandscape && (
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent container onClick from refiring
               setIsForcedLandscape(false);
               setShowEnterOverlay(true);
             }}
-            className="absolute top-4 right-4 z-[99] p-2.5 rounded-full bg-black/45 hover:bg-black/70 text-white/50 hover:text-white border border-white/10 hover:border-white/20 transition-all duration-200 cursor-pointer flex items-center justify-center backdrop-blur-sm shadow-lg active:scale-95"
+            className={`absolute top-4 right-4 z-[99] p-2.5 rounded-full bg-black/45 hover:bg-black/70 text-white/50 hover:text-white border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer flex items-center justify-center backdrop-blur-sm shadow-lg active:scale-95 ${
+              showOverlayButtons ? 'opacity-100 pointer-events-auto scale-100' : 'opacity-0 pointer-events-none scale-90'
+            }`}
             title={t('restore_portrait', activeLocale)}
           >
             <X className="w-5 h-5" />
@@ -1476,11 +1505,11 @@ export default function AudienceRoom() {
           </div>
         )}
 
-        {/* Smart Branded Watermark & Guide (Only for Free rooms) */}
-        {roomTier === 'free' && (
+        {/* Smart Branded Watermark & Guide (For Free and Sync rooms) */}
+        {(roomTier === 'free' || roomTier === 'sync') && (
           <div 
-            className={`absolute bottom-6 right-6 z-40 transition-all duration-500 flex flex-col items-end ${
-              showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+            className={`absolute bottom-6 right-6 z-40 transition-all duration-300 flex flex-col items-end ${
+              (!isForcedLandscape || showOverlayButtons) ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'
             }`}
           >
             {/* Tooltip Overlay */}
@@ -1490,29 +1519,38 @@ export default function AudienceRoom() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="text-[10px] text-zinc-400 font-semibold leading-relaxed">
-                  {activeLocale === 'ko' 
-                    ? 'GlowWave 무료 체험방을 이용 중입니다. 매장 요금제로 업그레이드 시 로고가 완벽 제거되며 24시간 끊김 없는 가동이 활성화됩니다.'
-                    : 'GlowWave Free Trial active. Upgrading to a store plan removes this logo and unlocks 24/7 continuous play.'}
+                  {roomTier === 'sync' ? (
+                    activeLocale === 'ko'
+                      ? '1인용 무료 연동 체험 중입니다. 요금제를 업그레이드하시면 인원 무제한 연동이 해제되고 이 로고가 완전히 제거됩니다.'
+                      : '1-person Free Sync Trial active. Upgrade your plan to remove this logo and connect unlimited spectators.'
+                  ) : (
+                    activeLocale === 'ko'
+                      ? 'GlowWave 무료 체험방입니다. 나만의 전광판을 만들어 친구들과 함께 응원해 보세요!'
+                      : 'GlowWave Free Trial room. Create your own signboard and cheer together with friends!'
+                  )}
                 </div>
                 <div className="flex flex-col gap-1.5 mt-1">
-                  <button
-                    onClick={() => {
-                      setShowWatermarkTooltip(false);
-                      window.open('/', '_blank');
-                    }}
-                    className="w-full py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white text-[10px] font-bold transition-all text-center border border-white/5 active:scale-98"
-                  >
-                    🚀 {activeLocale === 'ko' ? '나도 전광판 만들기 (무료)' : 'Create My Own Signboard'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowWatermarkTooltip(false);
-                      window.open('/host/setup?plan=store', '_blank');
-                    }}
-                    className="w-full py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black transition-all text-center active:scale-98"
-                  >
-                    👑 {activeLocale === 'ko' ? '로고 제거 & 요금제 보기' : 'Remove Logo & Upgrade'}
-                  </button>
+                  {roomTier === 'sync' ? (
+                    <button
+                      onClick={() => {
+                        setShowWatermarkTooltip(false);
+                        window.open('/host/setup?plan=store', '_blank');
+                      }}
+                      className="w-full py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black tracking-wider transition-all text-center cursor-pointer active:scale-98 shadow-md border border-violet-400"
+                    >
+                      {activeLocale === 'ko' ? '요금제 업그레이드하기' : 'Upgrade Plan'}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setShowWatermarkTooltip(false);
+                        window.open('/', '_blank');
+                      }}
+                      className="w-full py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white text-[10px] font-extrabold tracking-wider transition-all text-center border border-white/10 active:scale-98 cursor-pointer"
+                    >
+                      {activeLocale === 'ko' ? '나도 전광판 만들기 (무료)' : 'Create My Own Signboard'}
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -1527,7 +1565,9 @@ export default function AudienceRoom() {
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 group-hover:animate-ping" />
               <span>GW | GLOWWAVE</span>
-              <span className="text-[8px] bg-white/10 px-1 py-0.5 rounded text-white/50 group-hover:text-white font-semibold">TRIAL</span>
+              <span className="text-[8px] bg-white/10 px-1 py-0.5 rounded text-white/50 group-hover:text-white font-semibold">
+                {roomTier === 'sync' ? 'SYNC' : 'TRIAL'}
+              </span>
             </button>
           </div>
         )}
