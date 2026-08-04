@@ -162,6 +162,46 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = ${JSON.st
       console.warn('[Admin Templates POST] Read-only FileSystem environment detected. Saving to Memory Cache instead:', fsError);
     }
 
+    // GitHub Auto-Commit & Push Integration
+    const githubPat = process.env.GITHUB_PAT;
+    const githubOwner = process.env.GITHUB_OWNER || 'kimrima';
+    const githubRepo = process.env.GITHUB_REPO || 'glowwave';
+    const githubBranch = process.env.GITHUB_BRANCH || 'main';
+
+    if (githubPat && githubPat !== 'your_github_token_here') {
+      try {
+        console.log('[Admin Templates POST] Starting GitHub auto-commit routine...');
+        
+        // 1. Commit src/lib/templates.json
+        const jsonContentBase64 = Buffer.from(JSON.stringify(templates, null, 2), 'utf8').toString('base64');
+        await commitFileToGithub({
+          owner: githubOwner,
+          repo: githubRepo,
+          branch: githubBranch,
+          path: 'src/lib/templates.json',
+          contentBase64: jsonContentBase64,
+          message: 'admin: update templates.json via dashboard',
+          token: githubPat
+        });
+
+        // 2. Commit src/lib/templates.ts
+        const tsContentBase64 = Buffer.from(fileContent, 'utf8').toString('base64');
+        await commitFileToGithub({
+          owner: githubOwner,
+          repo: githubRepo,
+          branch: githubBranch,
+          path: 'src/lib/templates.ts',
+          contentBase64: tsContentBase64,
+          message: 'admin: update templates.ts via dashboard',
+          token: githubPat
+        });
+        
+        console.log('[Admin Templates POST] GitHub auto-commit successfully finished for both files.');
+      } catch (ghError) {
+        console.error('[Admin Templates POST] GitHub auto-commit routine failed:', ghError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Templates database updated successfully in Memory Cache'
@@ -170,4 +210,60 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = ${JSON.st
     console.error('[Admin Templates POST] Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
+}
+
+async function commitFileToGithub(params: {
+  owner: string;
+  repo: string;
+  branch: string;
+  path: string;
+  contentBase64: string;
+  message: string;
+  token: string;
+}) {
+  const { owner, repo, branch, path, contentBase64, message, token } = params;
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+  // Step A: Get current file sha if exists
+  let sha: string | undefined;
+  try {
+    const getRes = await fetch(`${url}?ref=${branch}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'Glowwave-Admin-Dashboard'
+      }
+    });
+    if (getRes.ok) {
+      const data = await getRes.json();
+      sha = data.sha;
+    }
+  } catch (e) {
+    console.warn(`[commitFileToGithub] Failed to retrieve SHA for ${path}:`, e);
+  }
+
+  // Step B: Put updated content
+  const putRes = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'Glowwave-Admin-Dashboard',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message,
+      content: contentBase64,
+      sha,
+      branch
+    })
+  });
+
+  if (!putRes.ok) {
+    const errorText = await putRes.text();
+    throw new Error(`GitHub API returned status ${putRes.status}: ${errorText}`);
+  }
+  console.log(`[commitFileToGithub] Successfully committed ${path} (sha: ${sha || 'new'}).`);
 }
