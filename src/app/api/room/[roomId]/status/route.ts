@@ -3,13 +3,21 @@ import { localDb } from '@/lib/localDb';
 
 import { isSupabaseConfigured } from '@/lib/supabase';
 
+const normalizeRoomId = (id: string): string => {
+  const trimmed = id.trim();
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed)) {
+    return trimmed.toLowerCase();
+  }
+  return trimmed.toUpperCase();
+};
+
 export async function GET(
   request: Request,
   { params }: { params: any }
 ) {
   try {
     const resolvedParams = await params;
-    const roomId = (resolvedParams.roomId as string).toUpperCase();
+    const roomId = normalizeRoomId(resolvedParams.roomId as string);
 
     const { searchParams } = new URL(request.url);
     const queryToken = searchParams.get('token');

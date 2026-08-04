@@ -210,11 +210,19 @@ const ROOM_TRANSLATIONS: Record<Locale, Record<string, string>> = {
   }
 };
 
+const normalizeRoomId = (id: string): string => {
+  const trimmed = id.trim();
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed)) {
+    return trimmed.toLowerCase();
+  }
+  return trimmed.toUpperCase();
+};
+
 export default function AudienceRoom() {
   const params = useParams();
   const router = useRouter();
   const rawRoomId = params.room_id as string;
-  const roomId = rawRoomId ? rawRoomId.toUpperCase() : '';
+  const roomId = rawRoomId ? normalizeRoomId(rawRoomId) : '';
 
   const [showSafariTip, setShowSafariTip] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);

@@ -6,11 +6,19 @@ import { Sparkles, Users, Tv, RefreshCw, AlertCircle, X, ShieldAlert } from 'luc
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { t, Locale } from '@/lib/translations';
 
+const normalizeRoomId = (id: string): string => {
+  const trimmed = id.trim();
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed)) {
+    return trimmed.toLowerCase();
+  }
+  return trimmed.toUpperCase();
+};
+
 export default function PresentationView() {
   const params = useParams();
   const router = useRouter();
   const rawRoomId = params.room_id as string;
-  const roomId = rawRoomId ? rawRoomId.toUpperCase() : '';
+  const roomId = rawRoomId ? normalizeRoomId(rawRoomId) : '';
 
   const [activeLocale, setActiveLocale] = useState<Locale>('ko');
   const [loading, setLoading] = useState(true);
