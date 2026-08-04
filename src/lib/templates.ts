@@ -360,7 +360,7 @@ export const LOCALIZED_TEMPLATES: Record<Locale, TemplateCategory[]> = {
       "presets": [
         {
           "bg_color": "#DB2777",
-          "text": "Encore!",
+          "text": "앵콜!",
           "text_color": "#FFFFFF",
           "effect": "blink",
           "speed": 1921,
