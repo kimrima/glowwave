@@ -3,11 +3,52 @@ import { localDb } from '@/lib/localDb';
 
 import { isSupabaseConfigured } from '@/lib/supabase';
 
+// Memory-based Rate Limiter for brute-force scanning protection
+const statusRateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const statusBlockedIpMap = new Map<string, number>();
+
+const LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS = 30; // 30 requests per minute
+const BLOCK_DURATION = 5 * 60 * 1000; // 5 minutes block
+
 export async function GET(
   request: Request,
   { params }: { params: any }
 ) {
   try {
+    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    const now = Date.now();
+
+    // 1. Check if IP is currently blocked
+    const blockUntil = statusBlockedIpMap.get(ip);
+    if (blockUntil) {
+      if (now < blockUntil) {
+        const remainingSeconds = Math.ceil((blockUntil - now) / 1000);
+        return NextResponse.json({
+          error: 'Too Many Requests',
+          suggestion: `비정상적인 무작위 조회가 감지되어 해당 IP 접속이 일시 차단되었습니다. ${remainingSeconds}초 후 다시 시도해 주세요.`
+        }, { status: 429 });
+      } else {
+        statusBlockedIpMap.delete(ip); // Block expired
+      }
+    }
+
+    // 2. Track request rate
+    let tracker = statusRateLimitMap.get(ip);
+    if (!tracker || now > tracker.resetTime) {
+      tracker = { count: 1, resetTime: now + LIMIT_WINDOW };
+      statusRateLimitMap.set(ip, tracker);
+    } else {
+      tracker.count++;
+      if (tracker.count > MAX_REQUESTS) {
+        statusBlockedIpMap.set(ip, now + BLOCK_DURATION);
+        statusRateLimitMap.delete(ip);
+        return NextResponse.json({
+          error: 'Too Many Requests',
+          suggestion: '스캔 및 어뷰징 방지를 위해 무작위 조회가 일시 차단되었습니다. 5분 후 다시 접속해 주세요.'
+        }, { status: 429 });
+      }
+    }
     const resolvedParams = await params;
     const roomId = (resolvedParams.roomId as string).toUpperCase();
 
